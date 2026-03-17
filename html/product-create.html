@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Thêm sản phẩm chuyên sâu - MotoShop Admin</title>
+    
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+      .card-form { border-radius: 12px; border: none; box-shadow: 0 2px 15px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
+      .editor-wrapper { border: 1px solid #d9dee3; border-radius: 12px; overflow: hidden; background: #fff; min-height: 500px; }
+      .ck-editor__editable { min-height: 450px !important; }
+      
+      .image-upload-box { width: 100%; height: 120px; border: 2px dashed #d9dee3; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; transition: 0.3s; background: #f8f9fa; }
+      .image-upload-box:hover { border-color: var(--ds-primary); background: #fff; }
+      .gallery-item { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; border: 1px solid #eee; position: relative; }
+      .gallery-item .remove-img { position: absolute; top: -5px; right: -5px; background: red; color: #fff; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+      
+      .variant-row { background: #fcfcfd; border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 10px; }
+      .section-title { font-weight: 800; text-transform: uppercase; color: var(--ds-text-heading); font-size: 0.85rem; border-left: 4px solid var(--ds-primary); padding-left: 10px; margin-bottom: 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <h5 class="m-0 text-muted fw-light">Sản phẩm / <span class="text-dark fw-bold">Thêm sản phẩm mới</span></h5>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-uppercase text-primary">Biên tập sản phẩm</h4>
+                <div class="d-flex gap-2">
+                  <a href="products.html" class="btn btn-outline-secondary">Hủy bỏ</a>
+                  <button class="btn btn-primary px-4" id="btnSave" onclick="handleSave()">Lưu & Xuất bản</button>
+                </div>
+              </div>
+
+              <div class="row">
+                <!-- CỘT TRÁI: THÔNG TIN CHI TIẾT -->
+                <div class="col-lg-8">
+                  <!-- 1. Thông tin chung -->
+                  <div class="card card-form">
+                    <div class="card-body">
+                      <div class="section-title">Thông tin cơ bản</div>
+                      <div class="mb-3">
+                        <label class="filter-label">Tên sản phẩm <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-lg" placeholder="Nhập tên sản phẩm...">
+                      </div>
+                      <div class="row g-3">
+                        <div class="col-md-6">
+                          <label class="filter-label">Mã SKU gốc</label>
+                          <input type="text" class="form-control" placeholder="Mã định danh chính">
+                        </div>
+                        <div class="col-md-6">
+                          <label class="filter-label">Đơn vị tính</label>
+                          <select class="form-select">
+                            <option>Cái</option><option>Bộ</option><option>Lon/Chai</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 2. Soạn thảo mô tả -->
+                  <div class="card card-form">
+                    <div class="card-body">
+                      <div class="section-title">Mô tả chi tiết sản phẩm</div>
+                      <div class="editor-wrapper">
+                        <div id="editor"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 3. Quản lý Biến thể (Variants) -->
+                  <div class="card card-form">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="section-title mb-0">Phiên bản sản phẩm (Biến thể)</div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="addVariant()"><i class="bx bx-plus me-1"></i>Thêm biến thể</button>
+                      </div>
+                      <div id="variantContainer">
+                        <div class="variant-row">
+                          <div class="row g-2">
+                            <div class="col-md-3">
+                              <label class="filter-label">Tên biến thể</label>
+                              <input type="text" class="form-control form-control-sm" placeholder="Màu đỏ, Size L...">
+                            </div>
+                            <div class="col-md-3">
+                              <label class="filter-label">Mã SKU riêng</label>
+                              <input type="text" class="form-control form-control-sm" placeholder="SKU-01">
+                            </div>
+                            <div class="col-md-3">
+                              <label class="filter-label">Giá bán (đ)</label>
+                              <input type="number" class="form-control form-control-sm text-primary fw-bold" value="0">
+                            </div>
+                            <div class="col-md-2">
+                              <label class="filter-label">Kho</label>
+                              <input type="number" class="form-control form-control-sm" value="0">
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end">
+                              <button class="btn btn-sm btn-icon text-danger mb-1"><i class="bx bx-trash"></i></button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- CỘT PHẢI: PHÂN LOẠI & MEDIA -->
+                <div class="col-lg-4">
+                  <!-- 4. Giá & Kho tổng -->
+                  <div class="card card-form">
+                    <div class="card-body">
+                      <div class="section-title">Giá & Kho</div>
+                      <div class="mb-3">
+                        <label class="filter-label">Giá niêm yết</label>
+                        <input type="number" class="form-control fw-bold" value="0">
+                      </div>
+                      <div class="mb-3">
+                        <label class="filter-label">Giá khuyến mãi</label>
+                        <input type="number" class="form-control text-danger fw-bold" value="0">
+                      </div>
+                      <div class="mb-0 text-muted small">
+                        <i class="bx bx-info-circle me-1"></i>Giá biến thể sẽ ghi đè giá tổng nếu được thiết lập.
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 5. Phân loại -->
+                  <div class="card card-form">
+                    <div class="card-body">
+                      <div class="section-title">Phân loại</div>
+                      <div class="mb-3">
+                        <label class="filter-label">Danh mục sản phẩm</label>
+                        <select class="form-select"><option>Bộ nồi</option><option>Dàn chân</option></select>
+                      </div>
+                      <div class="mb-3">
+                        <label class="filter-label">Thương hiệu</label>
+                        <select class="form-select"><option>Honda</option><option>Yamaha</option></select>
+                      </div>
+                      <div class="mb-0">
+                        <label class="filter-label">Nhãn sản phẩm</label>
+                        <div class="d-flex flex-wrap gap-2">
+                          <div class="form-check"><input class="form-check-input" type="checkbox" id="tagNew"><label class="form-check-label small" for="tagNew">Mới về</label></div>
+                          <div class="form-check"><input class="form-check-input" type="checkbox" id="tagHot"><label class="form-check-label small" for="tagHot">Bán chạy</label></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 6. Hình ảnh & Gallery -->
+                  <div class="card card-form">
+                    <div class="card-body">
+                      <div class="section-title">Hình ảnh sản phẩm</div>
+                      <label class="filter-label">Ảnh đại diện chính</label>
+                      <div class="image-upload-box mb-3">
+                        <i class="bx bx-cloud-upload fs-2 text-muted"></i>
+                        <span class="small">Tải ảnh chính</span>
+                      </div>
+                      
+                      <label class="filter-label">Bộ sưu tập (Gallery)</label>
+                      <div class="d-flex flex-wrap gap-2 mb-3">
+                        <div class="gallery-item"><img src="../assets/img/elements/1.jpg" class="w-100 h-100 rounded"><div class="remove-img">×</div></div>
+                        <div class="image-upload-box" style="width: 80px; height: 80px; padding: 0;">
+                          <i class="bx bx-plus text-muted"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 7. Cấu hình SEO -->
+                  <div class="card card-form">
+                    <div class="card-body">
+                      <div class="section-title">Cấu hình SEO</div>
+                      <div class="mb-3">
+                        <label class="filter-label">Đường dẫn thân thiện (Slug)</label>
+                        <input type="text" class="form-control form-control-sm" placeholder="bo-noi-honda-sh-2026">
+                      </div>
+                      <div class="mb-0">
+                        <label class="filter-label">Mô tả SEO</label>
+                        <textarea class="form-control form-control-sm" rows="3" placeholder="Nhập mô tả ngắn cho công cụ tìm kiếm..."></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl py-2 text-center">© 2026, MotoShop Admin - Product Management System</div>
+            </footer>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CKEditor 5 Super Build Local -->
+    <script src="../assets/vendor/libs/ckeditor/ckeditor.js"></script>
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      let editorInstance;
+      window.addEventListener('load', () => {
+        if (typeof CKEDITOR !== 'undefined') {
+          CKEDITOR.ClassicEditor
+            .create(document.querySelector('#editor'), {
+              toolbar: {
+                items: [
+                  'heading', '|', 'fontSize', 'fontColor', 'fontBackgroundColor', 'highlight', '|',
+                  'bold', 'italic', 'underline', 'strikethrough', 'removeFormat', '|',
+                  'alignment', '|', 'numberedList', 'bulletedList', 'todoList', '|',
+                  'link', 'uploadImage', 'insertTable', 'mediaEmbed', 'blockQuote', 'codeBlock', '|',
+                  'sourceEditing', '|', 'undo', 'redo'
+                ],
+                shouldNotGroupWhenFull: true
+              },
+              simpleUpload: { uploadUrl: '../api/upload-handler.php', headers: { 'Module-Name': 'products' } },
+              image: { toolbar: ['imageStyle:alignLeft', 'imageStyle:block', 'imageStyle:alignRight', '|', 'toggleImageCaption', 'imageTextAlternative'], insert: { integrations: ['upload'] } },
+              removePlugins: [
+                'AIAssistant', 'CKBox', 'CKFinder', 'EasyImage', 'RealTimeCollaborativeComments',
+                'RealTimeCollaborativeTrackChanges', 'RealTimeCollaborativeRevisionHistory', 'PresenceList',
+                'Comments', 'TrackChanges', 'TrackChangesData', 'RevisionHistory', 'Pagination', 'WProofreader',
+                'MathType', 'SlashCommand', 'Template', 'DocumentOutline', 'FormatPainter', 'TableOfContents', 
+                'PasteFromOfficeEnhanced', 'CaseChange', 'MultiLevelList', 'ExportPdf', 'ExportWord'
+              ],
+              placeholder: 'Nhập nội dung mô tả chi tiết sản phẩm...',
+              language: 'vi'
+            })
+            .then(editor => { editorInstance = editor; })
+            .catch(error => { console.error(error); });
+        }
+      });
+
+      function addVariant() {
+        const container = document.getElementById('variantContainer');
+        const newRow = document.createElement('div');
+        newRow.className = 'variant-row';
+        newRow.innerHTML = `
+          <div class="row g-2">
+            <div class="col-md-3"><input type="text" class="form-control form-control-sm" placeholder="Tên biến thể"></div>
+            <div class="col-md-3"><input type="text" class="form-control form-control-sm" placeholder="Mã SKU"></div>
+            <div class="col-md-3"><input type="number" class="form-control form-control-sm text-primary fw-bold" value="0"></div>
+            <div class="col-md-2"><input type="number" class="form-control form-control-sm" value="0"></div>
+            <div class="col-md-1 d-flex align-items-end"><button class="btn btn-sm btn-icon text-danger mb-1" onclick="this.closest('.variant-row').remove()"><i class="bx bx-trash"></i></button></div>
+          </div>
+        `;
+        container.appendChild(newRow);
+      }
+
+      function handleSave() {
+        const btn = document.getElementById('btnSave');
+        DS.loading.btnStart(btn);
+        setTimeout(() => {
+          DS.loading.btnStop(btn);
+          DS.showToast('Đã lưu sản phẩm thành công!', 'success');
+          setTimeout(() => { location.href = 'products.html'; }, 1000);
+        }, 1500);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Danh sách Sản phẩm - MotoShop Admin</title>
+    
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    
+    <!-- Design System & UI Components -->
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+    <link rel="stylesheet" href="../assets/css/pagination-component.css" />
+
+    <!-- Helpers -->
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      /* Tối ưu riêng cho bảng Sản phẩm */
+      .product-img {
+        width: 56px;
+        height: 56px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid var(--ds-border-color);
+      }
+      
+      .product-name {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;  
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 600;
+        color: var(--ds-text-heading);
+        line-height: 1.4;
+        max-width: 300px;
+        white-space: normal;
+      }
+
+      .search-filter-bar {
+        background: var(--ds-bg-card);
+        padding: 1.25rem;
+        border-radius: var(--ds-radius);
+        box-shadow: 0 2px 6px rgba(67, 89, 113, 0.1);
+      }
+
+      .btn-view { color: var(--ds-info) !important; }
+      .btn-edit { color: var(--ds-primary) !important; }
+      .btn-delete { color: var(--ds-danger) !important; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Sidebar dùng chung -->
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="m-0 text-muted fw-light">Quản lý Cửa hàng / <span class="text-dark fw-bold">Sản phẩm</span></h5>
+            </div>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <!-- Header -->
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0">Danh sách Sản phẩm</h4>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-danger d-none" id="btnBulkDelete" onclick="handleBulkDelete()">
+                    <i class="bx bx-trash me-1"></i>Xóa đã chọn (<span id="selectedCount">0</span>)
+                  </button>
+                  <a href="product-create.html" class="btn btn-primary d-flex align-items-center">
+                    <i class="bx bx-plus me-1"></i> Thêm sản phẩm
+                  </a>
+                </div>
+              </div>
+
+              <!-- Search & Filter Bar -->
+              <div class="search-filter-bar mb-4">
+                <form class="row g-3">
+                  <div class="col-lg-4 col-md-6">
+                    <div class="input-group input-group-merge">
+                      <span class="input-group-text"><i class="bx bx-search"></i></span>
+                      <input type="text" class="form-control" placeholder="Tìm tên sản phẩm hoặc mã SKU...">
+                    </div>
+                  </div>
+                  <div class="col-lg-2 col-md-3">
+                    <select class="form-select">
+                      <option value="">Loại sản phẩm</option>
+                      <option value="1">Bộ nồi</option>
+                      <option value="2">Bố thắng</option>
+                    </select>
+                  </div>
+                  <div class="col-lg-2 col-md-3">
+                    <select class="form-select">
+                      <option value="">Thương hiệu</option>
+                      <option value="honda">Honda</option>
+                      <option value="yamaha">Yamaha</option>
+                    </select>
+                  </div>
+                  <div class="col-lg-2 col-md-6">
+                    <select class="form-select">
+                      <option value="newest">Mới nhất</option>
+                      <option value="az">Tên A-Z</option>
+                      <option value="za">Tên Z-A</option>
+                    </select>
+                  </div>
+                  <div class="col-lg-2 col-md-6">
+                    <button type="submit" class="btn btn-outline-primary w-100">Lọc dữ liệu</button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Product Table -->
+              <div class="card overflow-hidden">
+                <div class="table-responsive text-nowrap">
+                  <table class="table table-hover m-0">
+                    <thead>
+                      <tr>
+                        <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                        <th style="width: 80px">Ảnh</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Thương hiệu</th>
+                        <th>Danh mục</th>
+                        <th class="text-center">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody id="productTableBody">
+                      <!-- Sản phẩm 1 -->
+                      <tr>
+                        <td><input class="form-check-input" type="checkbox" onchange="updateBulkActions()"></td>
+                        <td>
+                          <img src="../assets/img/elements/1.jpg" alt="product" class="product-img">
+                        </td>
+                        <td>
+                          <div class="product-name cursor-pointer" title="Xem chi tiết" onclick="location.href='product-detail.html'">
+                            Bộ Nồi Trước Honda SH 125/150i Cao Cấp Nhập Khẩu Chính Hãng
+                          </div>
+                          <small class="text-muted">SKU: HD-SH-001</small>
+                        </td>
+                        <td>Honda</td>
+                        <td>Bộ nồi</td>
+                        <td class="text-center">
+                          <div class="d-flex justify-content-center gap-2">
+                            <button class="btn btn-sm btn-icon btn-view" title="Xem chi tiết" onclick="location.href='product-detail.html'"><i class="bx bx-show"></i></button>
+                            <button class="btn btn-sm btn-icon btn-edit" title="Chỉnh sửa" onclick="location.href='product-edit.html'"><i class="bx bx-edit-alt"></i></button>
+                            <button class="btn btn-sm btn-icon btn-delete" onclick="handleDeleteProduct('Bộ Nồi Trước Honda SH')" title="Xóa"><i class="bx bx-trash"></i></button>
+                          </div>
+                        </td>
+                      </tr>
+                      <!-- Sản phẩm 2 -->
+                      <tr>
+                        <td><input class="form-check-input" type="checkbox" onchange="updateBulkActions()"></td>
+                        <td>
+                          <img src="../assets/img/elements/placeholder.png" alt="no-image" class="product-img" onerror="this.src='https://via.placeholder.com/56x56?text=No+Img'">
+                        </td>
+                        <td>
+                          <div class="product-name" title="Bố thắng đĩa trước Yamaha Exciter 155 VVA">
+                            Bố thắng đĩa trước Yamaha Exciter 155 VVA
+                          </div>
+                          <small class="text-muted">SKU: YM-EX-992</small>
+                        </td>
+                        <td>Yamaha</td>
+                        <td>Bố thắng</td>
+                        <td class="text-center">
+                          <div class="d-flex justify-content-center gap-2">
+                            <button class="btn btn-sm btn-icon btn-view"><i class="bx bx-show"></i></button>
+                            <button class="btn btn-sm btn-icon btn-edit"><i class="bx bx-edit-alt"></i></button>
+                            <button class="btn btn-sm btn-icon btn-delete" onclick="handleDeleteProduct('Bố thắng đĩa trước Yamaha')"><i class="bx bx-trash"></i></button>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Reusable Pagination Footer -->
+                <div class="table-pagination-footer">
+                  <div class="pagination-rows-selector">
+                    Hiển thị 
+                    <select class="form-select form-select-sm d-inline-block w-auto mx-2">
+                      <option>10</option>
+                      <option>20</option>
+                      <option>50</option>
+                    </select> dòng
+                  </div>
+                  <nav class="pagination-nav">
+                    <ul class="pagination pagination-sm m-0">
+                      <li class="page-item disabled"><a class="page-link" href="javascript:void(0);"><i class="bx bx-chevron-left"></i></a></li>
+                      <li class="page-item active"><a class="page-link" href="javascript:void(0);">1</a></li>
+                      <li class="page-item"><a class="page-link" href="javascript:void(0);">2</a></li>
+                      <li class="page-item"><a class="page-link" href="javascript:void(0);">3</a></li>
+                      <li class="page-item"><a class="page-link" href="javascript:void(0);"><i class="bx bx-chevron-right"></i></a></li>
+                    </ul>
+                  </nav>
+                  <div class="pagination-info text-muted">
+                    Hiển thị 1–10 / 124
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty State (Ẩn đi mặc định) -->
+              <div id="emptyState" class="text-center py-5 d-none">
+                <img src="../assets/img/illustrations/man-with-laptop-light.png" alt="empty" width="200" class="mb-3">
+                <h5 class="text-muted">Chưa có sản phẩm nào</h5>
+                <button class="btn btn-primary" onclick="location.href='product-create.html'">+ Thêm sản phẩm</button>
+              </div>
+
+            </div>
+
+            <!-- Footer -->
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+                <div class="mb-2 mb-md-0">© 2026, MotoShop Admin</div>
+              </div>
+            </footer>
+            
+            <div class="content-backdrop fade"></div>
+          </div>
+        </div>
+      </div>
+      <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+        <!-- Core JS -->
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      function updateBulkActions() {
+        const checkedCount = document.querySelectorAll('tbody .form-check-input:checked').length;
+        const btnBulk = document.getElementById('btnBulkDelete');
+        const countSpan = document.getElementById('selectedCount');
+        if (checkedCount > 0) {
+          btnBulk.classList.remove('d-none');
+          countSpan.innerText = checkedCount;
+        } else {
+          btnBulk.classList.add('d-none');
+        }
+      }
+
+      document.getElementById('checkAll').onclick = function() {
+        const checkboxes = document.querySelectorAll('tbody .form-check-input');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+        updateBulkActions();
+      };
+
+      function handleBulkDelete() {
+        const count = document.querySelectorAll('tbody .form-check-input:checked').length;
+        DS.confirm({
+          title: 'Xác nhận xóa nhiều',
+          message: `Bạn có chắc muốn xóa vĩnh viễn ${count} sản phẩm đã chọn?`,
+          type: 'danger',
+          onConfirm: () => {
+            DS.showToast(`Đã xóa ${count} sản phẩm thành công`, 'success');
+            updateBulkActions();
+          }
+        });
+      }
+
+      function handleDeleteProduct(name) {
+        DS.confirm({
+          title: 'Xác nhận xóa',
+          message: `Bạn có chắc muốn xóa sản phẩm "${name}"? Thao tác này không thể hoàn tác.`,
+          onConfirm: () => {
+            DS.showToast(`Đã xóa sản phẩm ${name} thành công`, 'success');
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

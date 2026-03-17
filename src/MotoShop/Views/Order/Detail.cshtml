@@ -1,0 +1,199 @@
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng";
+}
+
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Account" asp-action="Profile">Tài khoản</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Order" asp-action="Index">Đơn hàng của tôi</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Chi tiết đơn hàng</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<main class="container mb-5">
+    <div class="row g-4">
+        <!-- 2. SIDEBAR MENU (Left) -->
+        <aside class="col-lg-3">
+            <div class="account-sidebar">
+                <div class="d-flex align-items-center gap-3 mb-4 pb-4 border-bottom">
+                    <div style="width: 50px; height: 50px;">
+                        <img src="https://i.pravatar.cc/150?u=1" class="rounded-circle w-100 h-100 object-fit-cover" alt="User">
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">Nguyễn Văn An</h6>
+                        <p class="text-muted small mb-0">Thành viên Bạc</p>
+                    </div>
+                </div>
+                <ul class="account-nav">
+                    <li class="account-nav-item"><a asp-controller="Account" asp-action="Profile" class="account-nav-link"><i class='bx bx-user'></i> Thông tin cá nhân</a></li>
+                    <li class="account-nav-item"><a asp-controller="Order" asp-action="Index" class="account-nav-link active"><i class='bx bx-package'></i> Đơn hàng của tôi</a></li>
+                    <li class="account-nav-item"><a asp-controller="Account" asp-action="AddressBook" class="account-nav-link"><i class='bx bx-map'></i> Địa chỉ giao hàng</a></li>
+                    <li class="account-nav-item"><a asp-controller="Product" asp-action="Wishlist" class="account-nav-link"><i class='bx bx-heart'></i> Sản phẩm yêu thích</a></li>
+                    <li class="account-nav-item"><a asp-controller="Account" asp-action="ChangePassword" class="account-nav-link"><i class='bx bx-lock-alt'></i> Đổi mật khẩu</a></li>
+                    <li class="account-nav-item mt-3 pt-3 border-top"><a href="javascript:void(0)" class="account-nav-link text-danger" onclick="confirmLogout()"><i class='bx bx-log-out'></i> Đăng xuất</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 3. MAIN CONTENT (Right) -->
+        <div class="col-lg-9">
+            <!-- Order Header -->
+            <div class="order-detail-header">
+                <div>
+                    <h4 class="text-uppercase">Chi tiết đơn hàng #MS-102345</h4>
+                    <p class="text-muted small mb-0">Ngày đặt: 12 Tháng 3, 2026 | 08:30 sáng</p>
+                </div>
+                <div class="status-indicator status-shipping">
+                    <i class='bx bx-truck'></i> ĐANG GIAO HÀNG
+                </div>
+            </div>
+
+            <!-- 4. ORDER STATUS TIMELINE -->
+            <div class="profile-section-card">
+                <div class="tracking-timeline-wrapper py-2">
+                    <div class="tracking-timeline">
+                        <div class="timeline-progress" style="width: 50%;"></div>
+                        <div class="timeline-step completed">
+                            <div class="step-icon-circle"><i class='bx bx-check'></i></div>
+                            <div class="step-label">Đã đặt</div>
+                        </div>
+                        <div class="timeline-step completed">
+                            <div class="step-icon-circle"><i class='bx bx-check'></i></div>
+                            <div class="step-label">Xác nhận</div>
+                        </div>
+                        <div class="timeline-step active">
+                            <div class="step-icon-circle"><i class='bx bx-package'></i></div>
+                            <div class="step-label">Đang giao</div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="step-icon-circle"><i class='bx bx-home-heart'></i></div>
+                            <div class="step-label">Hoàn tất</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. ORDER PRODUCTS -->
+            <div class="profile-section-card p-0 overflow-hidden">
+                <div class="p-4 border-bottom">
+                    <h5 class="fw-bold mb-0">DANH SÁCH SẢN PHẨM</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th>Đơn giá</th>
+                                <th>Số lượng</th>
+                                <th class="text-end">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=100" class="rounded-3 border" style="width: 50px;" alt="P">
+                                        <div>
+                                            <a asp-controller="Product" asp-action="Details" asp-route-slug="bo-noi-truoc-honda-sh" class="text-dark fw-bold text-decoration-none small d-block">Bộ Nồi Trước Honda SH Chính Hãng</a>
+                                            <span class="text-muted" style="font-size: 11px;">Dòng xe: SH 150i</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>1.250.000đ</td>
+                                <td>01</td>
+                                <td class="text-end fw-bold">1.250.000đ</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=100" class="rounded-3 border" style="width: 50px;" alt="P">
+                                        <div>
+                                            <a asp-controller="Product" asp-action="Details" asp-route-slug="nhot-motul-300v" class="text-dark fw-bold text-decoration-none small d-block">Nhớt Motul 300V Factory Line 10W40</a>
+                                            <span class="text-muted" style="font-size: 11px;">Dung tích: 1 Lít</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>450.000đ</td>
+                                <td>02</td>
+                                <td class="text-end fw-bold">900.000đ</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="row g-4 mt-1">
+                <!-- 6. SHIPPING INFORMATION -->
+                <div class="col-md-6">
+                    <div class="profile-section-card h-100">
+                        <h6 class="info-card-title"><i class='bx bx-map-pin'></i> THÔNG TIN NHẬN HÀNG</h6>
+                        <div class="info-card-content">
+                            <p class="fw-bold mb-1">Nguyễn Văn An</p>
+                            <p class="mb-1">0901 234 567</p>
+                            <p class="mb-3">123 Đường ABC, Phường 5, Quận 1, TP. Hồ Chí Minh</p>
+                            <p class="mb-0"><span class="text-muted">Phương thức giao hàng:</span><br>Giao hàng tiêu chuẩn (Giao tiết kiệm)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. PAYMENT SUMMARY -->
+                <div class="col-md-6">
+                    <div class="profile-section-card h-100">
+                        <h6 class="info-card-title"><i class='bx bx-credit-card'></i> TÓM TẮT THANH TOÁN</h6>
+                        <div class="info-card-content">
+                            <div class="payment-summary-row">
+                                <span class="text-muted">Tạm tính:</span>
+                                <span>2.150.000đ</span>
+                            </div>
+                            <div class="payment-summary-row">
+                                <span class="text-muted">Phí vận chuyển:</span>
+                                <span>30.000đ</span>
+                            </div>
+                            <div class="payment-summary-row">
+                                <span class="text-muted">Phương thức thanh toán:</span>
+                                <span class="fw-bold">Tiền mặt (COD)</span>
+                            </div>
+                            <div class="payment-summary-total">
+                                <span>TỔNG CỘNG:</span>
+                                <span>2.180.000đ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8. ORDER ACTIONS -->
+            <div class="d-flex gap-3 mt-4 flex-wrap">
+                <a asp-controller="Order" asp-action="Tracking" class="btn btn-dark rounded-pill px-4 fw-bold">
+                    <i class='bx bx-map-alt me-2'></i> THEO DÕI ĐƠN HÀNG
+                </a>
+                <button class="btn btn-outline-danger rounded-pill px-4 fw-bold">
+                    <i class='bx bx-refresh me-2'></i> MUA LẠI ĐƠN HÀNG
+                </button>
+                <button class="btn btn-outline-dark rounded-pill px-4 fw-bold">
+                    <i class='bx bx-support me-2'></i> LIÊN HỆ HỖ TRỢ
+                </button>
+            </div>
+
+            <!-- Ghi chú đơn hàng nếu có -->
+            <div class="mt-4 p-3 bg-light rounded-3 border-start border-danger border-4">
+                <p class="small mb-0"><strong>Ghi chú đơn hàng:</strong> Giao hàng sau 5h chiều, vui lòng gọi điện trước khi đến.</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script>
+        function confirmLogout() {
+            if(confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+                alert('Đã đăng xuất!');
+            }
+        }
+    </script>
+}

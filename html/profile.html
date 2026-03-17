@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Hồ sơ cá nhân - MotoShop Admin</title>
+    
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    
+    <!-- Design System & UI Components -->
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+
+    <!-- Helpers -->
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      :root {
+        --ds-primary: #E60023;
+        --ds-primary-hover: #C2001F;
+        --ds-primary-light: rgba(230, 0, 35, 0.08);
+      }
+      .profile-avatar { width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+      .info-label { font-size: 0.7rem; font-weight: 700; color: #a1acb8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block; }
+      .info-value { font-size: 0.95rem; color: #32475c; font-weight: 600; display: block; margin-bottom: 1rem; }
+      .section-title { font-size: 0.9rem; font-weight: 700; color: #32475c; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 0.5px; border-left: 4px solid var(--ds-primary); padding-left: 10px; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <h5 class="m-0">Tài khoản / <span class="text-primary fw-bold">Hồ sơ cá nhân</span></h5>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <div class="row">
+                <!-- Cột trái: Ảnh và Thông tin cơ bản -->
+                <div class="col-lg-4">
+                  <div class="card mb-4 border-0 shadow-sm text-center">
+                    <div class="card-body pt-5">
+                      <div class="position-relative d-inline-block mb-4">
+                        <img src="../assets/img/avatars/1.png" alt="avatar" id="avatarPreview" class="profile-avatar">
+                        <button class="btn btn-sm btn-icon btn-primary position-absolute border-white" 
+                                style="bottom: 5px; right: 5px; border-radius: 50%; width: 32px; height: 32px;"
+                                onclick="document.getElementById('avatarInput').click()">
+                          <i class="bx bx-camera"></i>
+                        </button>
+                        <input type="file" id="avatarInput" hidden accept="image/*" onchange="previewAvatar(this)">
+                      </div>
+                      <h4 class="fw-bold mb-1">NGUYỄN VĂN AN</h4>
+                      <p class="text-muted small mb-4">Quản trị viên hệ thống</p>
+                      
+                      <hr class="my-4">
+                      
+                      <div class="text-start">
+                        <label class="info-label">Chức vụ</label>
+                        <span class="info-value"><span class="badge bg-label-primary">Administrator</span></span>
+                        
+                        <label class="info-label">Cửa hàng / Chi nhánh</label>
+                        <span class="info-value">MotoShop Bình Tân</span>
+                        
+                        <label class="info-label">Ngày tham gia</label>
+                        <span class="info-value">12/10/2023</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cột phải: Form cập nhật và Đổi mật khẩu -->
+                <div class="col-lg-8">
+                  <!-- Section 2: Cập nhật thông tin -->
+                  <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                      <h6 class="section-title">Thông tin cá nhân</h6>
+                      <form id="profileForm">
+                        <div class="row g-3">
+                          <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">HỌ VÀ TÊN</label>
+                            <input type="text" class="form-control" value="Nguyễn Văn An">
+                          </div>
+                          <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">EMAIL LIÊN HỆ</label>
+                            <input type="email" class="form-control" value="an.nguyen@motoshop.vn">
+                          </div>
+                          <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">SỐ ĐIỆN THOẠI</label>
+                            <input type="text" class="form-control" value="0908 123 456">
+                          </div>
+                          <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">ĐỊA CHỈ</label>
+                            <input type="text" class="form-control" value="123 Đường số 7, Bình Tân, TP.HCM">
+                          </div>
+                          <div class="col-12 text-end mt-4">
+                            <button type="button" class="btn btn-primary px-4" id="btnSaveProfile" onclick="handleSaveProfile()">
+                              <i class="bx bx-check me-1"></i> Lưu thay đổi
+                            </button>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+
+                  <!-- Section 3: Đổi mật khẩu -->
+                  <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                      <h6 class="section-title">Bảo mật & Mật khẩu</h6>
+                      <form id="passwordForm">
+                        <div class="row g-3">
+                          <div class="col-md-12">
+                            <label class="form-label fw-bold small text-muted">MẬT KHẨU HIỆN TẠI</label>
+                            <div class="input-group input-group-merge">
+                              <input type="password" class="form-control" placeholder="••••••••">
+                              <span class="input-group-text cursor-pointer"><i class="bx bx-hide"></i></span>
+                            </div>
+                          </div>
+                          <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">MẬT KHẨU MỚI</label>
+                            <input type="password" id="newPassword" class="form-control" placeholder="Tối thiểu 6 ký tự">
+                          </div>
+                          <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">XÁC NHẬN MẬT KHẨU MỚI</label>
+                            <input type="password" id="confirmPassword" class="form-control" placeholder="Nhập lại mật khẩu mới">
+                          </div>
+                          <div class="col-12 mt-4 text-end">
+                            <button type="button" class="btn btn-outline-primary px-4" id="btnSavePassword" onclick="handleSavePassword()">
+                              <i class="bx bx-lock-alt me-1"></i> Đổi mật khẩu
+                            </button>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl py-2">© 2026, MotoShop Admin - Quản lý tài khoản cá nhân</div>
+            </footer>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JS Scripts -->
+        <!-- Core JS -->
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      // 1. Xem trước ảnh đại diện
+      function previewAvatar(input) {
+        if (input.files && input.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            document.getElementById('avatarPreview').src = e.target.result;
+            UI.showToast('Đã tải ảnh lên thành công!', 'success');
+          }
+          reader.readAsDataURL(input.files[0]);
+        }
+      }
+
+      // 2. Lưu hồ sơ
+      function handleSaveProfile() {
+        const btn = document.getElementById('btnSaveProfile');
+        DS.loading.btnStart(btn);
+        setTimeout(() => {
+          DS.loading.btnStop(btn);
+          UI.showToast('Cập nhật hồ sơ cá nhân thành công!', 'success');
+        }, 1200);
+      }
+
+      // 3. Đổi mật khẩu
+      function handleSavePassword() {
+        const newPass = document.getElementById('newPassword').value;
+        const confirmPass = document.getElementById('confirmPassword').value;
+        const btn = document.getElementById('btnSavePassword');
+
+        if (newPass.length < 6) {
+          UI.showToast('Mật khẩu mới phải có ít nhất 6 ký tự!', 'error');
+          return;
+        }
+        if (newPass !== confirmPass) {
+          UI.showToast('Xác nhận mật khẩu không trùng khớp!', 'error');
+          return;
+        }
+
+        DS.loading.btnStart(btn);
+        setTimeout(() => {
+          DS.loading.btnStop(btn);
+          document.getElementById('passwordForm').reset();
+          UI.showToast('Đổi mật khẩu thành công!', 'success');
+        }, 1500);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,52 @@
+<div class="offcanvas-header border-bottom">
+    <h5 class="offcanvas-title fw-bold">MENU CHÍNH</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+</div>
+<div class="offcanvas-body p-0 d-flex flex-column">
+    <div class="p-3 bg-light border-bottom">
+        <div class="d-flex align-items-center">
+            <div class="avatar-circle bg-white text-primary me-2 shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%;">
+                <i class='bx bxs-user-circle fs-2'></i>
+            </div>
+            <div>
+                <div class="fw-bold text-dark">Khách hàng</div>
+                <div class="small">
+                    <a asp-controller="Account" asp-action="Login" class="text-danger text-decoration-none">Đăng nhập</a> / 
+                    <a asp-controller="Account" asp-action="Register" class="text-dark text-decoration-none">Đăng ký</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <ul class="list-unstyled mb-0 text-start">
+        <li class="border-bottom"><a asp-controller="Home" asp-action="Index" class="nav-link p-3 fw-bold d-flex align-items-center text-dark"><i class='bx bx-home-alt me-2 fs-5 text-danger'></i> TRANG CHỦ</a></li>
+        <li class="border-bottom"><a asp-controller="Product" asp-action="Index" class="nav-link p-3 fw-bold d-flex align-items-center text-dark"><i class='bx bx-category me-2 fs-5 text-danger'></i> DANH MỤC</a></li>
+        <li class="border-bottom"><a asp-controller="Service" asp-action="Index" class="nav-link p-3 fw-bold d-flex align-items-center text-dark"><i class='bx bx-wrench me-2 fs-5 text-danger'></i> DỊCH VỤ</a></li>
+        <li class="border-bottom"><a asp-controller="Product" asp-action="Promotion" class="nav-link p-3 fw-bold text-danger d-flex align-items-center"><i class='bx bxs-hot me-2 fs-5'></i> KHUYẾN MÃI HOT</a></li>
+        
+        <li class="bg-light p-2 px-3 small fw-bold text-muted text-uppercase">Tài khoản của tôi</li>
+        <li class="border-bottom"><a asp-controller="Account" asp-action="Profile" class="nav-link p-3 d-flex align-items-center text-dark"><i class='bx bx-user me-2 fs-5'></i> Hồ sơ cá nhân</a></li>
+        <li class="border-bottom"><a asp-controller="Order" asp-action="Index" class="nav-link p-3 d-flex align-items-center text-dark"><i class='bx bx-package me-2 fs-5'></i> Đơn hàng của tôi</a></li>
+        <li class="border-bottom"><a asp-controller="Product" asp-action="Wishlist" class="nav-link p-3 d-flex align-items-center text-dark"><i class='bx bx-heart me-2 fs-5'></i> Sản phẩm yêu thích</a></li>
+    </ul>
+    <div class="p-4 bg-light mt-auto">
+        <p class="small text-muted mb-3 fw-bold text-uppercase">Hỗ trợ khách hàng</p>
+        <div class="mb-2">
+            <a href="tel:0281234567" class="text-decoration-none text-dark d-flex align-items-center">
+                <i class='bx bx-phone-call me-2 text-danger fs-4'></i> 
+                <div>
+                    <div class="small text-muted">Hotline 24/7</div>
+                    <div class="fw-bold">028 123 4567</div>
+                </div>
+            </a>
+        </div>
+        <div>
+            <a href="mailto:support@motoshop.vn" class="text-decoration-none text-dark d-flex align-items-center">
+                <i class='bx bx-envelope me-2 text-danger fs-4'></i>
+                <div>
+                    <div class="small text-muted">Email hỗ trợ</div>
+                    <div class="fw-bold">support@motoshop.vn</div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>

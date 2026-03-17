@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Quản lý Sliders - MotoShop Admin</title>
+    
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      .slider-preview { width: 100%; height: 180px; object-fit: cover; border-radius: 12px; border: 1px solid #eee; }
+      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+      .slider-card { transition: 0.3s; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+      .slider-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+      .order-badge { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color: #fff; padding: 2px 10px; border-radius: 20px; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <h5 class="m-0 text-muted fw-light">Nội dung / <span class="text-dark fw-bold">Trình chiếu (Sliders)</span></h5>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-uppercase">Quản lý Sliders</h4>
+                <button class="btn btn-primary" onclick="openSliderModal('create')"><i class="bx bx-plus me-1"></i>Thêm Slider mới</button>
+              </div>
+
+              <div class="row">
+                <!-- Slider 1 -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                  <div class="card slider-card h-100">
+                    <div class="position-relative">
+                      <img src="../assets/img/elements/11.jpg" class="slider-preview">
+                      <span class="order-badge">Thứ tự: 1</span>
+                    </div>
+                    <div class="card-body">
+                      <h6 class="fw-bold mb-1">Khuyến mãi Phụ tùng Hè</h6>
+                      <div class="text-muted small mb-3 text-truncate"><i class="bx bx-link me-1"></i>/promotion.html</div>
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" checked>
+                          <label class="form-check-label small fw-bold">Hiển thị</label>
+                        </div>
+                        <div class="btn-group">
+                          <button class="btn btn-sm btn-outline-primary" onclick="openSliderModal('edit')"><i class="bx bx-edit-alt"></i></button>
+                          <button class="btn btn-sm btn-outline-danger"><i class="bx bx-trash"></i></button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Slider 2 -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                  <div class="card slider-card h-100">
+                    <div class="position-relative">
+                      <img src="../assets/img/elements/12.jpg" class="slider-preview">
+                      <span class="order-badge">Thứ tự: 2</span>
+                    </div>
+                    <div class="card-body">
+                      <h6 class="fw-bold mb-1">Dịch vụ bảo dưỡng chuyên nghiệp</h6>
+                      <div class="text-muted small mb-3 text-truncate"><i class="bx bx-link me-1"></i>/service.html</div>
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" checked>
+                          <label class="form-check-label small fw-bold">Hiển thị</label>
+                        </div>
+                        <div class="btn-group">
+                          <button class="btn btn-sm btn-outline-primary"><i class="bx bx-edit-alt"></i></button>
+                          <button class="btn btn-sm btn-outline-danger"><i class="bx bx-trash"></i></button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Slider -->
+    <div class="modal fade" id="sliderModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+          <div class="modal-header border-bottom p-4">
+            <h5 class="modal-title fw-bold" id="modalTitle">Thêm Slider</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="mb-3">
+              <label class="filter-label">Hình ảnh Slider (1920x600px)</label>
+              <div class="p-4 border-2 border-dashed rounded text-center bg-light cursor-pointer">
+                <i class="bx bx-image-add fs-1 text-muted"></i>
+                <p class="mb-0 small text-muted">Bấm để tải ảnh lên</p>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="filter-label">Tiêu đề (Alt text)</label>
+              <input type="text" class="form-control" placeholder="Mô tả ngắn về ảnh...">
+            </div>
+            <div class="mb-3">
+              <label class="filter-label">Liên kết điều hướng (URL)</label>
+              <input type="text" class="form-control" placeholder="http://...">
+            </div>
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="filter-label">Thứ tự</label>
+                <input type="number" class="form-control" value="1">
+              </div>
+              <div class="col-6">
+                <label class="filter-label">Trạng thái</label>
+                <select class="form-select">
+                  <option>Hiển thị</option>
+                  <option>Ẩn</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer border-top p-3 px-4">
+            <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button class="btn btn-primary px-4" onclick="DS.showToast('Đã lưu slider!', 'success'); bootstrap.Modal.getInstance(document.getElementById('sliderModal')).hide();">Lưu dữ liệu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      function openSliderModal(mode) {
+        document.getElementById('modalTitle').innerText = mode === 'create' ? 'Thêm Slider mới' : 'Chỉnh sửa Slider';
+        new bootstrap.Modal(document.getElementById('sliderModal')).show();
+      }
+    </script>
+  </body>
+</html>

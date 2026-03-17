@@ -1,0 +1,131 @@
+{
+  "auth": {
+    "roles": [
+      { "id": "r1", "name": "Admin" },
+      { "id": "r2", "name": "Staff" },
+      { "id": "r3", "name": "Customer" }
+    ],
+    "users": [
+      { "id": "u1", "username": "admin", "email": "admin@motoshop.vn", "role_id": "r1" },
+      { "id": "u2", "username": "thang_staff", "email": "thang.staff@motoshop.vn", "role_id": "r2" },
+      { "id": "u3", "username": "an_customer", "email": "an.customer@gmail.com", "role_id": "r3" }
+    ]
+  },
+  "stores": [
+    { "id": 1, "name": "MotoShop Quận 1", "address": "123 Lý Tự Trọng, Q1, TP.HCM", "phone": "028 1111 2222" },
+    { "id": 2, "name": "MotoShop Quận 7", "address": "456 Nguyễn Thị Thập, Q7, TP.HCM", "phone": "028 3333 4444" }
+  ],
+  "staff": [
+    { "id": 1, "user_id": "u2", "store_id": 1, "code": "STF001", "position": "Kỹ thuật viên trưởng" }
+  ],
+  "customers": [
+    { "id": 1, "user_id": "u3", "fullname": "Nguyễn Văn An", "phone": "0901234567", "address": "789 Phan Xích Long, Phú Nhuận" }
+  ],
+  "brands": [
+    { "id": 1, "name": "Honda", "logo": "honda.svg" },
+    { "id": 2, "name": "Yamaha", "logo": "yamaha.svg" },
+    { "id": 3, "name": "Motul", "logo": "motul.svg" },
+    { "id": 4, "name": "NGK", "logo": "ngk.svg" }
+  ],
+  "categories": [
+    { "id": 1, "name": "Dầu nhớt", "slug": "dau-nhot", "parent_id": null },
+    { "id": 2, "name": "Hệ thống truyền động", "slug": "truyen-dong", "parent_id": null },
+    { "id": 3, "name": "Bộ nồi xe ga", "slug": "bo-noi-xe-ga", "parent_id": 2 }
+  ],
+  "units": [
+    { "id": 1, "name": "Lon", "symbol": "L" },
+    { "id": 2, "name": "Cái", "symbol": "C" },
+    { "id": 3, "name": "Bộ", "symbol": "B" }
+  ],
+  "attributes": [
+    { "id": 1, "name": "Dung tích" },
+    { "id": 2, "name": "Màu sắc" }
+  ],
+  "attribute_values": [
+    { "id": 1, "attribute_id": 1, "value": "1 Lít" },
+    { "id": 2, "attribute_id": 2, "value": "Đen CNC" }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "brand_id": 3,
+      "category_id": 1,
+      "name": "Dầu nhớt Motul 300V",
+      "slug": "motul-300v",
+      "desc": "Dầu nhớt cao cấp cho xe phân khối lớn.",
+      "is_featured": true
+    }
+  ],
+  "product_variants": [
+    {
+      "id": 101,
+      "product_id": 1,
+      "base_unit_id": 1,
+      "name": "Motul 300V 10W40 1L",
+      "sku": "MOT300V10W40",
+      "price": 450000,
+      "stock": 100,
+      "attribute_values": [1]
+    }
+  ],
+  "product_images": [
+    { "id": 1, "product_id": 1, "url": "motul-300v.jpg", "is_primary": true }
+  ],
+  "promotions": [
+    { "id": 1, "name": "Flash Sale Tháng 3", "discount_percent": 10, "start": "2026-03-01", "end": "2026-03-31" }
+  ],
+  "product_promotions": [
+    { "product_id": 1, "promotion_id": 1 }
+  ],
+  "orders": [
+    {
+      "id": 1,
+      "customer_id": 1,
+      "store_id": 1,
+      "order_date": "2026-03-12T10:00:00",
+      "total_amount": 405000,
+      "status": "Đã hoàn thành"
+    }
+  ],
+  "order_items": [
+    { "id": 1, "order_id": 1, "variant_id": 101, "quantity": 1, "price": 405000 }
+  ],
+  "order_status_history": [
+    { "id": 1, "order_id": 1, "status": "Chờ xác nhận", "date": "2026-03-12T10:00:00" },
+    { "id": 2, "order_id": 1, "status": "Đã giao hàng", "date": "2026-03-12T15:00:00" }
+  ],
+  "payments": [
+    { "id": 1, "order_id": 1, "method": "Chuyển khoản", "status": "Đã thanh toán", "date": "2026-03-12T10:05:00" }
+  ],
+  "services": [
+    { "id": 1, "name": "Vệ sinh kim phun Fi", "price": 150000, "desc": "Làm sạch kim phun bằng sóng siêu âm." }
+  ],
+  "service_bookings": [
+    {
+      "id": 1,
+      "customer_id": 1,
+      "service_id": 1,
+      "staff_id": 1,
+      "booking_date": "2026-03-14T08:00:00",
+      "service_date": "2026-03-16T09:00:00",
+      "status": "Đã xác nhận"
+    }
+  ],
+  "wishlists": [
+    { "id": 1, "customer_id": 1, "items": [101] }
+  ],
+  "reviews": [
+    { "id": 1, "product_id": 1, "customer_id": 1, "rating": 5, "comment": "Nhớt chạy rất êm máy!" }
+  ],
+  "stock_movements": [
+    { "id": 1, "variant_id": 101, "qty": -1, "reason": "Bán hàng đơn #1", "date": "2026-03-12T10:00:00" }
+  ],
+  "homepage": {
+    "sliders": [
+      { "id": 1, "title": "Bảo dưỡng chuyên nghiệp", "image": "slider1.jpg", "link": "service.html" }
+    ],
+    "banners": [
+      { "id": 1, "title": "Giảm giá 50%", "image": "banner1.jpg", "position": "Top" }
+    ]
+  }
+}

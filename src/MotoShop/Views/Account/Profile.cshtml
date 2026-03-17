@@ -1,0 +1,188 @@
+@{
+    ViewData["Title"] = "Hồ sơ của tôi";
+}
+
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Tài khoản của tôi</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<main class="container mb-5">
+    <div class="row g-4">
+        <!-- 2. SIDEBAR MENU (Left) -->
+        <aside class="col-lg-3">
+            <div class="account-sidebar">
+                <div class="d-flex align-items-center gap-3 mb-4 pb-4 border-bottom">
+                    <div style="width: 50px; height: 50px;">
+                        <img src="https://i.pravatar.cc/150?u=1" class="rounded-circle w-100 h-100 object-fit-cover" alt="User">
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">Nguyễn Văn An</h6>
+                        <p class="text-muted small mb-0">Thành viên Bạc</p>
+                    </div>
+                </div>
+                <ul class="account-nav">
+                    <li class="account-nav-item">
+                        <a href="/Account/Profile" class="account-nav-link active">
+                            <i class='bx bx-user'></i> Thông tin cá nhân
+                        </a>
+                    </li>
+                    <li class="account-nav-item">
+                        <a href="/Order" class="account-nav-link">
+                            <i class='bx bx-package'></i> Đơn hàng của tôi
+                        </a>
+                    </li>
+                    <li class="account-nav-item">
+                        <a href="/Account/AddressBook" class="account-nav-link">
+                            <i class='bx bx-map'></i> Địa chỉ giao hàng
+                        </a>
+                    </li>
+                    <li class="account-nav-item">
+                        <a href="/Product/Wishlist" class="account-nav-link">
+                            <i class='bx bx-heart'></i> Sản phẩm yêu thích
+                        </a>
+                    </li>
+                    <li class="account-nav-item">
+                        <a href="/Account/ChangePassword" class="account-nav-link">
+                            <i class='bx bx-lock-alt'></i> Đổi mật khẩu
+                        </a>
+                    </li>
+                    <li class="account-nav-item mt-3 pt-3 border-top">
+                        <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm" class="d-none"></form>
+                        <a href="javascript:void(0)" class="account-nav-link text-danger" onclick="confirmLogout()">
+                            <i class='bx bx-log-out'></i> Đăng xuất
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 3. MAIN CONTENT (Right) -->
+        <div class="col-lg-9">
+            <!-- Profile Information Card -->
+            <div class="profile-section-card">
+                <h5 class="fw-bold mb-4">THÔNG TIN CÁ NHÂN</h5>
+                <div class="row g-4">
+                    <div class="col-md-auto">
+                        <div class="avatar-wrapper">
+                            <img src="https://i.pravatar.cc/150?u=1" class="avatar-img" id="userAvatar" alt="Avatar">
+                            <label for="avatarUpload" class="btn-change-avatar">
+                                <i class='bx bx-camera'></i>
+                                <input type="file" id="avatarUpload" class="d-none" accept="image/*">
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md">
+                        <form id="profileForm">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label-custom">Họ và tên</label>
+                                    <input type="text" class="form-control form-control-custom" value="Nguyễn Văn An">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label-custom">Số điện thoại</label>
+                                    <input type="tel" class="form-control form-control-custom" value="0901 234 567">
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label-custom">Địa chỉ Email</label>
+                                    <input type="email" class="form-control form-control-custom" value="an.nguyen@example.com">
+                                </div>
+                                <div class="col-md-12 pt-2">
+                                    <button type="button" class="btn btn-danger rounded-pill px-5 fw-bold">LƯU THAY ĐỔI</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Stats Grid -->
+            <div class="order-stats-grid">
+                <a href="/Order" class="stat-box text-decoration-none">
+                    <span class="stat-count">02</span>
+                    <span class="stat-label">Đang xử lý</span>
+                </a>
+                <a href="/Order" class="stat-box text-decoration-none">
+                    <span class="stat-count">01</span>
+                    <span class="stat-label">Đang giao</span>
+                </a>
+                <a href="/Order" class="stat-box text-decoration-none">
+                    <span class="stat-count">15</span>
+                    <span class="stat-label">Đã hoàn thành</span>
+                </a>
+            </div>
+
+            <!-- Recent Orders Table -->
+            <div class="profile-section-card p-0 overflow-hidden">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">ĐƠN HÀNG GẦN ĐÂY</h5>
+                    <a href="/Order" class="text-danger fw-bold small text-decoration-none">Xem tất cả <i class='bx bx-right-arrow-alt'></i></a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Ngày đặt</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="fw-bold">#MS-102345</td>
+                                <td>12/03/2026</td>
+                                <td class="fw-bold text-danger">2.180.000đ</td>
+                                <td><span class="status-badge badge-shipping">Đang giao</span></td>
+                                <td><a href="/Order/Detail/102345" class="btn btn-sm btn-outline-dark rounded-pill px-3">Chi tiết</a></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">#MS-102300</td>
+                                <td>05/03/2026</td>
+                                <td class="fw-bold text-danger">450.000đ</td>
+                                <td><span class="status-badge badge-completed">Đã nhận</span></td>
+                                <td><a href="/Order/Detail/102300" class="btn btn-sm btn-outline-dark rounded-pill px-3">Chi tiết</a></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">#MS-102280</td>
+                                <td>28/02/2026</td>
+                                <td class="fw-bold text-danger">8.900.000đ</td>
+                                <td><span class="status-badge badge-completed">Đã nhận</span></td>
+                                <td><a href="/Order/Detail/102280" class="btn btn-sm btn-outline-dark rounded-pill px-3">Chi tiết</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script>
+        // Xử lý upload avatar demo
+        document.getElementById('avatarUpload').addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(ex) {
+                    document.getElementById('userAvatar').src = ex.target.result;
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        // Xác nhận đăng xuất
+        function confirmLogout() {
+            if(confirm('Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?')) {
+                document.getElementById('logoutForm').submit();
+            }
+        }
+    </script>
+}

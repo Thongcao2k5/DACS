@@ -1,0 +1,159 @@
+@{
+    ViewData["Title"] = "Sản phẩm yêu thích - MotoShop";
+}
+
+<!-- 1. BREADCRUMB -->
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Sản phẩm yêu thích</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<main class="container mb-5">
+    <!-- 2. WISHLIST HEADER -->
+    <div class="wishlist-header">
+        <div>
+            <h2 class="fw-bold mb-0">SẢN PHẨM YÊU THÍCH <span class="fs-5 text-muted fw-normal">(3)</span></h2>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-dark rounded-pill px-4 fw-bold">
+            <i class='bx bx-shopping-bag me-2'></i> TIẾP TỤC MUA SẮM
+        </a>
+    </div>
+
+    <!-- 3. WISHLIST PRODUCTS GRID -->
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="wishlistGrid">
+        <!-- Product 1 -->
+        <div class="col wishlist-item">
+            <div class="product-card">
+                <button class="btn-remove-wishlist" title="Xóa khỏi yêu thích" onclick="removeFromWishlist(this)">
+                    <i class='bx bxs-heart'></i>
+                </button>
+                <div class="product-img-wrapper">
+                    <a asp-action="Details" asp-route-slug="bo-noi-truoc-honda-sh">
+                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400" alt="Product" loading="lazy">
+                    </a>
+                </div>
+                <div class="product-info flex-grow-1">
+                    <span class="brand">HONDA</span>
+                    <h6 class="name"><a asp-action="Details" asp-route-slug="bo-noi-truoc-honda-sh" class="text-decoration-none text-dark">Bộ Nồi Trước Honda SH Chính Hãng - Made in Italy</a></h6>
+                    <div class="product-price">
+                        <span class="current">1.250.000đ</span>
+                        <span class="old">1.500.000đ</span>
+                    </div>
+                </div>
+                <div class="mt-3 d-flex gap-2">
+                    <button class="btn btn-add-cart flex-grow-1 rounded-pill fw-bold py-2 btn-sm">
+                        <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product 2 -->
+        <div class="col wishlist-item">
+            <div class="product-card">
+                <button class="btn-remove-wishlist" title="Xóa khỏi yêu thích" onclick="removeFromWishlist(this)">
+                    <i class='bx bxs-heart'></i>
+                </button>
+                <div class="product-img-wrapper">
+                    <a asp-action="Details" asp-route-slug="nhot-motul-300v">
+                        <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=400" alt="Product" loading="lazy">
+                    </a>
+                </div>
+                <div class="product-info flex-grow-1">
+                    <span class="brand">MOTUL</span>
+                    <h6 class="name"><a asp-action="Details" asp-route-slug="nhot-motul-300v" class="text-decoration-none text-dark">Nhớt Motul 300V Factory Line 10W40 1L</a></h6>
+                    <div class="product-price">
+                        <span class="current">450.000đ</span>
+                    </div>
+                </div>
+                <div class="mt-3 d-flex gap-2">
+                    <button class="btn btn-add-cart flex-grow-1 rounded-pill fw-bold py-2 btn-sm">
+                        <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product 3 -->
+        <div class="col wishlist-item">
+            <div class="product-card">
+                <button class="btn-remove-wishlist" title="Xóa khỏi yêu thích" onclick="removeFromWishlist(this)">
+                    <i class='bx bxs-heart'></i>
+                </button>
+                <div class="product-img-wrapper">
+                    <a asp-action="Details" asp-route-slug="phuoc-ohlins-chinh-hang">
+                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400" alt="Product" loading="lazy">
+                    </a>
+                </div>
+                <div class="product-info flex-grow-1">
+                    <span class="brand">OHLINS</span>
+                    <h6 class="name"><a asp-action="Details" asp-route-slug="phuoc-ohlins-chinh-hang" class="text-decoration-none text-dark">Phuộc Ohlins Chính Hãng Cho Vario / Click Thái</a></h6>
+                    <div class="product-price">
+                        <span class="current">8.900.000đ</span>
+                    </div>
+                </div>
+                <div class="mt-3 d-flex gap-2">
+                    <button class="btn btn-add-cart flex-grow-1 rounded-pill fw-bold py-2 btn-sm">
+                        <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. WISHLIST ACTIONS -->
+    <div class="wishlist-bulk-actions">
+        <button class="btn btn-dark rounded-pill px-5 fw-bold" onclick="alert('Đã thêm toàn bộ sản phẩm vào giỏ hàng!')">
+            <i class='bx bx-cart-download me-2 fs-4'></i> THÊM TẤT CẢ VÀO GIỎ
+        </button>
+        <button class="btn btn-outline-danger rounded-pill px-5 fw-bold" onclick="clearWishlist()">
+            <i class='bx bx-trash me-2 fs-4'></i> XÓA TOÀN BỘ DANH SÁCH
+        </button>
+    </div>
+
+    <!-- Empty State (Hidden) -->
+    <div id="emptyWishlist" class="d-none empty-wishlist-box animate__animated animate__fadeIn">
+        <div class="empty-wishlist-icon">
+            <i class='bx bx-heart-circle'></i>
+        </div>
+        <h3 class="fw-bold">Danh sách yêu thích đang trống</h3>
+        <p class="text-muted mb-4">Bạn chưa lưu sản phẩm nào vào danh sách yêu thích của mình.</p>
+        <a asp-action="Index" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold">KHÁM PHÁ SẢN PHẨM</a>
+    </div>
+</main>
+
+@section Scripts {
+    <script>
+        function removeFromWishlist(btn) {
+            const item = btn.closest('.wishlist-item');
+            item.style.opacity = '0';
+            item.style.transform = 'scale(0.8)';
+            setTimeout(() => {
+                item.remove();
+                checkEmpty();
+            }, 300);
+        }
+
+        function clearWishlist() {
+            if(confirm('Bạn có chắc chắn muốn xóa toàn bộ sản phẩm yêu thích?')) {
+                document.getElementById('wishlistGrid').innerHTML = '';
+                checkEmpty();
+            }
+        }
+
+        function checkEmpty() {
+            const grid = document.getElementById('wishlistGrid');
+            if (grid.children.length === 0) {
+                grid.classList.add('d-none');
+                document.querySelector('.wishlist-bulk-actions').classList.add('d-none');
+                document.getElementById('emptyWishlist').classList.remove('d-none');
+            }
+        }
+    </script>
+}

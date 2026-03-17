@@ -1,0 +1,691 @@
+FRONTEND REUSABLE UI COMPONENT RULES
+(Ecommerce Website)
+
+GLOBAL LAYOUT
+
+Toàn bộ các trang của website phải sử dụng layout chung.
+
+Layout bao gồm:
+
+Header
+Navigation Menu
+Main Content
+Footer
+
+Layout này áp dụng cho tất cả các trang:
+
+Home
+Products
+Product Detail
+Brand
+Search Results
+Cart
+Checkout
+Blog
+Contact
+
+HEADER
+
+Header là component dùng chung cho toàn bộ website.
+
+Header gồm:
+
+Top Header
+Main Header
+Navigation Menu
+
+Top Header hiển thị:
+
+Hotline
+Email hỗ trợ
+Thông báo khuyến mãi
+
+Main Header hiển thị:
+
+Logo
+Search Bar
+Account
+Cart
+
+Navigation Menu hiển thị:
+
+Danh mục
+Sản phẩm
+Thương hiệu
+Khuyến mãi hot
+Tin tức
+Liên hệ
+
+Header phải hỗ trợ:
+
+Sticky Header
+Shrink Header khi scroll
+
+FOOTER
+
+Footer là component dùng chung cho toàn bộ website.
+
+Footer gồm 4 cột:
+
+Giới thiệu website
+Danh mục sản phẩm
+Hỗ trợ khách hàng
+Thông tin liên hệ
+
+Footer phải hiển thị:
+
+Địa chỉ
+Hotline
+Email hỗ trợ
+Mạng xã hội
+
+PRODUCT CARD
+
+Product Card là component quan trọng nhất của website Ecommerce.
+
+Product Card được dùng ở các trang:
+
+Home
+Flash Sale
+Best Selling
+New Products
+Products Page
+Brand Products
+Search Results
+Related Products
+
+Product Card hiển thị:
+
+Product Image
+Product Name
+Brand
+Price
+Add to Cart Button
+
+Tên sản phẩm hiển thị tối đa:
+
+2 dòng
+
+Nếu không có hình sản phẩm:
+
+Hiển thị ảnh placeholder mặc định.
+
+PRODUCT GRID
+
+Product Grid dùng để hiển thị danh sách sản phẩm.
+
+Product Grid sử dụng Product Card.
+
+Grid responsive:
+
+Desktop:
+
+4 sản phẩm / hàng
+
+Tablet:
+
+3 sản phẩm / hàng
+
+Mobile:
+
+2 sản phẩm / hàng
+
+Product Grid được sử dụng ở:
+
+Home
+Products Page
+Brand Products
+Search Results
+Related Products
+
+CATEGORY CARD
+
+Category Card hiển thị thông tin danh mục.
+
+Category Card gồm:
+
+Category Image
+Category Name
+
+Category Card được dùng ở:
+
+Home
+Category Page
+Mega Menu
+
+BANNER COMPONENT
+
+Banner component dùng để hiển thị quảng cáo hoặc khuyến mãi.
+
+Banner gồm:
+
+Image
+Title
+CTA Button
+
+Banner được dùng ở:
+
+Home
+Promotion Page
+Category Page
+
+BRAND LOGO COMPONENT
+
+Brand Logo component hiển thị logo thương hiệu.
+
+Brand Logo gồm:
+
+Brand Logo Image
+Brand Name
+
+Brand Logo được dùng ở:
+
+Home
+Brand Page
+Product Detail
+
+BREADCRUMB
+
+Breadcrumb hiển thị đường dẫn điều hướng.
+
+Ví dụ:
+
+Home > Danh mục > Bộ nồi
+
+Breadcrumb được dùng ở:
+
+Products Page
+Product Detail
+Brand Products
+Blog Page
+Contact Page
+
+FILTER SIDEBAR
+
+Filter Sidebar hiển thị bộ lọc sản phẩm.
+
+Filter gồm:
+
+Category Filter
+Brand Filter
+Price Filter
+
+Filter Sidebar được dùng ở:
+
+Products Page
+Brand Products
+Search Results
+
+SORT BAR
+
+Sort Bar hiển thị các lựa chọn sắp xếp sản phẩm.
+
+Các lựa chọn:
+
+Mặc định
+Giá tăng dần
+Giá giảm dần
+Sản phẩm mới
+Sản phẩm bán chạy
+
+Sort Bar được dùng ở:
+
+Products Page
+Brand Products
+Search Results
+
+PAGINATION
+
+Pagination dùng để phân trang danh sách dữ liệu.
+
+Pagination hiển thị:
+
+Previous Page
+Page Numbers
+Next Page
+
+Pagination được dùng ở:
+
+Products Page
+Search Results
+Blog Page
+
+MINI CART
+
+Mini Cart hiển thị giỏ hàng nhanh từ Header.
+
+Mini Cart hiển thị:
+
+Product Image
+Product Name
+Variant
+Quantity
+Price
+
+Mini Cart có các nút:
+
+Xem giỏ hàng
+Thanh toán
+
+Mini Cart có thể truy cập từ mọi trang.
+
+EMPTY STATE
+
+Empty State hiển thị khi không có dữ liệu.
+
+Ví dụ:
+
+Không tìm thấy sản phẩm
+Giỏ hàng trống
+
+Empty State được dùng ở:
+
+Search Results
+Products Page
+Cart Page
+Orders Page
+
+SKELETON LOADING
+
+Skeleton Loading hiển thị khi đang tải dữ liệu.
+
+Skeleton Loading được dùng ở:
+
+Product Grid
+Search Results
+Related Products
+
+COMPONENT STRUCTURE
+
+Cấu trúc component frontend nên được tổ chức như sau:
+
+components
+
+header
+footer
+product-card
+product-grid
+category-card
+banner
+brand-logo
+breadcrumb
+filter-sidebar
+pagination
+mini-cart
+empty-state
+skeleton-loading
+
+PAGE STRUCTURE
+
+Các trang chính của website:
+
+pages
+
+home
+products
+product-detail
+brand
+search
+cart
+checkout
+blog
+contact
+
+UI CONSISTENCY
+
+Toàn bộ website phải đảm bảo:
+
+Spacing đồng nhất
+Icon style đồng nhất
+Font đồng nhất
+Color palette đồng nhất
+
+RESPONSIVE DESIGN
+
+Website phải hỗ trợ:
+
+Desktop
+Tablet
+Mobile
+
+Grid sản phẩm tự động thay đổi theo kích thước màn hình.
+
+FRONTEND WEBSITE UI DESIGN RULES
+(Ecommerce Website Layout & Page Structure)
+
+DANH SÁCH CÁC TRANG FRONTEND
+
+Hệ thống Ecommerce cần có đầy đủ các trang sau:
+
+NHÓM TRANG CHÍNH
+
+Home
+Category
+Product List
+Product Detail
+Brand
+Brand Products
+Search Results
+
+NHÓM TRANG MUA HÀNG
+
+Cart
+Checkout
+Order Success (Thank You Page)
+Order Failed
+
+NHÓM TRANG TRA CỨU ĐƠN HÀNG
+
+Track Order (Tra cứu đơn hàng)
+Order Detail
+
+NHÓM TRANG TÀI KHOẢN
+
+Login
+Register
+Forgot Password
+My Profile
+My Orders
+Address Book
+
+NHÓM TRANG NỘI DUNG
+
+About Us
+Contact
+Warranty Policy
+Shipping Policy
+Return Policy
+Privacy Policy
+Terms and Conditions
+
+NHÓM TRANG HỆ THỐNG
+
+404 Not Found
+500 Error
+Maintenance Page
+Empty Cart
+Empty Search Result
+
+NHÓM TRANG MARKETING (tùy chọn)
+
+Flash Sale
+Featured Products
+New Products
+Promotion Page
+
+WEBSITE LAYOUT CHUNG
+
+Tất cả các trang frontend phải sử dụng layout chung gồm:
+
+Header
+Navigation Menu
+Main Content
+Footer
+
+HEADER STRUCTURE
+
+Header gồm 3 phần chính:
+
+TOP HEADER
+
+Hiển thị thông tin nhanh:
+
+Hotline
+Email hỗ trợ
+Thông báo khuyến mãi
+
+Ví dụ:
+
+Miễn phí vận chuyển đơn hàng > 400k
+Hotline: 028 xxx xxxx
+
+MAIN HEADER
+
+Hiển thị các thành phần chính:
+
+Logo (bên trái)
+
+Search Bar (ở giữa)
+
+Account Icon
+
+Cart Icon
+
+Search luôn nằm ở vị trí trung tâm header.
+
+NAVIGATION MENU
+
+Menu điều hướng chính của website.
+
+Các mục cơ bản:
+
+Danh mục sản phẩm
+Thương hiệu
+Khuyến mãi
+Tin tức
+Liên hệ
+
+Danh mục sản phẩm nên hỗ trợ Mega Menu để hiển thị danh mục cấp 1 và cấp 2.
+
+MAIN CONTENT
+
+Toàn bộ nội dung trang nằm trong container chung.
+
+Container width:
+
+Max width: 1200px – 1400px
+Centered layout
+
+FOOTER STRUCTURE
+
+Footer chia thành 4 cột.
+
+Cột 1
+Giới thiệu website
+
+Cột 2
+Danh mục sản phẩm
+
+Cột 3
+Hỗ trợ khách hàng
+
+Cột 4
+Thông tin liên hệ
+
+Footer cần hiển thị:
+
+Địa chỉ
+Hotline
+Email hỗ trợ
+Copyright
+
+COMPONENT DÙNG CHUNG
+
+Các component được sử dụng xuyên suốt website:
+
+Product Card
+Product Grid
+Breadcrumb
+Pagination
+Filter Sidebar
+Sort Dropdown
+Badge
+Button Add To Cart
+
+PRODUCT CARD RULES
+
+Product Card là thành phần quan trọng nhất của website Ecommerce.
+
+Product Card phải hiển thị:
+
+Product Image
+Product Name
+Brand
+Price
+Add to Cart Button
+
+Nếu không có hình sản phẩm:
+
+Hiển thị ảnh placeholder mặc định.
+
+PRODUCT IMAGE RULES
+
+Tỷ lệ hình ảnh:
+
+Aspect ratio: 1:1
+
+Style:
+
+Object-fit: cover
+
+Ảnh phải hiển thị đồng nhất trong grid sản phẩm.
+
+PRODUCT GRID RESPONSIVE
+
+Desktop
+
+4 sản phẩm / hàng
+
+Tablet
+
+3 sản phẩm / hàng
+
+Mobile
+
+2 sản phẩm / hàng
+
+PRODUCT NAME DISPLAY
+
+Tên sản phẩm có thể dài.
+
+Hiển thị tối đa:
+
+2 dòng
+
+Phần dư:
+
+ellipsis (...)
+
+SEARCH RULES
+
+Search luôn hiển thị trên header.
+
+Search có thể tìm theo:
+
+Tên sản phẩm
+SKU
+Thương hiệu
+
+Trang Search Results phải hỗ trợ:
+
+Filter
+Sort
+Pagination
+
+CATEGORY STRUCTURE
+
+Danh mục sản phẩm hỗ trợ 2 cấp.
+
+Ví dụ:
+
+Bộ nồi
+ Bộ nồi trước
+ Bộ nồi sau
+
+Bố thắng
+ Bố thắng đĩa
+ Bố thắng cùm
+
+Phụ kiện khác
+
+FILTER SYSTEM
+
+Trang Product List và Search Results phải có bộ lọc.
+
+Các filter phổ biến:
+
+Danh mục
+Thương hiệu
+Khoảng giá
+
+SORT SYSTEM
+
+Trang danh sách sản phẩm phải có sắp xếp:
+
+Mặc định
+Giá tăng dần
+Giá giảm dần
+Sản phẩm mới
+
+PAGINATION
+
+Phân trang hiển thị ở cuối danh sách sản phẩm.
+
+Bao gồm:
+
+Previous Page
+Next Page
+Page Numbers
+
+CART RULES
+
+Giỏ hàng phải hiển thị:
+
+Hình sản phẩm
+Tên sản phẩm
+Biến thể
+Số lượng
+Giá
+Tổng tiền
+
+Cho phép:
+
+Tăng số lượng
+Giảm số lượng
+Xóa sản phẩm
+
+CHECKOUT RULES
+
+Trang Checkout hiển thị:
+
+Thông tin khách hàng
+Địa chỉ giao hàng
+Phương thức thanh toán
+Danh sách sản phẩm
+Tổng tiền
+
+ORDER SUCCESS PAGE
+
+Sau khi đặt hàng thành công hiển thị:
+
+Mã đơn hàng
+Thông tin đơn hàng
+Nút tiếp tục mua hàng
+
+TRACK ORDER PAGE
+
+Trang tra cứu đơn hàng cho khách không đăng nhập.
+
+Form nhập:
+
+Mã đơn hàng
+Số điện thoại
+
+Hiển thị:
+
+Trạng thái đơn hàng
+Danh sách sản phẩm
+Tổng tiền
+
+ERROR PAGES
+
+Hệ thống phải có các trang lỗi:
+
+404 Not Found
+500 Server Error
+Maintenance
+
+Trang 404 cần có:
+
+Thông báo lỗi
+Nút quay về trang chủ.

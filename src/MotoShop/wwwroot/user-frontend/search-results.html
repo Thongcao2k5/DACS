@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết quả tìm kiếm - MotoShop</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- UI UTILITIES Placeholder -->
+    <div id="pageLoader" style="display: none !important;"><div class="loader-spinner"></div></div>
+    <div id="backToTop" class="back-to-top"><i class='bx bx-chevron-up'></i></div>
+
+    <!-- COMMON COMPONENTS PLACEHOLDERS -->
+    <div id="mainHeaderWrapper" class="main-header-wrapper"></div>
+    <div id="searchOverlay" class="search-overlay"></div>
+    <div id="mobileMenu" class="offcanvas offcanvas-start mobile-menu-offcanvas" tabindex="-1"></div>
+
+    <!-- 1. BREADCRUMB -->
+    <div class="breadcrumb-wrapper">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.html">Trang chủ</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Tìm kiếm</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- 2. SEARCH RESULT HEADER -->
+    <header class="search-header-box">
+        <div class="container">
+            <h2 class="fw-bold mb-1">Kết quả tìm kiếm cho: <span class="search-keyword-highlight">"bugi ngk"</span></h2>
+            <p class="text-muted mb-0">Tìm thấy 36 sản phẩm phù hợp</p>
+        </div>
+    </header>
+
+    <main class="container mb-5">
+        <!-- 3. SEARCH FILTER BAR -->
+        <div class="inline-filter-bar">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small fw-bold text-muted">THƯƠNG HIỆU:</span>
+                    <select class="form-select form-control-custom h-auto py-1 px-3 small" style="width: auto;">
+                        <option selected>Tất cả</option>
+                        <option>NGK</option>
+                        <option>Denso</option>
+                    </select>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small fw-bold text-muted">KHOẢNG GIÁ:</span>
+                    <select class="form-select form-control-custom h-auto py-1 px-3 small" style="width: auto;">
+                        <option selected>Tất cả giá</option>
+                        <option>Dưới 100.000đ</option>
+                        <option>100.000đ - 500.000đ</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3">
+                <select class="form-select border-0 bg-transparent fw-bold small p-0" style="width: auto; box-shadow: none;">
+                    <option>Liên quan nhất</option>
+                    <option>Sản phẩm mới</option>
+                    <option>Giá: Thấp đến Cao</option>
+                    <option>Giá: Cao đến Thấp</option>
+                </select>
+                <div class="d-flex gap-1 border-start ps-3 d-none d-md-flex">
+                    <button class="view-mode-btn active btn-sm"><i class='bx bxs-grid-alt'></i></button>
+                    <button class="view-mode-btn btn-sm"><i class='bx bx-list-ul'></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. PRODUCTS GRID -->
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="searchResultGrid">
+            <!-- Product 1 -->
+            <div class="col">
+                <div class="product-card">
+                    <div class="product-img-wrapper">
+                        <a href="product-detail.html">
+                            <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400" alt="Product" loading="lazy">
+                        </a>
+                    </div>
+                    <div class="product-info flex-grow-1">
+                        <span class="brand">NGK</span>
+                        <h6 class="name"><a href="product-detail.html" class="text-decoration-none text-dark">Bugi NGK Iridium CPR7EAIX-9 Chính Hãng</a></h6>
+                        <div class="product-price">
+                            <span class="current">220.000đ</span>
+                            <span class="old">250.000đ</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-add-cart w-100 rounded-pill fw-bold mt-3">THÊM VÀO GIỎ</button>
+                </div>
+            </div>
+            <!-- More results... -->
+        </div>
+
+        <!-- 5. PAGINATION -->
+        <nav class="pagination-wrapper mt-5">
+            <ul class="pagination">
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#"><i class='bx bx-chevron-right'></i></a></li>
+            </ul>
+        </nav>
+
+        <!-- 6. EMPTY RESULT STATE (Hidden by default) -->
+        <div id="noResultsSection" class="d-none">
+            <div class="no-results-wrapper animate__animated animate__fadeIn">
+                <div class="no-results-icon"><i class='bx bx-search-alt'></i></div>
+                <h3 class="fw-bold">Rất tiếc, không tìm thấy sản phẩm!</h3>
+                <p class="text-muted">Chúng tôi không tìm thấy kết quả phù hợp cho <span class="fw-bold text-dark">"xyz123"</span>. Vui lòng kiểm tra lại chính tả hoặc thử với từ khóa khác.</p>
+                
+                <div class="popular-categories-box">
+                    <h6 class="fw-bold text-uppercase small text-muted mb-3">Gợi ý danh mục phổ biến</h6>
+                    <div class="popular-tags">
+                        <a href="category-products.html" class="tag-btn">Bugi</a>
+                        <a href="category-products.html" class="tag-btn">Dầu nhớt</a>
+                        <a href="category-products.html" class="tag-btn">Lọc gió</a>
+                        <a href="category-products.html" class="tag-btn">Phanh</a>
+                        <a href="category-products.html" class="tag-btn">Nhông sên dĩa</a>
+                    </div>
+                </div>
+                
+                <a href="products.html" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold mt-5">XEM TẤT CẢ SẢN PHẨM</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-dark text-white py-5 mt-5"></footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/header.js"></script>
+    <script src="js/components.js"></script>
+    <script>
+        // Demo switch to empty state via URL param: ?q=empty
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('q') === 'empty') {
+            document.getElementById('searchResultGrid').classList.add('d-none');
+            document.querySelector('.inline-filter-bar').classList.add('d-none');
+            document.querySelector('.pagination-wrapper').classList.add('d-none');
+            document.getElementById('noResultsSection').classList.remove('d-none');
+        }
+    </script>
+</body>
+</html>

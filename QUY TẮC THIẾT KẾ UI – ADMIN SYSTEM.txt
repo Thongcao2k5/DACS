@@ -1,0 +1,37 @@
+ADMIN UI DESIGN RULES
+
+Toàn bộ giao diện Admin của hệ thống Ecommerce sử dụng tiếng Việt. Không sử dụng tiếng Anh cho các hành động như Add, Edit, Delete mà thay bằng Thêm, Chỉnh sửa, Xóa, Xuất Excel, Chọn cột hiển thị.
+
+Cấu trúc chung của các trang Admin dạng danh sách gồm: Tiêu đề trang → Thanh hành động (Actions) → Search → Filter → Bảng dữ liệu (Table) → Phân trang (Pagination).
+
+Thanh hành động nằm phía trên bảng và căn về bên phải. Các nút thường dùng gồm: Thêm mới, Xuất Excel, Chọn cột hiển thị, Xóa hàng đã chọn. Thứ tự khuyến nghị: Thêm mới → Xuất Excel → Chọn cột hiển thị → Xóa hàng đã chọn.
+
+Tất cả các trang dạng bảng đều phải có ô tìm kiếm (Search) mặc định. Nội dung tìm kiếm thay đổi tùy module, ví dụ: Tìm theo tên sản phẩm, Tìm theo mã đơn hàng, Tìm theo tên thương hiệu.
+
+Mỗi module có bộ lọc (Filter) riêng. Ví dụ: Module Sản phẩm có thể lọc theo Loại sản phẩm, Thương hiệu, Trạng thái. Module Đơn hàng có thể lọc theo Trạng thái đơn hàng, Cửa hàng, Nhân viên tạo đơn, Khoảng ngày đặt.
+
+Các trang danh sách sử dụng bảng dữ liệu (Data Table). Bảng phải có checkbox chọn dòng, checkbox chọn tất cả, và chỉ hiển thị các cột quan trọng. Không hiển thị các cột dữ liệu dư thừa để tránh làm nặng trang.
+
+Mỗi dòng trong bảng có checkbox để chọn nhiều dòng. Checkbox đầu bảng cho phép chọn tất cả các dòng.
+
+Nút “Xóa hàng đã chọn” mặc định phải ẩn. Chỉ khi người dùng chọn từ hai dòng trở lên thì nút này mới hiển thị. Nút này nằm ở bên phải cùng hàng với các nút hành động khác.
+
+Tất cả các trang dạng bảng đều có nút Xuất Excel. Xuất Excel phải tuân theo số dòng đang hiển thị trên bảng. Ví dụ nếu bảng đang hiển thị 10 dòng thì file Excel xuất ra cũng chỉ gồm 10 dòng đó.
+
+Mỗi bảng có nút “Chọn cột hiển thị”. Chức năng này cho phép bật hoặc tắt các cột phụ. Các cột quan trọng như tên, mã, trạng thái không được phép tắt.
+
+Phân trang sử dụng layout 3 cột. Cột bên trái là chọn số dòng hiển thị (10, 20, 50, 100). Cột ở giữa hiển thị các số trang (1, 2, 3, 4...). Cột bên phải hiển thị tổng số dòng dữ liệu. Phần phân trang sử dụng cỡ chữ lớn hơn một chút so với chữ trong bảng.
+
+Sau mỗi thao tác thêm, sửa, xóa hoặc cập nhật dữ liệu, hệ thống hiển thị Toast thông báo. Ví dụ: Thêm thành công, Cập nhật thành công, Xóa thành công. Toast hiển thị ở góc màn hình và tự động biến mất sau vài giây.
+
+Modal được sử dụng cho các trường hợp xác nhận hoặc nhập thông tin nhanh. Ví dụ: Modal xác nhận xóa, Modal nhập dữ liệu, Modal chỉnh sửa nhanh. Modal phải đồng bộ thiết kế trong toàn bộ hệ thống.
+
+Khi xóa dữ liệu phải hiển thị Modal xác nhận với nội dung: “Bạn có chắc chắn muốn xóa dữ liệu này không? Dữ liệu đã xóa sẽ không thể khôi phục.” Hai nút hành động gồm: Hủy và Xóa.
+
+Trong quá trình hệ thống tải dữ liệu hoặc xử lý thao tác (load trang, lưu dữ liệu, xóa dữ liệu), phải hiển thị Loading Spinner để người dùng biết hệ thống đang xử lý.
+
+Đối với các dữ liệu có hình ảnh như sản phẩm hoặc biến thể sản phẩm, nếu dữ liệu không có ảnh thì phải hiển thị ảnh mặc định của hệ thống.
+
+Nguyên tắc chung của toàn bộ Admin UI là giữ giao diện đồng bộ, sử dụng cùng kiểu Button, Table, Input, Dropdown, Modal, Toast và Loading trên tất cả các trang.
+
+Các thành phần giao diện cần được thiết kế dạng component tái sử dụng gồm: Table, Pagination, Toast, Modal, Loading, Search và Filter.

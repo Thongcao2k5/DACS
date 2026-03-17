@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Tổng quan Dashboard - MotoShop Admin</title>
+    
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/apex-charts/apex-charts.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      .card-kpi { border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: 0.3s; height: 100%; }
+      .card-kpi:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+      .kpi-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+      .table-product-img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Sidebar -->
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <div class="navbar-nav align-items-center"><h5 class="m-0 fw-bold text-uppercase">Bảng điều khiển hệ thống</h5></div>
+              
+              <ul class="navbar-nav flex-row align-items-center ms-auto">
+                <!-- Notifications -->
+                <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3">
+                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                    <div class="position-relative">
+                      <i class="bx bx-bell bx-sm"></i>
+                      <span class="badge badge-dot bg-danger position-absolute border-2" style="top: -2px; right: -2px; width: 8px; height: 8px;"></span>
+                    </div>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end py-0 shadow-lg border-0" style="width: 350px; border-radius: 12px;">
+                    <li class="dropdown-menu-header border-bottom p-3">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold">Thông báo</h6>
+                        <span class="badge bg-label-primary rounded-pill small">3 Mới</span>
+                      </div>
+                    </li>
+                    <li class="dropdown-notifications-list scrollable-container" style="max-height: 350px; overflow-y: auto;">
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item list-group-item-action p-3 border-bottom">
+                          <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                              <div class="avatar"><span class="avatar-initial rounded-circle bg-label-success"><i class="bx bx-cart"></i></span></div>
+                            </div>
+                            <div class="flex-grow-1">
+                              <h6 class="mb-1 small fw-bold">Đơn hàng mới #ORD-99</h6>
+                              <p class="mb-0 small text-muted">Lê Minh Tâm vừa đặt mua Bộ Nồi Honda SH.</p>
+                              <small class="text-muted">2 phút trước</small>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="list-group-item list-group-item-action p-3 border-bottom">
+                          <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                              <div class="avatar"><span class="avatar-initial rounded-circle bg-label-danger"><i class="bx bx-error"></i></span></div>
+                            </div>
+                            <div class="flex-grow-1">
+                              <h6 class="mb-1 small fw-bold">Cảnh báo tồn kho!</h6>
+                              <p class="mb-0 small text-muted">Nhớt Motul 300V sắp hết hàng (còn 3).</p>
+                              <small class="text-muted">1 giờ trước</small>
+                            </div>
+                          </div>
+                        </li>
+                      </ul>
+                    </li>
+                    <li class="dropdown-menu-footer border-top p-2 text-center">
+                      <a href="javascript:void(0);" class="small fw-bold text-primary">XEM TẤT CẢ</a>
+                    </li>
+                  </ul>
+                </li>
+
+                <!-- User -->
+                <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                    <div class="avatar avatar-online"><img src="../assets/img/avatars/1.png" alt class="w-px-40 h-auto rounded-circle" /></div>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius: 12px; min-width: 220px;">
+                    <li>
+                      <a class="dropdown-item" href="profile.html">
+                        <div class="d-flex align-items-center">
+                          <div class="avatar avatar-online me-2"><img src="../assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" /></div>
+                          <div class="flex-grow-1">
+                            <span class="fw-bold d-block small">Lê Minh Tâm</span>
+                            <small class="text-muted" style="font-size: 10px;">Administrator</small>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                    <li><div class="dropdown-divider"></div></li>
+                    <li><a class="dropdown-item" href="profile.html"><i class="bx bx-user me-2"></i><span>Hồ sơ cá nhân</span></a></li>
+                    <li><a class="dropdown-item" href="settings.html"><i class="bx bx-cog me-2"></i><span>Cài đặt hệ thống</span></a></li>
+                    <li><div class="dropdown-divider"></div></li>
+                    <li><a class="dropdown-item text-danger" href="login.html"><i class="bx bx-power-off me-2"></i><span>Đăng xuất</span></a></li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <!-- 1. KPI Cards Row -->
+              <div class="row g-4 mb-4">
+                <div class="col-lg-2 col-md-4 col-6">
+                  <div class="card card-kpi">
+                    <div class="card-body">
+                      <div class="kpi-icon bg-label-primary"><i class="bx bx-dollar fs-4"></i></div>
+                      <span class="fw-semibold d-block mb-1 small">Doanh thu tháng</span>
+                      <h5 class="card-title mb-1 fw-bold">320.5M</h5>
+                      <small class="text-success fw-bold"><i class="bx bx-up-arrow-alt"></i> +12%</small>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6">
+                  <div class="card card-kpi">
+                    <div class="card-body">
+                      <div class="kpi-icon bg-label-success"><i class="bx bx-cart fs-4"></i></div>
+                      <span class="fw-semibold d-block mb-1 small">Đơn hàng mới</span>
+                      <h5 class="card-title mb-1 fw-bold">42</h5>
+                      <small class="text-success fw-bold"><i class="bx bx-up-arrow-alt"></i> +5%</small>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6">
+                  <div class="card card-kpi">
+                    <div class="card-body">
+                      <div class="kpi-icon bg-label-info"><i class="bx bx-receipt fs-4"></i></div>
+                      <span class="fw-semibold d-block mb-1 small">Phiếu dịch vụ</span>
+                      <h5 class="card-title mb-1 fw-bold">35</h5>
+                      <small class="text-danger fw-bold"><i class="bx bx-down-arrow-alt"></i> -2%</small>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6">
+                  <div class="card card-kpi">
+                    <div class="card-body">
+                      <div class="kpi-icon bg-label-warning"><i class="bx bx-user fs-4"></i></div>
+                      <span class="fw-semibold d-block mb-1 small">Khách hàng mới</span>
+                      <h5 class="card-title mb-1 fw-bold">128</h5>
+                      <small class="text-success fw-bold"><i class="bx bx-up-arrow-alt"></i> +18%</small>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6">
+                  <div class="card card-kpi">
+                    <div class="card-body">
+                      <div class="kpi-icon bg-label-secondary"><i class="bx bx-box fs-4"></i></div>
+                      <span class="fw-semibold d-block mb-1 small">Sản phẩm</span>
+                      <h5 class="card-title mb-1 fw-bold">156</h5>
+                      <small class="text-muted">Đang bán</small>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6">
+                  <div class="card card-kpi">
+                    <div class="card-body">
+                      <div class="kpi-icon bg-label-danger"><i class="bx bx-error fs-4"></i></div>
+                      <span class="fw-semibold d-block mb-1 small">Sắp hết hàng</span>
+                      <h5 class="card-title mb-1 fw-bold text-danger">12</h5>
+                      <small class="text-danger fw-bold">Cần nhập</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <!-- 2. Revenue Chart -->
+                <div class="col-lg-8 mb-4">
+                  <div class="card h-100">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                      <h5 class="card-title m-0 fw-bold">Xu hướng doanh thu (30 ngày qua)</h5>
+                      <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">Tháng này</button>
+                        <div class="dropdown-menu dropdown-menu-end">
+                          <a class="dropdown-item" href="javascript:void(0);">7 ngày qua</a>
+                          <a class="dropdown-item" href="javascript:void(0);">Tháng trước</a>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card-body">
+                      <div id="revenueTrendChart"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3. Order Statistics (Donut) -->
+                <div class="col-lg-4 mb-4">
+                  <div class="card h-100">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                      <h5 class="card-title m-0 fw-bold">Tỷ lệ đơn hàng</h5>
+                    </div>
+                    <div class="card-body">
+                      <div id="orderStatisticsChart"></div>
+                      <ul class="p-0 m-0 mt-4 list-unstyled">
+                        <li class="d-flex mb-3 pb-1">
+                          <div class="avatar flex-shrink-0 me-3"><span class="avatar-initial rounded bg-label-success"><i class="bx bx-check"></i></span></div>
+                          <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2"><h6 class="mb-0 fw-bold small">Hoàn thành</h6><small class="text-muted">Giao hàng thành công</small></div>
+                            <div class="user-progress"><small class="fw-bold">65%</small></div>
+                          </div>
+                        </li>
+                        <li class="d-flex">
+                          <div class="avatar flex-shrink-0 me-3"><span class="avatar-initial rounded bg-label-warning"><i class="bx bx-time"></i></span></div>
+                          <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2"><h6 class="mb-0 fw-bold small">Đang xử lý</h6><small class="text-muted">Chờ xác nhận/Giao hàng</small></div>
+                            <div class="user-progress"><small class="fw-bold">35%</small></div>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <!-- 4. Recent Orders Table -->
+                <div class="col-md-7 mb-4">
+                  <div class="card h-100">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                      <h5 class="card-title m-0 fw-bold">Đơn hàng mới nhất</h5>
+                      <a href="orders.html" class="small fw-bold">Xem tất cả</a>
+                    </div>
+                    <div class="table-responsive text-nowrap">
+                      <table class="table table-hover border-top">
+                        <thead>
+                          <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td><span class="fw-bold">#ORD-2026</span></td>
+                            <td>Lê Minh Tâm</td>
+                            <td><span class="fw-bold text-primary">1,250,000đ</span></td>
+                            <td><span class="badge bg-label-warning">Chờ xử lý</span></td>
+                          </tr>
+                          <tr>
+                            <td><span class="fw-bold">#ORD-2025</span></td>
+                            <td>Nguyễn Thu Hà</td>
+                            <td><span class="fw-bold text-primary">850,000đ</span></td>
+                            <td><span class="badge bg-label-success">Hoàn thành</span></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 5. Top Products -->
+                <div class="col-md-5 mb-4">
+                  <div class="card h-100">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                      <h5 class="card-title m-0 fw-bold">Sản phẩm bán chạy</h5>
+                    </div>
+                    <div class="card-body">
+                      <ul class="p-0 m-0">
+                        <li class="d-flex mb-4 pb-1">
+                          <div class="avatar flex-shrink-0 me-3"><img src="../assets/img/elements/1.jpg" class="rounded"></div>
+                          <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2"><h6 class="mb-0 fw-bold small">Bộ Nồi Trước Honda SH</h6><small class="text-muted">Phụ tùng máy</small></div>
+                            <div class="user-progress"><h6 class="mb-0 fw-bold small">42 lượt</h6></div>
+                          </div>
+                        </li>
+                        <li class="d-flex">
+                          <div class="avatar flex-shrink-0 me-3"><img src="../assets/img/elements/13.jpg" class="rounded"></div>
+                          <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2"><h6 class="mb-0 fw-bold small">Bố thắng đĩa Yamaha</h6><small class="text-muted">Dàn chân</small></div>
+                            <div class="user-progress"><h6 class="mb-0 fw-bold small">28 lượt</h6></div>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            <footer class="content-footer footer bg-footer-theme text-center py-3">© 2026, MotoShop Admin Dashboard</footer>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Core JS -->
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/libs/apex-charts/apexcharts.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      // 1. Revenue Chart Logic
+      const revenueOptions = {
+        chart: { height: 350, type: 'area', toolbar: { show: false } },
+        dataLabels: { enabled: false },
+        stroke: { curve: 'smooth', width: 2 },
+        series: [{ name: 'Doanh thu', data: [31, 40, 28, 51, 42, 109, 100] }],
+        colors: [config.colors.primary],
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0.1 } },
+        xaxis: { categories: ['Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7', 'CN'] }
+      };
+      new ApexCharts(document.querySelector("#revenueTrendChart"), revenueOptions).render();
+
+      // 2. Order Statistics Chart
+      const orderOptions = {
+        chart: { height: 165, width: 130, type: 'donut' },
+        labels: ['Hoàn thành', 'Đang xử lý'],
+        series: [65, 35],
+        colors: [config.colors.success, config.colors.warning],
+        stroke: { width: 5, colors: ['#fff'] },
+        dataLabels: { enabled: false },
+        legend: { show: false },
+        grid: { padding: { top: 0, bottom: 0, right: 15 } },
+        plotOptions: { pie: { donut: { size: '75%', labels: { show: true, value: { fontSize: '1.5rem', fontWeight: '600', color: '#566a7f', offsetY: -10 }, total: { show: true, label: 'Tổng', fontSize: '0.8rem', color: '#a1acb8' } } } } }
+      };
+      new ApexCharts(document.querySelector("#orderStatisticsChart"), orderOptions).render();
+    </script>
+  </body>
+</html>

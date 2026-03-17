@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán - MotoShop</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- UI UTILITIES Placeholder -->
+    <div id="pageLoader" style="display: none !important;"><div class="loader-spinner"></div></div>
+    <div id="backToTop" class="back-to-top"><i class='bx bx-chevron-up'></i></div>
+
+    <!-- COMMON COMPONENTS PLACEHOLDERS -->
+    <div id="mainHeaderWrapper" class="main-header-wrapper"></div>
+    <div id="searchOverlay" class="search-overlay"></div>
+    <div id="mobileMenu" class="offcanvas offcanvas-start mobile-menu-offcanvas" tabindex="-1"></div>
+
+    <!-- 1. BREADCRUMB -->
+    <div class="breadcrumb-wrapper">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.html">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="cart.html">Giỏ hàng</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Thanh toán</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <main class="container mb-5">
+        <!-- 2. CHECKOUT STEPS -->
+        <div class="checkout-steps">
+            <div class="step-item completed">
+                <div class="step-number"><i class='bx bx-check'></i></div>
+                <span>Giỏ hàng</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-item active">
+                <div class="step-number">2</div>
+                <span>Thanh toán</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-item">
+                <div class="step-number">3</div>
+                <span>Hoàn tất</span>
+            </div>
+        </div>
+
+        <form id="checkoutForm" action="order-success.html">
+            <div class="row g-4">
+                <!-- 3. LEFT COLUMN: INFORMATION -->
+                <div class="col-lg-7">
+                    <!-- Customer Information -->
+                    <div class="checkout-section">
+                        <h5 class="section-subtitle"><i class='bx bx-user-circle'></i> THÔNG TIN KHÁCH HÀNG</h5>
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label-custom">Họ và tên *</label>
+                                <input type="text" class="form-control form-control-custom" placeholder="Nhập đầy đủ họ tên" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Số điện thoại *</label>
+                                <input type="tel" class="form-control form-control-custom" placeholder="Nhập số điện thoại" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Email (Không bắt buộc)</label>
+                                <input type="email" class="form-control form-control-custom" placeholder="Nhập địa chỉ email">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label-custom">Địa chỉ nhận hàng *</label>
+                                <textarea class="form-control form-control-custom" style="height: 100px; padding-top: 15px;" placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố..." required></textarea>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label-custom">Ghi chú đơn hàng</label>
+                                <textarea class="form-control form-control-custom" style="height: 80px; padding-top: 15px;" placeholder="Ví dụ: Giao sau 5h chiều, gọi trước khi giao..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Shipping Method -->
+                    <div class="checkout-section">
+                        <h5 class="section-subtitle"><i class='bx bx-truck'></i> PHƯƠNG THỨC VẬN CHUYỂN</h5>
+                        <div class="method-card active">
+                            <input type="radio" name="shipping" id="ship1" checked>
+                            <div class="method-info">
+                                <label for="ship1" class="name">Giao hàng tiêu chuẩn</label>
+                                <span class="desc">Dự kiến nhận hàng sau 2-4 ngày</span>
+                            </div>
+                            <div class="method-price">30.000đ</div>
+                        </div>
+                        <div class="method-card">
+                            <input type="radio" name="shipping" id="ship2">
+                            <div class="method-info">
+                                <label for="ship2" class="name">Giao hàng hỏa tốc (Grab/Ahamove)</label>
+                                <span class="desc">Nhận hàng ngay trong 2 giờ tại TP.HCM</span>
+                            </div>
+                            <div class="method-price">55.000đ</div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="checkout-section">
+                        <h5 class="section-subtitle"><i class='bx bx-credit-card-front'></i> PHƯƠNG THỨC THANH TOÁN</h5>
+                        <div class="method-card active" onclick="togglePaymentDetail('cod-detail')">
+                            <input type="radio" name="payment" id="pay1" checked>
+                            <div class="method-info">
+                                <label for="pay1" class="name">Thanh toán khi nhận hàng (COD)</label>
+                                <span class="desc">Thanh toán bằng tiền mặt khi shipper giao hàng</span>
+                            </div>
+                        </div>
+                        <div id="cod-detail" class="payment-detail" style="display: block;">
+                            Vui lòng chuẩn bị sẵn số tiền mặt tương ứng khi shipper liên hệ giao hàng.
+                        </div>
+
+                        <div class="method-card mt-3" onclick="togglePaymentDetail('bank-detail')">
+                            <input type="radio" name="payment" id="pay2">
+                            <div class="method-info">
+                                <label for="pay2" class="name">Chuyển khoản ngân hàng</label>
+                                <span class="desc">Chuyển khoản qua ứng dụng ngân hàng hoặc cây ATM</span>
+                            </div>
+                        </div>
+                        <div id="bank-detail" class="payment-detail">
+                            <strong>Thông tin chuyển khoản:</strong><br>
+                            Ngân hàng: Vietcombank - CN TP.HCM<br>
+                            Số tài khoản: 0123 456 789<br>
+                            Chủ TK: CTY TNHH MOTOSHOP<br>
+                            Nội dung: [Họ tên] - [Số điện thoại]
+                        </div>
+
+                        <div class="method-card mt-3" onclick="togglePaymentDetail('wallet-detail')">
+                            <input type="radio" name="payment" id="pay3">
+                            <div class="method-info">
+                                <label for="pay3" class="name">Ví điện tử (MoMo / ZaloPay)</label>
+                                <span class="desc">Thanh toán nhanh chóng qua QR Code</span>
+                            </div>
+                        </div>
+                        <div id="wallet-detail" class="payment-detail">
+                            Hệ thống sẽ hiển thị mã QR sau khi bạn nhấn "Đặt hàng".
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. RIGHT COLUMN: SUMMARY -->
+                <div class="col-lg-5">
+                    <div class="cart-summary-card">
+                        <h5 class="fw-bold mb-4">TÓM TẮT ĐƠN HÀNG</h5>
+                        
+                        <ul class="summary-items-list">
+                            <li class="summary-item-product">
+                                <div class="summary-item-img">
+                                    <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=100" class="w-100 h-100 object-fit-contain p-1" alt="P">
+                                </div>
+                                <div class="summary-item-info flex-grow-1">
+                                    <span class="name">Bộ Nồi Trước Honda SH Chính Hãng</span>
+                                    <span class="qty-price">Số lượng: 1 x 1.250.000đ</span>
+                                </div>
+                                <div class="fw-bold small">1.250.000đ</div>
+                            </li>
+                            <li class="summary-item-product">
+                                <div class="summary-item-img">
+                                    <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=100" class="w-100 h-100 object-fit-contain p-1" alt="P">
+                                </div>
+                                <div class="summary-item-info flex-grow-1">
+                                    <span class="name">Nhớt Motul 300V Factory Line 10W40</span>
+                                    <span class="qty-price">Số lượng: 2 x 450.000đ</span>
+                                </div>
+                                <div class="fw-bold small">900.000đ</div>
+                            </li>
+                        </ul>
+
+                        <div class="coupon-group">
+                            <input type="text" class="form-control form-control-custom h-auto" placeholder="Mã giảm giá">
+                            <button type="button" class="btn btn-apply">ÁP DỤNG</button>
+                        </div>
+
+                        <div class="mt-4 pt-4 border-top">
+                            <div class="summary-item">
+                                <span>Tạm tính</span>
+                                <span class="fw-bold">2.150.000đ</span>
+                            </div>
+                            <div class="summary-item">
+                                <span>Phí vận chuyển</span>
+                                <span class="fw-bold">30.000đ</span>
+                            </div>
+                            <div class="summary-total">
+                                <span>TỔNG CỘNG</span>
+                                <span class="price">2.180.000đ</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-checkout mt-4">XÁC NHẬN ĐẶT HÀNG</button>
+                        
+                        <p class="text-center mt-3 small text-muted">Bằng cách nhấn Đặt hàng, bạn đồng ý với <a href="#" class="text-dark">Điều khoản dịch vụ</a> của chúng tôi.</p>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <footer class="bg-dark text-white py-5 mt-5"></footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/header.js"></script>
+    <script src="js/components.js"></script>
+    <script>
+        // Xử lý ẩn hiện thông tin thanh toán chi tiết
+        function togglePaymentDetail(detailId) {
+            // Ẩn tất cả detail trước
+            document.querySelectorAll('.payment-detail').forEach(d => d.style.display = 'none');
+            // Hiện detail của cái đang chọn
+            document.getElementById(detailId).style.display = 'block';
+            
+            // Cập nhật class active cho card
+            document.querySelectorAll('.method-card').forEach(card => {
+                if(card.contains(event.target) || card === event.currentTarget) {
+                    // Xử lý logic radio button bên trong nếu cần
+                }
+            });
+        }
+
+        // Script để đồng bộ radio và class active (tùy chọn thêm)
+        document.querySelectorAll('.method-card input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const parentSection = this.closest('.checkout-section');
+                parentSection.querySelectorAll('.method-card').forEach(c => c.classList.remove('active'));
+                this.closest('.method-card').classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Quản lý Loại sản phẩm - MotoShop Admin</title>
+    
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    
+    <!-- Design System & UI -->
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+    <link rel="stylesheet" href="../assets/css/pagination-component.css" />
+
+    <!-- Helpers -->
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      :root {
+        --ds-primary: #E60023;
+        --ds-primary-hover: #C2001F;
+        --ds-primary-light: rgba(230, 0, 35, 0.08);
+      }
+
+      /* Ghi đè màu đỏ chuẩn cho Sneat */
+      .text-primary { color: var(--ds-primary) !important; }
+      .btn-primary { background-color: var(--ds-primary) !important; border-color: var(--ds-primary) !important; box-shadow: 0 2px 4px rgba(230, 0, 35, 0.2) !important; }
+      .btn-primary:hover { background-color: var(--ds-primary-hover) !important; border-color: var(--ds-primary-hover) !important; }
+      .form-check-input:checked { background-color: var(--ds-primary) !important; border-color: var(--ds-primary) !important; }
+      .form-control:focus, .form-select:focus { border-color: var(--ds-primary) !important; box-shadow: 0 0 0 0.2rem var(--ds-primary-light) !important; }
+
+      /* Custom Table Styling */
+      .category-child { padding-left: 2.5rem !important; background-color: #fafafa; }
+      .tree-icon { color: #d9dee3; margin-right: 0.5rem; }
+      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+      
+      /* Modal Modern Styling */
+      .modal-content { border-radius: 12px; border: none; }
+      .modal-header { padding: 1.5rem 1.5rem 1rem; }
+      .modal-body { padding: 1rem 1.5rem 1.5rem; }
+      .modal-footer { padding: 1rem 1.5rem; background-color: #fcfcfd; border-radius: 0 0 12px 12px; }
+      .form-label { font-weight: 600; color: #32475c; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Sidebar dùng chung -->
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="m-0 text-muted fw-light">Quản lý Cửa hàng / <span class="text-dark fw-bold">Loại sản phẩm</span></h5>
+            </div>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <!-- 1. Header & Actions (Đồng bộ với Thương hiệu) -->
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-uppercase">Loại sản phẩm</h4>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-danger d-none" id="btnBulkDelete" onclick="handleBulkDelete()">
+                    <i class="bx bx-trash me-1"></i>Xóa đã chọn (<span id="selectedCount">0</span>)
+                  </button>
+                  <button type="button" class="btn btn-primary" onclick="openCreateModal()">
+                    <i class="bx bx-plus me-1"></i> Thêm loại sản phẩm
+                  </button>
+                  <button class="btn btn-outline-secondary" onclick="DS.showToast('Đang xuất Excel dữ liệu hiện tại...', 'info')">
+                    <i class="bx bx-export me-1"></i>Xuất Excel
+                  </button>
+                  <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle hide-arrow" type="button" data-bs-toggle="dropdown">
+                      <i class="bx bx-columns me-1"></i>Hiển thị
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 200px;">
+                      <h6 class="dropdown-header px-0 mb-2">Cột hiển thị</h6>
+                      <div class="form-check mb-2"><input class="form-check-input" type="checkbox" checked id="cParent"><label class="form-check-label" for="cParent">Danh mục cha</label></div>
+                      <div class="form-check mb-2"><input class="form-check-input" type="checkbox" checked id="cCount"><label class="form-check-label" for="cCount">Số sản phẩm</label></div>
+                      <div class="form-check mb-2"><input class="form-check-input" type="checkbox" checked id="cStatus"><label class="form-check-label" for="cStatus">Trạng thái</label></div>
+                      <div class="form-check"><input class="form-check-input" type="checkbox" checked id="cDate"><label class="form-check-label" for="cDate">Ngày tạo</label></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. Search & Filter Bar -->
+              <div class="card mb-4 border shadow-none">
+                <div class="card-body">
+                  <form class="row g-3">
+                    <div class="col-lg-4 col-md-6">
+                      <label class="filter-label">Tìm kiếm loại sản phẩm</label>
+                      <div class="input-group input-group-merge">
+                        <span class="input-group-text"><i class="bx bx-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Tên loại hoặc SKU...">
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-3">
+                      <label class="filter-label">Danh mục cha</label>
+                      <select class="form-select">
+                        <option value="">Tất cả</option>
+                        <option value="1">Bộ nồi</option>
+                        <option value="2">Bố thắng</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-3 col-md-3">
+                      <label class="filter-label">Trạng thái</label>
+                      <select class="form-select">
+                        <option value="">Tất cả</option>
+                        <option value="active">Hoạt động</option>
+                        <option value="inactive">Tạm ẩn</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-2 col-md-12 d-flex align-items-end">
+                      <button type="submit" class="btn btn-secondary w-100"><i class="bx bx-filter-alt me-1"></i>Lọc</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- 3. Table -->
+              <div class="card overflow-hidden border shadow-sm">
+                <div class="table-responsive text-nowrap">
+                  <table class="table table-hover m-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                        <th style="width: 35%">Tên loại sản phẩm</th>
+                        <th>Danh mục cha</th>
+                        <th class="text-center">Số SP</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày tạo</th>
+                        <th class="text-end">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- Cấp cha -->
+                      <tr>
+                        <td><input class="form-check-input" type="checkbox" onchange="updateBulkActions()"></td>
+                        <td><span class="fw-bold">Bộ nồi</span></td>
+                        <td>-</td>
+                        <td class="text-center"><span class="badge bg-label-info">15</span></td>
+                        <td><span class="badge bg-label-success">Hoạt động</span></td>
+                        <td>12/10/2023</td>
+                        <td class="text-end">
+                          <button class="btn btn-sm btn-icon text-primary" onclick="openEditModal(1, 'Bộ nồi', '', 'active')"><i class="bx bx-edit-alt"></i></button>
+                          <button class="btn btn-sm btn-icon text-danger" onclick="handleDelete(1, 'Bộ nồi', true)"><i class="bx bx-trash"></i></button>
+                        </td>
+                      </tr>
+                      <!-- Cấp con -->
+                      <tr class="category-child">
+                        <td><input class="form-check-input" type="checkbox" onchange="updateBulkActions()"></td>
+                        <td><span class="tree-icon">↳</span> Bộ nồi trước</td>
+                        <td>Bộ nồi</td>
+                        <td class="text-center"><span class="badge bg-label-info">8</span></td>
+                        <td><span class="badge bg-label-success">Hoạt động</span></td>
+                        <td>13/10/2023</td>
+                        <td class="text-end">
+                          <button class="btn btn-sm btn-icon text-primary" onclick="openEditModal(2, 'Bộ nồi trước', '1', 'active')"><i class="bx bx-edit-alt"></i></button>
+                          <button class="btn btn-sm btn-icon text-danger" onclick="handleDelete(2, 'Bộ nồi trước', false)"><i class="bx bx-trash"></i></button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- 4. Phân trang -->
+                <div class="table-pagination-footer">
+                  <div class="pagination-rows-selector">
+                    Hiển thị 
+                    <select class="form-select form-select-sm d-inline-block w-auto mx-2">
+                      <option>10</option><option>20</option>
+                    </select> dòng
+                  </div>
+                  <nav class="pagination-nav">
+                    <ul class="pagination pagination-sm m-0">
+                      <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                      <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    </ul>
+                  </nav>
+                  <div class="pagination-info text-muted fw-bold">Tổng: 24 mục</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+                <div class="mb-2 mb-md-0">© 2026, MotoShop Admin</div>
+              </div>
+            </footer>
+            <div class="content-backdrop fade"></div>
+          </div>
+        </div>
+      </div>
+      <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <!-- Modal Form -->
+    <div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header border-bottom">
+            <h5 class="modal-title fw-bold" id="modalTitle">Thêm loại sản phẩm</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="categoryForm">
+              <input type="hidden" id="categoryId">
+              <div class="mb-4">
+                <label class="form-label" for="categoryName">Tên loại sản phẩm <span class="text-danger">*</span></label>
+                <input type="text" id="categoryName" class="form-control" placeholder="Nhập tên loại sản phẩm" required>
+                <div id="nameError" class="invalid-feedback">Vui lòng nhập tên loại sản phẩm</div>
+              </div>
+              <div class="mb-4">
+                <label class="form-label" for="parentCategory">Danh mục cha</label>
+                <select id="parentCategory" class="form-select">
+                  <option value="">Không có (Danh mục cấp 1)</option>
+                  <option value="1">Bộ nồi</option>
+                  <option value="3">Bố thắng</option>
+                </select>
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Trạng thái hiển thị</label>
+                <div class="d-flex gap-4">
+                  <div class="form-check"><input name="status" class="form-check-input" type="radio" value="active" id="statusActive" checked><label class="form-check-label" for="statusActive">Hoạt động</label></div>
+                  <div class="form-check"><input name="status" class="form-check-input" type="radio" value="inactive" id="statusInactive"><label class="form-check-label" for="statusInactive">Tạm ẩn</label></div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-primary px-4" id="saveCategoryBtn" onclick="handleSave()">Lưu dữ liệu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JS Scripts -->
+        <!-- Core JS -->
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      const categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+
+      // Logic Xóa hàng loạt
+      function updateBulkActions() {
+        const checkedCount = document.querySelectorAll('tbody .form-check-input:checked').length;
+        const btnBulk = document.getElementById('btnBulkDelete');
+        const countSpan = document.getElementById('selectedCount');
+        if (checkedCount > 0) {
+          btnBulk.classList.remove('d-none');
+          countSpan.innerText = checkedCount;
+        } else {
+          btnBulk.classList.add('d-none');
+        }
+      }
+
+      document.getElementById('checkAll').onclick = function() {
+        const checkboxes = document.querySelectorAll('tbody .form-check-input');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+        updateBulkActions();
+      };
+
+      function handleBulkDelete() {
+        const count = document.querySelectorAll('tbody .form-check-input:checked').length;
+        DS.confirm({
+          title: 'Xác nhận xóa nhiều',
+          message: `Bạn có chắc muốn xóa vĩnh viễn ${count} loại sản phẩm đã chọn?`,
+          type: 'danger',
+          onConfirm: () => {
+            DS.showToast(`Đã xóa ${count} mục thành công`, 'success');
+            updateBulkActions();
+          }
+        });
+      }
+
+      function openCreateModal() {
+        document.getElementById('modalTitle').innerText = 'Thêm loại sản phẩm mới';
+        document.getElementById('categoryForm').reset();
+        categoryModal.show();
+      }
+
+      function openEditModal(id, name, parentId, status) {
+        document.getElementById('modalTitle').innerText = 'Cập nhật loại sản phẩm';
+        document.getElementById('categoryName').value = name;
+        document.getElementById('parentCategory').value = parentId;
+        document.getElementById(`status${status.charAt(0).toUpperCase() + status.slice(1)}`).checked = true;
+        categoryModal.show();
+      }
+
+      function handleSave() {
+        const name = document.getElementById('categoryName').value;
+        if(!name) { document.getElementById('categoryName').classList.add('is-invalid'); return; }
+        const btn = document.getElementById('saveCategoryBtn');
+        btn.disabled = true;
+        setTimeout(() => {
+          btn.disabled = false;
+          categoryModal.hide();
+          DS.showToast('Lưu dữ liệu thành công!', 'success');
+        }, 800);
+      }
+
+      function handleDelete(id, name, hasChildren) {
+        if (hasChildren) {
+          DS.showToast(`Không thể xóa "${name}" vì đang chứa danh mục con!`, 'error');
+          return;
+        }
+        DS.confirm({
+          title: 'Xác nhận xóa',
+          message: `Bạn có chắc chắn muốn xóa "${name}"?`,
+          onConfirm: () => { DS.showToast('Đã xóa thành công', 'success'); }
+        });
+      }
+    </script>
+  </body>
+</html>

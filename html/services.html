@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Quản lý Dịch vụ - MotoShop Admin</title>
+    
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+    <link rel="stylesheet" href="../assets/css/pagination-component.css" />
+
+    <!-- Helpers -->
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      .service-name { font-weight: 700; color: var(--ds-text-heading); font-size: 0.95rem; }
+      .service-desc { font-size: 0.8rem; color: #697a8d; white-space: normal; max-width: 300px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+      .service-price { font-weight: 700; color: var(--ds-primary); }
+      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+      .duration-badge { background: #e1faff; color: #03c3ec; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Sidebar -->
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="m-0 text-muted fw-light">Dịch vụ / <span class="text-dark fw-bold">Danh sách dịch vụ</span></h5>
+            </div>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <!-- 1. Header Actions -->
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-uppercase">Dịch vụ kỹ thuật</h4>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-danger d-none" id="btnBulkDelete" onclick="handleBulkDelete()">
+                    <i class="bx bx-trash me-1"></i>Xóa đã chọn (<span id="selectedCount">0</span>)
+                  </button>
+                  <a href="service-create.html" class="btn btn-primary">
+                    <i class="bx bx-plus me-1"></i>Thêm dịch vụ mới
+                  </a>
+                  <button class="btn btn-outline-secondary" onclick="DS.showToast('Đang xuất danh mục dịch vụ...', 'info')">
+                    <i class="bx bx-export me-1"></i>Xuất Excel
+                  </button>
+                </div>
+              </div>
+
+              <!-- 2. Search & Filter -->
+              <div class="card mb-4 border shadow-none">
+                <div class="card-body">
+                  <form class="row g-3">
+                    <div class="col-lg-6 col-md-12">
+                      <label class="filter-label">Tìm kiếm dịch vụ</label>
+                      <div class="input-group input-group-merge">
+                        <span class="input-group-text"><i class="bx bx-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Nhập tên dịch vụ hoặc từ khóa mô tả...">
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                      <label class="filter-label">Trạng thái</label>
+                      <select class="form-select">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="active">Đang kinh doanh</option>
+                        <option value="inactive">Tạm ngưng</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6 d-flex align-items-end">
+                      <button type="submit" class="btn btn-secondary w-100"><i class="bx bx-filter-alt me-1"></i>Lọc dữ liệu</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- 3. Service Table -->
+              <div class="card overflow-hidden border shadow-sm">
+                <div class="table-responsive text-nowrap">
+                  <table class="table table-hover m-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                        <th>Tên dịch vụ & Mô tả</th>
+                        <th class="text-center">Thời gian dự kiến</th>
+                        <th>Giá dịch vụ</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Hành động</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><input class="form-check-input" type="checkbox" onchange="updateBulkActions()"></td>
+                        <td>
+                          <div class="service-name">Vệ sinh nồi xe tay ga (Full combo)</div>
+                          <div class="service-desc">Vệ sinh chi tiết cụm nồi trước/sau, kiểm tra bi nồi, dây curoa và tra mỡ chịu nhiệt.</div>
+                        </td>
+                        <td class="text-center">
+                          <span class="duration-badge"><i class="bx bx-time-five me-1"></i> 45 phút</span>
+                        </td>
+                        <td><span class="service-price">250,000đ</span></td>
+                        <td><span class="ds-badge ds-badge-success">Đang kinh doanh</span></td>
+                        <td class="text-end">
+                          <a href="service-edit.html" class="btn btn-sm btn-icon text-primary" title="Chỉnh sửa"><i class="bx bx-edit-alt"></i></a>
+                          <button class="btn btn-sm btn-icon text-danger" title="Xóa" onclick="handleDeleteService('Vệ sinh nồi xe tay ga')"><i class="bx bx-trash"></i></button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><input class="form-check-input" type="checkbox" onchange="updateBulkActions()"></td>
+                        <td>
+                          <div class="service-name">Thay nhớt máy & Nhớt hộp số</div>
+                          <div class="service-desc">Thay nhớt máy Motul/Liqui Moly tùy chọn và nhớt láp chính hãng.</div>
+                        </td>
+                        <td class="text-center">
+                          <span class="duration-badge"><i class="bx bx-time-five me-1"></i> 15 phút</span>
+                        </td>
+                        <td><span class="service-price">180,000đ</span></td>
+                        <td><span class="ds-badge ds-badge-success">Đang kinh doanh</span></td>
+                        <td class="text-end">
+                          <a href="service-edit.html" class="btn btn-sm btn-icon text-primary"><i class="bx bx-edit-alt"></i></a>
+                          <button class="btn btn-sm btn-icon text-danger"><i class="bx bx-trash"></i></button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Phân trang -->
+                <div class="table-pagination-footer">
+                  <div class="pagination-rows-selector">Hiển thị <select class="form-select form-select-sm d-inline-block w-auto mx-2"><option>10</option><option>20</option></select> dòng</div>
+                  <nav class="pagination-nav"><ul class="pagination pagination-sm m-0"><li class="page-item active"><a class="page-link" href="#">1</a></li><li class="page-item"><a class="page-link" href="#">2</a></li></ul></nav>
+                  <div class="pagination-info text-muted fw-bold">Tổng: 45 dịch vụ</div>
+                </div>
+              </div>
+            </div>
+            
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl py-2">© 2026, MotoShop Admin - Service Management</div>
+            </footer>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Core JS -->
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      function handleDeleteService(name) {
+        DS.confirm({
+          title: 'Xác nhận xóa dịch vụ',
+          message: `Bạn chắc chắn muốn xóa dịch vụ <strong>${name}</strong>? Dữ liệu lịch sử đặt lịch có thể bị ảnh hưởng.`,
+          onConfirm: () => {
+            UI.showToast('Đã xóa dịch vụ thành công', 'success');
+          }
+        });
+      }
+
+      function updateBulkActions() {
+        const checkedCount = document.querySelectorAll('tbody .form-check-input:checked').length;
+        const btnBulk = document.getElementById('btnBulkDelete');
+        const countSpan = document.getElementById('selectedCount');
+        if (checkedCount > 0) {
+          btnBulk.classList.remove('d-none');
+          countSpan.innerText = checkedCount;
+        } else {
+          btnBulk.classList.add('d-none');
+        }
+      }
+
+      document.getElementById('checkAll').onclick = function() {
+        document.querySelectorAll('tbody .form-check-input').forEach(cb => cb.checked = this.checked);
+        updateBulkActions();
+      };
+
+      function handleBulkDelete() {
+        const count = document.querySelectorAll('tbody .form-check-input:checked').length;
+        DS.confirm({
+          title: 'Xóa nhiều dịch vụ',
+          message: `Bạn chắc chắn muốn xóa vĩnh viễn <strong>${count}</strong> dịch vụ đã chọn?`,
+          onConfirm: () => {
+            UI.showToast(`Đã xóa thành công ${count} dịch vụ`, 'success');
+            updateBulkActions();
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

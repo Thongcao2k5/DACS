@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Danh sách Thương hiệu - MotoShop Admin</title>
+    
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+    <link rel="stylesheet" href="../assets/css/pagination-component.css" />
+
+    <!-- Helpers -->
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      :root {
+        --ds-primary: #E60023;
+        --ds-primary-hover: #C2001F;
+        --ds-primary-light: rgba(230, 0, 35, 0.08);
+      }
+      .brand-logo-sm { width: 40px; height: 40px; object-fit: contain; border-radius: 4px; padding: 2px; border: 1px solid #eee; background: #fff; }
+      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+      
+      /* Modal Design */
+      .modal-content { border-radius: 12px; border: none; }
+      .modal-header { padding: 1.5rem 1.5rem 1rem; border-bottom: 1px solid #f0f2f4; }
+      .modal-body { padding: 1.5rem; }
+      .modal-footer { padding: 1rem 1.5rem; background-color: #fcfcfd; border-top: 1px solid #f0f2f4; border-radius: 0 0 12px 12px; }
+      .logo-preview-container {
+        width: 100px; height: 100px; border: 2px dashed #d9dee3; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f8f9fa;
+      }
+      .logo-preview-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <script src="../assets/js/sidebar.js"></script>
+        <div class="layout-page">
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none"><a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a></div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="m-0 text-muted fw-light">Cửa hàng / <span class="text-dark fw-bold">Thương hiệu</span></h5>
+            </div>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <!-- Header & Actions -->
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-uppercase">Quản lý Thương hiệu</h4>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-danger d-none" id="btnBulkDelete" onclick="handleBulkDelete()">
+                    <i class="bx bx-trash me-1"></i>Xóa đã chọn (<span id="selectedCount">0</span>)
+                  </button>
+                  <button class="btn btn-primary" onclick="openBrandModal('create')"><i class="bx bx-plus me-1"></i>Thêm thương hiệu</button>
+                  <button class="btn btn-outline-secondary" onclick="DS.showToast('Đang xuất Excel...', 'info')"><i class="bx bx-export me-1"></i>Xuất Excel</button>
+                </div>
+              </div>
+
+              <!-- Table -->
+              <div class="card overflow-hidden border shadow-sm">
+                <div class="table-responsive text-nowrap">
+                  <table class="table table-hover m-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                        <th style="width: 80px">Logo</th>
+                        <th>Tên thương hiệu</th>
+                        <th>Slug</th>
+                        <th class="text-center">Số SP</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><input class="form-check-input" type="checkbox" onchange="updateBulkActions()"></td>
+                        <td><img src="https://upload.wikimedia.org/wikipedia/commons/7/7b/Honda_Logo.svg" class="brand-logo-sm"></td>
+                        <td><span class="fw-bold text-dark">Honda</span></td>
+                        <td><code>honda</code></td>
+                        <td class="text-center"><span class="badge bg-label-info">42</span></td>
+                        <td><span class="badge bg-label-success">Hoạt động</span></td>
+                        <td class="text-end">
+                          <button class="btn btn-sm btn-icon text-primary" onclick="openBrandModal('edit', {id: 1, name: 'Honda', slug: 'honda', status: 1})"><i class="bx bx-edit-alt"></i></button>
+                          <button class="btn btn-sm btn-icon text-danger" onclick="handleDeleteBrand('Honda', true)"><i class="bx bx-trash"></i></button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><input class="form-check-input" type="checkbox" onchange="updateBulkActions()"></td>
+                        <td><img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/Yamaha_logo.svg" class="brand-logo-sm"></td>
+                        <td><span class="fw-bold text-dark">Yamaha</span></td>
+                        <td><code>yamaha</code></td>
+                        <td class="text-center"><span class="badge bg-label-info">28</span></td>
+                        <td><span class="badge bg-label-success">Hoạt động</span></td>
+                        <td class="text-end">
+                          <button class="btn btn-sm btn-icon text-primary" onclick="openBrandModal('edit', {id: 2, name: 'Yamaha', slug: 'yamaha', status: 1})"><i class="bx bx-edit-alt"></i></button>
+                          <button class="btn btn-sm btn-icon text-danger" onclick="handleDeleteBrand('Yamaha', false)"><i class="bx bx-trash"></i></button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="table-pagination-footer">
+                  <div class="pagination-rows-selector">Hiển thị <select class="form-select form-select-sm d-inline-block w-auto mx-2"><option>10</option></select> dòng</div>
+                  <nav class="pagination-nav"><ul class="pagination pagination-sm m-0"><li class="page-item active"><a class="page-link" href="#">1</a></li></ul></nav>
+                  <div class="pagination-info text-muted">Tổng: 2 thương hiệu</div>
+                </div>
+              </div>
+            </div>
+            <footer class="content-footer footer bg-footer-theme"><div class="container-xxl py-2">© 2026, MotoShop Admin</div></footer>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Thêm/Sửa Thương hiệu -->
+    <div class="modal fade" id="brandModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold" id="modalTitle">Thêm thương hiệu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="brandForm">
+              <input type="hidden" id="brandId">
+              <div class="mb-3">
+                <label class="form-label text-uppercase fw-bold small">Tên thương hiệu <span class="text-danger">*</span></label>
+                <input type="text" id="brandName" class="form-control" placeholder="VD: Honda, Yamaha..." oninput="syncSlug()">
+                <div class="invalid-feedback">Tên thương hiệu không được để trống</div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label text-uppercase fw-bold small">Đường dẫn (Slug)</label>
+                <input type="text" id="brandSlug" class="form-control" placeholder="tu-dong-tao-slug">
+              </div>
+              <div class="mb-3">
+                <label class="form-label text-uppercase fw-bold small">Logo thương hiệu</label>
+                <div class="d-flex align-items-center gap-3">
+                  <div class="logo-preview-container" onclick="document.getElementById('logoInput').click()">
+                    <img id="logoPreview" src="../assets/img/elements/placeholder.png">
+                  </div>
+                  <div class="flex-grow-1">
+                    <input type="file" id="logoInput" class="form-control form-control-sm" accept="image/*" onchange="previewLogo(this)">
+                    <small class="text-muted mt-1 d-block">Dung lượng tối đa 2MB. Định dạng: JPG, PNG.</small>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-0">
+                <label class="form-label text-uppercase fw-bold small">Trạng thái hoạt động</label>
+                <div class="form-check form-switch mt-1">
+                  <input class="form-check-input" type="checkbox" id="brandStatus" checked>
+                  <label class="form-check-label fw-bold" for="brandStatus">Đang hoạt động</label>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Hủy bỏ</button>
+            <button class="btn btn-primary px-4" id="btnSaveBrand" onclick="handleSaveBrand()">
+              <i class="bx bx-check me-1"></i>Lưu dữ liệu
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+        <!-- Core JS -->
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      const brandModal = new bootstrap.Modal(document.getElementById('brandModal'));
+
+      // 1. Mở Modal
+      function openBrandModal(mode, data = null) {
+        const form = document.getElementById('brandForm');
+        form.reset();
+        document.getElementById('logoPreview').src = '../assets/img/elements/placeholder.png';
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+
+        if (mode === 'create') {
+          document.getElementById('modalTitle').innerText = 'Thêm thương hiệu mới';
+          document.getElementById('brandId').value = '';
+        } else {
+          document.getElementById('modalTitle').innerText = 'Chỉnh sửa thương hiệu';
+          document.getElementById('brandId').value = data.id;
+          document.getElementById('brandName').value = data.name;
+          document.getElementById('brandSlug').value = data.slug;
+          document.getElementById('brandStatus').checked = data.status === 1;
+        }
+        brandModal.show();
+      }
+
+      // 2. Tạo Slug tự động
+      function syncSlug() {
+        const name = document.getElementById('brandName').value;
+        const slug = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd').replace(/([^0-9a-z-\s])/g, '').replace(/(\s+)/g, '-').replace(/^-+|-+$/g, '');
+        document.getElementById('brandSlug').value = slug;
+      }
+
+      // 3. Xem trước Logo
+      function previewLogo(input) {
+        if (input.files && input.files[0]) {
+          const reader = new FileReader();
+          reader.onload = e => document.getElementById('logoPreview').src = e.target.result;
+          reader.readAsDataURL(input.files[0]);
+        }
+      }
+
+      // 4. Lưu dữ liệu
+      function handleSaveBrand() {
+        const name = document.getElementById('brandName').value.trim();
+        const id = document.getElementById('brandId').value;
+        
+        if (!name) {
+          document.getElementById('brandName').classList.add('is-invalid');
+          return;
+        }
+
+        const btn = document.getElementById('btnSaveBrand');
+        DS.loading.btnStart(btn);
+
+        setTimeout(() => {
+          DS.loading.btnStop(btn);
+          brandModal.hide();
+          DS.showToast(id ? 'Cập nhật thương hiệu thành công!' : 'Thêm thương hiệu thành công!', 'success');
+        }, 1000);
+      }
+
+      // 5. Xóa thương hiệu
+      function handleDeleteBrand(name, isUsed) {
+        if (hasProducts(name) || isUsed) {
+          UI.showToast('Không thể xóa thương hiệu đang được sử dụng cho sản phẩm!', 'error');
+          return;
+        }
+        UI.confirmDelete({
+          message: `Bạn có chắc chắn muốn xóa thương hiệu <strong>"${name}"</strong> không?`,
+          onConfirm: () => {
+            // Logic sau khi xóa thành công (ví dụ reload bảng)
+          }
+        });
+      }
+
+      function hasProducts(name) { return name === 'Honda'; } // Giả lập check
+
+      // 6. Xử lý Xóa hàng loạt
+      function updateBulkActions() {
+        const checked = document.querySelectorAll('tbody .form-check-input:checked');
+        const btn = document.getElementById('btnBulkDelete');
+        document.getElementById('selectedCount').innerText = checked.length;
+        checked.length > 0 ? btn.classList.remove('d-none') : btn.classList.add('d-none');
+      }
+
+      document.getElementById('checkAll').onclick = function() {
+        document.querySelectorAll('tbody .form-check-input').forEach(cb => cb.checked = this.checked);
+        updateBulkActions();
+      };
+
+      function handleBulkDelete() {
+        const count = document.querySelectorAll('tbody .form-check-input:checked').length;
+        UI.confirmDelete({
+          message: `Bạn có chắc chắn muốn xóa <strong>${count}</strong> thương hiệu đã chọn không?`,
+          onConfirm: () => { 
+            updateBulkActions();
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

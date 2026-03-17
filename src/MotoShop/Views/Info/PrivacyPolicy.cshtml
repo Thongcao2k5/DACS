@@ -1,0 +1,124 @@
+@{
+    ViewData["Title"] = "Chính sách bảo mật";
+}
+
+<!-- 1. BREADCRUMB -->
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Chính sách bảo mật</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<main class="policy-page-wrapper">
+    <div class="container">
+        <div class="policy-content-box">
+            <!-- 1. PAGE HEADER -->
+            <header class="mb-5">
+                <h1 class="fw-bold text-dark mb-2">CHÍNH SÁCH BẢO MẬT</h1>
+                <p class="text-muted small mb-0"><i class='bx bx-time-five'></i> Cập nhật lần cuối: 01 Tháng 1, 2026</p>
+            </header>
+
+            <!-- 2. TABLE OF CONTENTS -->
+            <nav class="policy-toc">
+                <h6 class="policy-toc-title">MỤC LỤC NỘI DUNG</h6>
+                <ul class="policy-toc-list">
+                    <li><a href="#sec1" class="policy-toc-link">1. Thông tin chúng tôi thu thập</a></li>
+                    <li><a href="#sec2" class="policy-toc-link">2. Cách chúng tôi sử dụng thông tin</a></li>
+                    <li><a href="#sec3" class="policy-toc-link">3. Chia sẻ thông tin</a></li>
+                    <li><a href="#sec4" class="policy-toc-link">4. Bảo mật dữ liệu</a></li>
+                    <li><a href="#sec5" class="policy-toc-link">5. Quyền của khách hàng</a></li>
+                    <li><a href="#sec6" class="policy-toc-link">6. Cookies và tracking</a></li>
+                    <li><a href="#sec7" class="policy-toc-link">7. Thay đổi chính sách</a></li>
+                    <li><a href="#sec8" class="policy-toc-link">8. Liên hệ</a></li>
+                </ul>
+            </nav>
+
+            <!-- 3. PRIVACY POLICY CONTENT -->
+            <article class="policy-text">
+                <!-- Section 1 -->
+                <section id="sec1" class="policy-section">
+                    <h3 class="policy-section-title"><span>01</span> Thông tin chúng tôi thu thập</h3>
+                    <p>Khi bạn truy cập website MotoShop và sử dụng các dịch vụ đặt hàng, chúng tôi có thể yêu cầu bạn cung cấp các thông tin cá nhân sau:</p>
+                    <ul>
+                        <li>Thông tin danh tính: Họ và tên.</li>
+                        <li>Thông tin liên lạc: Số điện thoại, địa chỉ email.</li>
+                        <li>Thông tin giao nhận: Địa chỉ chi tiết (số nhà, tên đường, quận/huyện).</li>
+                        <li>Thông tin giao dịch: Lịch sử mua hàng, phương thức thanh toán.</li>
+                        <li>Dữ liệu kỹ thuật: Địa chỉ IP, loại trình duyệt, lịch sử truy cập qua cookies.</li>
+                    </ul>
+                </section>
+
+                <!-- Section 2 -->
+                <section id="sec2" class="policy-section">
+                    <h3 class="policy-section-title"><span>02</span> Cách chúng tôi sử dụng thông tin</h3>
+                    <p>Mục đích chính của việc thu thập thông tin là để mang lại cho bạn một trải nghiệm mua sắm an toàn và thuận tiện. Chúng tôi sử dụng thông tin để:</p>
+                    <ul>
+                        <li>Xử lý và thực hiện các đơn hàng bạn đã đặt.</li>
+                        <li>Giao hàng đến đúng địa chỉ yêu cầu thông qua các đối tác vận chuyển.</li>
+                        <li>Liên hệ xác nhận đơn hàng và hỗ trợ kỹ thuật khi cần thiết.</li>
+                        <li>Gửi thông báo về các chương trình khuyến mãi, ưu đãi đặc biệt (nếu bạn đăng ký nhận tin).</li>
+                        <li>Cải thiện giao diện và nội dung website dựa trên hành vi người dùng.</li>
+                    </ul>
+                </section>
+
+                <!-- Section 3 -->
+                <section id="sec3" class="policy-section">
+                    <h3 class="policy-section-title"><span>03</span> Chia sẻ thông tin</h3>
+                    <p>MotoShop cam kết bảo mật tuyệt đối thông tin khách hàng. Chúng tôi không bán, trao đổi hoặc chia sẻ thông tin của bạn cho bên thứ ba, ngoại trừ các trường hợp:</p>
+                    <ul>
+                        <li>Cung cấp cho các đơn vị vận chuyển (GHTK, Viettel Post...) để thực hiện việc giao hàng.</li>
+                        <li>Cung cấp theo yêu cầu của cơ quan pháp luật có thẩm quyền theo quy định của pháp luật Việt Nam.</li>
+                    </ul>
+                </section>
+
+                <!-- Section 4 -->
+                <section id="sec4" class="policy-section">
+                    <h3 class="policy-section-title"><span>04</span> Bảo mật dữ liệu</h3>
+                    <p>Chúng tôi áp dụng các biện pháp kỹ thuật và tổ chức để bảo vệ thông tin của bạn chống lại việc truy cập trái phép, mất mát hoặc phá hủy:</p>
+                    <ul>
+                        <li>Sử dụng giao thức HTTPS (SSL) để mã hóa dữ liệu truyền tải trên website.</li>
+                        <li>Hệ thống lưu trữ an toàn with quyền truy cập giới hạn.</li>
+                        <li>Thường xuyên kiểm tra và cập nhật các lỗ hổng bảo mật.</li>
+                    </ul>
+                </section>
+
+                <!-- Section 5 -->
+                <section id="sec5" class="policy-section">
+                    <h3 class="policy-section-title"><span>05</span> Quyền của khách hàng</h3>
+                    <p>Bạn có toàn bộ quyền đối với dữ liệu cá nhân của mình, bao gồm:</p>
+                    <ul>
+                        <li>Quyền truy cập và xem lại các thông tin cá nhân đã cung cấp.</li>
+                        <li>Quyền yêu cầu chỉnh sửa hoặc cập nhật thông tin không chính xác.</li>
+                        <li>Quyền yêu cầu xóa bỏ hoàn toàn dữ liệu cá nhân khỏi hệ thống của chúng tôi.</li>
+                    </ul>
+                </section>
+
+                <!-- Section 6 -->
+                <section id="sec6" class="policy-section">
+                    <h3 class="policy-section-title"><span>06</span> Cookies và Tracking</h3>
+                    <p>MotoShop sử dụng "cookies" để ghi nhớ thông tin phiên đăng nhập và các sản phẩm trong giỏ hàng của bạn. Điều này giúp bạn không phải nhập lại thông tin nhiều lần và giúp chúng tôi hiểu rõ hơn về nhu cầu của khách hàng để phục vụ tốt hơn.</p>
+                </section>
+
+                <!-- Section 7 -->
+                <section id="sec7" class="policy-section">
+                    <h3 class="policy-section-title"><span>07</span> Thay đổi chính sách</h3>
+                    <p>Chúng tôi có quyền cập nhật và chỉnh sửa nội dung Chính sách bảo mật này bất cứ lúc nào để phù hợp với quy định của pháp luật và hoạt động của cửa hàng. Mọi thay đổi sẽ có hiệu lực ngay khi được đăng tải trên trang này.</p>
+                </section>
+
+                <!-- 4. CONTACT INFORMATION -->
+                <section id="sec8" class="policy-contact-info">
+                    <h5 class="fw-bold text-dark mb-3">LIÊN HỆ VỀ VẤN ĐỀ BẢO MẬT</h5>
+                    <p class="mb-1 text-dark"><strong>Hệ thống Phụ tùng MotoShop</strong></p>
+                    <p class="mb-1">Email: <a href="mailto:support@motoshop.vn" class="text-danger fw-bold">support@motoshop.vn</a></p>
+                    <p class="mb-1">Hotline: <span class="text-danger fw-bold">028 123 4567</span></p>
+                    <p class="mb-0">Địa chỉ: Quận 1, TP. Hồ Chí Minh, Việt Nam</p>
+                </section>
+            </article>
+        </div>
+    </div>
+</main>

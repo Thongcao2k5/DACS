@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khuyến mãi hấp dẫn - MotoShop</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- UI UTILITIES Placeholder -->
+    <div id="pageLoader" style="display: none !important;"><div class="loader-spinner"></div></div>
+    <div id="backToTop" class="back-to-top"><i class='bx bx-chevron-up'></i></div>
+
+    <!-- COMMON COMPONENTS PLACEHOLDERS -->
+    <div id="mainHeaderWrapper" class="main-header-wrapper"></div>
+    <div id="searchOverlay" class="search-overlay"></div>
+    <div id="mobileMenu" class="offcanvas offcanvas-start mobile-menu-offcanvas" tabindex="-1"></div>
+
+    <!-- 1. BREADCRUMB -->
+    <div class="breadcrumb-wrapper">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.html">Trang chủ</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Chương trình khuyến mãi</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <main class="container mb-5">
+        <!-- 2. PROMOTION BANNER -->
+        <section class="p-0 mb-5">
+            <div class="promo-banner-large rounded-4 overflow-hidden position-relative">
+                <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1600&q=80" class="w-100" style="height: 400px; object-fit: cover;" alt="Promo">
+                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="background: linear-gradient(to right, rgba(0,0,0,0.7), transparent); padding: 60px;">
+                    <div class="text-white col-lg-6">
+                        <h4 class="fw-bold text-warning mb-2">ƯU ĐÃI ĐẶC BIỆT</h4>
+                        <h1 class="display-4 fw-bolder mb-3">FLASH SALE CUỐI TUẦN<br>GIẢM ĐẾN 50%</h1>
+                        <p class="fs-5 mb-4 opacity-75">Áp dụng cho hơn 1000 mã linh kiện chính hãng Honda, Yamaha & Motul.</p>
+                        <a href="#discountGrid" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold">SĂN DEAL NGAY</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. PROMOTION CATEGORIES -->
+        <div class="row row-cols-2 row-cols-md-4 g-3 mb-5">
+            <div class="col">
+                <a href="#" class="promo-cat-card">
+                    <i class='bx bxs-zap'></i>
+                    <span>Flash Sale</span>
+                </a>
+            </div>
+            <div class="col">
+                <a href="#" class="promo-cat-card">
+                    <i class='bx bxs-category'></i>
+                    <span>Theo danh mục</span>
+                </a>
+            </div>
+            <div class="col">
+                <a href="#" class="promo-cat-card">
+                    <i class='bx bxs-award'></i>
+                    <span>Theo thương hiệu</span>
+                </a>
+            </div>
+            <div class="col">
+                <a href="#" class="promo-cat-card">
+                    <i class='bx bxs-gift'></i>
+                    <span>Combo tiết kiệm</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 4. FLASH SALE SECTION -->
+        <section class="p-0 mb-5">
+            <div class="flash-sale-header">
+                <div class="d-flex align-items-center gap-3">
+                    <h3 class="fw-bolder mb-0 italic">FLASH SALE</h3>
+                    <div class="countdown-timer">
+                        <span class="small fw-bold me-1">KẾT THÚC TRONG:</span>
+                        <div class="timer-unit" id="hr">02</div>
+                        <span class="fw-bold">:</span>
+                        <div class="timer-unit" id="mn">15</div>
+                        <span class="fw-bold">:</span>
+                        <div class="timer-unit" id="sc">30</div>
+                    </div>
+                </div>
+                <a href="#" class="text-white fw-bold text-decoration-none small">XEM TẤT CẢ <i class='bx bx-right-arrow-alt'></i></a>
+            </div>
+            <div class="flash-sale-body">
+                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+                    <!-- Flash Sale Item 1 -->
+                    <div class="col">
+                        <div class="product-card">
+                            <div class="discount-badge-large">-35%</div>
+                            <div class="product-img-wrapper">
+                                <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400" alt="P">
+                            </div>
+                            <div class="product-info flex-grow-1">
+                                <h6 class="name">Bộ Nồi Trước Honda SH Chính Hãng</h6>
+                                <div class="product-price">
+                                    <span class="current">812.500đ</span>
+                                    <span class="old">1.250.000đ</span>
+                                </div>
+                                <!-- Stock Progress -->
+                                <div class="stock-progress-wrapper">
+                                    <div class="stock-label">
+                                        <span>Đã bán: 18</span>
+                                        <span>Còn lại: 5</span>
+                                    </div>
+                                    <div class="progress-bar-custom">
+                                        <div class="progress-fill" style="width: 78%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-danger w-100 rounded-pill fw-bold mt-3">MUA NGAY</button>
+                        </div>
+                    </div>
+                    <!-- Other items... -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. DISCOUNT PRODUCTS GRID -->
+        <section class="p-0" id="discountGrid">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                <h3 class="fw-bold mb-0 text-uppercase">SẢN PHẨM ƯU ĐÃI</h3>
+                <div class="d-flex gap-2">
+                    <select class="form-select form-control-custom h-auto py-2 small" style="width: 180px;">
+                        <option>Giảm giá cao nhất</option>
+                        <option>Giá từ thấp đến cao</option>
+                        <option>Sản phẩm mới nhất</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+                <!-- Product 1 -->
+                <div class="col">
+                    <div class="product-card">
+                        <span class="product-badge badge-hot">-20%</span>
+                        <div class="product-img-wrapper">
+                            <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=400" alt="P">
+                        </div>
+                        <div class="product-info flex-grow-1">
+                            <span class="brand">MOTUL</span>
+                            <h6 class="name">Nhớt Motul 300V Factory Line 10W40 1L</h6>
+                            <div class="product-price">
+                                <span class="current">360.000đ</span>
+                                <span class="old">450.000đ</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-add-cart w-100 rounded-pill fw-bold mt-3">THÊM VÀO GIỎ</button>
+                    </div>
+                </div>
+                <!-- Add more items ... -->
+            </div>
+
+            <!-- Pagination -->
+            <nav class="pagination-wrapper mt-5">
+                <ul class="pagination">
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#"><i class='bx bx-chevron-right'></i></a></li>
+                </ul>
+            </nav>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-white py-5 mt-5"></footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/header.js"></script>
+    <script src="js/components.js"></script>
+    <script>
+        // Simple countdown logic
+        function startTimer() {
+            let h = 2, m = 15, s = 30;
+            setInterval(() => {
+                s--;
+                if(s < 0) { s = 59; m--; }
+                if(m < 0) { m = 59; h--; }
+                document.getElementById('hr').innerText = h.toString().padStart(2, '0');
+                document.getElementById('mn').innerText = m.toString().padStart(2, '0');
+                document.getElementById('sc').innerText = s.toString().padStart(2, '0');
+            }, 1000);
+        }
+        startTimer();
+    </script>
+</body>
+</html>

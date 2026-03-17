@@ -1,0 +1,153 @@
+@{
+    ViewData["Title"] = "Đơn hàng của tôi";
+}
+
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Account" asp-action="Profile">Tài khoản</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Đơn hàng của tôi</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<main class="container mb-5">
+    <div class="row g-4">
+        <!-- 2. SIDEBAR MENU (Left) -->
+        <aside class="col-lg-3">
+            <div class="account-sidebar">
+                <div class="d-flex align-items-center gap-3 mb-4 pb-4 border-bottom">
+                    <div style="width: 50px; height: 50px;">
+                        <img src="https://i.pravatar.cc/150?u=1" class="rounded-circle w-100 h-100 object-fit-cover" alt="User">
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">Nguyễn Văn An</h6>
+                        <p class="text-muted small mb-0">Thành viên Bạc</p>
+                    </div>
+                </div>
+                <ul class="account-nav">
+                    <li class="account-nav-item">
+                        <a asp-controller="Account" asp-action="Profile" class="account-nav-link">
+                            <i class='bx bx-user'></i> Thông tin cá nhân
+                        </a>
+                    </li>
+                    <li class="account-nav-item">
+                        <a asp-controller="Order" asp-action="Index" class="account-nav-link active">
+                            <i class='bx bx-package'></i> Đơn hàng của tôi
+                        </a>
+                    </li>
+                    <li class="account-nav-item"><a asp-controller="Account" asp-action="AddressBook" class="account-nav-link"><i class='bx bx-map'></i> Địa chỉ giao hàng</a></li>
+                    <li class="account-nav-item"><a asp-controller="Product" asp-action="Wishlist" class="account-nav-link"><i class='bx bx-heart'></i> Sản phẩm yêu thích</a></li>
+                    <li class="account-nav-item"><a asp-controller="Account" asp-action="ChangePassword" class="account-nav-link"><i class='bx bx-lock-alt'></i> Đổi mật khẩu</a></li>
+                    <li class="account-nav-item mt-3 pt-3 border-top">
+                        <a href="javascript:void(0)" class="account-nav-link text-danger" onclick="confirmLogout()">
+                            <i class='bx bx-log-out'></i> Đăng xuất
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 3. MAIN CONTENT (Right) -->
+        <div class="col-lg-9">
+            <h4 class="fw-bold mb-4 text-uppercase">ĐƠN HÀNG CỦA TÔI</h4>
+
+            <!-- Status Filter Tabs -->
+            <div class="order-filter-tabs">
+                <a href="#" class="order-filter-link active">Tất cả</a>
+                <a href="#" class="order-filter-link">Đang xử lý</a>
+                <a href="#" class="order-filter-link">Đang giao</a>
+                <a href="#" class="order-filter-link">Đã nhận</a>
+                <a href="#" class="order-filter-link">Đã hủy</a>
+            </div>
+
+            <!-- Orders List -->
+            <div id="ordersList">
+                <!-- Order 1 -->
+                <div class="order-item-card">
+                    <div class="order-card-header">
+                        <div>
+                            <span class="fw-bold me-2">Mã đơn: #MS-102345</span>
+                            <span class="text-muted small">| Đặt ngày: 12/03/2026</span>
+                        </div>
+                        <div class="status-indicator status-shipping">
+                            <i class='bx bx-truck'></i> ĐANG GIAO HÀNG
+                        </div>
+                    </div>
+                    <div class="order-card-body">
+                        <div class="order-product-preview">
+                            <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=100" alt="P">
+                            <div>
+                                <h6 class="fw-bold mb-1">Bộ Nồi Trước Honda SH Chính Hãng...</h6>
+                                <p class="text-muted small mb-0">và 1 sản phẩm khác</p>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-4 border-top">
+                            <div>
+                                <span class="text-muted small">Tổng thanh toán:</span>
+                                <h5 class="fw-bold text-danger mb-0">2.180.000đ</h5>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a asp-controller="Order" asp-action="Tracking" class="btn btn-outline-dark rounded-pill px-4 btn-sm fw-bold">Theo dõi</a>
+                                <a asp-controller="Order" asp-action="Detail" asp-route-id="MS-102345" class="btn btn-danger rounded-pill px-4 btn-sm fw-bold">Chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order 2 -->
+                <div class="order-item-card">
+                    <div class="order-card-header">
+                        <div>
+                            <span class="fw-bold me-2">Mã đơn: #MS-102300</span>
+                            <span class="text-muted small">| Đặt ngày: 05/03/2026</span>
+                        </div>
+                        <div class="status-indicator" style="background:#e8f5e9; color:#1b5e20;">
+                            <i class='bx bx-check-circle'></i> ĐÃ HOÀN THÀNH
+                        </div>
+                    </div>
+                    <div class="order-card-body">
+                        <div class="order-product-preview">
+                            <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=100" alt="P">
+                            <div>
+                                <h6 class="fw-bold mb-1">Nhớt Motul 300V Factory Line 10W40 1L</h6>
+                                <p class="text-muted small mb-0">Số lượng: 1</p>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-4 border-top">
+                            <div>
+                                <span class="text-muted small">Tổng thanh toán:</span>
+                                <h5 class="fw-bold text-danger mb-0">450.000đ</h5>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-danger rounded-pill px-4 btn-sm fw-bold">Mua lại</button>
+                                <a asp-controller="Order" asp-action="Detail" asp-route-id="MS-102300" class="btn btn-danger rounded-pill px-4 btn-sm fw-bold">Chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State (Hidden) -->
+                <div id="emptyOrders" class="d-none text-center py-5">
+                    <i class='bx bx-receipt fs-1 text-muted mb-3'></i>
+                    <h5 class="fw-bold">Bạn chưa có đơn hàng nào</h5>
+                    <p class="text-muted mb-4">Hãy khám phá thêm nhiều phụ tùng chất lượng tại MotoShop nhé!</p>
+                    <a asp-controller="Product" asp-action="Index" class="btn btn-danger rounded-pill px-5 fw-bold">MUA SẮM NGAY</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script>
+        function confirmLogout() {
+            if(confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+                alert('Đã đăng xuất!');
+            }
+        }
+    </script>
+}

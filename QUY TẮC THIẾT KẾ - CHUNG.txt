@@ -1,0 +1,112 @@
+UI DESIGN RULES
+(Admin + Frontend Website)
+
+PAGE LOADING
+
+Tất cả các trang trong hệ thống phải có hiệu ứng tải trang.
+
+Áp dụng cho:
+
+Admin Pages
+Frontend Pages
+
+Khi trang đang tải dữ liệu phải hiển thị:
+
+Skeleton Loading
+hoặc Spinner Loading
+
+Skeleton loading áp dụng cho:
+
+Table data
+Product grid
+Card list
+
+Spinner loading áp dụng cho:
+
+Page transition
+Small components
+
+PAGE TRANSITION
+
+Khi chuyển trang phải có hiệu ứng mượt.
+
+Hiệu ứng gợi ý:
+
+Fade
+Slide
+Smooth transition
+
+Transition duration:
+
+0.2s – 0.3s
+
+BACK TO TOP BUTTON
+
+Tất cả các trang phải có nút Back To Top.
+
+Vị trí:
+
+Góc phải dưới màn hình.
+
+BACK TO TOP BEHAVIOR
+
+Nút Back To Top chỉ hiển thị khi:
+
+Người dùng scroll xuống một khoảng nhất định.
+
+Ví dụ:
+
+300px từ đầu trang.
+
+BACK TO TOP ACTION
+
+Khi người dùng click nút:
+
+Trang sẽ scroll mượt về đầu trang.
+
+Hiệu ứng:
+
+Smooth scroll.
+
+ÁP DỤNG MẶC ĐỊNH CHO MỌI PROMPT
+
+Từ thời điểm này trở đi:
+
+Mọi prompt thiết kế page phải tự động bao gồm:
+
+Page Loading Animation
+Back To Top Button
+
+Không cần nhắc lại trong từng prompt.
+
+CONSISTENCY RULE
+
+Toàn bộ hệ thống phải đảm bảo:
+
+UI đồng nhất
+Animation đồng nhất
+Spacing đồng nhất
+
+RESPONSIVE DESIGN
+
+Tất cả trang phải hỗ trợ:
+
+Desktop
+Tablet
+Mobile
+
+PERFORMANCE
+
+Tất cả animation và loading phải:
+
+Nhẹ
+Không gây lag
+Tối ưu cho trải nghiệm người dùng
+
+UX EXPERIENCE
+
+Các hiệu ứng UI phải:
+
+Mượt
+Dễ hiểu
+Không gây khó chịu cho người dùng

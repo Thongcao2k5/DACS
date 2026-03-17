@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Quản lý Đặt lịch - MotoShop Admin</title>
+    
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+    <link rel="stylesheet" href="../assets/css/pagination-component.css" />
+
+    <!-- Helpers -->
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      .customer-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+      .booking-time { font-weight: 700; color: var(--ds-text-heading); }
+      .service-tag { font-size: 0.75rem; background: #f0f2f4; padding: 2px 8px; border-radius: 4px; color: #566a7f; }
+      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+      
+      /* Status Colors */
+      .status-pending { color: #ffab00; background: #fff8e1; }
+      .status-confirmed { color: #03c3ec; background: #e1faff; }
+      .status-processing { color: #696cff; background: #e7e7ff; }
+      .status-completed { color: #71dd37; background: #e8fad0; }
+      .status-cancelled { color: #ff3e1d; background: #ffe5e5; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Sidebar -->
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="m-0 text-muted fw-light">Dịch vụ / <span class="text-dark fw-bold">Lịch đặt dịch vụ</span></h5>
+            </div>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <!-- Header Actions -->
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-uppercase">Quản lý Đặt lịch</h4>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-primary" onclick="openBookingModal('create')"><i class="bx bx-plus me-1"></i>Tạo lịch đặt mới</button>
+                  <button class="btn btn-outline-secondary" onclick="DS.showToast('Đang xuất danh sách đặt lịch...', 'info')"><i class="bx bx-export me-1"></i>Xuất Excel</button>
+                </div>
+              </div>
+
+              <!-- Stats Overview -->
+              <div class="row mb-4">
+                <div class="col-md-3">
+                  <div class="card border-0 shadow-sm p-3 text-center">
+                    <div class="text-muted small text-uppercase fw-bold">Hôm nay</div>
+                    <div class="h4 fw-bold mb-0 text-primary">12</div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="card border-0 shadow-sm p-3 text-center">
+                    <div class="text-muted small text-uppercase fw-bold">Chờ xác nhận</div>
+                    <div class="h4 fw-bold mb-0 text-warning">5</div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="card border-0 shadow-sm p-3 text-center">
+                    <div class="text-muted small text-uppercase fw-bold">Đã xác nhận</div>
+                    <div class="h4 fw-bold mb-0 text-info">8</div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="card border-0 shadow-sm p-3 text-center">
+                    <div class="text-muted small text-uppercase fw-bold">Hoàn thành</div>
+                    <div class="h4 fw-bold mb-0 text-success">45</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Search & Filter Bar -->
+              <div class="card mb-4 border shadow-none">
+                <div class="card-body">
+                  <form class="row g-3">
+                    <div class="col-lg-3 col-md-6">
+                      <label class="filter-label">Khách hàng / SĐT</label>
+                      <div class="input-group input-group-merge">
+                        <span class="input-group-text"><i class="bx bx-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Tên khách hoặc số điện thoại...">
+                      </div>
+                    </div>
+                    <div class="col-lg-2 col-md-3">
+                      <label class="filter-label">Dịch vụ</label>
+                      <select class="form-select">
+                        <option value="">Tất cả dịch vụ</option>
+                        <option>Bảo dưỡng tổng quát</option>
+                        <option>Vệ sinh nồi</option>
+                        <option>Thay nhớt</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-2 col-md-3">
+                      <label class="filter-label">Trạng thái</label>
+                      <select class="form-select">
+                        <option value="">Tất cả</option>
+                        <option>Chờ xác nhận</option>
+                        <option>Đã xác nhận</option>
+                        <option>Đang thực hiện</option>
+                        <option>Hoàn thành</option>
+                        <option>Đã hủy</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                      <label class="filter-label">Ngày đặt lịch</label>
+                      <input type="date" class="form-control">
+                    </div>
+                    <div class="col-lg-2 col-md-6 d-flex align-items-end">
+                      <button type="submit" class="btn btn-secondary w-100"><i class="bx bx-filter-alt me-1"></i>Lọc</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- Booking Table -->
+              <div class="card overflow-hidden border shadow-sm">
+                <div class="table-responsive text-nowrap">
+                  <table class="table table-hover m-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Mã lịch</th>
+                        <th>Khách hàng</th>
+                        <th>Dịch vụ</th>
+                        <th>Thời gian hẹn</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><span class="fw-bold">#BK-8801</span></td>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <img src="../assets/img/avatars/1.png" class="customer-avatar me-2 shadow-sm">
+                            <div>
+                              <div class="fw-bold text-dark">Lê Minh Tâm</div>
+                              <small class="text-muted">0908 111 222</small>
+                            </div>
+                          </div>
+                        </td>
+                        <td><span class="service-tag">Bảo dưỡng tổng quát</span></td>
+                        <td>
+                          <div class="booking-time">14/03/2026</div>
+                          <small class="text-muted">09:30 AM</small>
+                        </td>
+                        <td><span class="badge status-pending">Chờ xác nhận</span></td>
+                        <td class="text-end">
+                          <div class="dropdown">
+                            <button type="button" class="btn btn-sm btn-icon p-0" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded"></i></button>
+                            <div class="dropdown-menu dropdown-menu-end">
+                              <a class="dropdown-item text-success" href="javascript:void(0);" onclick="handleStatus('Xác nhận lịch đặt')"><i class="bx bx-check me-1"></i> Xác nhận</a>
+                              <a class="dropdown-item" href="javascript:void(0);" onclick="openBookingModal('edit')"><i class="bx bx-edit-alt me-1"></i> Chỉnh sửa</a>
+                              <div class="dropdown-divider"></div>
+                              <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="handleCancel('BK-8801')"><i class="bx bx-x me-1"></i> Hủy lịch</a>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><span class="fw-bold">#BK-8795</span></td>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-circle bg-label-primary me-2" style="width: 32px; height: 32px; font-size: 0.7rem;">NH</div>
+                            <div>
+                              <div class="fw-bold text-dark">Nguyễn Thu Hà</div>
+                              <small class="text-muted">0912 333 444</small>
+                            </div>
+                          </div>
+                        </td>
+                        <td><span class="service-tag">Vệ sinh nồi xe ga</span></td>
+                        <td>
+                          <div class="booking-time">14/03/2026</div>
+                          <small class="text-muted">10:45 AM</small>
+                        </td>
+                        <td><span class="badge status-confirmed">Đã xác nhận</span></td>
+                        <td class="text-end">
+                          <div class="dropdown">
+                            <button type="button" class="btn btn-sm btn-icon p-0" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded"></i></button>
+                            <div class="dropdown-menu dropdown-menu-end">
+                              <a class="dropdown-item text-primary" href="javascript:void(0);"><i class="bx bx-play me-1"></i> Bắt đầu xử lý</a>
+                              <a class="dropdown-item" href="javascript:void(0);" onclick="openBookingModal('edit')"><i class="bx bx-edit-alt me-1"></i> Chỉnh sửa</a>
+                              <div class="dropdown-divider"></div>
+                              <a class="dropdown-item text-danger" href="javascript:void(0);"><i class="bx bx-x me-1"></i> Hủy lịch</a>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><span class="fw-bold">#BK-8790</span></td>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <img src="../assets/img/avatars/5.png" class="customer-avatar me-2 shadow-sm">
+                            <div>
+                              <div class="fw-bold text-dark">Trần Hoàng Nam</div>
+                              <small class="text-muted">0988 777 999</small>
+                            </div>
+                          </div>
+                        </td>
+                        <td><span class="service-tag">Thay nhớt máy</span></td>
+                        <td>
+                          <div class="booking-time">13/03/2026</div>
+                          <small class="text-muted">03:00 PM</small>
+                        </td>
+                        <td><span class="badge status-completed">Hoàn thành</span></td>
+                        <td class="text-end">
+                          <button class="btn btn-sm btn-icon text-info" title="Xem chi tiết"><i class="bx bx-show"></i></button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Phân trang (3 cột chuẩn Design System) -->
+                <div class="table-pagination-footer">
+                  <div class="pagination-rows-selector">Hiển thị <select class="form-select form-select-sm d-inline-block w-auto mx-2"><option>10</option><option>20</option></select> dòng</div>
+                  <nav class="pagination-nav"><ul class="pagination pagination-sm m-0"><li class="page-item active"><a class="page-link" href="#">1</a></li><li class="page-item"><a class="page-link" href="#">2</a></li></ul></nav>
+                  <div class="pagination-info text-muted fw-bold">Tổng: 156 lượt đặt</div>
+                </div>
+              </div>
+            </div>
+            
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl py-2">© 2026, MotoShop Admin - Service Booking Management</div>
+            </footer>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Tạo / Sửa Lịch đặt -->
+    <div class="modal fade" id="bookingModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+          <div class="modal-header border-bottom p-4">
+            <h5 class="modal-title fw-bold" id="bookingModalTitle">Tạo lịch đặt mới</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <form id="bookingForm">
+              <div class="mb-3">
+                <label class="filter-label">Khách hàng <span class="text-danger">*</span></label>
+                <div class="input-group input-group-merge">
+                  <span class="input-group-text"><i class="bx bx-user"></i></span>
+                  <input type="text" class="form-control" placeholder="Tìm tên khách hoặc số điện thoại...">
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="filter-label">Dịch vụ lựa chọn <span class="text-danger">*</span></label>
+                <select class="form-select">
+                  <option value="">Chọn dịch vụ...</option>
+                  <option>Bảo dưỡng tổng quát</option>
+                  <option>Vệ sinh nồi</option>
+                  <option>Thay nhớt</option>
+                </select>
+              </div>
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="filter-label">Ngày hẹn <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control">
+                </div>
+                <div class="col-md-6">
+                  <label class="filter-label">Giờ hẹn <span class="text-danger">*</span></label>
+                  <input type="time" class="form-control">
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="filter-label">Ghi chú từ khách hàng</label>
+                <textarea class="form-control" rows="2" placeholder="Yêu cầu riêng, tình trạng xe..."></textarea>
+              </div>
+              <div>
+                <label class="filter-label">Trạng thái xác nhận</label>
+                <select class="form-select border-primary">
+                  <option value="pending">Chờ xác nhận</option>
+                  <option value="confirmed">Xác nhận ngay</option>
+                </select>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer border-top p-3 px-4">
+            <button class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Đóng</button>
+            <button class="btn btn-primary px-4" id="btnSaveBooking" onclick="handleSaveBooking()">Lưu lịch hẹn</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Core JS -->
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+
+      function openBookingModal(mode) {
+        document.getElementById('bookingModalTitle').innerText = mode === 'create' ? 'Tạo lịch đặt mới' : 'Cập nhật thông tin đặt lịch';
+        if(mode === 'create') document.getElementById('bookingForm').reset();
+        bookingModal.show();
+      }
+
+      function handleSaveBooking() {
+        const btn = document.getElementById('btnSaveBooking');
+        DS.loading.btnStart(btn);
+        setTimeout(() => {
+          DS.loading.btnStop(btn);
+          bookingModal.hide();
+          UI.showToast('Đã lưu lịch đặt dịch vụ thành công!', 'success');
+        }, 1000);
+      }
+
+      function handleStatus(title) {
+        DS.confirm({
+          title: title,
+          message: `Bạn có chắc chắn muốn cập nhật trạng thái này? Hệ thống sẽ gửi thông báo cho khách hàng.`,
+          type: 'success',
+          confirmText: 'Đồng ý',
+          onConfirm: () => {
+            UI.showToast('Cập nhật trạng thái thành công', 'success');
+          }
+        });
+      }
+
+      function handleCancel(code) {
+        UI.confirmDelete({
+          title: 'Hủy lịch đặt',
+          message: `Bạn chắc chắn muốn hủy lịch <strong>#${code}</strong>? Hành động này không thể hoàn tác.`,
+          type: 'danger',
+          onConfirm: () => {
+            UI.showToast(`Đã hủy lịch #${code}`, 'warning');
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

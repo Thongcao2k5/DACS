@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Đơn vị tính - MotoShop Admin</title>
+    
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+    <link rel="stylesheet" href="../assets/css/pagination-component.css" />
+
+    <!-- Helpers -->
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      :root {
+        --ds-primary: #E60023;
+        --ds-primary-hover: #C2001F;
+        --ds-primary-light: rgba(230, 0, 35, 0.08);
+      }
+      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Sidebar dùng chung -->
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="m-0 text-muted fw-light">Sản phẩm / <span class="text-dark fw-bold">Đơn vị tính</span></h5>
+            </div>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <!-- Header & Actions -->
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-uppercase">Quản lý Đơn vị tính</h4>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-danger d-none" id="btnBulkDelete" onclick="handleBulkDelete()">
+                    <i class="bx bx-trash me-1"></i>Xóa đã chọn (<span id="selectedCount">0</span>)
+                  </button>
+                  <button class="btn btn-primary" onclick="openUnitModal('create')"><i class="bx bx-plus me-1"></i>Thêm đơn vị tính</button>
+                  <button class="btn btn-outline-secondary" onclick="DS.showToast('Đang xuất Excel...', 'info')"><i class="bx bx-export me-1"></i>Xuất Excel</button>
+                </div>
+              </div>
+
+              <!-- Bảng dữ liệu -->
+              <div class="card overflow-hidden border shadow-sm">
+                <div class="table-responsive text-nowrap">
+                  <table class="table table-hover m-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                        <th>Mã đơn vị</th>
+                        <th>Tên đơn vị</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><input class="form-check-input" type="checkbox" onchange="updateBulkActions()"></td>
+                        <td><code>CAI</code></td>
+                        <td><span class="fw-bold">Cái</span></td>
+                        <td><span class="ds-badge ds-badge-success">Đang hoạt động</span></td>
+                        <td class="text-end">
+                          <button class="btn btn-sm btn-icon text-primary" onclick="openUnitModal('edit', {code: 'CAI', name: 'Cái', status: true})"><i class="bx bx-edit-alt"></i></button>
+                          <button class="btn btn-sm btn-icon text-danger" onclick="handleDeleteUnit('Cái')"><i class="bx bx-trash"></i></button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><input class="form-check-input" type="checkbox" onchange="updateBulkActions()"></td>
+                        <td><code>BO</code></td>
+                        <td><span class="fw-bold">Bộ</span></td>
+                        <td><span class="ds-badge ds-badge-success">Đang hoạt động</span></td>
+                        <td class="text-end">
+                          <button class="btn btn-sm btn-icon text-primary"><i class="bx bx-edit-alt"></i></button>
+                          <button class="btn btn-sm btn-icon text-danger" onclick="handleDeleteUnit('Bộ')"><i class="bx bx-trash"></i></button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Phân trang -->
+                <div class="table-pagination-footer">
+                  <div class="pagination-rows-selector">Hiển thị <select class="form-select form-select-sm d-inline-block w-auto mx-2"><option>10</option></select> dòng</div>
+                  <nav class="pagination-nav"><ul class="pagination pagination-sm m-0"><li class="page-item active"><a class="page-link" href="#">1</a></li></ul></nav>
+                  <div class="pagination-info text-muted">Tổng: 2 đơn vị</div>
+                </div>
+              </div>
+            </div>
+            <footer class="content-footer footer bg-footer-theme"><div class="container-xxl py-2">© 2026, MotoShop Admin</div></footer>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Thêm/Sửa Đơn vị tính -->
+    <div class="modal fade" id="unitModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content shadow-lg border-0">
+          <div class="modal-header border-bottom p-4">
+            <h5 class="modal-title fw-bold" id="modalTitle">Thêm đơn vị tính</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4">
+            <form id="unitForm">
+              <div class="mb-3">
+                <label class="filter-label">Tên đơn vị tính <span class="text-danger">*</span></label>
+                <input type="text" id="unitName" class="form-control" placeholder="VD: Cái, Bộ, Hộp..." required>
+                <div class="invalid-feedback">Tên đơn vị tính không được để trống</div>
+              </div>
+              <div class="mb-3">
+                <label class="filter-label">Mã đơn vị (Mã định danh) <span class="text-danger">*</span></label>
+                <input type="text" id="unitCode" class="form-control" placeholder="VD: CAI, BO, HOP..." required>
+                <div class="invalid-feedback">Mã đơn vị tính không được để trống</div>
+              </div>
+              <div class="mb-0">
+                <label class="filter-label">Trạng thái hoạt động</label>
+                <div class="form-check form-switch mt-2">
+                  <input class="form-check-input" type="checkbox" id="unitStatus" checked>
+                  <label class="form-check-label fw-bold" for="unitStatus">Đang sử dụng</label>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer border-top p-3 px-4">
+            <button class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Hủy bỏ</button>
+            <button class="btn btn-primary px-4" id="btnSaveUnit" onclick="handleSaveUnit()">
+              <i class="bx bx-check me-1"></i>Lưu dữ liệu
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+        <!-- Core JS -->
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      const unitModal = new bootstrap.Modal(document.getElementById('unitModal'));
+      let isEdit = false;
+
+      function openUnitModal(mode, data = null) {
+        const form = document.getElementById('unitForm');
+        form.reset();
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+
+        if (mode === 'create') {
+          isEdit = false;
+          document.getElementById('modalTitle').innerText = 'Thêm đơn vị tính';
+        } else {
+          isEdit = true;
+          document.getElementById('modalTitle').innerText = 'Chỉnh sửa đơn vị tính';
+          document.getElementById('unitName').value = data.name;
+          document.getElementById('unitCode').value = data.code;
+          document.getElementById('unitStatus').checked = data.status;
+        }
+        unitModal.show();
+      }
+
+      function handleSaveUnit() {
+        const name = document.getElementById('unitName').value.trim();
+        const code = document.getElementById('unitCode').value.trim();
+        let hasError = false;
+
+        if (!name) { document.getElementById('unitName').classList.add('is-invalid'); hasError = true; }
+        if (!code) { document.getElementById('unitCode').classList.add('is-invalid'); hasError = true; }
+
+        if (hasError) return;
+
+        const btn = document.getElementById('btnSaveUnit');
+        DS.loading.btnStart(btn);
+
+        setTimeout(() => {
+          DS.loading.btnStop(btn);
+          unitModal.hide();
+          UI.showToast(isEdit ? 'Cập nhật đơn vị tính thành công!' : 'Thêm đơn vị tính thành công!', 'success');
+        }, 1000);
+      }
+
+      function handleDeleteUnit(name) {
+        UI.confirmDelete({
+          message: `Bạn chắc chắn muốn xóa đơn vị tính <strong>"${name}"</strong> không?`,
+          onConfirm: () => { /* Logic xóa */ }
+        });
+      }
+
+      // Xử lý Checkbox & Xóa hàng loạt
+      function updateBulkActions() {
+        const checkedCount = document.querySelectorAll('tbody .form-check-input:checked').length;
+        const btnBulk = document.getElementById('btnBulkDelete');
+        const countSpan = document.getElementById('selectedCount');
+        if (checkedCount > 0) {
+          btnBulk.classList.remove('d-none');
+          countSpan.innerText = checkedCount;
+        } else {
+          btnBulk.classList.add('d-none');
+        }
+      }
+
+      document.getElementById('checkAll').onclick = function() {
+        document.querySelectorAll('tbody .form-check-input').forEach(cb => cb.checked = this.checked);
+        updateBulkActions();
+      };
+
+      function handleBulkDelete() {
+        const count = document.querySelectorAll('tbody .form-check-input:checked').length;
+        UI.confirmDelete({
+          message: `Bạn chắc chắn muốn xóa <strong>${count}</strong> đơn vị đã chọn?`,
+          onConfirm: () => { updateBulkActions(); }
+        });
+      }
+    </script>
+  </body>
+</html>

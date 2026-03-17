@@ -1,0 +1,158 @@
+@{
+    ViewData["Title"] = "Hệ thống cửa hàng MotoShop";
+}
+
+<!-- 1. BREADCRUMB -->
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Hệ thống cửa hàng</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- 1. PAGE HEADER -->
+<header class="container mb-5">
+    <div class="p-5 bg-danger text-white rounded-4 text-center">
+        <h1 class="display-4 fw-bolder mb-3">HỆ THỐNG CỬA HÀNG MOTOSHOP</h1>
+        <p class="fs-5 opacity-75">Tìm cửa hàng MotoShop gần bạn để mua phụ tùng và sử dụng dịch vụ bảo dưỡng chuyên nghiệp.</p>
+    </div>
+</header>
+
+<main class="container mb-5">
+    <!-- 2. BRANCH FINDER -->
+    <div class="branch-finder-bar">
+        <div class="row g-3">
+            <div class="col-lg-8">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0"><i class='bx bx-search fs-4 text-muted'></i></span>
+                    <input type="text" class="form-control form-control-custom border-start-0 ps-0" placeholder="Tìm chi nhánh theo thành phố hoặc địa chỉ...">
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <select class="form-select form-control-custom h-auto py-2">
+                    <option selected>Tất cả Thành phố</option>
+                    <option>TP Hồ Chí Minh</option>
+                    <option>Hà Nội</option>
+                    <option>Đà Nẵng</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- 3. BRANCH LIST (Left) -->
+        <div class="col-lg-6">
+            <div class="row g-4">
+                <!-- Branch 1 -->
+                <div class="col-12">
+                    <div class="branch-card">
+                        <div class="branch-card-body">
+                            <h5 class="branch-title"><i class='bx bxs-map'></i> MotoShop Quận 7</h5>
+                            <ul class="branch-info-list">
+                                <li class="branch-info-item">
+                                    <i class='bx bx-navigation'></i>
+                                    <span>123 Nguyễn Thị Thập, Phường Tân Quy, Quận 7, TP. Hồ Chí Minh</span>
+                                </li>
+                                <li class="branch-info-item">
+                                    <i class='bx bx-phone'></i>
+                                    <span>028 1234 5678 - 0901 234 567</span>
+                                </li>
+                                <li class="branch-info-item">
+                                    <i class='bx bx-time-five'></i>
+                                    <span>08:00 – 20:00 (Thứ 2 – Chủ nhật)</span>
+                                </li>
+                            </ul>
+                            <div class="branch-actions">
+                                <a href="#" class="btn-branch-outline">XEM BẢN ĐỒ</a>
+                                <a href="https://www.google.com/maps" target="_blank" class="btn-branch-outline">CHỈ ĐƯỜNG</a>
+                                <a href="tel:0901234567" class="btn-branch-call">GỌI ĐIỆN HỖ TRỢ</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Branch 2 -->
+                <div class="col-12">
+                    <div class="branch-card">
+                        <div class="branch-card-body">
+                            <h5 class="branch-title"><i class='bx bxs-map'></i> MotoShop Quận 1</h5>
+                            <ul class="branch-info-list">
+                                <li class="branch-info-item">
+                                    <i class='bx bx-navigation'></i>
+                                    <span>456 Lý Tự Trọng, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh</span>
+                                </li>
+                                <li class="branch-info-item">
+                                    <i class='bx bx-phone'></i>
+                                    <span>028 2233 4455 - 0988 777 666</span>
+                                </li>
+                                <li class="branch-info-item">
+                                    <i class='bx bx-time-five'></i>
+                                    <span>08:00 – 21:00 (Thứ 2 – Chủ nhật)</span>
+                                </li>
+                            </ul>
+                            <div class="branch-actions">
+                                <a href="#" class="btn-branch-outline">XEM BẢN ĐỒ</a>
+                                <a href="#" class="btn-branch-outline">CHỈ ĐƯỜNG</a>
+                                <a href="tel:0988777666" class="btn-branch-call">GỌI ĐIỆN HỖ TRỢ</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. MAP SECTION (Right) -->
+        <div class="col-lg-6">
+            <div class="map-container h-100" style="min-height: 500px;">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.669726937899!2d106.6648812758382!3d10.759917059496412!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f1b7c3ed289%3A0xf042663641743c74!2zMTIzIMSQxrDhu51uZyBBQkMsIFF14bqtbiAxLCBUUC4gSOG7kyBDaMOtIE1pbmg!5e0!3m2!1svi!2s!4v1710400000000!5m2!1svi!2s" allowfullscreen="" loading="lazy"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. STORE FEATURES -->
+    <div class="branch-features-box">
+        <h4 class="fw-bold mb-5 text-uppercase">DỊCH VỤ SẴN CÓ TẠI MỌI CHI NHÁNH</h4>
+        <div class="row g-4">
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="feature-icon-item">
+                    <div class="feature-icon-circle"><i class='bx bx-check-shield'></i></div>
+                    <span>Phụ tùng chính hãng</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="feature-icon-item">
+                    <div class="feature-icon-circle"><i class='bx bx-wrench'></i></div>
+                    <span>Bảo dưỡng chuyên nghiệp</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="feature-icon-item">
+                    <div class="feature-icon-circle"><i class='bx bx-test-tube'></i></div>
+                    <span>Vệ sinh kim phun</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="feature-icon-item">
+                    <div class="feature-icon-circle"><i class='bx bx-droplet'></i></div>
+                    <span>Thay dầu nhớt nhanh</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="feature-icon-item">
+                    <div class="feature-icon-circle"><i class='bx bx-cog'></i></div>
+                    <span>Sửa chữa xe máy</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="feature-icon-item">
+                    <div class="feature-icon-circle"><i class='bx bx-wifi'></i></div>
+                    <span>Wifi & Cafe miễn phí</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>

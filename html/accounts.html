@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Tài khoản Quản trị - MotoShop Admin</title>
+    
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+    <link rel="stylesheet" href="../assets/css/pagination-component.css" />
+
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      .user-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
+      .role-badge { font-weight: 700; font-size: 0.75rem; text-transform: uppercase; }
+      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+      .last-login { font-size: 0.8rem; color: #697a8d; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="m-0 text-muted fw-light">Hệ thống / <span class="text-dark fw-bold">Tài khoản Admin</span></h5>
+            </div>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-uppercase">Danh sách Nhân viên</h4>
+                <button class="btn btn-primary" onclick="openAccountModal('create')"><i class="bx bx-user-plus me-1"></i>Thêm tài khoản</button>
+              </div>
+
+              <!-- Search Bar -->
+              <div class="card mb-4 border shadow-none">
+                <div class="card-body">
+                  <form class="row g-3">
+                    <div class="col-lg-6 col-md-12">
+                      <label class="filter-label">Tìm kiếm nhân viên</label>
+                      <input type="text" class="form-control" placeholder="Tên, Email hoặc Username...">
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                      <label class="filter-label">Vai trò</label>
+                      <select class="form-select">
+                        <option>Tất cả</option>
+                        <option>Administrator</option>
+                        <option>Quản lý kho</option>
+                        <option>Nhân viên bán hàng</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6 d-flex align-items-end">
+                      <button type="submit" class="btn btn-secondary w-100">Lọc</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- Account Table -->
+              <div class="card border shadow-sm overflow-hidden">
+                <div class="table-responsive text-nowrap">
+                  <table class="table table-hover m-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Nhân viên</th>
+                        <th>Email / Username</th>
+                        <th>Vai trò</th>
+                        <th>Đăng nhập cuối</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Hành động</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <img src="../assets/img/avatars/1.png" class="user-avatar me-2 shadow-sm">
+                            <div><div class="fw-bold text-dark">Lê Minh Tâm</div><small class="text-muted">Quản trị viên</small></div>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="fw-bold small">admin_tam</div>
+                          <div class="text-muted small">tam.le@motoshop.com</div>
+                        </td>
+                        <td><span class="badge bg-label-primary role-badge">Administrator</span></td>
+                        <td><div class="last-login">14/03/2026</div><small class="text-muted">10:45 AM</small></td>
+                        <td><span class="ds-badge ds-badge-success">Đang hoạt động</span></td>
+                        <td class="text-end">
+                          <button class="btn btn-sm btn-icon text-primary" title="Chỉnh sửa" onclick="openAccountModal('edit', 'Lê Minh Tâm')"><i class="bx bx-edit-alt"></i></button>
+                          <button class="btn btn-sm btn-icon text-warning" title="Đổi mật khẩu" onclick="openPasswordModal('Lê Minh Tâm')"><i class="bx bx-key"></i></button>
+                          <button class="btn btn-sm btn-icon text-danger" title="Khóa tài khoản" onclick="handleLock('Lê Minh Tâm')"><i class="bx bx-lock-alt"></i></button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-circle bg-label-info me-2" style="width: 38px; height: 38px;">HA</div>
+                            <div><div class="fw-bold text-dark">Nguyễn Hoàng An</div><small class="text-muted">Nhân viên kho</small></div>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="fw-bold small">an_nguyen</div>
+                          <div class="text-muted small">an.nguyen@motoshop.com</div>
+                        </td>
+                        <td><span class="badge bg-label-warning role-badge">Quản lý kho</span></td>
+                        <td><div class="last-login">13/03/2026</div><small class="text-muted">04:20 PM</small></td>
+                        <td><span class="ds-badge ds-badge-success">Đang hoạt động</span></td>
+                        <td class="text-end">
+                          <button class="btn btn-sm btn-icon text-primary"><i class="bx bx-edit-alt"></i></button>
+                          <button class="btn btn-sm btn-icon text-warning"><i class="bx bx-key"></i></button>
+                          <button class="btn btn-sm btn-icon text-danger"><i class="bx bx-lock-alt"></i></button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Tài khoản -->
+    <div class="modal fade" id="accModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+          <div class="modal-header border-bottom p-4">
+            <h5 class="modal-title fw-bold" id="modalTitle">Thiết lập tài khoản</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="row g-3">
+              <div class="col-12 text-center mb-3">
+                <div class="avatar-circle bg-light mx-auto" style="width: 80px; height: 80px;">
+                  <i class="bx bx-user-circle fs-1 text-muted"></i>
+                </div>
+                <button class="btn btn-sm btn-link mt-2">Thay đổi ảnh</button>
+              </div>
+              <div class="col-12">
+                <label class="filter-label">Họ và tên nhân viên</label>
+                <input type="text" id="accName" class="form-control" placeholder="Nhập đầy đủ họ tên">
+              </div>
+              <div class="col-md-6">
+                <label class="filter-label">Tên đăng nhập</label>
+                <input type="text" class="form-control" placeholder="username">
+              </div>
+              <div class="col-md-6">
+                <label class="filter-label">Vai trò hệ thống</label>
+                <select class="form-select">
+                  <option>Administrator</option>
+                  <option>Quản lý kho</option>
+                  <option>Nhân viên bán hàng</option>
+                  <option>Kỹ thuật viên</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="filter-label">Địa chỉ Email</label>
+                <input type="email" class="form-control" placeholder="example@motoshop.com">
+              </div>
+              <div class="col-12" id="passwordSection">
+                <label class="filter-label">Mật khẩu khởi tạo</label>
+                <input type="password" class="form-control" placeholder="********">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer border-top p-3 px-4">
+            <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button class="btn btn-primary px-4" onclick="DS.showToast('Đã lưu tài khoản thành công!', 'success'); bootstrap.Modal.getInstance(document.getElementById('accModal')).hide();">Lưu tài khoản</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Đổi mật khẩu -->
+    <div class="modal fade" id="passwordModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content shadow-lg border-0">
+          <div class="modal-header border-bottom p-4">
+            <h5 class="modal-title fw-bold">Đặt lại mật khẩu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <p class="small text-muted mb-3">Đặt lại mật khẩu cho nhân viên <strong id="resetPassName" class="text-dark"></strong></p>
+            <div class="mb-3">
+              <label class="filter-label">Mật khẩu mới</label>
+              <input type="password" class="form-control" placeholder="********">
+            </div>
+            <div>
+              <label class="filter-label">Xác nhận mật khẩu</label>
+              <input type="password" class="form-control" placeholder="********">
+            </div>
+          </div>
+          <div class="modal-footer border-top p-3 px-4">
+            <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button class="btn btn-primary px-4" onclick="DS.showToast('Đã đổi mật khẩu thành công!', 'success'); bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();">Cập nhật</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      const accModal = new bootstrap.Modal(document.getElementById('accModal'));
+      const passModal = new bootstrap.Modal(document.getElementById('passwordModal'));
+
+      function openAccountModal(mode, name = '') {
+        document.getElementById('modalTitle').innerText = mode === 'create' ? 'Thêm tài khoản mới' : 'Chỉnh sửa tài khoản';
+        if(mode === 'edit') {
+          document.getElementById('accName').value = name;
+          document.getElementById('passwordSection').style.display = 'none';
+        } else {
+          document.getElementById('accName').value = '';
+          document.getElementById('passwordSection').style.display = 'block';
+        }
+        accModal.show();
+      }
+
+      function openPasswordModal(name) {
+        document.getElementById('resetPassName').innerText = name;
+        passModal.show();
+      }
+
+      function handleLock(name) {
+        UI.confirmDelete({
+          title: 'Khóa tài khoản',
+          message: `Bạn chắc chắn muốn khóa tài khoản của <strong>${name}</strong>? Nhân viên này sẽ không thể đăng nhập vào hệ thống quản trị.`,
+          onConfirm: () => {
+            DS.showToast(`Đã khóa tài khoản ${name}`, 'warning');
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

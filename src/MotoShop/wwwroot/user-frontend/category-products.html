@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phụ tùng máy chính hãng - MotoShop</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- UI UTILITIES Placeholder -->
+    <div id="pageLoader" style="display: none !important;"><div class="loader-spinner"></div></div>
+    <div id="backToTop" class="back-to-top"><i class='bx bx-chevron-up'></i></div>
+
+    <!-- COMMON COMPONENTS PLACEHOLDERS -->
+    <div id="mainHeaderWrapper" class="main-header-wrapper"></div>
+    <div id="searchOverlay" class="search-overlay"></div>
+    <div id="mobileMenu" class="offcanvas offcanvas-start mobile-menu-offcanvas" tabindex="-1"></div>
+
+    <!-- 1. BREADCRUMB -->
+    <div class="breadcrumb-wrapper">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.html">Trang chủ</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Phụ tùng máy</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- 2. CATEGORY HEADER & 3. DESCRIPTION -->
+    <section class="category-header-section">
+        <div class="container">
+            <div class="category-header-content">
+                <h1>PHỤ TÙNG MÁY</h1>
+                <p>Tổng hợp các loại linh kiện động cơ, bộ nồi, piston, xi lanh chính hãng giúp tối ưu hóa hiệu suất vận hành và độ bền cho xế yêu của bạn.</p>
+            </div>
+        </div>
+    </section>
+
+    <main class="container mb-5">
+        <!-- 4. FILTER & SORT BAR (Inline) -->
+        <div class="inline-filter-bar">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small fw-bold text-muted">THƯƠNG HIỆU:</span>
+                    <select class="form-select form-control-custom h-auto py-1 px-3 small" style="width: auto;">
+                        <option selected>Tất cả thương hiệu</option>
+                        <option>Honda</option>
+                        <option>Yamaha</option>
+                        <option>Suzuki</option>
+                        <option>Bando</option>
+                    </select>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small fw-bold text-muted">KHOẢNG GIÁ:</span>
+                    <select class="form-select form-control-custom h-auto py-1 px-3 small" style="width: auto;">
+                        <option selected>Tất cả giá</option>
+                        <option>Dưới 500.000đ</option>
+                        <option>500.000đ - 2.000.000đ</option>
+                        <option>Trên 2.000.000đ</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-muted small fw-bold">128 SẢN PHẨM</span>
+                <select class="form-select border-0 bg-transparent fw-bold small p-0" style="width: auto; box-shadow: none;">
+                    <option>Mặc định</option>
+                    <option>Giá: Thấp đến Cao</option>
+                    <option>Giá: Cao đến Thấp</option>
+                    <option>Bán chạy nhất</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 5. PRODUCTS GRID -->
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="categoryProductGrid">
+            <!-- Product 1 -->
+            <div class="col">
+                <div class="product-card">
+                    <div class="product-img-wrapper">
+                        <a href="product-detail.html">
+                            <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400" alt="Product" loading="lazy">
+                        </a>
+                    </div>
+                    <div class="product-info flex-grow-1">
+                        <span class="brand">HONDA</span>
+                        <h6 class="name"><a href="product-detail.html" class="text-decoration-none text-dark">Bộ Nồi Trước Honda SH Chính Hãng - Made in Italy</a></h6>
+                        <div class="product-price">
+                            <span class="current">1.250.000đ</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-add-cart w-100 rounded-pill fw-bold mt-3">THÊM VÀO GIỎ</button>
+                </div>
+            </div>
+
+            <!-- Product 2 -->
+            <div class="col">
+                <div class="product-card">
+                    <span class="product-badge badge-hot">Hot</span>
+                    <div class="product-img-wrapper">
+                        <a href="product-detail.html">
+                            <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=400" alt="Product" loading="lazy">
+                        </a>
+                    </div>
+                    <div class="product-info flex-grow-1">
+                        <span class="brand">BANDO</span>
+                        <h6 class="name"><a href="product-detail.html" class="text-decoration-none text-dark">Dây Curoa Bando 2 Mặt Cho Honda SH 150i</a></h6>
+                        <div class="product-price">
+                            <span class="current">680.000đ</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-add-cart w-100 rounded-pill fw-bold mt-3">THÊM VÀO GIỎ</button>
+                </div>
+            </div>
+
+            <!-- Add more products... -->
+        </div>
+
+        <!-- 6. PAGINATION -->
+        <nav class="pagination-wrapper mt-5">
+            <ul class="pagination">
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#"><i class='bx bx-chevron-right'></i></a></li>
+            </ul>
+        </nav>
+    </main>
+
+    <footer class="bg-dark text-white py-5 mt-5"></footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/header.js"></script>
+    <script src="js/components.js"></script>
+</body>
+</html>

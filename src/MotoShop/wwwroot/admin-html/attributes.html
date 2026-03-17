@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Danh sách Thuộc tính - MotoShop Admin</title>
+    
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+    <link rel="stylesheet" href="../assets/css/pagination-component.css" />
+
+    <!-- Helpers -->
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      :root {
+        --ds-primary: #E60023;
+        --ds-primary-hover: #C2001F;
+        --ds-primary-light: rgba(230, 0, 35, 0.08);
+      }
+      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+      .value-preview { font-size: 0.85rem; color: #566a7f; }
+      .value-badge-count { background: #f0f2f4; color: #566a7f; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+      
+      /* Styles cho Modal Giá trị Thuộc tính */
+      .value-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+      .value-list-container { max-height: 300px; overflow-y: auto; padding-right: 5px; }
+      .value-list-container::-webkit-scrollbar { width: 4px; }
+      .value-list-container::-webkit-scrollbar-thumb { background: #d9dee3; border-radius: 10px; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Sidebar dùng chung -->
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="m-0 text-muted fw-light">Sản phẩm / <span class="text-dark fw-bold">Thuộc tính</span></h5>
+            </div>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <!-- Header & Actions -->
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-uppercase">Danh sách Thuộc tính</h4>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-danger d-none" id="btnBulkDelete" onclick="handleBulkDelete()">
+                    <i class="bx bx-trash me-1"></i>Xóa đã chọn (<span id="selectedCount">0</span>)
+                  </button>
+                  <button class="btn btn-primary" onclick="openAttrModal('create')"><i class="bx bx-plus me-1"></i>Thêm thuộc tính</button>
+                  <button class="btn btn-outline-secondary" onclick="DS.showToast('Đang xuất Excel...', 'info')"><i class="bx bx-export me-1"></i>Xuất Excel</button>
+                </div>
+              </div>
+
+              <!-- Bảng Thuộc tính -->
+              <div class="card overflow-hidden border shadow-sm">
+                <div class="table-responsive text-nowrap">
+                  <table class="table table-hover m-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                        <th>Tên thuộc tính</th>
+                        <th class="text-center">Số lượng</th>
+                        <th>Giá trị xem trước</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><input class="form-check-input" type="checkbox" onchange="updateBulkActions()"></td>
+                        <td><span class="fw-bold">Màu sắc</span></td>
+                        <td class="text-center"><span class="badge bg-label-info">3</span></td>
+                        <td><span class="value-preview">Đỏ, Đen, Xanh</span></td>
+                        <td><span class="ds-badge ds-badge-success">Hoạt động</span></td>
+                        <td class="text-end">
+                          <button class="btn btn-sm btn-icon text-primary" onclick="openAttrModal('edit', {name: 'Màu sắc', status: true, values: ['Đỏ', 'Đen', 'Xanh']})"><i class="bx bx-edit-alt"></i></button>
+                          <button class="btn btn-sm btn-icon text-danger" onclick="handleDeleteAttr('Màu sắc')"><i class="bx bx-trash"></i></button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="table-pagination-footer">
+                  <div class="pagination-rows-selector">Hiển thị <select class="form-select form-select-sm d-inline-block w-auto mx-2"><option>10</option></select> dòng</div>
+                  <nav class="pagination-nav"><ul class="pagination pagination-sm m-0"><li class="page-item active"><a class="page-link" href="#">1</a></li></ul></nav>
+                  <div class="pagination-info text-muted">Tổng: 1 dòng</div>
+                </div>
+              </div>
+            </div>
+            <footer class="content-footer footer bg-footer-theme"><div class="container-xxl py-2">© 2026, MotoShop Admin</div></footer>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Thêm/Sửa Thuộc tính (Modern Dynamic Form) -->
+    <div class="modal fade" id="attrModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold" id="modalTitle">Thêm thuộc tính</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="attrForm">
+              <div class="mb-4">
+                <label class="filter-label">Tên thuộc tính <span class="text-danger">*</span></label>
+                <input type="text" id="attrName" class="form-control" placeholder="VD: Màu sắc, Kích thước..." required>
+                <div id="attrNameError" class="invalid-feedback">Vui lòng nhập tên thuộc tính</div>
+              </div>
+
+              <div class="mb-4">
+                <label class="filter-label">Trạng thái hoạt động</label>
+                <div class="form-check form-switch mt-2">
+                  <input class="form-check-input" type="checkbox" id="attrStatus" checked>
+                  <label class="form-check-label fw-bold" for="attrStatus">Đang hoạt động</label>
+                </div>
+              </div>
+
+              <hr>
+
+              <div class="mb-3 d-flex justify-content-between align-items-center">
+                <label class="filter-label m-0">Giá trị thuộc tính</label>
+                <button type="button" class="btn btn-xs btn-outline-primary" onclick="addValueRow()">+ Thêm giá trị</button>
+              </div>
+
+              <div class="value-list-container" id="valueList">
+                <!-- Hàng giá trị sẽ được thêm ở đây -->
+              </div>
+              <div id="valueError" class="text-danger small mt-2 d-none">Vui lòng nhập đầy đủ giá trị và không trùng lặp</div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Hủy bỏ</button>
+            <button class="btn btn-primary px-4" id="btnSaveAttr" onclick="handleSaveAttr()">Lưu dữ liệu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JS Scripts -->
+        <!-- Core JS -->
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      const attrModal = new bootstrap.Modal(document.getElementById('attrModal'));
+      let currentMode = 'create';
+
+      function openAttrModal(mode, data = null) {
+        currentMode = mode;
+        const form = document.getElementById('attrForm');
+        const valueList = document.getElementById('valueList');
+        form.reset();
+        valueList.innerHTML = '';
+        document.getElementById('attrName').classList.remove('is-invalid');
+        document.getElementById('valueError').classList.add('d-none');
+
+        if (mode === 'create') {
+          document.getElementById('modalTitle').innerText = 'Thêm thuộc tính mới';
+          addValueRow(); // Mặc định hiện 1 hàng
+        } else {
+          document.getElementById('modalTitle').innerText = 'Chỉnh sửa thuộc tính';
+          document.getElementById('attrName').value = data.name;
+          document.getElementById('attrStatus').checked = data.status;
+          data.values.forEach(val => addValueRow(val));
+        }
+        attrModal.show();
+      }
+
+      function addValueRow(value = '') {
+        const container = document.getElementById('valueList');
+        const div = document.createElement('div');
+        div.className = 'value-row';
+        div.innerHTML = `
+          <input type="text" class="form-control form-control-sm attr-value-input" value="${value}" placeholder="Nhập giá trị...">
+          <button type="button" class="btn btn-sm btn-icon text-danger" onclick="this.parentElement.remove()"><i class="bx bx-x"></i></button>
+        `;
+        container.appendChild(div);
+        div.querySelector('input').focus();
+      }
+
+      function handleSaveAttr() {
+        const nameInp = document.getElementById('attrName');
+        const valueInputs = document.querySelectorAll('.attr-value-input');
+        const valueError = document.getElementById('valueError');
+        
+        let hasError = false;
+        
+        // 1. Validate Name
+        if (!nameInp.value.trim()) {
+          nameInp.classList.add('is-invalid');
+          hasError = true;
+        } else {
+          nameInp.classList.remove('is-invalid');
+        }
+
+        // 2. Validate Values
+        const values = [];
+        let emptyValue = false;
+        let duplicateValue = false;
+
+        valueInputs.forEach(input => {
+          const val = input.value.trim();
+          if (!val) emptyValue = true;
+          if (values.includes(val)) duplicateValue = true;
+          values.push(val);
+        });
+
+        if (emptyValue || duplicateValue || values.length === 0) {
+          valueError.classList.remove('d-none');
+          valueError.innerText = emptyValue ? 'Vui lòng không để trống giá trị' : (duplicateValue ? 'Giá trị không được trùng lặp' : 'Cần ít nhất 1 giá trị');
+          hasError = true;
+        } else {
+          valueError.classList.add('d-none');
+        }
+
+        if (hasError) return;
+
+        const btn = document.getElementById('btnSaveAttr');
+        DS.loading.btnStart(btn);
+
+        setTimeout(() => {
+          DS.loading.btnStop(btn);
+          attrModal.hide();
+          DS.showToast(currentMode === 'create' ? 'Thêm thuộc tính thành công!' : 'Cập nhật thuộc tính thành công!', 'success');
+        }, 1000);
+      }
+
+      function handleDeleteAttr(name) {
+        UI.confirmDelete({
+          message: `Bạn chắc chắn muốn xóa thuộc tính <strong>"${name}"</strong>?`,
+          onConfirm: () => { /* Logic xóa */ }
+        });
+      }
+
+      // Xử lý Checkbox & Bulk Delete
+      function updateBulkActions() {
+        const checked = document.querySelectorAll('tbody .form-check-input:checked').length;
+        const btn = document.getElementById('btnBulkDelete');
+        document.getElementById('selectedCount').innerText = checked;
+        checked > 0 ? btn.classList.remove('d-none') : btn.classList.add('d-none');
+      }
+
+      document.getElementById('checkAll').onclick = function() {
+        document.querySelectorAll('tbody .form-check-input').forEach(cb => cb.checked = this.checked);
+        updateBulkActions();
+      };
+
+      function handleBulkDelete() {
+        const count = document.querySelectorAll('tbody .form-check-input:checked').length;
+        UI.confirmDelete({
+          message: `Bạn chắc chắn muốn xóa <strong>${count}</strong> thuộc tính đã chọn?`,
+          onConfirm: () => { updateBulkActions(); }
+        });
+      }
+    </script>
+  </body>
+</html>

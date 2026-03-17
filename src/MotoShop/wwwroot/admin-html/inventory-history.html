@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Lịch sử Nhập xuất - MotoShop Admin</title>
+    
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+    <link rel="stylesheet" href="../assets/css/pagination-component.css" />
+
+    <!-- Helpers -->
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      .movement-in { color: #71dd37; font-weight: 700; }
+      .movement-out { color: var(--ds-primary); font-weight: 700; }
+      .movement-adj { color: #03c3ec; font-weight: 700; }
+      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+      .stock-change-box { font-size: 0.85rem; padding: 2px 8px; border-radius: 4px; background: #f8f9fa; border: 1px solid #eee; }
+      .ref-code { font-family: monospace; font-weight: 600; color: #566a7f; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Sidebar -->
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="m-0 text-muted fw-light">Kho hàng / <span class="text-dark fw-bold">Lịch sử nhập xuất</span></h5>
+            </div>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <!-- Header Actions -->
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-uppercase">Lịch sử Nhập xuất kho</h4>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-secondary" onclick="DS.showToast('Đang tạo báo cáo chi tiết...', 'info')"><i class="bx bx-export me-1"></i>Xuất báo cáo</button>
+                </div>
+              </div>
+
+              <!-- Search & Filter Bar -->
+              <div class="card mb-4 border shadow-none">
+                <div class="card-body">
+                  <form class="row g-3">
+                    <div class="col-lg-3 col-md-6">
+                      <label class="filter-label">Tìm theo SKU / Tham chiếu</label>
+                      <div class="input-group input-group-merge">
+                        <span class="input-group-text"><i class="bx bx-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Mã SKU, Mã đơn hàng...">
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                      <label class="filter-label">Khoảng ngày</label>
+                      <div class="input-group">
+                        <input type="date" class="form-control" title="Từ ngày">
+                        <input type="date" class="form-control" title="Đến ngày">
+                      </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                      <label class="filter-label">Loại giao dịch</label>
+                      <select class="form-select">
+                        <option value="">Tất cả</option>
+                        <option>Nhập kho (+)</option>
+                        <option>Xuất kho (-)</option>
+                        <option>Điều chỉnh</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                      <label class="filter-label">Cửa hàng</label>
+                      <select class="form-select">
+                        <option value="">Tất cả kho</option>
+                        <option>Bình Tân</option>
+                        <option>Quận 7</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-2 col-md-4 d-flex align-items-end">
+                      <button type="submit" class="btn btn-secondary w-100"><i class="bx bx-filter-alt me-1"></i>Lọc</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- History Table -->
+              <div class="card overflow-hidden border shadow-sm">
+                <div class="table-responsive text-nowrap">
+                  <table class="table table-hover m-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Thời gian</th>
+                        <th>Sản phẩm / Biến thể</th>
+                        <th>Loại</th>
+                        <th class="text-center">Thay đổi</th>
+                        <th>Tồn trước/sau</th>
+                        <th>Tham chiếu</th>
+                        <th>Cửa hàng</th>
+                        <th>Người thực hiện</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <div class="fw-bold text-dark">14/03/2026</div>
+                          <small class="text-muted">14:25:30</small>
+                        </td>
+                        <td>
+                          <div class="fw-bold">Bộ Nồi Trước Honda SH</div>
+                          <small class="text-muted">SKU: HD-SH-001-RED</small>
+                        </td>
+                        <td><span class="badge bg-label-success"><i class="bx bx-trending-up me-1"></i>Nhập kho</span></td>
+                        <td class="text-center"><span class="movement-in">+20</span></td>
+                        <td>
+                          <div class="stock-change-box">22 <i class="bx bx-right-arrow-alt mx-1"></i> 42</div>
+                        </td>
+                        <td><span class="ref-code">#PO-2026-088</span></td>
+                        <td>Bình Tân</td>
+                        <td>Admin</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="fw-bold text-dark">14/03/2026</div>
+                          <small class="text-muted">10:15:12</small>
+                        </td>
+                        <td>
+                          <div class="fw-bold">Bố thắng đĩa trước Yamaha</div>
+                          <small class="text-muted">SKU: YM-EX-992</small>
+                        </td>
+                        <td><span class="badge bg-label-danger"><i class="bx bx-trending-down me-1"></i>Xuất bán</span></td>
+                        <td class="text-center"><span class="movement-out">-2</span></td>
+                        <td>
+                          <div class="stock-change-box">5 <i class="bx bx-right-arrow-alt mx-1"></i> 3</div>
+                        </td>
+                        <td><a href="order-detail.html" class="ref-code text-primary">#ORD-2026-002</a></td>
+                        <td>Quận 7</td>
+                        <td>NV An</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="fw-bold text-dark">13/03/2026</div>
+                          <small class="text-muted">16:45:00</small>
+                        </td>
+                        <td>
+                          <div class="fw-bold">Nhớt Motul 300V</div>
+                          <small class="text-muted">SKU: MO-300V-1L</small>
+                        </td>
+                        <td><span class="badge bg-label-info"><i class="bx bx-adjust me-1"></i>Điều chỉnh</span></td>
+                        <td class="text-center"><span class="movement-adj">-1</span></td>
+                        <td>
+                          <div class="stock-change-box">15 <i class="bx bx-right-arrow-alt mx-1"></i> 14</div>
+                        </td>
+                        <td><span class="ref-code">#ADJ-00124</span></td>
+                        <td>Bình Tân</td>
+                        <td>Quản lý</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Phân trang -->
+                <div class="table-pagination-footer">
+                  <div class="pagination-rows-selector">Hiển thị <select class="form-select form-select-sm d-inline-block w-auto mx-2"><option>10</option><option>20</option></select> dòng</div>
+                  <nav class="pagination-nav"><ul class="pagination pagination-sm m-0"><li class="page-item active"><a class="page-link" href="#">1</a></li><li class="page-item"><a class="page-link" href="#">2</a></li></ul></nav>
+                  <div class="pagination-info text-muted fw-bold">Tổng: 1,250 giao dịch</div>
+                </div>
+              </div>
+            </div>
+            
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl py-2">© 2026, MotoShop Admin - Nhật ký kho hàng</div>
+            </footer>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Core JS -->
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+  </body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Đánh giá & Phản hồi - MotoShop Admin</title>
+    
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+    <link rel="stylesheet" href="../assets/css/pagination-component.css" />
+
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      .customer-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+      .rating-stars { color: #ffab00; font-size: 0.9rem; }
+      .review-content { font-size: 0.85rem; color: #566a7f; white-space: normal; max-width: 400px; line-height: 1.5; }
+      .review-reply { background: #f8f9fa; border-radius: 8px; padding: 10px; margin-top: 10px; font-size: 0.8rem; border-left: 3px solid #d9dee3; }
+      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+      .product-sm-img { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; border: 1px solid #eee; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="m-0 text-muted fw-light">Khách hàng / <span class="text-dark fw-bold">Đánh giá & Phản hồi</span></h5>
+            </div>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-uppercase">Quản lý Đánh giá</h4>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-secondary" onclick="DS.showToast('Đang xuất báo cáo đánh giá...', 'info')">Xuất báo cáo</button>
+                </div>
+              </div>
+
+              <!-- Filter Bar -->
+              <div class="card mb-4 border shadow-none">
+                <div class="card-body">
+                  <form class="row g-3">
+                    <div class="col-lg-4 col-md-12">
+                      <label class="filter-label">Tìm kiếm</label>
+                      <input type="text" class="form-control" placeholder="Tên khách hàng, nội dung đánh giá...">
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                      <label class="filter-label">Số sao</label>
+                      <select class="form-select">
+                        <option>Tất cả sao</option>
+                        <option>5 sao</option>
+                        <option>4 sao</option>
+                        <option>3 sao</option>
+                        <option>1-2 sao</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-3 col-md-4">
+                      <label class="filter-label">Trạng thái</label>
+                      <select class="form-select">
+                        <option>Tất cả</option>
+                        <option>Chờ duyệt</option>
+                        <option>Đã hiển thị</option>
+                        <option>Đã ẩn</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-3 col-md-4 d-flex align-items-end">
+                      <button type="submit" class="btn btn-secondary w-100">Lọc dữ liệu</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- Review Table -->
+              <div class="card overflow-hidden border shadow-sm">
+                <div class="table-responsive text-nowrap">
+                  <table class="table table-hover m-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Khách hàng</th>
+                        <th>Sản phẩm / Dịch vụ</th>
+                        <th>Đánh giá</th>
+                        <th>Thời gian</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Hành động</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- Review 1 -->
+                      <tr>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <img src="../assets/img/avatars/1.png" class="customer-avatar me-2 shadow-sm">
+                            <div><div class="fw-bold text-dark small">Lê Minh Tâm</div><small class="text-muted">0908 111 222</small></div>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <img src="../assets/img/elements/1.jpg" class="product-sm-img me-2">
+                            <small class="fw-bold text-dark">Bộ Nồi Trước SH</small>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="rating-stars mb-1"><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i></div>
+                          <div class="review-content">Hàng chính hãng, đóng gói kỹ. Xe chạy bốc hơn hẳn sau khi thay bộ nồi này. Rất hài lòng!</div>
+                          <div class="review-reply"><i class='bx bx-reply me-1'></i><span class="fw-bold">MotoShop:</span> Cảm ơn anh Tâm đã tin tưởng và ủng hộ shop ạ!</div>
+                        </td>
+                        <td>12/03/2026</td>
+                        <td><span class="ds-badge ds-badge-success">Hiển thị</span></td>
+                        <td class="text-end">
+                          <button class="btn btn-sm btn-icon text-primary" title="Phản hồi" onclick="openReplyModal('Lê Minh Tâm')"><i class="bx bx-reply"></i></button>
+                          <button class="btn btn-sm btn-icon text-warning" title="Ẩn đánh giá"><i class="bx bx-hide"></i></button>
+                          <button class="btn btn-sm btn-icon text-danger" title="Xóa"><i class="bx bx-trash"></i></button>
+                        </td>
+                      </tr>
+                      <!-- Review 2 (Chưa duyệt) -->
+                      <tr>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-circle bg-label-primary me-2" style="width: 32px; height: 32px; font-size: 0.7rem;">NH</div>
+                            <div><div class="fw-bold text-dark small">Nguyễn Thu Hà</div><small class="text-muted">0912 333 444</small></div>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <img src="../assets/img/elements/18.jpg" class="product-sm-img me-2">
+                            <small class="fw-bold text-dark">Vệ sinh nồi xe ga</small>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="rating-stars mb-1"><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bx-star'></i></div>
+                          <div class="review-content">Kỹ thuật viên làm việc rất tỉ mỉ, tuy nhiên phải đợi hơi lâu một chút.</div>
+                        </td>
+                        <td>14/03/2026</td>
+                        <td><span class="badge bg-label-warning">Chờ duyệt</span></td>
+                        <td class="text-end">
+                          <button class="btn btn-sm btn-icon text-success" title="Duyệt ngay"><i class="bx bx-check-circle"></i></button>
+                          <button class="btn btn-sm btn-icon text-primary" onclick="openReplyModal('Nguyễn Thu Hà')"><i class="bx bx-reply"></i></button>
+                          <button class="btn btn-sm btn-icon text-danger"><i class="bx bx-trash"></i></button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="table-pagination-footer">
+                  <div class="pagination-rows-selector">Hiện <select class="form-select form-select-sm d-inline-block w-auto mx-1"><option>10</option></select> dòng</div>
+                  <nav><ul class="pagination pagination-sm m-0"><li class="page-item active"><a class="page-link" href="#">1</a></li></ul></nav>
+                  <div class="pagination-info text-muted fw-bold">Tổng: 85 đánh giá</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Phản hồi -->
+    <div class="modal fade" id="replyModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+          <div class="modal-header border-bottom p-4">
+            <h5 class="modal-title fw-bold">Phản hồi khách hàng: <span id="replyName" class="text-primary"></span></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <label class="filter-label">Nội dung phản hồi</label>
+            <textarea class="form-control" rows="4" placeholder="Nhập lời cảm ơn hoặc giải đáp thắc mắc cho khách hàng..."></textarea>
+          </div>
+          <div class="modal-footer border-top p-3 px-4">
+            <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button class="btn btn-primary px-4" onclick="DS.showToast('Đã gửi phản hồi thành công!', 'success'); bootstrap.Modal.getInstance(document.getElementById('replyModal')).hide();">Gửi phản hồi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      function openReplyModal(name) {
+        document.getElementById('replyName').innerText = name;
+        new bootstrap.Modal(document.getElementById('replyModal')).show();
+      }
+    </script>
+  </body>
+</html>

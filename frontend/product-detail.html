@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết sản phẩm - MotoShop</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- UI UTILITIES -->
+    <div id="pageLoader" style="display: none !important;">
+        <div class="loader-spinner"></div>
+    </div>
+    <div id="backToTop" class="back-to-top">
+        <i class='bx bx-chevron-up'></i>
+    </div>
+
+    <!-- COMMON COMPONENTS PLACEHOLDERS -->
+    <div id="mainHeaderWrapper" class="main-header-wrapper"></div>
+    <div id="searchOverlay" class="search-overlay"></div>
+    <div id="mobileMenu" class="offcanvas offcanvas-start mobile-menu-offcanvas" tabindex="-1"></div>
+
+    <!-- 1. BREADCRUMB -->
+    <div class="breadcrumb-wrapper">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.html">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="products.html">Phụ tùng máy</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Bộ Nồi Trước Honda SH</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <main class="container mb-5">
+        <div class="row">
+            <!-- 2. PRODUCT GALLERY -->
+            <div class="col-lg-6">
+                <div class="product-gallery">
+                    <div class="main-img-wrapper" id="mainImgWrapper">
+                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800" alt="Main Product" id="mainProductImg">
+                    </div>
+                    <ul class="thumb-list">
+                        <li class="thumb-item active" onclick="changeImage(this, 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800')">
+                            <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=200" alt="Thumb">
+                        </li>
+                        <li class="thumb-item" onclick="changeImage(this, 'https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=800')">
+                            <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=200" alt="Thumb">
+                        </li>
+                        <li class="thumb-item" onclick="changeImage(this, 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800')">
+                            <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=200" alt="Thumb">
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 3. PRODUCT INFO -->
+            <div class="col-lg-6">
+                <div class="product-detail-info">
+                    <a href="#" class="brand-link">HONDA GENUINE PARTS</a>
+                    <h1 class="product-name">Bộ Nồi Trước Honda SH Chính Hãng - Made in Italy</h1>
+                    
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rating-stars me-2">
+                            <i class='bx bxs-star'></i>
+                            <i class='bx bxs-star'></i>
+                            <i class='bx bxs-star'></i>
+                            <i class='bx bxs-star'></i>
+                            <i class='bx bxs-star-half'></i>
+                        </div>
+                        <span class="text-muted small">(24 đánh giá) | SKU: AB-12345</span>
+                    </div>
+
+                    <div class="detail-price">1.250.000đ</div>
+
+                    <p class="text-muted mb-4">Bộ nồi trước chính hãng Honda nhập khẩu từ Ý, giúp xe vận hành êm ái, tăng tốc mượt mà và tiết kiệm nhiên liệu tối đa cho dòng xe SH 125/150i.</p>
+
+                    <!-- Variants: Model -->
+                    <div class="variant-group">
+                        <div class="variant-title">Dòng xe tương thích:</div>
+                        <div class="variant-options">
+                            <button class="btn-variant active">SH 125i</button>
+                            <button class="btn-variant">SH 150i</button>
+                            <button class="btn-variant">SH 160i (2024)</button>
+                        </div>
+                    </div>
+
+                    <!-- Variants: Color (Example) -->
+                    <div class="variant-group">
+                        <div class="variant-title">Chất liệu:</div>
+                        <div class="variant-options">
+                            <button class="btn-variant active">Hợp kim nhôm</button>
+                            <button class="btn-variant">Thép cường lực</button>
+                        </div>
+                    </div>
+
+                    <!-- Quantity & Actions -->
+                    <div class="variant-group">
+                        <div class="variant-title">Số lượng:</div>
+                        <div class="qty-selector">
+                            <button class="qty-btn" onclick="updateQty(-1)"><i class='bx bx-minus'></i></button>
+                            <input type="text" class="qty-input" value="1" id="qtyInput" readonly>
+                            <button class="qty-btn" onclick="updateQty(1)"><i class='bx bx-plus'></i></button>
+                        </div>
+                    </div>
+
+                    <div class="btn-buy-group">
+                        <button class="btn-add-to-cart">
+                            <i class='bx bx-cart-add fs-4 me-2'></i> THÊM VÀO GIỎ
+                        </button>
+                        <button class="btn-buy-now">MUA NGAY</button>
+                    </div>
+
+                    <div class="mt-4 pt-4 border-top">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class='bx bx-check-shield text-success fs-4 me-2'></i>
+                            <span class="small fw-bold">Bảo hành chính hãng 12 tháng</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class='bx bx-refresh text-success fs-4 me-2'></i>
+                            <span class="small fw-bold">Đổi trả trong 7 ngày nếu lỗi sản xuất</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class='bx bx-package text-success fs-4 me-2'></i>
+                            <span class="small fw-bold">Còn hàng - Giao ngay toàn quốc</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. PRODUCT TABS -->
+        <div class="product-tabs-wrapper">
+            <ul class="nav-tabs-custom" id="productTabs">
+                <li><a href="javascript:void(0)" class="active" onclick="switchTab(this, 'tab-desc')">Mô tả chi tiết</a></li>
+                <li><a href="javascript:void(0)" onclick="switchTab(this, 'tab-specs')">Thông số kỹ thuật</a></li>
+                <li><a href="javascript:void(0)" onclick="switchTab(this, 'tab-reviews')">Đánh giá (24)</a></li>
+            </ul>
+
+            <div class="tab-content-custom">
+                <!-- Tab: Description -->
+                <div id="tab-desc" class="tab-pane-custom">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <h5 class="fw-bold mb-3">Ưu điểm nổi bật của Bộ Nồi Trước Honda SH Ý</h5>
+                            <p>Sản phẩm được sản xuất theo tiêu chuẩn khắt khe nhất của Honda toàn cầu tại nhà máy Italy. Với công nghệ đúc chính xác, bộ nồi giúp tối ưu hóa khả năng truyền động từ động cơ đến bánh xe.</p>
+                            <ul>
+                                <li>Giảm hiện tượng rung đầu khi khởi động.</li>
+                                <li>Tăng độ bền của dây curoa nhờ bề mặt tiếp xúc hoàn hảo.</li>
+                                <li>Giảm tiếng ồn lạch cạch đặc trưng của dòng SH cũ.</li>
+                                <li>Lắp đặt như zin, không chế cháo.</li>
+                            </ul>
+                            <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800" class="img-fluid rounded-4 my-4" alt="Detail">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Specs -->
+                <div id="tab-specs" class="tab-pane-custom d-none">
+                    <div class="col-lg-6">
+                        <table class="specs-table">
+                            <tr><td>Thương hiệu</td><td>Honda Genuine Parts</td></tr>
+                            <tr><td>Xuất xứ</td><td>Italy</td></tr>
+                            <tr><td>Chất liệu</td><td>Hợp kim nhôm cao cấp</td></tr>
+                            <tr><td>Trọng lượng</td><td>1.2 kg</td></tr>
+                            <tr><td>Tương thích</td><td>SH 125i, 150i (2012 - 2024)</td></tr>
+                            <tr><td>Quy cách đóng gói</td><td>Hộp carton chính hãng</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab: Reviews -->
+                <div id="tab-reviews" class="tab-pane-custom d-none">
+                    <div class="row">
+                        <div class="col-lg-7">
+                            <div class="review-item">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <h6 class="fw-bold mb-0">Nguyễn Văn An</h6>
+                                    <span class="text-muted small">12/03/2026</span>
+                                </div>
+                                <div class="rating-stars mb-2"><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i></div>
+                                <p class="small mb-0">Hàng chuẩn Ý, lắp vào xe chạy êm hơn hẳn nồi zin theo xe lắp ráp trong nước. Rất hài lòng với dịch vụ của shop.</p>
+                            </div>
+                            <div class="review-item">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <h6 class="fw-bold mb-0">Trần Minh Thắng</h6>
+                                    <span class="text-muted small">05/03/2026</span>
+                                </div>
+                                <div class="rating-stars mb-2"><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bx-star'></i></div>
+                                <p class="small mb-0">Sản phẩm tốt, đóng gói cẩn thận. Tuy nhiên giao hàng hơi chậm một chút do ở tỉnh xa.</p>
+                            </div>
+                        </div>
+                        <div class="col-lg-5 ps-lg-5">
+                            <div class="bg-light p-4 rounded-4">
+                                <h5 class="fw-bold mb-3">Viết đánh giá của bạn</h5>
+                                <form>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Xếp hạng của bạn</label>
+                                        <div class="fs-4 text-warning"><i class='bx bx-star'></i><i class='bx bx-star'></i><i class='bx bx-star'></i><i class='bx bx-star'></i><i class='bx bx-star'></i></div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <textarea class="form-control border-0" rows="4" placeholder="Nhận xét của bạn về sản phẩm..."></textarea>
+                                    </div>
+                                    <button class="btn btn-danger w-100 rounded-pill fw-bold">GỬI ĐÁNH GIÁ</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. RELATED PRODUCTS -->
+        <section class="mt-5 pt-5 border-top">
+            <div class="section-title-wrapper">
+                <h2 class="section-title text-uppercase">Sản phẩm liên quan</h2>
+            </div>
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+                <!-- Sử dụng component card đã có -->
+                <div class="col">
+                    <div class="product-card">
+                        <div class="product-img-wrapper"><img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=400" alt="Product"></div>
+                        <div class="product-info flex-grow-1">
+                            <span class="brand">MOTUL</span>
+                            <h6 class="name">Nhớt Motul 300V Factory Line 10W40 1L</h6>
+                            <div class="product-price"><span class="current">450.000đ</span></div>
+                        </div>
+                        <button class="btn btn-add-cart w-100 rounded-pill fw-bold mt-3">THÊM VÀO GIỎ</button>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="product-card">
+                        <div class="product-img-wrapper"><img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400" alt="Product"></div>
+                        <div class="product-info flex-grow-1">
+                            <span class="brand">BANDO</span>
+                            <h6 class="name">Dây Curoa Bando 2 Mặt Cho Honda SH</h6>
+                            <div class="product-price"><span class="current">680.000đ</span></div>
+                        </div>
+                        <button class="btn btn-add-cart w-100 rounded-pill fw-bold mt-3">THÊM VÀO GIỎ</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-white py-5 mt-5"></footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/header.js"></script>
+    <script src="js/components.js"></script>
+    <script>
+        // Gallery logic
+        function changeImage(thumb, src) {
+            document.getElementById('mainProductImg').src = src;
+            document.querySelectorAll('.thumb-item').forEach(i => i.classList.remove('active'));
+            thumb.classList.add('active');
+        }
+
+        // Qty logic
+        function updateQty(val) {
+            const input = document.getElementById('qtyInput');
+            let current = parseInt(input.value);
+            current += val;
+            if (current < 1) current = 1;
+            input.value = current;
+        }
+
+        // Tabs logic
+        function switchTab(el, tabId) {
+            document.querySelectorAll('.nav-tabs-custom li a').forEach(a => a.classList.remove('active'));
+            el.classList.add('active');
+            document.querySelectorAll('.tab-pane-custom').forEach(p => p.classList.add('d-none'));
+            document.getElementById(tabId).classList.remove('d-none');
+        }
+    </script>
+</body>
+</html>

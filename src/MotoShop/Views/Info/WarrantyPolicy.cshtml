@@ -1,0 +1,113 @@
+@{
+    ViewData["Title"] = "Chính sách bảo hành - MotoShop";
+}
+
+<!-- 1. BREADCRUMB -->
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Chính sách bảo hành</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<main class="policy-page-wrapper">
+    <div class="container">
+        <div class="policy-content-box">
+            <!-- 1. PAGE HEADER -->
+            <header class="mb-5 text-center">
+                <h1 class="fw-bold text-dark mb-3">CHÍNH SÁCH BẢO HÀNH</h1>
+                <p class="text-muted">MotoShop đồng hành cùng xế yêu của bạn với chế độ hậu mãi và bảo hành chu đáo.</p>
+            </header>
+
+            <!-- 2. WARRANTY INTRODUCTION -->
+            <section class="policy-section">
+                <h3 class="policy-section-title"><span>01</span> Giới thiệu chung</h3>
+                <p class="policy-text">Tất cả sản phẩm phụ tùng và dịch vụ chăm sóc xe tại MotoShop đều được áp dụng chính sách bảo hành chính hãng. Chúng tôi cam kết xử lý các vấn đề kỹ thuật phát sinh một cách nhanh chóng, đảm bảo quyền lợi và sự an tâm tuyệt đối cho khách hàng.</p>
+            </section>
+
+            <!-- 3. WARRANTY CONDITIONS -->
+            <section class="policy-section">
+                <h3 class="policy-section-title"><span>02</span> Điều kiện được bảo hành</h3>
+                <p class="policy-text">Sản phẩm sẽ được MotoShop tiếp nhận bảo hành nếu đáp ứng đủ các điều kiện sau:</p>
+                <div class="warranty-conditions-list">
+                    <div class="condition-item-box">
+                        <i class='bx bx-time'></i>
+                        <span>CÒN TRONG THỜI HẠN BẢO HÀNH</span>
+                    </div>
+                    <div class="condition-item-box">
+                        <i class='bx bx-receipt'></i>
+                        <span>CÓ HÓA ĐƠN HOẶC TEM BẢO HÀNH</span>
+                    </div>
+                    <div class="condition-item-box">
+                        <i class='bx bx-cog'></i>
+                        <span>LỖI DO NHÀ SẢN XUẤT</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. WARRANTY PROCESS -->
+            <section class="policy-section">
+                <h3 class="policy-section-title"><span>03</span> Quy trình thực hiện</h3>
+                <div class="delivery-step-wrapper">
+                    <div class="service-process-list">
+                        <div class="process-step">
+                            <div class="process-step-number">1</div>
+                            <h6 class="process-step-title">Tiếp nhận sản phẩm</h6>
+                            <p class="process-step-desc">Khách hàng mang sản phẩm hoặc xe đến chi nhánh MotoShop gần nhất để nhân viên kỹ thuật tiếp nhận.</p>
+                        </div>
+                        <div class="process-step">
+                            <div class="process-step-number">2</div>
+                            <h6 class="process-step-title">Kiểm tra tình trạng</h6>
+                            <p class="process-step-desc">Nhân viên kỹ thuật tiến hành kiểm định lỗi, xác định nguyên nhân hư hỏng có thuộc phạm vi bảo hành hay không.</p>
+                        </div>
+                        <div class="process-step">
+                            <div class="process-step-number">3</div>
+                            <h6 class="process-step-title">Xác nhận và Xử lý</h6>
+                            <p class="process-step-desc">Thông báo kết quả cho khách hàng. Nếu đủ điều kiện, MotoShop sẽ tiến hành sửa chữa hoặc đổi mới sản phẩm.</p>
+                        </div>
+                        <div class="process-step">
+                            <div class="process-step-number">4</div>
+                            <h6 class="process-step-title">Bàn giao và Nghiệm thu</h6>
+                            <p class="process-step-desc">Kiểm tra vận hành sản phẩm sau bảo hành và bàn giao lại cho khách hàng kèm biên bản nghiệm thu.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. NON-WARRANTY CASES -->
+            <section class="policy-section">
+                <h3 class="policy-section-title"><span>04</span> Trường hợp từ chối bảo hành</h3>
+                <p class="policy-text">MotoShop có quyền từ chối bảo hành đối với các trường hợp:</p>
+                <div class="non-warranty-grid">
+                    <div class="non-warranty-card">
+                        <i class='bx bx-error-alt'></i>
+                        <span>SỬ DỤNG / LẮP ĐẶT SAI CÁCH</span>
+                    </div>
+                    <div class="non-warranty-card">
+                        <i class='bx bx-wrench'></i>
+                        <span>TỰ Ý THÁO DỠ, SỬA CHỮA</span>
+                    </div>
+                    <div class="non-warranty-card">
+                        <i class='bx bx-collision'></i>
+                        <span>HƯ HỎNG DO TAI NẠN, VA CHẠM</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. CONTACT SUPPORT -->
+            <section class="policy-section mb-0">
+                <h3 class="policy-section-title"><span>05</span> Hỗ trợ bảo hành</h3>
+                <div class="policy-contact-info mt-0">
+                    <h5 class="fw-bold text-dark mb-3">LIÊN HỆ BỘ PHẬN KỸ THUẬT</h5>
+                    <p class="mb-1">Hotline bảo hành: <span class="text-danger fw-bold">028 123 4567</span></p>
+                    <p class="mb-1">Email: <a href="mailto:warranty@motoshop.vn" class="text-danger fw-bold">warranty@motoshop.vn</a></p>
+                    <p class="mb-0 text-muted small">Thời gian làm việc: 08:00 - 20:00 (Tất cả các ngày trong tuần)</p>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>

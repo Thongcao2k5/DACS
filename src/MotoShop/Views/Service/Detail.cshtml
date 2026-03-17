@@ -1,0 +1,147 @@
+@{
+    ViewData["Title"] = "Chi tiết dịch vụ";
+}
+
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Service" asp-action="Index">Dịch vụ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Vệ sinh kim phun Fi</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<main class="container mb-5">
+    <!-- 2. SERVICE DETAIL LAYOUT -->
+    <div class="row g-5">
+        <!-- LEFT - SERVICE IMAGE -->
+        <div class="col-lg-6">
+            <div class="service-gallery">
+                <div class="main-img-wrapper mb-3" style="aspect-ratio: 16/9;">
+                    <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800" class="w-100 h-100 object-fit-cover" alt="Service Detail">
+                </div>
+                <!-- Before/After Simulation -->
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="rounded-3 overflow-hidden border position-relative">
+                            <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=400" class="img-fluid" alt="Before">
+                            <span class="badge bg-dark position-absolute top-0 start-0 m-2">TRƯỚC</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="rounded-3 overflow-hidden border position-relative">
+                            <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400" class="img-fluid" alt="After">
+                            <span class="badge bg-success position-absolute top-0 start-0 m-2">SAU</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT - SERVICE INFORMATION -->
+        <div class="col-lg-6">
+            <div class="service-detail-info">
+                <h1 class="fw-bold mb-3">Vệ sinh kim phun xăng điện tử Fi</h1>
+                <p class="text-muted fs-5 mb-4">Dịch vụ làm sạch kim phun bằng thiết bị sóng siêu âm chuyên dụng, giúp phục hồi hiệu suất đánh lửa, xe chạy êm hơn và tiết kiệm nhiên liệu rõ rệt.</p>
+                
+                <div class="service-meta-info">
+                    <div class="meta-item">
+                        <i class='bx bx-time-five'></i>
+                        <span>THỜI GIAN: 30-45 PHÚT</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class='bx bx-check-shield'></i>
+                        <span>BẢO HÀNH VẬN HÀNH 7 NGÀY</span>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <h2 class="text-danger fw-bold mb-0">150.000đ</h2>
+                    <span class="text-muted text-decoration-line-through">200.000đ</span>
+                </div>
+
+                <div class="d-flex gap-3">
+                    <a asp-controller="Service" asp-action="Booking" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold flex-grow-1">
+                        ĐẶT LỊCH DỊCH VỤ
+                    </a>
+                    <button class="btn btn-outline-dark btn-lg rounded-pill px-4">
+                        <i class='bx bx-cart-add fs-4'></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. SERVICE PROCESS -->
+    <div class="row mt-5 pt-5">
+        <div class="col-lg-8">
+            <h4 class="fw-bold mb-4 text-uppercase">Quy trình thực hiện chuyên nghiệp</h4>
+            <div class="service-process-list">
+                <div class="process-step">
+                    <div class="process-step-number">1</div>
+                    <h6 class="process-step-title">Kiểm tra hệ thống phun xăng</h6>
+                    <p class="process-step-desc">Kỹ thuật viên sử dụng máy chẩn đoán lỗi để kiểm tra các thông số vận hành của hệ thống phun xăng điện tử trước khi tháo rời.</p>
+                </div>
+                <div class="process-step">
+                    <div class="process-step-number">2</div>
+                    <h6 class="process-step-title">Tháo rời kim phun</h6>
+                    <p class="process-step-desc">Kim phun được tháo ra khỏi buồng máy một cách cẩn thận, tránh làm hư hại các ron cao su và giắc cắm điện.</p>
+                </div>
+                <div class="process-step">
+                    <div class="process-step-number">3</div>
+                    <h6 class="process-step-title">Vệ sinh bằng máy sóng siêu âm</h6>
+                    <p class="process-step-desc">Kim phun được đưa vào bể dung dịch chuyên dụng và làm sạch bằng công nghệ sóng siêu âm để đánh tan muội than bên trong.</p>
+                </div>
+                <div class="process-step">
+                    <div class="process-step-number">4</div>
+                    <h6 class="process-step-title">Lắp lại và kiểm tra cuối cùng</h6>
+                    <p class="process-step-desc">Lắp kim phun lại vị trí cũ, nổ máy kiểm tra độ ổn định và bàn giao xe cho khách hàng.</p>
+                </div>
+            </div>
+
+            <!-- 4. NOTES / WARNING -->
+            <div class="service-note-box">
+                <h6><i class='bx bx-info-circle'></i> LƯU Ý KỸ THUẬT</h6>
+                <p class="small mb-0">Theo khuyến cáo của các chuyên gia, bạn nên thực hiện vệ sinh kim phun Fi định kỳ sau mỗi <span class="fw-bold text-dark">10.000 km</span> để đảm bảo xe luôn trong trạng thái vận hành tốt nhất và tránh hiện tượng chết máy đột ngột.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. RELATED SERVICES -->
+    <section class="mt-5 pt-5 border-top">
+        <div class="section-title-wrapper">
+            <h4 class="fw-bold text-uppercase">Dịch vụ liên quan</h4>
+        </div>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <div class="col">
+                <div class="service-card">
+                    <div class="service-img-box">
+                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=600" alt="S">
+                    </div>
+                    <div class="service-info">
+                        <h5 class="service-name">Vệ sinh buồng đốt chuyên sâu</h5>
+                        <p class="service-desc">Làm sạch muội than bám trên đỉnh piston mà không cần tháo rã máy.</p>
+                        <div class="service-price-current">250.000đ</div>
+                        <a asp-controller="Service" asp-action="Detail" asp-route-slug="ve-sinh-buong-dot" class="btn btn-book-service mt-3">XEM CHI TIẾT</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="service-card">
+                    <div class="service-img-box">
+                        <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=600" alt="S">
+                    </div>
+                    <div class="service-info">
+                        <h5 class="service-name">Bảo dưỡng nồi xe tay ga</h5>
+                        <p class="service-desc">Khắc phục hiện tượng rung đầu, giúp xe bốc hơn và chạy êm hơn.</p>
+                        <div class="service-price-current">120.000đ</div>
+                        <a asp-controller="Service" asp-action="Detail" asp-route-slug="bao-duong-noi-xe-tay-ga" class="btn btn-book-service mt-3">XEM CHI TIẾT</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>

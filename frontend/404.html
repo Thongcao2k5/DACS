@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Không tìm thấy trang - MotoShop</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- UI UTILITIES Placeholder -->
+    <div id="pageLoader" style="display: none !important;"><div class="loader-spinner"></div></div>
+    <div id="backToTop" class="back-to-top"><i class='bx bx-chevron-up'></i></div>
+
+    <!-- COMMON COMPONENTS PLACEHOLDERS -->
+    <div id="mainHeaderWrapper" class="main-header-wrapper"></div>
+    <div id="searchOverlay" class="search-overlay"></div>
+    <div id="mobileMenu" class="offcanvas offcanvas-start mobile-menu-offcanvas" tabindex="-1"></div>
+
+    <main class="container">
+        <div class="error-page-wrapper">
+            <!-- 1. ERROR ILLUSTRATION -->
+            <div class="error-code">404</div>
+            <div class="error-illustration">
+                <!-- Friendly E-commerce Illustration -->
+                <img src="https://illustrations.popsy.co/gray/crashed-error.svg" alt="Error Illustration" class="img-fluid">
+            </div>
+
+            <!-- 2. ERROR MESSAGE -->
+            <div class="error-content">
+                <h1>Ối! Trang này không tồn tại.</h1>
+                <p>Có vẻ như đường dẫn bạn truy cập đã bị lỗi hoặc trang này đã được di dời. Đừng lo, hãy thử tìm kiếm sản phẩm hoặc quay về trang chủ nhé!</p>
+            </div>
+
+            <!-- 3. ACTION BUTTONS -->
+            <div class="error-actions">
+                <a href="index.html" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold">QUAY VỀ TRANG CHỦ</a>
+                <a href="products.html" class="btn btn-outline-dark btn-lg rounded-pill px-5 fw-bold">XEM SẢN PHẨM</a>
+            </div>
+
+            <!-- SEARCH FIELD -->
+            <div class="error-search-box">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Bạn đang tìm phụ tùng gì?">
+                    <button class="btn btn-search"><i class='bx bx-search fs-4'></i></button>
+                </div>
+            </div>
+
+            <!-- 4. SUGGESTED PRODUCTS -->
+            <section class="mt-5 pt-5 border-top text-start">
+                <div class="section-title-wrapper text-center">
+                    <h3 class="fw-bold text-uppercase">CÓ THỂ BẠN ĐANG TÌM</h3>
+                </div>
+                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+                    <div class="col">
+                        <div class="product-card">
+                            <span class="product-badge badge-featured">Featured</span>
+                            <div class="product-img-wrapper">
+                                <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400" alt="Product" loading="lazy">
+                            </div>
+                            <div class="product-info flex-grow-1">
+                                <span class="brand">HONDA</span>
+                                <h6 class="name">Bộ Nồi Trước Honda SH Chính Hãng - Made in Italy</h6>
+                                <div class="product-price"><span class="current">1.250.000đ</span></div>
+                            </div>
+                            <button class="btn btn-add-cart w-100 rounded-pill fw-bold mt-3">THÊM VÀO GIỎ</button>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="product-card">
+                            <span class="product-badge badge-hot">Hot</span>
+                            <div class="product-img-wrapper">
+                                <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=400" alt="Product" loading="lazy">
+                            </div>
+                            <div class="product-info flex-grow-1">
+                                <span class="brand">MOTUL</span>
+                                <h6 class="name">Nhớt Motul 300V Factory Line 10W40 1L</h6>
+                                <div class="product-price"><span class="current">450.000đ</span></div>
+                            </div>
+                            <button class="btn btn-add-cart w-100 rounded-pill fw-bold mt-3">THÊM VÀO GIỎ</button>
+                        </div>
+                    </div>
+                    <!-- Other items... -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="bg-dark text-white py-5 mt-5"></footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/header.js"></script>
+    <script src="js/components.js"></script>
+</body>
+</html>

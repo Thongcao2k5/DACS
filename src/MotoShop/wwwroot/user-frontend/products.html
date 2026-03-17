@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sản phẩm - MotoShop</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- UI UTILITIES -->
+    <div id="pageLoader" style="display: none !important;">
+        <div class="loader-spinner"></div>
+    </div>
+    <div id="backToTop" class="back-to-top">
+        <i class='bx bx-chevron-up'></i>
+    </div>
+
+    <!-- COMMON COMPONENTS PLACEHOLDERS -->
+    <div id="mainHeaderWrapper" class="main-header-wrapper"></div>
+    <div id="searchOverlay" class="search-overlay"></div>
+    <div id="mobileMenu" class="offcanvas offcanvas-start mobile-menu-offcanvas" tabindex="-1"></div>
+
+    <!-- 1. BREADCRUMB -->
+    <div class="breadcrumb-wrapper">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.html">Trang chủ</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Tất cả sản phẩm</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <main class="container mb-5">
+        <div class="row">
+            <!-- 2. FILTER SIDEBAR (Desktop) -->
+            <aside class="col-lg-3 d-none d-lg-block">
+                <div class="filter-sidebar">
+                    <!-- Category Filter -->
+                    <div class="filter-widget">
+                        <h5 class="filter-title">Danh mục</h5>
+                        <ul class="filter-list">
+                            <li class="filter-item">
+                                <div class="d-flex align-items-center">
+                                    <input type="checkbox" id="cat1">
+                                    <label for="cat1">Phụ tùng máy</label>
+                                </div>
+                                <span class="count">42</span>
+                            </li>
+                            <li class="filter-item">
+                                <div class="d-flex align-items-center">
+                                    <input type="checkbox" id="cat2">
+                                    <label for="cat2">Dàn chân</label>
+                                </div>
+                                <span class="count">28</span>
+                            </li>
+                            <li class="filter-item">
+                                <div class="d-flex align-items-center">
+                                    <input type="checkbox" id="cat3">
+                                    <label for="cat3">Nhớt & Phụ gia</label>
+                                </div>
+                                <span class="count">15</span>
+                            </li>
+                            <li class="filter-item">
+                                <div class="d-flex align-items-center">
+                                    <input type="checkbox" id="cat4">
+                                    <label for="cat4">Đồ chơi xe</label>
+                                </div>
+                                <span class="count">36</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Brand Filter -->
+                    <div class="filter-widget">
+                        <h5 class="filter-title">Thương hiệu</h5>
+                        <ul class="filter-list">
+                            <li class="filter-item">
+                                <div class="d-flex align-items-center">
+                                    <input type="checkbox" id="brand1">
+                                    <label for="brand1">Honda</label>
+                                </div>
+                            </li>
+                            <li class="filter-item">
+                                <div class="d-flex align-items-center">
+                                    <input type="checkbox" id="brand2">
+                                    <label for="brand2">Yamaha</label>
+                                </div>
+                            </li>
+                            <li class="filter-item">
+                                <div class="d-flex align-items-center">
+                                    <input type="checkbox" id="brand3">
+                                    <label for="brand3">Motul</label>
+                                </div>
+                            </li>
+                            <li class="filter-item">
+                                <div class="d-flex align-items-center">
+                                    <input type="checkbox" id="brand4">
+                                    <label for="brand4">Ohlins</label>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Price Filter -->
+                    <div class="filter-widget">
+                        <h5 class="filter-title">Khoảng giá (đ)</h5>
+                        <div class="price-range-inputs">
+                            <input type="number" placeholder="Từ">
+                            <span>-</span>
+                            <input type="number" placeholder="Đến">
+                        </div>
+                        <button class="btn btn-danger btn-sm w-100 mt-3 rounded-pill">ÁP DỤNG</button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 3. MAIN CONTENT -->
+            <div class="col-lg-9">
+                <!-- Mobile Filter Button -->
+                <button class="btn btn-outline-dark mobile-filter-btn d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#mobileFilter">
+                    <i class='bx bx-filter-alt'></i> BỘ LỌC
+                </button>
+
+                <!-- Page Title & Sort Bar -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="fw-bold mb-0">Tất cả sản phẩm</h3>
+                    <p class="text-muted mb-0 d-none d-md-block">Tìm thấy 128 sản phẩm</p>
+                </div>
+
+                <div class="shop-control-bar">
+                    <div class="d-flex align-items-center">
+                        <span class="text-muted me-3 small">Sắp xếp:</span>
+                        <select class="sort-select">
+                            <option>Mặc định</option>
+                            <option>Giá tăng dần</option>
+                            <option>Giá giảm dần</option>
+                            <option>Sản phẩm mới</option>
+                            <option>Bán chạy nhất</option>
+                        </select>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="text-muted me-3 small d-none d-md-block">Chế độ xem:</span>
+                        <button class="view-mode-btn active" title="Grid View"><i class='bx bxs-grid-alt'></i></button>
+                        <button class="view-mode-btn" title="List View"><i class='bx bx-list-ul'></i></button>
+                    </div>
+                </div>
+
+                <!-- Product Grid -->
+                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="productGrid">
+                    <!-- Product 1 -->
+                    <div class="col">
+                        <div class="product-card">
+                            <span class="product-badge badge-new">New</span>
+                            <div class="product-img-wrapper">
+                                <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400" alt="Product" loading="lazy">
+                            </div>
+                            <div class="product-info flex-grow-1">
+                                <span class="brand">HONDA</span>
+                                <h6 class="name">Bộ Nồi Trước Honda SH Chính Hãng - Made in Italy</h6>
+                                <div class="product-price">
+                                    <span class="current">1.250.000đ</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3">
+                                <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Product 2 -->
+                    <div class="col">
+                        <div class="product-card">
+                            <span class="product-badge badge-hot">Best Seller</span>
+                            <div class="product-img-wrapper">
+                                <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=400" alt="Product" loading="lazy">
+                            </div>
+                            <div class="product-info flex-grow-1">
+                                <span class="brand">MOTUL</span>
+                                <h6 class="name">Nhớt Motul 300V Factory Line 10W40 1L</h6>
+                                <div class="product-price">
+                                    <span class="current">450.000đ</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3">
+                                <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Add more products to fill the grid -->
+                    <div class="col">
+                        <div class="product-card">
+                            <div class="product-img-wrapper">
+                                <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400" alt="Product" loading="lazy">
+                            </div>
+                            <div class="product-info flex-grow-1">
+                                <span class="brand">OHLINS</span>
+                                <h6 class="name">Phuộc Ohlins Chính Hãng Cho Vario / Click Thái</h6>
+                                <div class="product-price">
+                                    <span class="current">8.900.000đ</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3">
+                                <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="product-card">
+                            <span class="product-badge badge-featured">Featured</span>
+                            <div class="product-img-wrapper">
+                                <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=400" alt="Product" loading="lazy">
+                            </div>
+                            <div class="product-info flex-grow-1">
+                                <span class="brand">MICHELIN</span>
+                                <h6 class="name">Lốp Michelin City Grip 2 Cho Honda SH</h6>
+                                <div class="product-price">
+                                    <span class="current">1.850.000đ</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3">
+                                <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. PAGINATION -->
+                <nav class="pagination-wrapper">
+                    <ul class="pagination">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1"><i class='bx bx-chevron-left'></i></a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#"><i class='bx bx-chevron-right'></i></a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </main>
+
+    <!-- Mobile Filter Offcanvas -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="mobileFilter">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title fw-bold">BỘ LỌC SẢN PHẨM</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <div class="filter-mobile-content p-4">
+                <!-- Category Filter -->
+                <div class="filter-widget mb-4 pb-4 border-bottom">
+                    <h5 class="filter-title fw-bold mb-3">Danh mục</h5>
+                    <ul class="filter-list list-unstyled">
+                        <li class="filter-item mb-3 d-flex justify-content-between align-items-center">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="mcat1">
+                                <label class="form-check-label ms-2" for="mcat1">Phụ tùng máy</label>
+                            </div>
+                            <span class="badge bg-light text-muted rounded-pill">42</span>
+                        </li>
+                        <li class="filter-item mb-3 d-flex justify-content-between align-items-center">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="mcat2">
+                                <label class="form-check-label ms-2" for="mcat2">Dàn chân</label>
+                            </div>
+                            <span class="badge bg-light text-muted rounded-pill">28</span>
+                        </li>
+                        <li class="filter-item mb-3 d-flex justify-content-between align-items-center">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="mcat3">
+                                <label class="form-check-label ms-2" for="mcat3">Nhớt & Phụ gia</label>
+                            </div>
+                            <span class="badge bg-light text-muted rounded-pill">15</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Brand Filter -->
+                <div class="filter-widget mb-4 pb-4 border-bottom">
+                    <h5 class="filter-title fw-bold mb-3">Thương hiệu</h5>
+                    <ul class="filter-list list-unstyled">
+                        <li class="filter-item mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="mbrand1">
+                                <label class="form-check-label ms-2" for="mbrand1">Honda</label>
+                            </div>
+                        </li>
+                        <li class="filter-item mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="mbrand2">
+                                <label class="form-check-label ms-2" for="mbrand2">Yamaha</label>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Price Filter -->
+                <div class="filter-widget mb-4">
+                    <h5 class="filter-title fw-bold mb-3">Khoảng giá (đ)</h5>
+                    <div class="row g-2 align-items-center">
+                        <div class="col-5">
+                            <input type="number" class="form-control form-control-sm rounded-pill" placeholder="Từ">
+                        </div>
+                        <div class="col-2 text-center text-muted">-</div>
+                        <div class="col-5">
+                            <input type="number" class="form-control form-control-sm rounded-pill" placeholder="Đến">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="offcanvas-footer p-3 border-top d-flex gap-2">
+            <button class="btn btn-light flex-grow-1 rounded-pill fw-bold py-2">XÓA TẤT CẢ</button>
+            <button class="btn btn-danger flex-grow-1 rounded-pill fw-bold py-2" data-bs-dismiss="offcanvas">ÁP DỤNG</button>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white py-5 mt-5"></footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/header.js"></script>
+    <script src="js/components.js"></script>
+</body>
+</html>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Quản lý Biến thể - MotoShop Admin</title>
+    
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+    <link rel="stylesheet" href="../assets/css/pagination-component.css" />
+
+    <style>
+      :root {
+        --ds-primary: #E60023;
+        --ds-primary-hover: #C2001F;
+        --ds-primary-light: rgba(230, 0, 35, 0.08);
+      }
+
+      /* Chuẩn hóa nhãn (Labels) */
+      .form-label-custom {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #566a7f;
+        margin-bottom: 0.75rem;
+        display: block;
+      }
+
+      /* Section Title with Indicator */
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1.5rem;
+      }
+      .section-header::before {
+        content: "";
+        width: 4px;
+        height: 18px;
+        background: var(--ds-primary);
+        border-radius: 2px;
+      }
+      .section-header h6 { margin: 0; font-weight: 700; color: #32475c; text-transform: uppercase; letter-spacing: 0.5px; }
+
+      /* Attribute Management Styling */
+      .attr-card {
+        background: #fcfcfd;
+        border: 1px solid #eceef1;
+        border-radius: 10px;
+        padding: 1.5rem;
+      }
+      .attr-group {
+        padding: 1rem;
+        background: #fff;
+        border: 1px solid #eef0f2;
+        border-radius: 8px;
+        height: 100%;
+      }
+      .attr-value-badge {
+        background: var(--ds-primary-light);
+        color: var(--ds-primary);
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        border: 1px solid transparent;
+        transition: 0.2s;
+      }
+      .attr-value-badge:hover { border-color: var(--ds-primary); }
+      .attr-value-badge i { cursor: pointer; font-size: 1.1rem; }
+      
+      .btn-add-value {
+        height: 34px;
+        padding: 0 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border-style: dashed;
+      }
+
+      .variant-thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid var(--ds-border-color); }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Sidebar -->
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <h5 class="m-0 text-muted fw-light">Sản phẩm / <span class="text-dark fw-bold">Biến thể</span></h5>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <!-- 1. Thông tin Sản phẩm Chính -->
+              <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h4 class="fw-bold m-0 text-primary">BỘ NỒI TRƯỚC HONDA SH 125/150I</h4>
+                      <div class="mt-2">
+                        <span class="badge bg-label-secondary me-2">Honda</span>
+                        <span class="badge bg-label-secondary">Truyền động</span>
+                      </div>
+                    </div>
+                    <button class="btn btn-outline-primary" onclick="location.href='product-edit.html'">
+                      <i class="bx bx-edit-alt me-1"></i>Sửa thông tin gốc
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. CẤU HÌNH GIÁ TRỊ THUỘC TÍNH (Đã CSS lại theo quy tắc) -->
+              <div class="attr-card mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <div class="section-header mb-0">
+                    <h6>Cấu hình giá trị thuộc tính</h6>
+                  </div>
+                  <span class="badge bg-label-warning" style="font-size: 10px; font-weight: 700;">CẤU TRÚC CỐ ĐỊNH</span>
+                </div>
+                
+                <div class="row g-4">
+                  <!-- Nhóm Màu sắc -->
+                  <div class="col-md-6">
+                    <div class="attr-group shadow-none">
+                      <label class="form-label-custom">Màu sắc hiện có</label>
+                      <div class="d-flex flex-wrap align-items-center">
+                        <div id="colorValues" class="d-inline-block">
+                          <span class="attr-value-badge">Đỏ <i class="bx bx-x" onclick="removeValue(this)"></i></span>
+                          <span class="attr-value-badge">Đen <i class="bx bx-x" onclick="removeValue(this)"></i></span>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary btn-add-value mb-2" onclick="addValue('Màu sắc')">
+                          <i class="bx bx-plus me-1"></i>Thêm màu
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Nhóm Phiên bản -->
+                  <div class="col-md-6">
+                    <div class="attr-group shadow-none">
+                      <label class="form-label-custom">Phiên bản / Kích thước</label>
+                      <div class="d-flex flex-wrap align-items-center">
+                        <div id="sizeValues" class="d-inline-block">
+                          <span class="attr-value-badge">SH 125i <i class="bx bx-x" onclick="removeValue(this)"></i></span>
+                          <span class="attr-value-badge">SH 150i <i class="bx bx-x" onclick="removeValue(this)"></i></span>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary btn-add-value mb-2" onclick="addValue('Phiên bản')">
+                          <i class="bx bx-plus me-1"></i>Thêm phiên bản
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="alert alert-info py-2 px-3 mt-4 mb-0 border-0" style="font-size: 0.8rem; background: #eef9ff;">
+                  <i class="bx bx-info-circle me-2"></i><strong>Lưu ý:</strong> Cấu trúc thuộc tính được khóa để đảm bảo tính toàn vẹn dữ liệu. Bạn có thể thêm hoặc bớt các giá trị tùy chọn phía trên.
+                </div>
+              </div>
+
+              <!-- 3. Danh sách Biến thể -->
+              <div class="card overflow-hidden border-0 shadow-sm">
+                <div class="card-header border-bottom d-flex justify-content-between align-items-center py-3">
+                  <h6 class="m-0 fw-bold">DANH SÁCH BIẾN THỂ</h6>
+                  <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-danger d-none" id="btnBulkDelete" onclick="handleBulkDelete()">
+                      <i class="bx bx-trash me-1"></i>Xóa đã chọn (<span id="selectedCount">0</span>)
+                    </button>
+                    <button class="btn btn-sm btn-primary" onclick="openCreateModal()"><i class="bx bx-plus me-1"></i>Thêm biến thể</button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="openBulkModal()"><i class="bx bx-git-repo-forked me-1"></i>Tạo tổ hợp</button>
+                  </div>
+                </div>
+                
+                <div class="table-responsive text-nowrap">
+                  <table class="table table-hover m-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                        <th style="width: 80px">Ảnh</th>
+                        <th>Tên biến thể</th>
+                        <th>Mã SKU</th>
+                        <th>Giá bán (đ)</th>
+                        <th>Giá vốn (đ)</th>
+                        <th class="text-center">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><input class="form-check-input" type="checkbox" onchange="updateBulkActions()"></td>
+                        <td><img src="../assets/img/elements/1.jpg" class="variant-thumb"></td>
+                        <td><span class="fw-bold">Đỏ - SH 125i</span></td>
+                        <td><code>HD-SH-125-RED</code></td>
+                        <td class="text-primary fw-bold">1,250,000</td>
+                        <td class="text-muted">950,000</td>
+                        <td class="text-center">
+                          <button class="btn btn-sm btn-icon text-primary" onclick="openEditModal('Đỏ - SH 125i')"><i class="bx bx-edit-alt"></i></button>
+                          <button class="btn btn-sm btn-icon text-danger" onclick="deleteVariant('Đỏ - SH 125i')"><i class="bx bx-trash"></i></button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Phân trang -->
+                <div class="table-pagination-footer">
+                  <div class="pagination-rows-selector">
+                    Hiển thị <select class="form-select form-select-sm d-inline-block w-auto mx-2"><option>10</option></select> dòng
+                  </div>
+                  <nav class="pagination-nav">
+                    <ul class="pagination pagination-sm m-0">
+                      <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    </ul>
+                  </nav>
+                  <div class="pagination-info text-muted">Tổng: 1 dòng</div>
+                </div>
+              </div>
+
+            </div>
+            
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+                <div class="mb-2 mb-md-0">© 2026, MotoShop Admin</div>
+              </div>
+            </footer>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal và JS giữ nguyên logic -->
+    <div class="modal fade" id="variantModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header border-bottom p-4">
+            <h5 class="modal-title fw-bold" id="vTitle">Thêm biến thể mới</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="row g-3">
+              <div class="col-md-6"><label class="form-label-custom">Màu sắc</label><select class="form-select"><option>Đỏ</option></select></div>
+              <div class="col-md-6"><label class="form-label-custom">Phiên bản</label><select class="form-select"><option>SH 125i</option></select></div>
+              <div class="col-12"><label class="form-label-custom">Mã SKU</label><input type="text" class="form-control" placeholder="Để trống để tự tạo"></div>
+              <div class="col-md-6"><label class="form-label-custom">Giá bán (đ)</label><input type="number" class="form-control" value="0"></div>
+              <div class="col-md-6"><label class="form-label-custom">Giá vốn (đ)</label><input type="number" class="form-control" value="0"></div>
+            </div>
+          </div>
+          <div class="modal-footer border-top p-3 px-4">
+            <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+            <button class="btn btn-primary px-4" onclick="saveVariant()">Lưu dữ liệu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+        <!-- Core JS -->
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      const vModal = new bootstrap.Modal(document.getElementById('variantModal'));
+
+      // Logic Xóa hàng loạt
+      function updateBulkActions() {
+        const checkedCount = document.querySelectorAll('tbody .form-check-input:checked').length;
+        const btnBulk = document.getElementById('btnBulkDelete');
+        const countSpan = document.getElementById('selectedCount');
+        if (checkedCount > 0) {
+          btnBulk.classList.remove('d-none');
+          countSpan.innerText = checkedCount;
+        } else {
+          btnBulk.classList.add('d-none');
+        }
+      }
+
+      document.getElementById('checkAll').onclick = function() {
+        const checkboxes = document.querySelectorAll('tbody .form-check-input');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+        updateBulkActions();
+      };
+
+      function handleBulkDelete() {
+        const count = document.querySelectorAll('tbody .form-check-input:checked').length;
+        DS.confirm({
+          title: 'Xác nhận xóa nhiều',
+          message: `Bạn có chắc muốn xóa vĩnh viễn ${count} biến thể đã chọn?`,
+          type: 'danger',
+          onConfirm: () => {
+            DS.showToast(`Đã xóa ${count} biến thể thành công`, 'success');
+            updateBulkActions();
+          }
+        });
+      }
+
+      function openCreateModal() {
+ document.getElementById('vTitle').innerText = 'Thêm biến thể mới'; vModal.show(); }
+      function openEditModal(name) { document.getElementById('vTitle').innerText = 'Chỉnh sửa: ' + name; vModal.show(); }
+      function saveVariant() { vModal.hide(); DS.showToast('Đã lưu thay đổi thành công!', 'success'); }
+      function deleteVariant(name) {
+        DS.confirm({
+          title: 'Xác nhận xóa biến thể',
+          message: `Bạn có chắc muốn xóa vĩnh viễn biến thể "${name}"?`,
+          type: 'danger',
+          onConfirm: () => { DS.showToast(`Đã xóa ${name}`, 'success'); }
+        });
+      }
+      function addValue(attrName) { DS.showToast(`Chức năng thêm giá trị mới cho "${attrName}"`, 'info'); }
+      function removeValue(el) {
+        DS.confirm({
+          title: 'Xóa giá trị thuộc tính',
+          message: 'Lưu ý: Xóa giá trị này có thể ảnh hưởng đến các biến thể hiện tại. Tiếp tục?',
+          onConfirm: () => { el.parentElement.remove(); DS.showToast('Đã gỡ giá trị', 'success'); }
+        });
+      }
+    </script>
+  </body>
+</html>

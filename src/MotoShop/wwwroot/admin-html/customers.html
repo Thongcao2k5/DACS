@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Hệ thống Quản lý Khách hàng - MotoShop Admin</title>
+    
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+    <link rel="stylesheet" href="../assets/css/pagination-component.css" />
+
+    <!-- Helpers -->
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      .customer-avatar { width: 42px; height: 42px; object-fit: cover; border-radius: 50%; border: 2px solid #fff; }
+      .customer-name { font-weight: 700; color: var(--ds-text-heading); font-size: 0.95rem; }
+      .contact-info { font-size: 0.8rem; color: #697a8d; display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+      .points-badge { background: #fff8e1; color: #ffab00; border: 1px solid #ffe57f; padding: 2px 8px; border-radius: 12px; font-weight: 700; font-size: 0.75rem; }
+      
+      /* Modal History Styling */
+      .history-item { border-left: 3px solid var(--ds-primary); padding-left: 15px; margin-bottom: 15px; }
+      .history-code { font-family: monospace; font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Sidebar -->
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="m-0 text-muted fw-light">Hệ thống CRM / <span class="text-dark fw-bold">Quản lý Khách hàng</span></h5>
+            </div>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <!-- 1. Header Actions -->
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-uppercase">Khách hàng hệ thống</h4>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-danger d-none" id="btnBulkDelete" onclick="handleBulkDelete()">
+                    <i class="bx bx-trash me-1"></i>Xóa đã chọn (<span id="selectedCount">0</span>)
+                  </button>
+                  <button class="btn btn-primary" onclick="openCustomerModal('create')">
+                    <i class="bx bx-user-plus me-1"></i>Thêm khách hàng mới
+                  </button>
+                  <button class="btn btn-outline-secondary" onclick="DS.showToast('Đang chuẩn bị file Excel...', 'info')">
+                    <i class="bx bx-export me-1"></i>Xuất danh sách
+                  </button>
+                </div>
+              </div>
+
+              <!-- 2. Advanced Filters -->
+              <div class="card mb-4 border shadow-none">
+                <div class="card-body">
+                  <form class="row g-3">
+                    <div class="col-lg-4 col-md-12">
+                      <label class="filter-label">Tìm kiếm nhanh</label>
+                      <div class="input-group input-group-merge border-primary">
+                        <span class="input-group-text"><i class="bx bx-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Tìm theo tên, email, sđt...">
+                      </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                      <label class="filter-label">Hạng thành viên</label>
+                      <select class="form-select">
+                        <option value="">Tất cả hạng</option>
+                        <option>VIP (Vàng)</option>
+                        <option>Thân thiết (Bạc)</option>
+                        <option>Thành viên (Đồng)</option>
+                        <option>Khách mới</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                      <label class="filter-label">Trạng thái</label>
+                      <select class="form-select">
+                        <option value="">Tất cả</option>
+                        <option value="active">Đang hoạt động</option>
+                        <option value="locked">Đã khóa tài khoản</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                      <label class="filter-label">Ngày tham gia</label>
+                      <input type="date" class="form-control">
+                    </div>
+                    <div class="col-lg-2 col-md-12 d-flex align-items-end">
+                      <button type="submit" class="btn btn-secondary w-100"><i class="bx bx-filter-alt me-1"></i>Lọc dữ liệu</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- 3. Main Data Table -->
+              <div class="card overflow-hidden border shadow-sm">
+                <div class="table-responsive text-nowrap">
+                  <table class="table table-hover m-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                        <th>Thông tin Khách hàng</th>
+                        <th>Liên hệ</th>
+                        <th class="text-center">Đơn hàng</th>
+                        <th>Tổng chi tiêu</th>
+                        <th class="text-center">Điểm thưởng</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Hành động</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- Khách hàng 1 -->
+                      <tr>
+                        <td><input class="form-check-input" type="checkbox" onchange="updateBulkActions()"></td>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <img src="../assets/img/avatars/1.png" class="customer-avatar me-3 shadow-sm">
+                            <div>
+                              <div class="customer-name">Lê Minh Tâm</div>
+                              <span class="badge bg-label-warning" style="font-size: 10px">Hạng Vàng</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="contact-info"><i class="bx bx-phone-call"></i> 0908 111 222</div>
+                          <div class="contact-info"><i class="bx bx-envelope"></i> tam.le@gmail.com</div>
+                        </td>
+                        <td class="text-center"><span class="badge bg-label-info fw-bold">12</span></td>
+                        <td><span class="fw-bold text-dark">15,420,000đ</span></td>
+                        <td class="text-center"><span class="points-badge">1,542 pts</span></td>
+                        <td><span class="ds-badge ds-badge-success">Hoạt động</span></td>
+                        <td class="text-end">
+                          <div class="d-flex justify-content-end gap-1">
+                            <button class="btn btn-sm btn-icon text-info" title="Lịch sử mua hàng" onclick="viewHistory('Lê Minh Tâm')"><i class="bx bx-shopping-bag"></i></button>
+                            <button class="btn btn-sm btn-icon text-primary" title="Chỉnh sửa" onclick="openCustomerModal('edit', 'Lê Minh Tâm')"><i class="bx bx-edit-alt"></i></button>
+                            <button class="btn btn-sm btn-icon text-danger" title="Khóa tài khoản" onclick="handleLockAccount('Lê Minh Tâm')"><i class="bx bx-lock-alt"></i></button>
+                          </div>
+                        </td>
+                      </tr>
+                      <!-- Khách hàng 2 (Bị khóa) -->
+                      <tr>
+                        <td><input class="form-check-input" type="checkbox" onchange="updateBulkActions()"></td>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-circle me-3 bg-label-secondary">TH</div>
+                            <div>
+                              <div class="customer-name">Trần Văn Hùng</div>
+                              <span class="badge bg-label-secondary" style="font-size: 10px">Thành viên</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="contact-info"><i class="bx bx-phone-call"></i> 0912 555 666</div>
+                          <div class="contact-info"><i class="bx bx-envelope"></i> hung.tran@yahoo.com</div>
+                        </td>
+                        <td class="text-center"><span class="badge bg-label-info fw-bold">2</span></td>
+                        <td><span class="fw-bold text-dark">1,200,000đ</span></td>
+                        <td class="text-center"><span class="points-badge">120 pts</span></td>
+                        <td><span class="ds-badge ds-badge-danger">Đã khóa</span></td>
+                        <td class="text-end">
+                          <div class="d-flex justify-content-end gap-1">
+                            <button class="btn btn-sm btn-icon text-info" onclick="viewHistory('Trần Văn Hùng')"><i class="bx bx-shopping-bag"></i></button>
+                            <button class="btn btn-sm btn-icon text-primary" onclick="openCustomerModal('edit', 'Trần Văn Hùng')"><i class="bx bx-edit-alt"></i></button>
+                            <button class="btn btn-sm btn-icon text-success" title="Mở khóa" onclick="handleUnlockAccount('Trần Văn Hùng')"><i class="bx bx-lock-open-alt"></i></button>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Phân trang -->
+                <div class="table-pagination-footer">
+                  <div class="pagination-rows-selector">Hiển thị <select class="form-select form-select-sm d-inline-block w-auto mx-2"><option>10</option><option>20</option></select> dòng</div>
+                  <nav class="pagination-nav"><ul class="pagination pagination-sm m-0"><li class="page-item active"><a class="page-link" href="#">1</a></li><li class="page-item"><a class="page-link" href="#">2</a></li></ul></nav>
+                  <div class="pagination-info text-muted fw-bold">Tổng: 1,450 khách hàng</div>
+                </div>
+              </div>
+            </div>
+            
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl py-2">© 2026, MotoShop Admin - CRM & Loyalty System</div>
+            </footer>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: THÊM / SỬA KHÁCH HÀNG -->
+    <div class="modal fade" id="customerModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+          <div class="modal-header border-bottom p-4">
+            <h5 class="modal-title fw-bold" id="customerModalTitle">Thêm khách hàng mới</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <form id="customerForm">
+              <div class="row g-3">
+                <div class="col-12">
+                  <label class="filter-label">Họ và tên khách hàng <span class="text-danger">*</span></label>
+                  <input type="text" id="custName" class="form-control" placeholder="Nhập đầy đủ họ tên">
+                </div>
+                <div class="col-md-6">
+                  <label class="filter-label">Số điện thoại <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" placeholder="09xx xxx xxx">
+                </div>
+                <div class="col-md-6">
+                  <label class="filter-label">Địa chỉ Email</label>
+                  <input type="email" class="form-control" placeholder="example@gmail.com">
+                </div>
+                <div class="col-12">
+                  <label class="filter-label">Địa chỉ thường trú</label>
+                  <input type="text" class="form-control" placeholder="Số nhà, tên đường, phường/xã...">
+                </div>
+                <div class="col-md-6">
+                  <label class="filter-label">Hạng thành viên</label>
+                  <select class="form-select">
+                    <option>Khách mới</option>
+                    <option>Đồng</option>
+                    <option>Bạc</option>
+                    <option>Vàng</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="filter-label">Điểm tích lũy ban đầu</label>
+                  <input type="number" class="form-control" value="0">
+                </div>
+                <div class="col-12">
+                  <label class="filter-label">Ghi chú về khách hàng</label>
+                  <textarea class="form-control" rows="2" placeholder="Sở thích, lưu ý khi giao hàng..."></textarea>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer border-top p-3 px-4">
+            <button class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Hủy</button>
+            <button class="btn btn-primary px-4" id="btnSaveCustomer" onclick="handleSaveCustomer()">Lưu khách hàng</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: LỊCH SỬ MUA HÀNG NHANH -->
+    <div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0">
+          <div class="modal-header border-bottom p-4 bg-light">
+            <h5 class="modal-title fw-bold"><i class="bx bx-time-five me-2 text-primary"></i>Lịch sử mua hàng: <span id="historyCustomerName" class="text-primary"></span></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4" style="max-height: 500px; overflow-y: auto;">
+            <!-- Danh sách đơn hàng mock -->
+            <div class="history-item">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="history-code">#ORD-2026-001</span>
+                <span class="badge bg-label-success">Hoàn thành</span>
+              </div>
+              <div class="small text-muted mb-2">Ngày đặt: 12/03/2026 | Thanh toán: Chuyển khoản</div>
+              <div class="fw-bold">Tổng tiền: 3,250,000đ</div>
+            </div>
+            <div class="history-item" style="border-left-color: #ffab00;">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="history-code">#ORD-2026-045</span>
+                <span class="badge bg-label-warning">Đang giao</span>
+              </div>
+              <div class="small text-muted mb-2">Ngày đặt: 14/03/2026 | Thanh toán: COD</div>
+              <div class="fw-bold">Tổng tiền: 1,420,000đ</div>
+            </div>
+          </div>
+          <div class="modal-footer border-top">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            <button class="btn btn-outline-primary" onclick="location.href='orders.html'">Xem tất cả đơn hàng</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Core JS -->
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      const custModal = new bootstrap.Modal(document.getElementById('customerModal'));
+      const histModal = new bootstrap.Modal(document.getElementById('historyModal'));
+
+      // 1. Mở Modal Thêm/Sửa
+      function openCustomerModal(mode, name = '') {
+        document.getElementById('customerModalTitle').innerText = mode === 'create' ? 'Thêm khách hàng mới' : 'Chỉnh sửa thông tin khách hàng';
+        if(mode === 'edit') document.getElementById('custName').value = name;
+        else document.getElementById('customerForm').reset();
+        custModal.show();
+      }
+
+      // 2. Lưu khách hàng
+      function handleSaveCustomer() {
+        const btn = document.getElementById('btnSaveCustomer');
+        DS.loading.btnStart(btn);
+        setTimeout(() => {
+          DS.loading.btnStop(btn);
+          custModal.hide();
+          UI.showToast('Đã lưu thông tin khách hàng thành công!', 'success');
+        }, 1000);
+      }
+
+      // 3. Xem lịch sử mua hàng
+      function viewHistory(name) {
+        document.getElementById('historyCustomerName').innerText = name;
+        histModal.show();
+      }
+
+      // 4. Khóa tài khoản
+      function handleLockAccount(name) {
+        UI.confirmDelete({
+          title: 'Khóa tài khoản',
+          message: `Bạn có chắc chắn muốn khóa tài khoản của <strong>${name}</strong>? Khách hàng này sẽ không thể đăng nhập vào hệ thống.`,
+          type: 'danger',
+          onConfirm: () => {
+            UI.showToast(`Đã khóa tài khoản ${name} thành công`, 'warning');
+          }
+        });
+      }
+
+      // 5. Mở khóa tài khoản
+      function handleUnlockAccount(name) {
+        DS.confirm({
+          title: 'Mở khóa tài khoản',
+          message: `Kích hoạt lại quyền truy cập cho <strong>${name}</strong>?`,
+          onConfirm: () => {
+            UI.showToast(`Đã mở khóa tài khoản ${name}`, 'success');
+          }
+        });
+      }
+
+      // Logic Checkbox
+      function updateBulkActions() {
+        const checkedCount = document.querySelectorAll('tbody .form-check-input:checked').length;
+        const btnBulk = document.getElementById('btnBulkDelete');
+        const countSpan = document.getElementById('selectedCount');
+        if (checkedCount > 0) {
+          btnBulk.classList.remove('d-none');
+          countSpan.innerText = checkedCount;
+        } else {
+          btnBulk.classList.add('d-none');
+        }
+      }
+
+      document.getElementById('checkAll').onclick = function() {
+        document.querySelectorAll('tbody .form-check-input').forEach(cb => cb.checked = this.checked);
+        updateBulkActions();
+      };
+    </script>
+  </body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Quản lý Bài viết - MotoShop Admin</title>
+    
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+    <link rel="stylesheet" href="../assets/css/pagination-component.css" />
+
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      .blog-thumb { width: 100px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; }
+      .blog-title { font-weight: 700; color: var(--ds-text-heading); font-size: 0.95rem; line-height: 1.4; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="m-0 text-muted fw-light">Nội dung / <span class="text-dark fw-bold">Bài viết Blog</span></h5>
+            </div>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-uppercase">Quản lý bài viết</h4>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-danger d-none" id="btnBulkDelete" onclick="handleBulkDelete()">
+                    <i class="bx bx-trash me-1"></i>Xóa (<span id="selectedCount">0</span>)
+                  </button>
+                  <a href="blog-create.html" class="btn btn-primary"><i class="bx bx-plus me-1"></i>Viết bài mới</a>
+                </div>
+              </div>
+
+              <div class="card mb-4 border shadow-none">
+                <div class="card-body">
+                  <form class="row g-3">
+                    <div class="col-lg-5 col-md-12">
+                      <label class="filter-label">Tìm kiếm bài viết</label>
+                      <div class="input-group input-group-merge">
+                        <span class="input-group-text"><i class="bx bx-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Tiêu đề bài viết hoặc từ khóa...">
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                      <label class="filter-label">Chuyên mục</label>
+                      <select class="form-select">
+                        <option>Tất cả</option>
+                        <option>Kiến thức xe</option>
+                        <option>Tin tức MotoShop</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-2 col-md-6">
+                      <label class="filter-label">Trạng thái</label>
+                      <select class="form-select">
+                        <option>Tất cả</option>
+                        <option>Đang hiển thị</option>
+                        <option>Bản nháp</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-2 col-md-12 d-flex align-items-end">
+                      <button type="submit" class="btn btn-secondary w-100">Lọc dữ liệu</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <div class="card overflow-hidden border shadow-sm">
+                <div class="table-responsive text-nowrap">
+                  <table class="table table-hover m-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                        <th style="width: 120px">Hình ảnh</th>
+                        <th>Tiêu đề bài viết</th>
+                        <th>Chuyên mục</th>
+                        <th>Ngày đăng</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Hành động</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><input class="form-check-input" type="checkbox" onchange="updateBulkActions()"></td>
+                        <td><img src="../assets/img/elements/18.jpg" class="blog-thumb shadow-sm"></td>
+                        <td>
+                          <div class="blog-title">5 Cách Bảo Dưỡng Nồi Xe Tay Ga Tại Nhà Cực Đơn Giản</div>
+                          <small class="text-muted"><i class="bx bx-user-circle me-1"></i>Admin | <i class="bx bx-show me-1"></i>1.2k</small>
+                        </td>
+                        <td><span class="badge bg-label-info">Kiến thức xe</span></td>
+                        <td>12/03/2026</td>
+                        <td><span class="ds-badge ds-badge-success">Hiển thị</span></td>
+                        <td class="text-end">
+                          <a href="blog-edit.html" class="btn btn-sm btn-icon text-primary"><i class="bx bx-edit-alt"></i></a>
+                          <button class="btn btn-sm btn-icon text-danger" onclick="handleDelete('Bài viết #1')"><i class="bx bx-trash"></i></button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="table-pagination-footer">
+                  <div class="pagination-rows-selector">Hiện <select class="form-select form-select-sm d-inline-block w-auto mx-1"><option>10</option></select> dòng</div>
+                  <nav><ul class="pagination pagination-sm m-0"><li class="page-item active"><a class="page-link" href="#">1</a></li></ul></nav>
+                  <div class="pagination-info text-muted fw-bold">Tổng: 12 bài viết</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      function updateBulkActions() {
+        const checkedCount = document.querySelectorAll('tbody .form-check-input:checked').length;
+        const btnBulk = document.getElementById('btnBulkDelete');
+        const countSpan = document.getElementById('selectedCount');
+        if (checkedCount > 0) {
+          btnBulk.classList.remove('d-none');
+          countSpan.innerText = checkedCount;
+        } else {
+          btnBulk.classList.add('d-none');
+        }
+      }
+
+      document.getElementById('checkAll').onclick = function() {
+        document.querySelectorAll('tbody .form-check-input').forEach(cb => cb.checked = this.checked);
+        updateBulkActions();
+      };
+
+      function handleDelete(name) {
+        DS.confirm({
+          title: 'Xóa bài viết',
+          message: `Bạn chắc chắn muốn xóa bài viết <strong>${name}</strong>?`,
+          onConfirm: () => { DS.showToast('Đã xóa thành công', 'success'); }
+        });
+      }
+    </script>
+  </body>
+</html>

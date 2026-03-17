@@ -1,0 +1,128 @@
+@{
+    ViewData["Title"] = "Sản phẩm thương hiệu NGK - MotoShop";
+}
+
+<!-- 1. BREADCRUMB -->
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="#">Thương hiệu</a></li>
+                <li class="breadcrumb-item active" aria-current="page">NGK</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- 2. BRAND HEADER & 3. DESCRIPTION -->
+<section class="brand-header-section">
+    <div class="container">
+        <div class="brand-identity">
+            <div class="brand-logo-lg">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/NGK_Spark_Plugs_logo.svg" alt="NGK Logo">
+            </div>
+            <div class="brand-info-text">
+                <h1>NGK SPARK PLUGS</h1>
+                <p class="brand-description-text mb-0">NGK là thương hiệu bugi và cảm biến oxy hàng đầu thế giới đến từ Nhật Bản. Với hơn 80 năm kinh nghiệm, các sản phẩm của NGK được tin dùng bởi hầu hết các nhà sản xuất xe máy lớn như Honda, Yamaha, Suzuki nhờ hiệu suất đánh lửa vượt trội và độ bền cực cao.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<main class="container mb-5">
+    <!-- 4. FILTER & SORT BAR (Inline version) -->
+    <div class="inline-filter-bar">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="d-flex align-items-center gap-2">
+                <span class="small fw-bold text-muted">DANH MỤC:</span>
+                <select class="form-select form-control-custom h-auto py-1 px-3 small" style="width: auto;">
+                    <option selected>Tất cả danh mục</option>
+                    <option>Bugi tiêu chuẩn</option>
+                    <option>Bugi Iridium</option>
+                    <option>Dây phin & Chụp bugi</option>
+                </select>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="small fw-bold text-muted">KHOẢNG GIÁ:</span>
+                <select class="form-select form-control-custom h-auto py-1 px-3 small" style="width: auto;">
+                    <option selected>Tất cả giá</option>
+                    <option>Dưới 100.000đ</option>
+                    <option>100.000đ - 500.000đ</option>
+                    <option>Trên 500.000đ</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted small fw-bold">48 SẢN PHẨM</span>
+            <div class="step-line d-none d-md-block" style="width: 1px; height: 20px; background: #eee;"></div>
+            <select class="form-select border-0 bg-transparent fw-bold small p-0" style="width: auto; box-shadow: none;">
+                <option>Sản phẩm mới nhất</option>
+                <option>Giá: Thấp đến Cao</option>
+                <option>Giá: Cao đến Thấp</option>
+                <option>Bán chạy nhất</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- 5. PRODUCTS GRID -->
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="brandProductGrid">
+        <!-- Product 1 -->
+        <div class="col">
+            <div class="product-card">
+                <div class="product-img-wrapper">
+                    <a asp-action="Details" asp-route-slug="bugi-ngk-iridium">
+                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400" alt="Product" loading="lazy">
+                    </a>
+                </div>
+                <div class="product-info flex-grow-1">
+                    <span class="brand">NGK</span>
+                    <h6 class="name"><a asp-action="Details" asp-route-slug="bugi-ngk-iridium" class="text-decoration-none text-dark">Bugi NGK Iridium CPR7EAIX-9 Chính Hãng</a></h6>
+                    <div class="product-price">
+                        <span class="current">220.000đ</span>
+                        <span class="old">250.000đ</span>
+                    </div>
+                </div>
+                <button class="btn btn-add-cart rounded-pill fw-bold mt-3">
+                    <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Product 2 -->
+        <div class="col">
+            <div class="product-card">
+                <span class="product-badge badge-new">New</span>
+                <div class="product-img-wrapper">
+                    <a asp-action="Details" asp-route-slug="bugi-ngk-bach-kim">
+                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400" alt="Product" loading="lazy">
+                    </a>
+                </div>
+                <div class="product-info flex-grow-1">
+                    <span class="brand">NGK</span>
+                    <h6 class="name"><a asp-action="Details" asp-route-slug="bugi-ngk-bach-kim" class="text-decoration-none text-dark">Bugi NGK Bạch Kim G-Power CPR6EAGP-9</a></h6>
+                    <div class="product-price">
+                        <span class="current">95.000đ</span>
+                    </div>
+                </div>
+                <button class="btn btn-add-cart rounded-pill fw-bold mt-3">
+                    <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Add more products... -->
+    </div>
+
+    <!-- 6. PAGINATION -->
+    <nav class="pagination-wrapper mt-5">
+        <ul class="pagination">
+            <li class="page-item disabled"><a class="page-link" href="#"><i class='bx bx-chevron-left'></i></a></li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item"><a class="page-link" href="#"><i class='bx bx-chevron-right'></i></a></li>
+        </ul>
+    </nav>
+</main>

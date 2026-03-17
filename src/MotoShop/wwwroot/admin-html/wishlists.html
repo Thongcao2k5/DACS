@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Danh sách yêu thích - MotoShop Admin</title>
+    
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+    <link rel="stylesheet" href="../assets/css/pagination-component.css" />
+
+    <!-- Helpers -->
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      .customer-info { display: flex; align-items: center; gap: 10px; }
+      .customer-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+      .product-preview { display: flex; align-items: center; gap: 12px; }
+      .product-img { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; border: 1px solid #eee; }
+      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+      .price-tag { font-weight: 700; color: var(--ds-primary); }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Sidebar -->
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="m-0 text-muted fw-light">Khách hàng / <span class="text-dark fw-bold">Sản phẩm yêu thích</span></h5>
+            </div>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <!-- Header Actions -->
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-uppercase">Danh sách yêu thích</h4>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-danger d-none" id="btnBulkDelete" onclick="handleBulkDelete()">
+                    <i class="bx bx-trash me-1"></i>Xóa đã chọn (<span id="selectedCount">0</span>)
+                  </button>
+                  <button class="btn btn-outline-secondary" onclick="DS.showToast('Đang xuất báo cáo phân tích nhu cầu...', 'info')">
+                    <i class="bx bx-export me-1"></i>Xuất Excel
+                  </button>
+                </div>
+              </div>
+
+              <!-- Search & Filter -->
+              <div class="card mb-4 border shadow-none">
+                <div class="card-body">
+                  <form class="row g-3">
+                    <div class="col-lg-4 col-md-6">
+                      <label class="filter-label">Tìm kiếm</label>
+                      <div class="input-group input-group-merge">
+                        <span class="input-group-text"><i class="bx bx-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Tên khách hàng hoặc tên sản phẩm...">
+                      </div>
+                    </div>
+                    <div class="col-lg-2 col-md-3">
+                      <label class="filter-label">Loại sản phẩm</label>
+                      <select class="form-select">
+                        <option value="">Tất cả loại</option>
+                        <option>Phụ tùng máy</option>
+                        <option>Dàn chân</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-2 col-md-3">
+                      <label class="filter-label">Tình trạng kho</label>
+                      <select class="form-select">
+                        <option value="">Tất cả</option>
+                        <option>Còn hàng</option>
+                        <option>Hết hàng</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-2 col-md-6">
+                      <label class="filter-label">Ngày thêm</label>
+                      <input type="date" class="form-control">
+                    </div>
+                    <div class="col-lg-2 col-md-6 d-flex align-items-end">
+                      <button type="submit" class="btn btn-secondary w-100"><i class="bx bx-filter-alt me-1"></i>Lọc</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- Wishlist Table -->
+              <div class="card overflow-hidden border shadow-sm">
+                <div class="table-responsive text-nowrap">
+                  <table class="table table-hover m-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                        <th>Khách hàng</th>
+                        <th>Sản phẩm yêu thích</th>
+                        <th>Giá hiện tại</th>
+                        <th>Tình trạng</th>
+                        <th>Ngày thêm</th>
+                        <th class="text-end">Hành động</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- Entry 1 -->
+                      <tr>
+                        <td><input class="form-check-input" type="checkbox" onchange="updateBulkActions()"></td>
+                        <td>
+                          <div class="customer-info cursor-pointer" onclick="location.href='customers.html'">
+                            <img src="../assets/img/avatars/1.png" class="customer-avatar">
+                            <div>
+                              <div class="fw-bold text-dark">Lê Minh Tâm</div>
+                              <small class="text-muted">0908 111 222</small>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="product-preview cursor-pointer" onclick="location.href='product-detail.html'">
+                            <img src="../assets/img/elements/1.jpg" class="product-img shadow-sm">
+                            <div>
+                              <div class="fw-bold text-dark">Bộ Nồi Trước Honda SH</div>
+                              <small class="text-muted">SKU: HD-SH-001</small>
+                            </div>
+                          </div>
+                        </td>
+                        <td><span class="price-tag">1,250,000đ</span></td>
+                        <td><span class="badge bg-label-success">Còn hàng (42)</span></td>
+                        <td>12/03/2026</td>
+                        <td class="text-end">
+                          <button class="btn btn-sm btn-icon text-primary" title="Gửi ưu đãi riêng" onclick="DS.showToast('Đã gửi mã giảm giá cho khách hàng!', 'success')"><i class="bx bx-paper-plane"></i></button>
+                          <button class="btn btn-sm btn-icon text-danger" title="Xóa khỏi danh sách" onclick="handleRemove('Bộ Nồi Trước Honda SH')"><i class="bx bx-trash"></i></button>
+                        </td>
+                      </tr>
+                      <!-- Entry 2 -->
+                      <tr>
+                        <td><input class="form-check-input" type="checkbox" onchange="updateBulkActions()"></td>
+                        <td>
+                          <div class="customer-info">
+                            <div class="avatar-circle bg-label-primary me-2" style="width: 32px; height: 32px; font-size: 0.7rem;">NH</div>
+                            <div>
+                              <div class="fw-bold text-dark">Nguyễn Thu Hà</div>
+                              <small class="text-muted">0912 333 444</small>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="product-preview">
+                            <img src="../assets/img/elements/13.jpg" class="product-img shadow-sm">
+                            <div>
+                              <div class="fw-bold text-dark">Bố thắng đĩa trước Yamaha</div>
+                              <small class="text-muted">SKU: YM-EX-992</small>
+                            </div>
+                          </div>
+                        </td>
+                        <td><span class="price-tag">850,000đ</span></td>
+                        <td><span class="badge bg-label-danger">Hết hàng</span></td>
+                        <td>14/03/2026</td>
+                        <td class="text-end">
+                          <button class="btn btn-sm btn-icon text-muted disabled"><i class="bx bx-paper-plane"></i></button>
+                          <button class="btn btn-sm btn-icon text-danger" onclick="handleRemove('Bố thắng đĩa trước Yamaha')"><i class="bx bx-trash"></i></button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Phân trang -->
+                <div class="table-pagination-footer">
+                  <div class="pagination-rows-selector">Hiển thị <select class="form-select form-select-sm d-inline-block w-auto mx-2"><option>10</option><option>20</option></select> dòng</div>
+                  <nav class="pagination-nav"><ul class="pagination pagination-sm m-0"><li class="page-item active"><a class="page-link" href="#">1</a></li><li class="page-item"><a class="page-link" href="#">2</a></li></ul></nav>
+                  <div class="pagination-info text-muted fw-bold">Tổng: 342 lượt yêu thích</div>
+                </div>
+              </div>
+            </div>
+            
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl py-2">© 2026, MotoShop Admin - Marketing Analytics</div>
+            </footer>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Core JS -->
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      function updateBulkActions() {
+        const checkedCount = document.querySelectorAll('tbody .form-check-input:checked').length;
+        const btnBulk = document.getElementById('btnBulkDelete');
+        const countSpan = document.getElementById('selectedCount');
+        if (checkedCount > 0) {
+          btnBulk.classList.remove('d-none');
+          countSpan.innerText = checkedCount;
+        } else {
+          btnBulk.classList.add('d-none');
+        }
+      }
+
+      document.getElementById('checkAll').onclick = function() {
+        document.querySelectorAll('tbody .form-check-input').forEach(cb => cb.checked = this.checked);
+        updateBulkActions();
+      };
+
+      function handleRemove(prodName) {
+        DS.confirm({
+          title: 'Xóa yêu thích',
+          message: `Bạn chắc chắn muốn xóa sản phẩm <strong>${prodName}</strong> khỏi danh sách yêu thích của khách hàng này?`,
+          onConfirm: () => {
+            DS.showToast('Đã xóa thành công', 'success');
+          }
+        });
+      }
+
+      function handleBulkDelete() {
+        const count = document.querySelectorAll('tbody .form-check-input:checked').length;
+        DS.confirm({
+          title: 'Xóa nhiều mục',
+          message: `Bạn chắc chắn muốn xóa <strong>${count}</strong> mục đã chọn?`,
+          onConfirm: () => {
+            DS.showToast(`Đã xóa ${count} mục thành công`, 'success');
+            updateBulkActions();
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

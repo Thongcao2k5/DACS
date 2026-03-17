@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Viết bài mới - MotoShop Admin</title>
+    
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+      .card-form { border-radius: 12px; border: none; box-shadow: 0 2px 15px rgba(0,0,0,0.05); }
+      .editor-wrapper { border: 1px solid #d9dee3; border-radius: 12px; overflow: hidden; background: #fff; min-height: 700px; }
+      .ck-editor__editable { min-height: 650px !important; }
+      .cover-preview { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; border: 2px dashed #d9dee3; display: flex; align-items: center; justify-content: center; background: #f8f9fa; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <h5 class="m-0 text-muted fw-light">Nội dung / <a href="blogs.html" class="text-muted">Bài viết</a> / <span class="text-dark fw-bold">Viết bài mới</span></h5>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-uppercase text-primary">Biên tập bài viết</h4>
+                <div class="d-flex gap-2">
+                  <a href="blogs.html" class="btn btn-outline-secondary">Hủy</a>
+                  <button class="btn btn-primary px-4" id="btnSave" onclick="handleSave()">Xuất bản bài viết</button>
+                </div>
+              </div>
+
+              <div class="row">
+                <!-- Cột chính: Editor -->
+                <div class="col-lg-9">
+                  <div class="card card-form mb-4">
+                    <div class="card-body">
+                      <div class="mb-4">
+                        <label class="filter-label">Tiêu đề bài viết <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-lg fw-bold" placeholder="Nhập tiêu đề thu hút người đọc...">
+                      </div>
+                      <div class="editor-wrapper">
+                        <div id="editor"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cột phụ: Metadata -->
+                <div class="col-lg-3">
+                  <div class="card card-form mb-4">
+                    <div class="card-body">
+                      <h6 class="fw-bold mb-3">Thông tin đăng tải</h6>
+                      <div class="mb-3">
+                        <label class="filter-label">Chuyên mục</label>
+                        <select class="form-select">
+                          <option>Kiến thức xe</option>
+                          <option>Tin tức MotoShop</option>
+                          <option>Hướng dẫn</option>
+                        </select>
+                      </div>
+                      <div class="mb-3">
+                        <label class="filter-label">Thẻ (Tags)</label>
+                        <input type="text" class="form-control" placeholder="Phụ tùng, bảo dưỡng...">
+                      </div>
+                      <div class="form-check form-switch mt-3">
+                        <input class="form-check-input" type="checkbox" id="featured" checked>
+                        <label class="form-check-label fw-bold" for="featured">Bài viết nổi bật</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="card card-form">
+                    <div class="card-body">
+                      <h6 class="fw-bold mb-3">Ảnh bìa (Thumbnail)</h6>
+                      <div class="cover-preview mb-3">
+                        <div class="text-center">
+                          <i class="bx bx-camera text-muted" style="font-size: 2.5rem;"></i>
+                          <p class="mb-0 small">Chưa có ảnh bìa</p>
+                        </div>
+                      </div>
+                      <button class="btn btn-sm btn-outline-primary w-100">Thay đổi ảnh</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CKEditor Super Build Local -->
+    <script src="../assets/vendor/libs/ckeditor/ckeditor.js"></script>
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      let editorInstance;
+      window.addEventListener('load', () => {
+        if (typeof CKEDITOR !== 'undefined') {
+          CKEDITOR.ClassicEditor
+            .create(document.querySelector('#editor'), {
+              toolbar: {
+                items: [
+                  'sourceEditing', '|', 'heading', '|',
+                  'fontSize', 'fontColor', 'fontBackgroundColor', 'highlight', '|',
+                  'bold', 'italic', 'underline', '|', 'alignment', '|',
+                  'numberedList', 'bulletedList', '|',
+                  'link', 'uploadImage', 'insertTable', 'mediaEmbed', '|',
+                  'undo', 'redo'
+                ],
+                shouldNotGroupWhenFull: true
+              },
+              simpleUpload: { 
+                uploadUrl: '../api/upload-handler.php', 
+                headers: { 
+                  'X-CSRF-TOKEN': 'CSRF_TOKEN',
+                  'Module-Name': 'blogs' 
+                } 
+              },
+              image: { toolbar: ['imageStyle:alignLeft', 'imageStyle:block', 'imageStyle:alignRight', '|', 'toggleImageCaption', 'imageTextAlternative'], insert: { integrations: ['upload'] } },
+              removePlugins: [
+                'AIAssistant', 'CKBox', 'CKFinder', 'EasyImage', 'RealTimeCollaborativeComments',
+                'RealTimeCollaborativeTrackChanges', 'RealTimeCollaborativeRevisionHistory', 'PresenceList',
+                'Comments', 'TrackChanges', 'TrackChangesData', 'RevisionHistory', 'Pagination', 'WProofreader',
+                'MathType', 'SlashCommand', 'Template', 'DocumentOutline', 'FormatPainter', 'TableOfContents', 
+                'PasteFromOfficeEnhanced', 'CaseChange', 'MultiLevelList', 'ExportPdf', 'ExportWord'
+              ],
+              placeholder: 'Viết nội dung bài viết tại đây...',
+              language: 'vi'
+            })
+            .then(editor => { editorInstance = editor; })
+            .catch(error => { console.error(error); });
+        }
+      });
+
+      function handleSave() {
+        const btn = document.getElementById('btnSave');
+        DS.loading.btnStart(btn);
+        setTimeout(() => {
+          DS.loading.btnStop(btn);
+          DS.showToast('Đã xuất bản bài viết thành công!', 'success');
+          setTimeout(() => { location.href = 'blogs.html'; }, 1000);
+        }, 1200);
+      }
+    </script>
+  </body>
+</html>

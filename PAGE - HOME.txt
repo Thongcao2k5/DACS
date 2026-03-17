@@ -1,0 +1,32 @@
+Home
+ │
+ ├── Category
+ │     └── Product List
+ │             └── Product Detail
+ │
+ ├── Brand
+ │     └── Brand Products
+ │
+ ├── Search
+ │
+ ├── Cart
+ │     └── Checkout
+ │            └── Order Success (Thank you)
+ │
+ ├── Track Order
+ │
+ ├── Account
+ │     ├── Login
+ │     ├── Register
+ │     ├── Profile
+ │     └── My Orders
+ │
+ ├── Pages
+ │     ├── About
+ │     ├── Contact
+ │     └── Policies
+ │
+ └── System
+       ├── 404
+       ├── 500
+       └── Maintenance

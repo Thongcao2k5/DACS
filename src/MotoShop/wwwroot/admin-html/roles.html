@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Phân quyền hệ thống - MotoShop Admin</title>
+    
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      .role-card { transition: 0.3s; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+      .role-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+      .permission-table th { text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; color: #a1acb8; }
+      .permission-module { font-weight: 700; color: var(--ds-text-heading); background: #f8f9fa; }
+      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <h5 class="m-0 text-muted fw-light">Hệ thống / <span class="text-dark fw-bold">Phân quyền</span></h5>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <h4 class="fw-bold m-0 text-uppercase">Vai trò người dùng</h4>
+                  <p class="text-muted small mb-0">Thiết lập các nhóm quyền hạn truy cập vào hệ thống Admin</p>
+                </div>
+                <button class="btn btn-primary" onclick="openRoleModal('create')"><i class="bx bx-plus me-1"></i>Thêm vai trò mới</button>
+              </div>
+
+              <div class="row">
+                <!-- Role Card 1 -->
+                <div class="col-md-4 mb-4">
+                  <div class="card role-card h-100">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="text-muted small">Tổng: 2 nhân viên</span>
+                        <ul class="list-unstyled d-flex align-items-center avatar-group mb-0">
+                          <li class="avatar avatar-sm pull-up"><img src="../assets/img/avatars/1.png" class="rounded-circle"></li>
+                          <li class="avatar avatar-sm pull-up"><img src="../assets/img/avatars/5.png" class="rounded-circle"></li>
+                        </ul>
+                      </div>
+                      <h5 class="fw-bold mb-1">Administrator</h5>
+                      <p class="small text-muted mb-4">Toàn quyền quản trị hệ thống, cấu hình và bảo mật.</p>
+                      <div class="d-flex justify-content-between align-items-center">
+                        <a href="javascript:void(0);" onclick="openRoleModal('edit', 'Administrator')" class="text-primary fw-bold small">Chỉnh sửa quyền</a>
+                        <i class='bx bx-shield-quarter text-primary fs-3'></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Role Card 2 -->
+                <div class="col-md-4 mb-4">
+                  <div class="card role-card h-100">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="text-muted small">Tổng: 5 nhân viên</span>
+                        <ul class="list-unstyled d-flex align-items-center avatar-group mb-0">
+                          <li class="avatar avatar-sm pull-up"><img src="../assets/img/avatars/6.png" class="rounded-circle"></li>
+                          <li class="avatar avatar-sm pull-up"><img src="../assets/img/avatars/7.png" class="rounded-circle"></li>
+                        </ul>
+                      </div>
+                      <h5 class="fw-bold mb-1">Nhân viên bán hàng</h5>
+                      <p class="small text-muted mb-4">Quản lý đơn hàng, khách hàng và phản hồi.</p>
+                      <div class="d-flex justify-content-between align-items-center">
+                        <a href="javascript:void(0);" class="text-primary fw-bold small">Chỉnh sửa quyền</a>
+                        <i class='bx bx-cart text-info fs-3'></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Role Card 3 -->
+                <div class="col-md-4 mb-4">
+                  <div class="card role-card h-100">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="text-muted small">Tổng: 3 nhân viên</span>
+                      </div>
+                      <h5 class="fw-bold mb-1">Thủ kho</h5>
+                      <p class="small text-muted mb-4">Quản lý sản phẩm, tồn kho và lịch sử nhập xuất.</p>
+                      <div class="d-flex justify-content-between align-items-center">
+                        <a href="javascript:void(0);" class="text-primary fw-bold small">Chỉnh sửa quyền</a>
+                        <i class='bx bx-store text-warning fs-3'></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: PHÂN QUYỀN CHI TIẾT -->
+    <div class="modal fade" id="roleModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0">
+          <div class="modal-header border-bottom p-4">
+            <h5 class="modal-title fw-bold" id="modalTitle">Thiết lập Vai trò & Quyền</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="mb-4">
+              <label class="filter-label">Tên vai trò</label>
+              <input type="text" id="roleName" class="form-control" placeholder="VD: Quản lý marketing">
+            </div>
+
+            <h6 class="fw-bold mb-3"><i class="bx bx-check-shield me-2"></i>Quyền hạn chi tiết</h6>
+            <div class="table-responsive border rounded">
+              <table class="table table-sm table-hover m-0 permission-table">
+                <thead class="table-light">
+                  <tr>
+                    <th class="ps-3 py-3" style="width: 40%;">Module hệ thống</th>
+                    <th class="text-center py-3">
+                      <div class="form-check d-flex justify-content-center">
+                        <input class="form-check-input" type="checkbox" id="col-view" title="Chọn tất cả quyền Xem">
+                        <label class="form-check-label ms-2 d-none d-lg-block">Xem</label>
+                      </div>
+                    </th>
+                    <th class="text-center py-3">
+                      <div class="form-check d-flex justify-content-center">
+                        <input class="form-check-input" type="checkbox" id="col-create" title="Chọn tất cả quyền Thêm">
+                        <label class="form-check-label ms-2 d-none d-lg-block">Thêm</label>
+                      </div>
+                    </th>
+                    <th class="text-center py-3">
+                      <div class="form-check d-flex justify-content-center">
+                        <input class="form-check-input" type="checkbox" id="col-update" title="Chọn tất cả quyền Sửa">
+                        <label class="form-check-label ms-2 d-none d-lg-block">Sửa</label>
+                      </div>
+                    </th>
+                    <th class="text-center py-3">
+                      <div class="form-check d-flex justify-content-center">
+                        <input class="form-check-input" type="checkbox" id="col-delete" title="Chọn tất cả quyền Xóa">
+                        <label class="form-check-label ms-2 d-none d-lg-block">Xóa</label>
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Module 1 -->
+                  <tr>
+                    <td class="ps-3">
+                      <div class="d-flex align-items-center">
+                        <div class="form-check me-2">
+                          <input class="form-check-input row-selector" type="checkbox" title="Chọn tất cả quyền của module này">
+                        </div>
+                        <div>
+                          <div class="fw-bold text-dark small">Quản lý Sản phẩm</div>
+                          <div class="text-muted" style="font-size: 10px;">Sản phẩm, Danh mục, Thương hiệu...</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="text-center"><input class="form-check-input item-view" type="checkbox" checked></td>
+                    <td class="text-center"><input class="form-check-input item-create" type="checkbox" checked></td>
+                    <td class="text-center"><input class="form-check-input item-update" type="checkbox" checked></td>
+                    <td class="text-center"><input class="form-check-input item-delete" type="checkbox"></td>
+                  </tr>
+                  <!-- Module 2 -->
+                  <tr>
+                    <td class="ps-3">
+                      <div class="d-flex align-items-center">
+                        <div class="form-check me-2">
+                          <input class="form-check-input row-selector" type="checkbox">
+                        </div>
+                        <div>
+                          <div class="fw-bold text-dark small">Quản lý Đơn hàng</div>
+                          <div class="text-muted" style="font-size: 10px;">Xử lý đơn, Trạng thái giao hàng...</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="text-center"><input class="form-check-input item-view" type="checkbox" checked></td>
+                    <td class="text-center"><input class="form-check-input item-create" type="checkbox"></td>
+                    <td class="text-center"><input class="form-check-input item-update" type="checkbox" checked></td>
+                    <td class="text-center"><input class="form-check-input item-delete" type="checkbox"></td>
+                  </tr>
+                  <!-- Module 3 -->
+                  <tr>
+                    <td class="ps-3">
+                      <div class="d-flex align-items-center">
+                        <div class="form-check me-2">
+                          <input class="form-check-input row-selector" type="checkbox">
+                        </div>
+                        <div>
+                          <div class="fw-bold text-dark small">Quản lý Kho hàng</div>
+                          <div class="text-muted" style="font-size: 10px;">Tồn kho, Lịch sử nhập xuất...</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="text-center"><input class="form-check-input item-view" type="checkbox"></td>
+                    <td class="text-center"><input class="form-check-input item-create" type="checkbox"></td>
+                    <td class="text-center"><input class="form-check-input item-update" type="checkbox"></td>
+                    <td class="text-center"><input class="form-check-input item-delete" type="checkbox"></td>
+                  </tr>
+                  <!-- Module 4 -->
+                  <tr>
+                    <td class="ps-3">
+                      <div class="d-flex align-items-center">
+                        <div class="form-check me-2">
+                          <input class="form-check-input row-selector" type="checkbox">
+                        </div>
+                        <div>
+                          <div class="fw-bold text-dark small">Marketing & Khách hàng</div>
+                          <div class="text-muted" style="font-size: 10px;">CRM, Khuyến mãi, Reviews...</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="text-center"><input class="form-check-input item-view" type="checkbox"></td>
+                    <td class="text-center"><input class="form-check-input item-create" type="checkbox"></td>
+                    <td class="text-center"><input class="form-check-input item-update" type="checkbox"></td>
+                    <td class="text-center"><input class="form-check-input item-delete" type="checkbox"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-3 p-3 bg-light rounded">
+              <div class="d-flex align-items-center small text-muted">
+                <i class="bx bx-info-circle me-2"></i>
+                <span>Ghi chú: Quyền <strong>Xóa</strong> luôn đi kèm với rủi ro mất dữ liệu, hãy cẩn trọng khi gán quyền này.</span>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer border-top p-3 px-4">
+            <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button class="btn btn-primary px-4" onclick="DS.showToast('Đã cập nhật vai trò thành công!', 'success'); bootstrap.Modal.getInstance(document.getElementById('roleModal')).hide();">Lưu thay đổi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      function openRoleModal(mode, name = '') {
+        document.getElementById('modalTitle').innerText = mode === 'create' ? 'Tạo Vai trò mới' : 'Chỉnh sửa Vai trò & Quyền';
+        if(mode === 'edit') document.getElementById('roleName').value = name;
+        new bootstrap.Modal(document.getElementById('roleModal')).show();
+      }
+    </script>
+  </body>
+</html>

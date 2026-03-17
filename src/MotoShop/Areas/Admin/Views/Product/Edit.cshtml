@@ -1,0 +1,108 @@
+@model MotoShop.Data.Models.Product
+
+@{
+    ViewData["Title"] = "Chỉnh sửa sản phẩm";
+    Layout = "_Layout";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Sản phẩm /</span> Chỉnh sửa</h4>
+
+    <div class="row">
+        <div class="col-xl">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Hình ảnh sản phẩm (Kéo thả để sắp xếp)</h5>
+                </div>
+                <div class="card-body">
+                    <div id="sortable-images" class="d-flex flex-wrap gap-3">
+                        @foreach (var img in Model.Images.OrderBy(i => i.DisplayOrder))
+                        {
+                            <div class="image-item" data-id="@img.ImageId" style="position: relative; cursor: move;">
+                                <img src="@img.ImageUrl" class="img-thumbnail" style="width: 150px; height: 150px; object-fit: cover;" />
+                                @if (img.IsPrimary)
+                                {
+                                    <span class="badge bg-primary position-absolute top-0 start-0">Chính</span>
+                                }
+                                <div class="order-number position-absolute bottom-0 end-0 bg-dark text-white px-1" style="font-size: 0.8rem; opacity: 0.7;">
+                                    #@img.DisplayOrder
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-muted small">* Ảnh ở vị trí đầu tiên sẽ tự động được chọn làm ảnh chính.</p>
+                        <button id="saveOrderBtn" class="btn btn-success d-none">Lưu thứ tự</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Thêm thư viện SortableJS -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    
+    <script>
+        const el = document.getElementById('sortable-images');
+        const sortable = new Sortable(el, {
+            animation: 150,
+            ghostClass: 'bg-light',
+            onEnd: function (evt) {
+                updateOrders();
+            }
+        });
+
+        function updateOrders() {
+            const items = document.querySelectorAll('.image-item');
+            const newOrder = [];
+            
+            items.forEach((item, index) => {
+                const order = index + 1;
+                const imageId = item.getAttribute('data-id');
+                newOrder.push({ imageId: parseInt(imageId), order: order });
+                
+                // Cập nhật số hiển thị tạm thời trên giao diện
+                item.querySelector('.order-number').innerText = '#' + order;
+                
+                // Cập nhật badge 'Chính' tạm thời
+                const badge = item.querySelector('.badge');
+                if (order === 1) {
+                    if (!badge) {
+                        const newBadge = document.createElement('span');
+                        newBadge.classList.add('badge', 'bg-primary', 'position-absolute', 'top-0', 'start-0');
+                        newBadge.innerText = 'Chính';
+                        item.appendChild(newBadge);
+                    }
+                } else {
+                    if (badge) badge.remove();
+                }
+            });
+
+            // Gửi AJAX lưu thứ tự mới
+            saveNewOrder(newOrder);
+        }
+
+        function saveNewOrder(data) {
+            fetch('@Url.Action("UpdateImageOrder", "Product", new { area = "Admin" })', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    console.log('Thứ tự ảnh đã được cập nhật');
+                } else {
+                    alert('Lỗi: ' + result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+}

@@ -1,0 +1,140 @@
+@{
+    ViewData["Title"] = "Liên hệ với chúng tôi";
+}
+
+<!-- 1. BREADCRUMB -->
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Liên hệ</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<main>
+    <!-- 2. CONTACT BANNER -->
+    <section class="contact-banner mb-5">
+        <div class="container">
+            <h1 class="display-4 fw-bolder mb-3">LIÊN HỆ VỚI CHÚNG TÔI</h1>
+            <p class="fs-5 opacity-75">Đội ngũ MotoShop luôn sẵn sàng lắng nghe và giải đáp mọi thắc mắc của bạn.</p>
+        </div>
+    </section>
+
+    <!-- 3. CONTACT INFORMATION -->
+    <section class="container mb-5">
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="contact-info-card">
+                    <div class="contact-icon-box"><i class='bx bx-map'></i></div>
+                    <h6>ĐỊA CHỈ</h6>
+                    <p>123 Đường ABC, Quận 1<br>TP. Hồ Chí Minh</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="contact-info-card">
+                    <div class="contact-icon-box"><i class='bx bx-phone-call'></i></div>
+                    <h6>ĐIỆN THOẠI</h6>
+                    <a href="tel:0281234567">028 123 4567</a>
+                    <a href="tel:0901234567">0901 234 567</a>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="contact-info-card">
+                    <div class="contact-icon-box"><i class='bx bx-envelope'></i></div>
+                    <h6>EMAIL</h6>
+                    <a href="mailto:support@motoshop.vn">support@motoshop.vn</a>
+                    <a href="mailto:info@motoshop.vn">info@motoshop.vn</a>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="contact-info-card">
+                    <div class="contact-icon-box"><i class='bx bx-time-five'></i></div>
+                    <h6>GIỜ LÀM VIỆC</h6>
+                    <p>Thứ 2 - Chủ nhật<br>08:00 - 20:00</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. CONTACT FORM SECTION -->
+    <section class="container mb-5">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-5">
+                <h2 class="fw-bold mb-4">GỬI TIN NHẮN CHO CHÚNG TÔI</h2>
+                <p class="text-muted mb-4">Bạn có câu hỏi về sản phẩm, dịch vụ hoặc cần tư vấn kỹ thuật? Hãy điền vào biểu mẫu bên cạnh, chúng tôi sẽ phản hồi bạn trong vòng 24 giờ làm việc.</p>
+                
+                <div class="d-flex gap-3 mb-3">
+                    <div class="fs-2 text-danger"><i class='bx bxl-facebook-square'></i></div>
+                    <div class="fs-2 text-danger"><i class='bx bxl-instagram-alt'></i></div>
+                    <div class="fs-2 text-danger"><i class='bx bxl-youtube'></i></div>
+                    <div class="fs-2 text-danger"><i class='bx bxl-tiktok'></i></div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="contact-form-wrapper">
+                    <form id="contactForm" onsubmit="handleContactSubmit(event)">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Họ và tên *</label>
+                                <input type="text" class="form-control form-control-custom" placeholder="Nhập tên của bạn" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Email *</label>
+                                <input type="email" class="form-control form-control-custom" placeholder="email@example.com" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Số điện thoại</label>
+                                <input type="tel" class="form-control form-control-custom" placeholder="Nhập SĐT (không bắt buộc)">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Tiêu đề</label>
+                                <input type="text" class="form-control form-control-custom" placeholder="Bạn cần hỗ trợ về...">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label-custom">Nội dung tin nhắn *</label>
+                                <textarea class="form-control form-control-custom h-auto" style="height: 120px; padding-top: 15px;" placeholder="Viết nội dung tin nhắn của bạn tại đây..." required></textarea>
+                            </div>
+                            <div class="col-md-12 pt-2">
+                                <button type="submit" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold w-100">GỬI TIN NHẮN</button>
+                            </div>
+                        </div>
+                        <div id="contactSuccess" class="alert alert-success d-none mt-3 small py-2 text-center">
+                            <i class='bx bx-check-circle me-1'></i> Tin nhắn của bạn đã được gửi thành công.
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. GOOGLE MAP -->
+    <section class="p-0">
+        <div class="map-container">
+            <!-- Placeholder for Google Map Embed -->
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.669726937899!2d106.6648812758382!3d10.759917059496412!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f1b7c3ed289%3A0xf042663641743c74!2zMTIzIMSQxrDhu51uZyBBQkMsIFF14bqtbiAxLCBUUC4gSOG7kyBDaMOtIE1pbmg!5e0!3m2!1svi!2s!4v1710400000000!5m2!1svi!2s" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+    </section>
+</main>
+
+@section Scripts {
+    <script>
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            const successMsg = document.getElementById('contactSuccess');
+            const btn = e.target.querySelector('button');
+            
+            btn.disabled = true;
+            btn.innerText = 'ĐANG GỬI...';
+            
+            setTimeout(() => {
+                successMsg.classList.remove('d-none');
+                btn.innerText = 'GỬI TIN NHẮN';
+                btn.disabled = false;
+                e.target.reset();
+            }, 1500);
+        }
+    </script>
+}

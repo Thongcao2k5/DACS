@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="vi" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="../assets/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Chi tiết đơn hàng - MotoShop Admin</title>
+    
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="../assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+    
+    <!-- Design System & UI Components -->
+    <link rel="stylesheet" href="../assets/css/design-system.css" />
+    <link rel="stylesheet" href="../assets/css/ui-interactions.css" />
+
+    <!-- Helpers -->
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+
+    <style>
+      :root {
+        --ds-primary: #E60023;
+        --ds-primary-hover: #C2001F;
+        --ds-primary-light: rgba(230, 0, 35, 0.08);
+      }
+      /* Typography Rules */
+      .info-label { font-size: 0.7rem; font-weight: 700; color: #a1acb8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block; }
+      .info-value { font-size: 0.95rem; color: #32475c; font-weight: 600; display: block; }
+      
+      /* Timeline Styling */
+      .timeline { position: relative; padding-left: 2rem; list-style: none; margin-top: 1rem; }
+      .timeline::before { content: ""; position: absolute; left: 0.75rem; top: 0; height: 100%; border-left: 2px solid #eee; }
+      .timeline-item { position: relative; margin-bottom: 1.5rem; }
+      .timeline-point { position: absolute; left: -1.65rem; top: 0.25rem; width: 12px; height: 12px; border-radius: 50%; background: #ddd; border: 2px solid #fff; box-shadow: 0 0 0 2px #ddd; }
+      .timeline-item.active .timeline-point { background: var(--ds-primary); box-shadow: 0 0 0 2px var(--ds-primary-light); }
+      .timeline-item.active .timeline-title { color: var(--ds-primary); font-weight: 700; }
+      .timeline-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; display: block; }
+      .timeline-date { font-size: 0.8rem; color: #a1acb8; }
+
+      .product-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
+      .order-total-card { background: var(--ds-primary); color: #fff; border-radius: 12px; }
+      .order-total-card .info-label { color: rgba(255,255,255,0.8); }
+      .order-total-card .info-value { color: #fff; font-size: 1.5rem; }
+    </style>
+  </head>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <script src="../assets/js/sidebar.js"></script>
+        
+        <div class="layout-page">
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <nav aria-label="breadcrumb">
+                <ol class="breadcrumb m-0">
+                  <li class="breadcrumb-item"><a href="orders.html" class="text-muted">Đơn hàng</a></li>
+                  <li class="breadcrumb-item active text-dark fw-bold">Chi tiết đơn hàng</li>
+                </ol>
+              </nav>
+            </div>
+          </nav>
+
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <!-- Header -->
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-uppercase">Chi tiết đơn hàng: #ORD-2026-001</h4>
+                <button class="btn btn-primary px-4 shadow-sm" onclick="openStatusModal()">
+                  <i class="bx bx-git-branch me-1"></i> Quản lý trạng thái đơn hàng
+                </button>
+              </div>
+
+              <div class="row">
+                <!-- Cột trái: Thông tin chính -->
+                <div class="col-lg-8">
+                  <!-- Section 1: Thông tin đơn hàng -->
+                  <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-body">
+                      <h6 class="fw-bold mb-4"><i class="bx bx-info-circle me-2 text-primary"></i>THÔNG TIN ĐƠN HÀNG</h6>
+                      <div class="row g-4">
+                        <div class="col-md-4">
+                          <label class="info-label">Mã đơn hàng</label>
+                          <span class="info-value text-primary">#ORD-2026-001</span>
+                        </div>
+                        <div class="col-md-4">
+                          <label class="info-label">Ngày đặt</label>
+                          <span class="info-value">12/03/2026 10:20</span>
+                        </div>
+                        <div class="col-md-4">
+                          <label class="info-label">Trạng thái hiện tại</label>
+                          <span class="badge bg-label-warning px-3 py-2">CHỜ XỬ LÝ</span>
+                        </div>
+                        <div class="col-md-4">
+                          <label class="info-label">Khách hàng</label>
+                          <span class="info-value text-dark">Lê Minh Tâm</span>
+                          <small class="text-muted">0908 111 222</small>
+                        </div>
+                        <div class="col-md-4">
+                          <label class="info-label">Cửa hàng xử lý</label>
+                          <span class="info-value">MotoShop Quận 7</span>
+                        </div>
+                        <div class="col-md-4">
+                          <label class="info-label">Nhân viên tạo đơn</label>
+                          <span class="info-value">Nguyễn Văn An</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Section 3: Danh sách sản phẩm -->
+                  <div class="card mb-4 border-0 shadow-sm overflow-hidden">
+                    <div class="card-header border-bottom py-3">
+                      <h6 class="m-0 fw-bold"><i class="bx bx-package me-2 text-primary"></i>DANH SÁCH SẢN PHẨM</h6>
+                    </div>
+                    <div class="table-responsive text-nowrap">
+                      <table class="table table-hover m-0">
+                        <thead class="table-light">
+                          <tr>
+                            <th style="width: 70px">Ảnh</th>
+                            <th>Sản phẩm</th>
+                            <th>Biến thể</th>
+                            <th>SKU</th>
+                            <th class="text-end">Giá bán</th>
+                            <th class="text-center">Số lượng</th>
+                            <th class="text-end">Thành tiền</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td><img src="../assets/img/elements/1.jpg" class="product-thumb"></td>
+                            <td>
+                              <div class="fw-bold text-dark">Bộ Nồi Trước Honda SH</div>
+                            </td>
+                            <td><span class="badge bg-label-secondary">SH 150i - Đỏ</span></td>
+                            <td><code>HD-SH-150-RED</code></td>
+                            <td class="text-end">1,250,000đ</td>
+                            <td class="text-center fw-bold">02</td>
+                            <td class="text-end fw-bold text-dark">2,500,000đ</td>
+                          </tr>
+                          <tr>
+                            <td><img src="../assets/img/elements/13.jpg" class="product-thumb"></td>
+                            <td>
+                              <div class="fw-bold text-dark">Bố thắng đĩa trước</div>
+                            </td>
+                            <td><span class="badge bg-label-secondary">Standard</span></td>
+                            <td><code>BO-TH-STD</code></td>
+                            <td class="text-end">450,000đ</td>
+                            <td class="text-center fw-bold">01</td>
+                            <td class="text-end fw-bold text-dark">450,000đ</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cột phải: Thanh toán & Lịch sử -->
+                <div class="col-lg-4">
+                  <!-- Section 2: Thông tin thanh toán -->
+                  <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-body">
+                      <h6 class="fw-bold mb-4"><i class="bx bx-credit-card me-2 text-primary"></i>THANH TOÁN</h6>
+                      <div class="mb-3">
+                        <label class="info-label">Phương thức</label>
+                        <span class="info-value">Chuyển khoản Ngân hàng (Vietcombank)</span>
+                      </div>
+                      <div class="mb-3">
+                        <label class="info-label">Trạng thái</label>
+                        <span class="badge bg-label-success px-3 py-2">ĐÃ THU TIỀN</span>
+                      </div>
+                      <div class="mb-0">
+                        <label class="info-label">Ngày thanh toán</label>
+                        <span class="info-value">12/03/2026 10:45</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Section 4: Tổng kết đơn hàng -->
+                  <div class="card mb-4 order-total-card border-0 shadow-lg">
+                    <div class="card-body p-4">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                          <label class="info-label">TỔNG TIỀN ĐƠN HÀNG</label>
+                          <span class="info-value">2,950,000đ</span>
+                        </div>
+                        <i class="bx bx-wallet fs-1 opacity-50"></i>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Section 5: Lịch sử trạng thái -->
+                  <div class="card border-0 shadow-sm">
+                    <div class="card-header border-bottom py-3">
+                      <h6 class="m-0 fw-bold"><i class="bx bx-history me-2 text-primary"></i>LỊCH SỬ VẬN HÀNH</h6>
+                    </div>
+                    <div class="card-body">
+                      <ul class="ds-timeline">
+                        <li class="ds-timeline-item">
+                          <span class="ds-timeline-icon"><i class="bx bx-cart"></i></span>
+                          <div class="ds-timeline-content">
+                            <span class="ds-timeline-title">Chờ xử lý</span>
+                            <span class="ds-timeline-date">12/03/2026 10:20</span>
+                          </div>
+                        </li>
+                        <li class="ds-timeline-item">
+                          <span class="ds-timeline-icon"><i class="bx bx-check-double"></i></span>
+                          <div class="ds-timeline-content">
+                            <span class="ds-timeline-title">Đã xác nhận</span>
+                            <span class="ds-timeline-date">12/03/2026 11:05</span>
+                          </div>
+                        </li>
+                        <li class="ds-timeline-item active">
+                          <span class="ds-timeline-icon"><i class="bx bx-truck"></i></span>
+                          <div class="ds-timeline-content">
+                            <span class="ds-timeline-title">Đang giao hàng</span>
+                            <span class="ds-timeline-date">13/03/2026 08:15</span>
+                          </div>
+                        </li>
+                        <!-- Trạng thái chưa tới (optional) -->
+                        <li class="ds-timeline-item" style="opacity: 0.5;">
+                          <span class="ds-timeline-icon"><i class="bx bx-package"></i></span>
+                          <div class="ds-timeline-content">
+                            <span class="ds-timeline-title">Hoàn thành</span>
+                            <span class="ds-timeline-date">--/--/----</span>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl py-2">© 2026, MotoShop Admin - Chi tiết Đơn hàng Ecommerce</div>
+            </footer>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Quản lý biến trạng thái (Giả lập) -->
+    <div class="modal fade" id="statusModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content shadow-lg border-0">
+          <div class="modal-header border-bottom p-4">
+            <h5 class="modal-title fw-bold">Cập nhật trạng thái</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <label class="info-label">Chọn trạng thái mới</label>
+            <select class="form-select border-primary mt-1">
+              <option>Chờ xử lý</option>
+              <option selected>Đã xác nhận</option>
+              <option>Đang giao</option>
+              <option>Hoàn thành</option>
+              <option>Đã hủy</option>
+            </select>
+          </div>
+          <div class="modal-footer border-top p-3 px-4">
+            <button class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Đóng</button>
+            <button class="btn btn-primary px-4" id="btnUpdateStatus" onclick="handleUpdateStatus()">Cập nhật</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JS Scripts -->
+        <!-- Core JS -->
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/design-system.js"></script>
+    <script src="../assets/js/ui-interactions.js"></script>
+
+    <script>
+      const statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
+      function openStatusModal() { statusModal.show(); }
+      function handleUpdateStatus() {
+        const btn = document.getElementById('btnUpdateStatus');
+        DS.loading.btnStart(btn);
+        setTimeout(() => {
+          DS.loading.btnStop(btn);
+          statusModal.hide();
+          UI.showToast('Đã cập nhật trạng thái đơn hàng và ghi vào lịch sử!', 'success');
+        }, 1000);
+      }
+    </script>
+  </body>
+</html>

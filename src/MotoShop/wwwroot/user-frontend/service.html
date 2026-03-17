@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dịch vụ sửa chữa & Bảo dưỡng - MotoShop</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- UI UTILITIES Placeholder -->
+    <div id="pageLoader" style="display: none !important;"><div class="loader-spinner"></div></div>
+    <div id="backToTop" class="back-to-top"><i class='bx bx-chevron-up'></i></div>
+
+    <!-- COMMON COMPONENTS PLACEHOLDERS -->
+    <div id="mainHeaderWrapper" class="main-header-wrapper"></div>
+    <div id="searchOverlay" class="search-overlay"></div>
+    <div id="mobileMenu" class="offcanvas offcanvas-start mobile-menu-offcanvas" tabindex="-1"></div>
+
+    <!-- 1. BREADCRUMB -->
+    <div class="breadcrumb-wrapper">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.html">Trang chủ</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Dịch vụ tại cửa hàng</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- 2. PAGE HEADER -->
+    <header class="container mb-5">
+        <div class="p-5 bg-dark text-white rounded-4 text-center position-relative overflow-hidden">
+            <div style="position: absolute; top:0; right:0; opacity: 0.1; font-size: 15rem; transform: translate(20%, -20%);">
+                <i class='bx bxs-wrench'></i>
+            </div>
+            <h1 class="display-5 fw-bolder mb-3 position-relative">DỊCH VỤ CHĂM SÓC & BẢO DƯỠNG</h1>
+            <p class="fs-5 opacity-75 position-relative">MotoShop cung cấp các giải pháp bảo dưỡng chuyên nghiệp, giúp xe vận hành êm ái, an toàn và bền bỉ hơn theo thời gian.</p>
+        </div>
+    </header>
+
+    <main class="container mb-5">
+        <!-- 3. SERVICE CATEGORIES -->
+        <div class="service-cat-tabs">
+            <button class="service-cat-btn active">Tất cả dịch vụ</button>
+            <button class="service-cat-btn">Bảo dưỡng xe</button>
+            <button class="service-cat-btn">Vệ sinh chuyên sâu</button>
+            <button class="service-cat-btn">Sửa chữa nhanh</button>
+            <button class="service-cat-btn">Nâng cấp hiệu suất</button>
+        </div>
+
+        <!-- 4. SERVICE LIST -->
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="serviceList">
+            <!-- Service 1 -->
+            <div class="col">
+                <div class="service-card">
+                    <div class="service-img-box">
+                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=600" alt="Service">
+                        <button class="service-quick-detail" title="Xem chi tiết" data-bs-toggle="modal" data-bs-target="#serviceDetailModal">
+                            <i class='bx bx-search-alt'></i>
+                        </button>
+                    </div>
+                    <div class="service-info">
+                        <h5 class="service-name">Vệ sinh kim phun xăng điện tử Fi</h5>
+                        <p class="service-desc">Làm sạch kim phun bằng thiết bị sóng siêu âm chuyên dụng, giúp xe chạy êm, bốc hơn và tiết kiệm xăng rõ rệt.</p>
+                        <div class="service-price-row">
+                            <span class="service-price-current">150.000đ</span>
+                            <span class="service-price-old">200.000đ</span>
+                        </div>
+                        <div class="service-actions">
+                            <button class="btn-book-service w-100" onclick="alert('Chuyển đến trang đặt lịch!')">ĐẶT LỊCH NGAY</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 2 -->
+            <div class="col">
+                <div class="service-card">
+                    <div class="service-img-box">
+                        <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=600" alt="Service">
+                        <button class="service-quick-detail" title="Xem chi tiết" data-bs-toggle="modal" data-bs-target="#serviceDetailModal">
+                            <i class='bx bx-search-alt'></i>
+                        </button>
+                    </div>
+                    <div class="service-info">
+                        <h5 class="service-name">Bảo dưỡng xe tay ga 10 bước tiêu chuẩn</h5>
+                        <p class="service-desc">Gói bảo dưỡng toàn diện từ bộ nồi, phanh, lọc gió đến thay nhớt máy, nhớt số... Đảm bảo xe như mới sau dịch vụ.</p>
+                        <div class="service-price-row">
+                            <span class="service-price-current">350.000đ</span>
+                        </div>
+                        <div class="service-actions">
+                            <button class="btn-book-service w-100">ĐẶT LỊCH NGAY</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 3 -->
+            <div class="col">
+                <div class="service-card">
+                    <div class="service-img-box">
+                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=600" alt="Service">
+                        <button class="service-quick-detail" title="Xem chi tiết" data-bs-toggle="modal" data-bs-target="#serviceDetailModal">
+                            <i class='bx bx-search-alt'></i>
+                        </button>
+                    </div>
+                    <div class="service-info">
+                        <h5 class="service-name">Vệ sinh buồng đốt bằng máy chuyên dụng</h5>
+                        <p class="service-desc">Loại bỏ hoàn toàn muội than bám trên piston và nắp quy lát mà không cần tháo rã động cơ. Giúp máy êm và mát hơn.</p>
+                        <div class="service-price-row">
+                            <span class="service-price-current">250.000đ</span>
+                        </div>
+                        <div class="service-actions">
+                            <button class="btn-book-service w-100">ĐẶT LỊCH NGAY</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. PAGINATION -->
+        <nav class="pagination-wrapper mt-5">
+            <ul class="pagination">
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#"><i class='bx bx-chevron-right'></i></a></li>
+            </ul>
+        </nav>
+    </main>
+
+    <!-- QUICK DETAIL MODAL -->
+    <div class="modal fade" id="serviceDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">CHI TIẾT DỊCH VỤ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-5">
+                            <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=600" class="img-fluid rounded-4" alt="Service">
+                        </div>
+                        <div class="col-md-7">
+                            <h4 class="fw-bold mb-3">Vệ sinh kim phun Fi chuyên sâu</h4>
+                            <p class="text-muted">Dịch vụ giúp tối ưu hóa hệ thống phun xăng điện tử, đảm bảo lượng xăng phun tơi và đều, giúp quá trình cháy hoàn hảo nhất.</p>
+                            
+                            <div class="bg-light p-3 rounded-3 mb-3">
+                                <ul class="list-unstyled mb-0 small">
+                                    <li class="mb-2"><strong><i class='bx bx-time-five me-2'></i>Thời gian:</strong> Khoảng 45 - 60 phút</li>
+                                    <li class="mb-2"><strong><i class='bx bx-check-circle me-2'></i>Áp dụng:</strong> Các dòng xe Fi (phun xăng điện tử)</li>
+                                    <li><strong><i class='bx bx-info-circle me-2'></i>Lưu ý:</strong> Nên làm mỗi 10.000km một lần.</li>
+                                </ul>
+                            </div>
+                            
+                            <h3 class="text-danger fw-bold mb-4">150.000đ</h3>
+                            <button class="btn btn-danger w-100 rounded-pill fw-bold py-3">ĐẶT LỊCH NGAY</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white py-5 mt-5"></footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/header.js"></script>
+    <script src="js/components.js"></script>
+</body>
+</html>

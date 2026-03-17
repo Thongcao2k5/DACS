@@ -1,0 +1,126 @@
+@{
+    ViewData["Title"] = "Đăng ký tài khoản";
+}
+
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Đăng ký tài khoản</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<main class="auth-wrapper">
+    <div class="container">
+        <!-- 2. REGISTER CONTAINER -->
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2>ĐĂNG KÝ TÀI KHOẢN</h2>
+                <p>Trở thành thành viên MotoShop để nhận ngay các ưu đãi đặc biệt.</p>
+            </div>
+
+            <!-- 3. REGISTER FORM -->
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="mb-3">
+                    <label class="form-label-custom">Họ và tên *</label>
+                    <input type="text" class="form-control form-control-custom" placeholder="Nhập họ và tên của bạn" required>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Email *</label>
+                        <input type="email" class="form-control form-control-custom" placeholder="email@vi dụ.com" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Số điện thoại *</label>
+                        <input type="tel" class="form-control form-control-custom" placeholder="Nhập số điện thoại" required>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label-custom">Mật khẩu *</label>
+                    <div class="password-group">
+                        <input type="password" id="regPassword" class="form-control form-control-custom" placeholder="Tối thiểu 6 ký tự" required>
+                        <i class='bx bx-hide password-toggle-icon' onclick="togglePass('regPassword', this)"></i>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label-custom">Xác nhận mật khẩu *</label>
+                    <div class="password-group">
+                        <input type="password" id="regConfirmPassword" class="form-control form-control-custom" placeholder="Nhập lại mật khẩu" required>
+                        <i class='bx bx-hide password-toggle-icon' onclick="togglePass('regConfirmPassword', this)"></i>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                        <label class="form-check-label text-muted small" for="termsCheck">
+                            Tôi đồng ý với <a href="/Info/Terms" class="text-danger">Điều khoản sử dụng</a> và Chính sách bảo mật của MotoShop.
+                        </label>
+                    </div>
+                </div>
+
+                <div id="registerError" class="alert alert-danger d-none py-2 small mb-3">
+                    <i class='bx bx-error-circle me-1'></i> Email hoặc số điện thoại đã tồn tại.
+                </div>
+
+                <button type="submit" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold mb-4">ĐĂNG KÝ NGAY</button>
+            </form>
+
+            <!-- 4. ADDITIONAL OPTIONS -->
+            <div class="text-center">
+                <p class="text-muted small mb-0">Đã có tài khoản? <a href="/Account/Login" class="text-danger fw-bold text-decoration-none">Đăng nhập</a></p>
+            </div>
+
+            <div class="social-auth-divider">
+                <span>Hoặc đăng ký nhanh bằng</span>
+            </div>
+
+            <div class="social-btns">
+                <a href="#" class="btn-social btn-google">
+                    <i class='bx bxl-google'></i> Google
+                </a>
+                <a href="#" class="btn-social btn-facebook">
+                    <i class='bx bxl-facebook-circle'></i> Facebook
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script>
+        // Hàm ẩn hiện mật khẩu dùng chung
+        function togglePass(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('bx-hide', 'bx-show');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('bx-show', 'bx-hide');
+            }
+        }
+
+        // Xử lý đăng ký demo
+        function handleRegister(e) {
+            e.preventDefault();
+            const pass = document.getElementById('regPassword').value;
+            const confirm = document.getElementById('regConfirmPassword').value;
+            const errorMsg = document.getElementById('registerError');
+
+            if (pass !== confirm) {
+                alert('Mật khẩu xác nhận không khớp!');
+                return;
+            }
+            
+            // Giả lập check lỗi
+            errorMsg.classList.remove('d-none');
+        }
+    </script>
+}

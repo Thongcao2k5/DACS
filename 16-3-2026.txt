@@ -1,0 +1,42 @@
+KẾ HOẠCH TRIỂN KHAI DỰ ÁN MOTORCYCLEPARTS (16-03-2026)
+=====================================================
+
+Dưới đây là danh sách các hạng mục cần thực hiện để đáp ứng 100% yêu cầu trong "Sheet Tech":
+
+1. CẤU TRÚC LẠI KIẾN TRÚC HỆ THỐNG (LAYERED ARCHITECTURE)
+   - Tách project hiện tại thành các lớp riêng biệt:
+     + MotoShop.Web (Presentation Layer - MVC)
+     + MotoShop.Business (Business Logic Layer)
+     + MotoShop.Data (Data Access Layer - EF Core & Repositories)
+
+2. THIẾT LẬP DATABASE (CODE FIRST + MIGRATION)
+   - Chuyển từ việc dùng file database.sql thủ công sang EF Core Migrations.
+   - Chạy lệnh 'dotnet ef migrations add InitialCreate' để khởi tạo cấu trúc DB chuẩn.
+
+3. TRIỂN KHAI DESIGN PATTERN (REPOSITORY PATTERN)
+   - Tạo các Interface (IRepository) và lớp thực thi (Generic Repository).
+   - Đảm bảo Controller không gọi trực tiếp DbContext mà thông qua Repository/Service.
+
+4. CẤU HÌNH AUTHENTICATION & AUTHORIZATION (IDENTITY)
+   - Thiết lập ASP.NET Core Identity trong Program.cs.
+   - Cấu hình phân quyền Role (Admin, Staff, Customer, Guest).
+   - Tích hợp giao diện Đăng nhập/Đăng ký từ thư mục frontend vào Identity.
+
+5. CÀI ĐẶT VÀ CẤU HÌNH AUTOMAPPER
+   - Cài đặt NuGet: AutoMapper.Extensions.Microsoft.DependencyInjection.
+   - Tạo các Profile mapping giữa Entity (Product, Order...) và ViewModel.
+
+6. TRIỂN KHAI LOGIC PHÂN TRANG (PAGINATION)
+   - Xây dựng lớp dùng chung cho việc phân trang dữ liệu (PagedList).
+   - Áp dụng cho danh sách sản phẩm ở Frontend và các bảng dữ liệu ở Admin.
+
+7. HỆ THỐNG UPLOAD HÌNH ẢNH
+   - Xây dựng Service xử lý lưu trữ hình ảnh sản phẩm vào thư mục wwwroot/uploads.
+   - Lưu trữ đường dẫn ảnh vào database.
+
+8. HỆ THỐNG LOGGING
+   - Cấu hình ghi log hoạt động (Serilog hoặc NLog) để theo dõi lỗi và hành vi hệ thống.
+
+-----------------------------------------------------
+Trạng thái hiện tại: Đã có Model và Giao diện tĩnh (HTML/CSS).
+Mục tiêu tiếp theo: Tách Layer và cấu hình Identity.

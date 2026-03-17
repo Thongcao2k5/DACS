@@ -1,0 +1,163 @@
+@{
+    ViewData["Title"] = "Chi tiết bài viết";
+}
+
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Blog" asp-action="Index">Tin tức</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Chi tiết bài viết</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<main class="container mb-5">
+    <div class="row g-4">
+        <!-- 2. LEFT COLUMN: ARTICLE CONTENT -->
+        <div class="col-lg-8">
+            <article class="blog-detail-wrapper">
+                <!-- 3. ARTICLE HEADER -->
+                <header class="article-header">
+                    <div class="post-meta mb-3">
+                        <span><i class='bx bx-user'></i> Admin</span>
+                        <span><i class='bx bx-calendar'></i> 12 Tháng 3, 2026</span>
+                        <span><i class='bx bx-folder'></i> Kinh nghiệm xe máy</span>
+                    </div>
+                    <h1 class="article-title">Hướng dẫn bảo dưỡng nồi xe tay ga đúng cách tại nhà giúp xe vận hành êm ái</h1>
+                    <div class="post-img-wrapper rounded-4 mb-4">
+                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1200" alt="Featured Image">
+                    </div>
+                </header>
+
+                <!-- 4. ARTICLE CONTENT -->
+                <div class="article-body">
+                    <p>Xe tay ga sau một thời gian sử dụng thường có hiện tượng rung đầu, máy kêu to và tốn xăng hơn bình thường. Một trong những nguyên nhân chính dẫn đến tình trạng này là do bộ nồi (hệ thống truyền động) bị bẩn hoặc hao mòn. Trong bài viết này, MotoShop sẽ hướng dẫn bạn cách tự kiểm tra và bảo dưỡng nồi xe ga cơ bản ngay tại nhà.</p>
+
+                    <h3>Tại sao cần bảo dưỡng nồi xe tay ga định kỳ?</h3>
+                    <p>Hệ thống biến số vô cấp (V-Belt) trên xe ga hoạt động theo cơ chế ma sát khô. Sau khoảng 5.000 - 7.000km, bụi bẩn từ dây curoa và bố ba càng sẽ bám đầy trong chuông nồi, gây ra các hiện tượng:</p>
+                    <ul>
+                        <li>Xe bị giật, rung đầu khi lên ga nhẹ (đặc biệt là lúc máy nguội).</li>
+                        <li>Tiếng kêu xào xạc phát ra từ phía sau xe.</li>
+                        <li>Hiệu suất truyền động giảm, làm xe ì và tốn xăng hơn.</li>
+                    </ul>
+
+                    <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=800" alt="Maintenance">
+
+                    <h3>Các bước thực hiện bảo dưỡng</h3>
+                    <p>Để thực hiện, bạn cần chuẩn bị bộ dụng cụ chuyên dụng bao gồm súng bắn ốc hoặc vam mở nồi, xăng thơm để vệ sinh và mỡ bôi trơn chịu nhiệt.</p>
+                    <ol>
+                        <li>Tháo nắp ốp nồi phía bên trái xe.</li>
+                        <li>Vệ sinh sạch sẽ bụi bẩn trong lốc máy bằng khí nén hoặc cọ mềm.</li>
+                        <li>Kiểm tra độ mòn của dây curoa và bi nồi.</li>
+                        <li>Dùng giấy nhám mịn vệ sinh mặt trong của chuông nồi và bề mặt bố ba càng.</li>
+                        <li>Lắp lại các chi tiết và kiểm tra vận hành.</li>
+                    </ol>
+
+                    <p>Nếu bạn không tự tin vào tay nghề của mình, hãy mang xe đến các trung tâm bảo dưỡng uy tín để được kỹ thuật viên xử lý chuyên nghiệp nhất nhé!</p>
+                </div>
+
+                <!-- 5. TAGS & SHARE -->
+                <footer class="article-footer">
+                    <div class="tag-list">
+                        <span class="small fw-bold text-muted me-2 mt-1">TAGS:</span>
+                        <a href="#" class="tag-item">Bảo dưỡng</a>
+                        <a href="#" class="tag-item">Xe tay ga</a>
+                        <a href="#" class="tag-item">Phụ tùng nồi</a>
+                    </div>
+                    <div class="share-group">
+                        <span class="small fw-bold text-muted">CHIA SẺ:</span>
+                        <a href="#" class="share-btn fb"><i class='bx bxl-facebook'></i></a>
+                        <a href="#" class="share-btn tw"><i class='bx bxl-twitter'></i></a>
+                        <a href="#" class="share-btn zl"><i class='bx bx-link'></i></a>
+                    </div>
+                </footer>
+            </article>
+
+            <!-- 7. RELATED POSTS -->
+            <section class="mt-5 pt-5 border-top">
+                <h4 class="fw-bold mb-4 text-uppercase">BÀI VIẾT LIÊN QUAN</h4>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="related-post-card">
+                            <a href="#" class="related-post-thumb">
+                                <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400" alt="P">
+                            </a>
+                            <div class="related-post-info">
+                                <span class="text-muted" style="font-size: 11px;">08/03/2026</span>
+                                <a href="#" class="title mt-1">Cách phân biệt nhớt Motul thật và giả chính xác nhất</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="related-post-card">
+                            <a href="#" class="related-post-thumb">
+                                <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=400" alt="P">
+                            </a>
+                            <div class="related-post-info">
+                                <span class="text-muted" style="font-size: 11px;">05/03/2026</span>
+                                <a href="#" class="title mt-1">Mẹo tiết kiệm xăng cho xe ga Honda AirBlade 150</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="related-post-card">
+                            <a href="#" class="related-post-thumb">
+                                <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400" alt="P">
+                            </a>
+                            <div class="related-post-info">
+                                <span class="text-muted" style="font-size: 11px;">01/03/2026</span>
+                                <a href="#" class="title mt-1">Top 5 loại lốp bền nhất cho Honda SH hiện nay</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- 6. RIGHT COLUMN: SIDEBAR (Re-use from blog.html style) -->
+        <aside class="col-lg-4">
+            <!-- Search Widget -->
+            <div class="sidebar-widget">
+                <h5 class="widget-title">Tìm kiếm</h5>
+                <div class="input-group mt-3">
+                    <input type="text" class="form-control form-control-custom h-auto py-2" placeholder="Tìm kiến thức...">
+                    <button class="btn btn-danger"><i class='bx bx-search'></i></button>
+                </div>
+            </div>
+
+            <!-- Categories Widget -->
+            <div class="sidebar-widget">
+                <h5 class="widget-title">Chuyên mục</h5>
+                <ul class="widget-cat-list mt-3">
+                    <li><a href="#" class="widget-cat-link">Kinh nghiệm xe máy <span>(12)</span></a></li>
+                    <li><a href="#" class="widget-cat-link">Bảo dưỡng định kỳ <span>(08)</span></a></li>
+                    <li><a href="#" class="widget-cat-link">Review phụ tùng <span>(15)</span></a></li>
+                </ul>
+            </div>
+
+            <!-- Recent Posts Widget -->
+            <div class="sidebar-widget">
+                <h5 class="widget-title">Mới nhất</h5>
+                <div class="mt-3">
+                    <a href="#" class="recent-post-item">
+                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=100" class="recent-post-img" alt="P">
+                        <div class="recent-post-info">
+                            <span class="title">Top lốp bền nhất 2026</span>
+                            <span class="date">08/03/2026</span>
+                        </div>
+                    </a>
+                    <a href="#" class="recent-post-item">
+                        <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=100" class="recent-post-img" alt="P">
+                        <div class="recent-post-info">
+                            <span class="title">Tiết kiệm xăng xe ga</span>
+                            <span class="date">05/03/2026</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </aside>
+    </div>
+</main>
