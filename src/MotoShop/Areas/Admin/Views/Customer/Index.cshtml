@@ -1,0 +1,66 @@
+@model IEnumerable<MotoShop.Data.Models.Customer>
+@{
+    ViewData["Title"] = "Quản lý Khách hàng";
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <style>
+      .customer-avatar { width: 42px; height: 42px; object-fit: cover; border-radius: 50%; border: 2px solid #fff; }
+      .customer-name { font-weight: 700; color: #32475c; font-size: 0.95rem; }
+      .contact-info { font-size: 0.8rem; color: #697a8d; display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+    </style>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold m-0 text-uppercase">Khách hàng hệ thống</h4>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-success">
+            <i class="bx bx-export me-1"></i>Xuất danh sách
+        </button>
+    </div>
+</div>
+
+<div class="card overflow-hidden border-0 shadow-sm">
+    <div class="table-responsive text-nowrap">
+        <table class="table table-hover m-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                    <th>Khách hàng</th>
+                    <th>Liên hệ</th>
+                    <th>Ngày tham gia</th>
+                    <th class="text-end">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><input class="form-check-input" type="checkbox"></td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-3 bg-label-primary text-primary fw-bold">
+                                    @item.FullName.Substring(0, 1).ToUpper()
+                                </div>
+                                <div>
+                                    <div class="customer-name">@item.FullName</div>
+                                    <span class="badge bg-label-secondary" style="font-size: 10px">Thành viên</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="contact-info"><i class="bx bx-phone-call"></i> @(item.Phone ?? "N/A")</div>
+                            <div class="contact-info"><i class="bx bx-map"></i> @(item.Address ?? "N/A")</div>
+                        </td>
+                        <td>@item.CreatedDate.ToString("dd/MM/yyyy")</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-icon text-info" title="Xem lịch sử mua hàng"><i class="bx bx-shopping-bag"></i></button>
+                            <button class="btn btn-sm btn-icon text-primary" title="Chỉnh sửa"><i class="bx bx-edit-alt"></i></button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

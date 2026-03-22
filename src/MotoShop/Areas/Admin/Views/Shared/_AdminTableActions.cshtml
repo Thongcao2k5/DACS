@@ -1,0 +1,45 @@
+@using System.Reflection
+@model dynamic
+@{
+    // Cách an toàn để đọc property từ anonymous type (dynamic)
+    string GetPropValue(dynamic obj, string propName)
+    {
+        try 
+        {
+            var type = obj.GetType() as Type;
+            var prop = type?.GetProperty(propName);
+            return prop?.GetValue(obj, null)?.ToString() ?? "#";
+        }
+        catch 
+        {
+            return "#";
+        }
+    }
+
+    string addUrl = GetPropValue(Model, "AddUrl");
+    string exportUrl = GetPropValue(Model, "ExportUrl");
+    string entityName = GetPropValue(Model, "EntityName") != "#" ? GetPropValue(Model, "EntityName") : "dữ liệu";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold m-0">Danh sách @entityName</h4>
+    <div class="d-flex gap-2">
+        <a href="@addUrl" class="btn btn-primary d-flex align-items-center shadow-sm">
+            <i class="bx bx-plus me-1"></i> Thêm mới
+        </a>
+        <a href="@exportUrl" class="btn btn-outline-success d-flex align-items-center shadow-sm">
+            <i class="bx bx-file me-1"></i> Xuất Excel
+        </a>
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle shadow-sm" type="button" data-bs-toggle="dropdown">
+                <i class="bx bx-columns me-1"></i> Chọn cột
+            </button>
+            <div class="dropdown-menu dropdown-menu-end p-3" id="columnToggleMenu" style="min-width: 200px;">
+                <!-- Nội dung này sẽ được điền bằng JS tùy vào bảng -->
+            </div>
+        </div>
+        <button class="btn btn-danger d-none shadow-sm" id="btnBulkDelete" onclick="handleBulkDelete()">
+            <i class="bx bx-trash me-1"></i> Xóa hàng đã chọn (<span id="selectedCount">0</span>)
+        </button>
+    </div>
+</div>

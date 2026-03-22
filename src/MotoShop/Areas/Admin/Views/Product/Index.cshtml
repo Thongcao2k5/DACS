@@ -1,0 +1,235 @@
+@model IEnumerable<MotoShop.Data.Models.Product>
+
+@{
+    ViewData["Title"] = "Danh sách Sản phẩm";
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <style>
+        .product-img-admin { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; transition: 0.3s; }
+        .product-img-admin:hover { transform: scale(1.1); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .product-name-admin { font-weight: 600; color: #333; max-width: 280px; white-space: normal; line-height: 1.4; display: block; }
+        .status-badge { font-size: 0.7rem; padding: 0.35em 0.8em; border-radius: 50rem; }
+        .table > :not(caption) > * > * { padding: 1rem 0.5rem; vertical-align: middle; }
+    </style>
+}
+
+<!-- Actions Bar -->
+<partial name="_AdminTableActions" model='new { EntityName = "Sản phẩm", AddUrl = Url.Action("Create", "Product", new { area = "Admin" }) }' />
+
+<!-- Filter Bar -->
+<div class="card mb-4 shadow-sm border-0">
+    <div class="card-body">
+        <form id="filterForm" class="row g-3" method="get">
+            <div class="col-lg-4 col-md-6">
+                <div class="input-group input-group-merge">
+                    <span class="input-group-text"><i class="bx bx-search"></i></span>
+                    <input type="text" name="searchTerm" class="form-control" placeholder="Tìm tên sản phẩm hoặc mã SKU..." value="@ViewContext.HttpContext.Request.Query["searchTerm"]">
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-3">
+                <select class="form-select shadow-sm" name="categoryId">
+                    <option value="">Loại sản phẩm</option>
+                    @if (ViewBag.Categories != null)
+                    {
+                        foreach (var cat in (IEnumerable<MotoShop.Data.Models.Category>)ViewBag.Categories)
+                        {
+                            <option value="@cat.CategoryId">@cat.CategoryName</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-3">
+                <select class="form-select shadow-sm" name="brandId">
+                    <option value="">Thương hiệu</option>
+                    @if (ViewBag.Brands != null)
+                    {
+                        foreach (var brand in (IEnumerable<MotoShop.Data.Models.Brand>)ViewBag.Brands)
+                        {
+                            <option value="@brand.BrandId">@brand.BrandName</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <select class="form-select shadow-sm" name="sort">
+                    <option value="newest">Mới nhất</option>
+                    <option value="az">Tên A-Z</option>
+                    <option value="za">Tên Z-A</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <button type="submit" class="btn btn-outline-primary w-100 shadow-sm"><i class="bx bx-filter-alt me-1"></i> Lọc dữ liệu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card shadow-sm border-0 overflow-hidden">
+    <div class="table-responsive text-nowrap">
+        <table class="table table-hover m-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                    <th style="width: 80px" class="col-img">Ảnh</th>
+                    <th class="col-name">Tên sản phẩm</th>
+                    <th class="col-brand">Thương hiệu</th>
+                    <th class="col-category">Danh mục</th>
+                    <th class="col-status">Trạng thái</th>
+                    <th class="text-center">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><input class="form-check-input row-checkbox" type="checkbox" value="@item.ProductId"></td>
+                            <td class="col-img">
+                                <img src="@(item.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? "/assets/img/elements/no-image.png")" 
+                                     class="product-img-admin" 
+                                     onerror="this.src='/assets/img/elements/no-image.png'">
+                            </td>
+                            <td class="col-name">
+                                <a asp-action="Edit" asp-route-id="@item.ProductId" class="product-name-admin">@item.ProductName</a>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <small class="text-muted" style="font-size: 0.7rem;">SKU: @(item.Variants?.FirstOrDefault()?.SKU ?? "N/A")</small>
+                                    @if (item.IsFeatured) { <span class="badge bg-label-warning status-badge"><i class="bx bxs-star"></i> Nổi bật</span> }
+                                </div>
+                            </td>
+                            <td class="col-brand">@(item.Brand?.BrandName ?? "---")</td>
+                            <td class="col-category">@(item.Category?.CategoryName ?? "---")</td>
+                            <td class="col-status">
+                                @if (item.IsActive) { <span class="badge bg-label-success status-badge">Đang bán</span> }
+                                else { <span class="badge bg-label-secondary status-badge">Tạm ẩn</span> }
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-1">
+                                    <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-sm btn-icon btn-outline-primary" title="Chỉnh sửa"><i class="bx bx-edit-alt"></i></a>
+                                    <button class="btn btn-sm btn-icon btn-outline-danger" onclick="confirmDelete(@item.ProductId, '@item.ProductName')" title="Xóa"><i class="bx bx-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="text-center">
+                                <img src="/assets/img/illustrations/man-with-laptop-light.png" width="150" class="mb-3 opacity-50">
+                                <h5 class="text-muted">Không tìm thấy sản phẩm nào khớp với bộ lọc</h5>
+                                <button class="btn btn-primary" onclick="window.location.href='@Url.Action("Index")'">Xem tất cả</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <partial name="_AdminPagination" />
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // 1. Logic chọn nhiều dòng và hiển thị nút Xóa hàng loạt
+            function updateBulkDeleteButton() {
+                const checkedCount = $('.row-checkbox:checked').length;
+                const $btnBulk = $('#btnBulkDelete');
+                const $countSpan = $('#selectedCount');
+                
+                if (checkedCount >= 2) {
+                    $btnBulk.removeClass('d-none');
+                    $countSpan.text(checkedCount);
+                } else {
+                    $btnBulk.addClass('d-none');
+                }
+            }
+
+            $('#checkAll').on('change', function() {
+                $('.row-checkbox').prop('checked', $(this).prop('checked'));
+                updateBulkDeleteButton();
+            });
+
+            $(document).on('change', '.row-checkbox', function() {
+                updateBulkDeleteButton();
+                // Tự động tắt checkAll nếu có 1 dòng không check
+                if (!$(this).prop('checked')) {
+                    $('#checkAll').prop('checked', false);
+                }
+            });
+
+            // 2. Logic chọn cột hiển thị
+            const columns = [
+                { id: 'col-img', name: 'Ảnh' },
+                { id: 'col-brand', name: 'Thương hiệu' },
+                { id: 'col-category', name: 'Danh mục' },
+                { id: 'col-status', name: 'Trạng thái' }
+            ];
+
+            const $menu = $('#columnToggleMenu');
+            columns.forEach(col => {
+                $menu.append(`
+                    <div class="form-check mb-2">
+                        <input class="form-check-input col-toggle" type="checkbox" value="${col.id}" id="toggle-${col.id}" checked>
+                        <label class="form-check-label small" for="toggle-${col.id}">${col.name}</label>
+                    </div>
+                `);
+            });
+
+            $(document).on('change', '.col-toggle', function() {
+                const colId = $(this).val();
+                if ($(this).prop('checked')) {
+                    $(`.${colId}`).show();
+                } else {
+                    $(`.${colId}`).hide();
+                }
+            });
+
+            // 3. Hiệu ứng Loading Spinner khi submit form lọc
+            $('#filterForm').on('submit', function() {
+                $('#adminLoader').removeClass('d-none');
+            });
+        });
+
+        // 4. Modal xác nhận xóa dùng chung (Sử dụng UI Design Rules)
+        function confirmDelete(id, name) {
+            UI.confirm({
+                title: 'Xác nhận xóa',
+                message: `Bạn có chắc chắn muốn xóa sản phẩm "<strong>${name}</strong>" không? Dữ liệu đã xóa sẽ không thể khôi phục.`,
+                onConfirm: function() {
+                    $('#adminLoader').removeClass('d-none');
+                    // Logic xóa thật qua AJAX sẽ viết ở đây
+                    setTimeout(() => {
+                        $('#adminLoader').addClass('d-none');
+                        UI.toast('Đã xóa sản phẩm thành công', 'success');
+                    }, 1000);
+                }
+            });
+        }
+
+        function handleBulkDelete() {
+            const count = $('.row-checkbox:checked').length;
+            UI.confirm({
+                title: 'Xác nhận xóa nhiều',
+                message: `Bạn có chắc muốn xóa vĩnh viễn <strong>${count}</strong> sản phẩm đã chọn?`,
+                type: 'danger',
+                onConfirm: function() {
+                    $('#adminLoader').removeClass('d-none');
+                    // AJAX xóa hàng loạt
+                    setTimeout(() => {
+                        $('#adminLoader').addClass('d-none');
+                        UI.toast(`Đã xóa ${count} sản phẩm thành công`, 'success');
+                        location.reload();
+                    }, 1500);
+                }
+            });
+        }
+    </script>
+}

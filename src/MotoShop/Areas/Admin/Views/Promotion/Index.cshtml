@@ -1,0 +1,53 @@
+@model IEnumerable<MotoShop.Data.Models.Promotion>
+@{
+    ViewData["Title"] = "Chương trình Khuyến mãi";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold m-0 text-uppercase">Khuyến mãi & Ưu đãi</h4>
+    <button class="btn btn-primary" onclick="openPromotionModal('create')">
+        <i class="bx bx-plus me-1"></i>Tạo chương trình mới
+    </button>
+</div>
+
+<div class="card overflow-hidden border-0 shadow-sm">
+    <div class="table-responsive text-nowrap">
+        <table class="table table-hover m-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Tên chương trình</th>
+                    <th class="text-center">Giảm giá</th>
+                    <th class="text-center">Thời hạn</th>
+                    <th>Trạng thái</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><span class="fw-bold">@item.PromotionName</span></td>
+                        <td class="text-center text-danger fw-bold">@item.DiscountPercentage%</td>
+                        <td class="text-center small">
+                            @item.StartDate.ToString("dd/MM") - @item.EndDate.ToString("dd/MM/yyyy")
+                        </td>
+                        <td>
+                            @if (item.EndDate >= DateTime.Now && item.IsActive)
+                            {
+                                <span class="badge bg-label-success">Đang chạy</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-label-secondary">Kết thúc</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-icon text-primary"><i class="bx bx-edit-alt"></i></button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

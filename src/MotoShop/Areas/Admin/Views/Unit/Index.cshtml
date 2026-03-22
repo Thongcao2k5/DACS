@@ -1,0 +1,104 @@
+@model IEnumerable<MotoShop.Data.Models.Unit>
+@{
+    ViewData["Title"] = "Đơn vị tính";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold m-0 text-uppercase">Quản lý Đơn vị tính</h4>
+    <button class="btn btn-primary" onclick="openUnitModal('create')">
+        <i class="bx bx-plus me-1"></i>Thêm đơn vị tính
+    </button>
+</div>
+
+<div class="card overflow-hidden border-0 shadow-sm">
+    <div class="table-responsive text-nowrap">
+        <table class="table table-hover m-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Mã đơn vị</th>
+                    <th>Tên đơn vị</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><code>@item.Symbol</code></td>
+                        <td><span class="fw-bold">@item.UnitName</span></td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-icon text-primary" onclick="openUnitModal('edit', {id: @item.UnitId, name: '@item.UnitName', symbol: '@item.Symbol'})"><i class="bx bx-edit-alt"></i></button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="unitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header border-bottom p-4">
+                <h5 class="modal-title fw-bold" id="unitModalTitle">Thêm đơn vị tính</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="unitForm">
+                    <input type="hidden" id="unitId">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Tên đơn vị</label>
+                        <input type="text" id="unitName" class="form-control" placeholder="Cái, Bộ, Lon...">
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label fw-bold small text-uppercase">Ký hiệu (Mã)</label>
+                        <input type="text" id="unitSymbol" class="form-control" placeholder="CAI, BO, LON...">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top p-3 px-4">
+                <button class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-primary px-4" onclick="handleSaveUnit()">Lưu dữ liệu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const unitModal = new bootstrap.Modal(document.getElementById('unitModal'));
+
+        function openUnitModal(mode, data = null) {
+            $('#unitForm')[0].reset();
+            if (mode === 'create') {
+                $('#unitModalTitle').text('Thêm đơn vị tính');
+                $('#unitId').val('');
+            } else {
+                $('#unitModalTitle').text('Cập nhật đơn vị tính');
+                $('#unitId').val(data.id);
+                $('#unitName').val(data.name);
+                $('#unitSymbol').val(data.symbol);
+            }
+            unitModal.show();
+        }
+
+        function handleSaveUnit() {
+            const data = {
+                id: $('#unitId').val(),
+                name: $('#unitName').val(),
+                symbol: $('#unitSymbol').val()
+            };
+            showLoader();
+            $.post('/Admin/Unit/Upsert', data, function(res) {
+                hideLoader();
+                if (res.success) {
+                    unitModal.hide();
+                    UI.toast('Thành công', 'success');
+                    location.reload();
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,151 @@
+@model IEnumerable<MotoShop.Data.Models.Order>
+@{
+    ViewData["Title"] = "Quản lý Đơn hàng";
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <style>
+      .order-code { font-weight: 700; color: #E60023; font-size: 0.9rem; }
+      .badge-status { min-width: 100px; padding: 0.5em 0.75em; }
+      .bg-label-waiting { background-color: #fff2d6 !important; color: #ffab00 !important; }
+      .bg-label-confirmed { background-color: #e7e7ff !important; color: #696cff !important; }
+      .bg-label-shipping { background-color: #e1faff !important; color: #03c3ec !important; }
+      .bg-label-completed { background-color: #e8fadf !important; color: #71dd37 !important; }
+      .bg-label-cancelled { background-color: #ffe5e5 !important; color: #ff3e1d !important; }
+    </style>
+}
+
+<!-- Header Actions -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold m-0 text-uppercase">Danh sách Đơn hàng</h4>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-danger d-none" id="btnBulkDelete">
+            <i class="bx bx-trash me-1"></i>Xóa đã chọn (<span id="selectedCount">0</span>)
+        </button>
+        <button class="btn btn-outline-success">
+            <i class="bx bx-export me-1"></i>Xuất Excel
+        </button>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card overflow-hidden border-0 shadow-sm">
+    <div class="table-responsive text-nowrap">
+        <table class="table table-hover m-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                    <th>Mã đơn</th>
+                    <th>Khách hàng</th>
+                    <th>Ngày đặt</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                    <th class="text-center">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><input class="form-check-input row-checkbox" type="checkbox" value="@item.OrderId"></td>
+                        <td><span class="order-code">#@item.OrderCode</span></td>
+                        <td>
+                            <div class="fw-bold text-dark">@(item.Customer?.FullName ?? "Khách lẻ")</div>
+                            <small class="text-muted">@(item.Customer?.Phone ?? "N/A")</small>
+                        </td>
+                        <td>@item.OrderDate.ToString("dd/MM/yyyy")</td>
+                        <td class="fw-bold text-dark">@item.TotalAmount.ToString("N0")đ</td>
+                        <td>
+                            @{
+                                var statusClass = item.Status switch {
+                                    "Pending" => "bg-label-waiting",
+                                    "Confirmed" => "bg-label-confirmed",
+                                    "Shipping" => "bg-label-shipping",
+                                    "Completed" => "bg-label-completed",
+                                    "Cancelled" => "bg-label-cancelled",
+                                    _ => "bg-label-secondary"
+                                };
+                                var statusText = item.Status switch {
+                                    "Pending" => "Chờ xử lý",
+                                    "Confirmed" => "Đã xác nhận",
+                                    "Shipping" => "Đang giao",
+                                    "Completed" => "Hoàn thành",
+                                    "Cancelled" => "Đã hủy",
+                                    _ => item.Status
+                                };
+                            }
+                            <span class="badge @statusClass badge-status">@statusText</span>
+                        </td>
+                        <td class="text-center">
+                            <a asp-action="Details" asp-route-id="@item.OrderId" class="btn btn-sm btn-icon text-info" title="Xem chi tiết"><i class="bx bx-show"></i></a>
+                            <button class="btn btn-sm btn-icon text-primary" title="Cập nhật trạng thái" onclick="openStatusModal(@item.OrderId, '@item.OrderCode', '@item.Status')"><i class="bx bx-edit-alt"></i></button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: Cập nhật trạng thái -->
+<div class="modal fade" id="statusModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header border-bottom p-4">
+                <h5 class="modal-title fw-bold">Cập nhật đơn hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="orderIdInp">
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-uppercase">Mã đơn hàng</label>
+                    <input type="text" id="orderCodeInp" class="form-control bg-light" readonly>
+                </div>
+                <div>
+                    <label class="form-label fw-bold small text-uppercase">Trạng thái mới</label>
+                    <select id="statusSelect" class="form-select border-primary">
+                        <option value="Pending">Chờ xử lý</option>
+                        <option value="Confirmed">Đã xác nhận</option>
+                        <option value="Shipping">Đang giao</option>
+                        <option value="Completed">Hoàn thành</option>
+                        <option value="Cancelled">Đã hủy</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer border-top p-3 px-4">
+                <button class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-primary px-4" id="btnSaveStatus" onclick="handleSaveStatus()">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
+
+        function openStatusModal(id, code, currentStatus) {
+            $('#orderIdInp').val(id);
+            $('#orderCodeInp').val('#' + code);
+            $('#statusSelect').val(currentStatus);
+            statusModal.show();
+        }
+
+        function handleSaveStatus() {
+            const id = $('#orderIdInp').val();
+            const status = $('#statusSelect').val();
+            
+            showLoader();
+            $.post('/Admin/Order/UpdateStatus', { id: id, status: status }, function(res) {
+                hideLoader();
+                if (res.success) {
+                    UI.toast('Cập nhật trạng thái thành công', 'success');
+                    location.reload();
+                } else {
+                    UI.toast('Có lỗi xảy ra', 'error');
+                }
+            });
+        }
+    </script>
+}

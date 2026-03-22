@@ -1,0 +1,54 @@
+@model IEnumerable<MotoShop.Data.Models.InventoryTransaction>
+@{
+    ViewData["Title"] = "Lịch sử Nhập xuất";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold m-0 text-uppercase">Lịch sử Giao dịch Kho</h4>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bx bx-arrow-back me-1"></i>Quay lại Tồn kho
+    </a>
+</div>
+
+<div class="card overflow-hidden border-0 shadow-sm">
+    <div class="table-responsive text-nowrap">
+        <table class="table table-hover m-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Ngày giao dịch</th>
+                    <th>Sản phẩm & Biến thể</th>
+                    <th class="text-center">Loại</th>
+                    <th class="text-center">Số lượng</th>
+                    <th>Ghi chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.TransactionDate.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            <div class="fw-bold text-dark">@(item.ProductVariant?.Product?.ProductName ?? "N/A")</div>
+                            <small class="text-muted">@item.ProductVariant?.VariantName</small>
+                        </td>
+                        <td class="text-center">
+                            @if (item.TransactionType == "IN")
+                            {
+                                <span class="badge bg-label-success">NHẬP KHO</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-label-danger">XUẤT KHO</span>
+                            }
+                        </td>
+                        <td class="text-center fw-bold @(item.TransactionType == "IN" ? "text-success" : "text-danger")">
+                            @(item.TransactionType == "IN" ? "+" : "-") @Math.Abs(item.Quantity)
+                        </td>
+                        <td><small class="text-muted">@item.Note</small></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

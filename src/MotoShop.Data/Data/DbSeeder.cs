@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 using System;
@@ -9,8 +10,34 @@ namespace MotoShop.Data.Data
 {
     public static class DbSeeder
     {
-        public static async Task SeedAsync(MotoShopDbContext context)
+        public static async Task SeedAsync(MotoShopDbContext context, UserManager<IdentityUser> userManager = null, RoleManager<IdentityRole> roleManager = null)
         {
+            // 0. Seed Roles and Admin User (New)
+            if (roleManager != null && userManager != null)
+            {
+                if (!await roleManager.RoleExistsAsync("Admin"))
+                {
+                    await roleManager.CreateAsync(new IdentityRole("Admin"));
+                    await roleManager.CreateAsync(new IdentityRole("Customer"));
+                }
+
+                var adminUser = await userManager.FindByEmailAsync("admin@motoshop.com");
+                if (adminUser == null)
+                {
+                    var admin = new IdentityUser
+                    {
+                        UserName = "admin@motoshop.com",
+                        Email = "admin@motoshop.com",
+                        EmailConfirmed = true
+                    };
+                    var result = await userManager.CreateAsync(admin, "Admin123!");
+                    if (result.Succeeded)
+                    {
+                        await userManager.AddToRoleAsync(admin, "Admin");
+                    }
+                }
+            }
+
             // 1. Seed Categories
             if (!context.Categories.Any())
             {

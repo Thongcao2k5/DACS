@@ -58,7 +58,12 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<MotoShopDbContext>();
-    await DbSeeder.SeedAsync(context);
+    var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+    
+    // Đảm bảo database và các bảng được tạo trước khi seed dữ liệu
+    await context.Database.MigrateAsync();
+    await DbSeeder.SeedAsync(context, userManager, roleManager);
 }
 
 // Configure the HTTP request pipeline.

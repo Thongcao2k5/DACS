@@ -1,3 +1,5 @@
+@using MotoShop.Models.ViewModels
+@model RegisterViewModel
 @{
     ViewData["Title"] = "Đăng ký tài khoản";
 }
@@ -15,45 +17,50 @@
 
 <main class="auth-wrapper">
     <div class="container">
-        <!-- 2. REGISTER CONTAINER -->
         <div class="auth-card">
             <div class="auth-header">
                 <h2>ĐĂNG KÝ TÀI KHOẢN</h2>
                 <p>Trở thành thành viên MotoShop để nhận ngay các ưu đãi đặc biệt.</p>
             </div>
 
-            <!-- 3. REGISTER FORM -->
-            <form id="registerForm" onsubmit="handleRegister(event)">
+            <form asp-action="Register" method="post">
+                <div asp-validation-summary="All" class="text-danger small mb-3"></div>
+
                 <div class="mb-3">
-                    <label class="form-label-custom">Họ và tên *</label>
-                    <input type="text" class="form-control form-control-custom" placeholder="Nhập họ và tên của bạn" required>
+                    <label asp-for="FullName" class="form-label-custom">Họ và tên *</label>
+                    <input asp-for="FullName" class="form-control form-control-custom" placeholder="Nhập họ và tên của bạn">
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
                 </div>
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label-custom">Email *</label>
-                        <input type="email" class="form-control form-control-custom" placeholder="email@vi dụ.com" required>
+                        <label asp-for="Email" class="form-label-custom">Email *</label>
+                        <input asp-for="Email" class="form-control form-control-custom" placeholder="email@vi dụ.com">
+                        <span asp-validation-for="Email" class="text-danger small"></span>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label-custom">Số điện thoại *</label>
-                        <input type="tel" class="form-control form-control-custom" placeholder="Nhập số điện thoại" required>
+                        <label asp-for="PhoneNumber" class="form-label-custom">Số điện thoại *</label>
+                        <input asp-for="PhoneNumber" class="form-control form-control-custom" placeholder="Nhập số điện thoại">
+                        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
                     </div>
                 </div>
                 
                 <div class="mb-3">
-                    <label class="form-label-custom">Mật khẩu *</label>
+                    <label asp-for="Password" class="form-label-custom">Mật khẩu *</label>
                     <div class="password-group">
-                        <input type="password" id="regPassword" class="form-control form-control-custom" placeholder="Tối thiểu 6 ký tự" required>
+                        <input asp-for="Password" id="regPassword" class="form-control form-control-custom" placeholder="Tối thiểu 6 ký tự">
                         <i class='bx bx-hide password-toggle-icon' onclick="togglePass('regPassword', this)"></i>
                     </div>
+                    <span asp-validation-for="Password" class="text-danger small"></span>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label-custom">Xác nhận mật khẩu *</label>
+                    <label asp-for="ConfirmPassword" class="form-label-custom">Xác nhận mật khẩu *</label>
                     <div class="password-group">
-                        <input type="password" id="regConfirmPassword" class="form-control form-control-custom" placeholder="Nhập lại mật khẩu" required>
+                        <input asp-for="ConfirmPassword" id="regConfirmPassword" class="form-control form-control-custom" placeholder="Nhập lại mật khẩu">
                         <i class='bx bx-hide password-toggle-icon' onclick="togglePass('regConfirmPassword', this)"></i>
                     </div>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
                 </div>
 
                 <div class="mb-4">
@@ -63,10 +70,6 @@
                             Tôi đồng ý với <a href="/Info/Terms" class="text-danger">Điều khoản sử dụng</a> và Chính sách bảo mật của MotoShop.
                         </label>
                     </div>
-                </div>
-
-                <div id="registerError" class="alert alert-danger d-none py-2 small mb-3">
-                    <i class='bx bx-error-circle me-1'></i> Email hoặc số điện thoại đã tồn tại.
                 </div>
 
                 <button type="submit" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold mb-4">ĐĂNG KÝ NGAY</button>

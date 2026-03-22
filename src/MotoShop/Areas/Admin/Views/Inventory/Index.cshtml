@@ -1,0 +1,115 @@
+@model IEnumerable<MotoShop.Data.Models.ProductVariant>
+@{
+    ViewData["Title"] = "Quản lý Tồn kho";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold m-0 text-uppercase">Tồn kho hiện tại</h4>
+    <a asp-action="History" class="btn btn-outline-primary">
+        <i class="bx bx-history me-1"></i>Xem lịch sử nhập xuất
+    </a>
+</div>
+
+<div class="card overflow-hidden border-0 shadow-sm">
+    <div class="table-responsive text-nowrap">
+        <table class="table table-hover m-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Sản phẩm & Biến thể</th>
+                    <th>SKU</th>
+                    <th class="text-center">Tồn kho</th>
+                    <th class="text-center">Đơn vị</th>
+                    <th class="text-end">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dark">@(item.Product?.ProductName ?? "N/A")</div>
+                            <small class="text-muted">@item.VariantName</small>
+                        </td>
+                        <td><code>@item.SKU</code></td>
+                        <td class="text-center">
+                            @{
+                                var stockClass = item.StockQuantity <= 5 ? "text-danger fw-bold" : "text-dark";
+                            }
+                            <span class="@stockClass">@item.StockQuantity</span>
+                        </td>
+                        <td class="text-center">@item.BaseUnit?.Symbol</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-primary" onclick="openImportModal(@item.ProductVariantId, '@item.VariantName')">
+                                <i class="bx bx-plus me-1"></i>Nhập kho
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Nhập kho -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header border-bottom p-4">
+                <h5 class="modal-title fw-bold">Nhập thêm hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="variantIdInp">
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-uppercase">Sản phẩm</label>
+                    <div id="variantNameDisp" class="fw-bold text-primary"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-uppercase">Số lượng nhập</label>
+                    <input type="number" id="quantityInp" class="form-control" value="1" min="1">
+                </div>
+                <div>
+                    <label class="form-label fw-bold small text-uppercase">Ghi chú</label>
+                    <textarea id="noteInp" class="form-control" rows="2" placeholder="Nhập kho định kỳ..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-top p-3 px-4">
+                <button class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-primary px-4" onclick="handleImport()">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const importModal = new bootstrap.Modal(document.getElementById('importModal'));
+
+        function openImportModal(id, name) {
+            $('#variantIdInp').val(id);
+            $('#variantNameDisp').text(name);
+            $('#quantityInp').val(1);
+            $('#noteInp').val('');
+            importModal.show();
+        }
+
+        function handleImport() {
+            const data = {
+                variantId: $('#variantIdInp').val(),
+                quantity: $('#quantityInp').val(),
+                note: $('#noteInp').val()
+            };
+
+            showLoader();
+            $.post('/Admin/Inventory/UpdateStock', data, function(res) {
+                hideLoader();
+                if (res.success) {
+                    importModal.hide();
+                    UI.toast('Cập nhật kho thành công', 'success');
+                    location.reload();
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,174 @@
+@model IEnumerable<MotoShop.Data.Models.Category>
+@{
+    ViewData["Title"] = "Quản lý Loại sản phẩm";
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <style>
+      .category-child { padding-left: 2.5rem !important; background-color: #fafafa; }
+      .tree-icon { color: #d9dee3; margin-right: 0.5rem; }
+      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+    </style>
+}
+
+<!-- Actions Bar -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold m-0 text-uppercase">Loại sản phẩm</h4>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-danger d-none" id="btnBulkDelete" onclick="handleBulkDelete()">
+            <i class="bx bx-trash me-1"></i>Xóa đã chọn (<span id="selectedCount">0</span>)
+        </button>
+        <button type="button" class="btn btn-primary" onclick="openCreateModal()">
+            <i class="bx bx-plus me-1"></i> Thêm loại sản phẩm
+        </button>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card overflow-hidden border-0 shadow-sm">
+    <div class="table-responsive text-nowrap">
+        <table class="table table-hover m-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                    <th style="width: 35%">Tên loại sản phẩm</th>
+                    <th>Danh mục cha</th>
+                    <th class="text-center">Số SP</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Where(c => c.ParentId == null))
+                {
+                    <!-- Cấp cha -->
+                    <tr>
+                        <td><input class="form-check-input row-checkbox" type="checkbox" value="@item.CategoryId"></td>
+                        <td><span class="fw-bold text-dark">@item.CategoryName</span></td>
+                        <td>-</td>
+                        <td class="text-center"><span class="badge bg-label-info">@item.Products.Count</span></td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-icon text-primary" onclick="openEditModal(@item.CategoryId, '@item.CategoryName', '')"><i class="bx bx-edit-alt"></i></button>
+                            <button class="btn btn-sm btn-icon text-danger" onclick="confirmDelete(@item.CategoryId, '@item.CategoryName')"><i class="bx bx-trash"></i></button>
+                        </td>
+                    </tr>
+                    
+                    @foreach (var sub in Model.Where(c => c.ParentId == item.CategoryId))
+                    {
+                        <!-- Cấp con -->
+                        <tr class="category-child">
+                            <td><input class="form-check-input row-checkbox" type="checkbox" value="@sub.CategoryId"></td>
+                            <td><span class="tree-icon">↳</span> @sub.CategoryName</td>
+                            <td>@item.CategoryName</td>
+                            <td class="text-center"><span class="badge bg-label-secondary">@sub.Products.Count</span></td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-icon text-primary" onclick="openEditModal(@sub.CategoryId, '@sub.CategoryName', '@item.CategoryId')"><i class="bx bx-edit-alt"></i></button>
+                                <button class="btn btn-sm btn-icon text-danger" onclick="confirmDelete(@sub.CategoryId, '@sub.CategoryName')"><i class="bx bx-trash"></i></button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Form -->
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header border-bottom p-4">
+                <h5 class="modal-title fw-bold" id="modalTitle">Thêm loại sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="categoryForm">
+                    <input type="hidden" id="categoryId">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase" for="categoryName">Tên loại sản phẩm <span class="text-danger">*</span></label>
+                        <input type="text" id="categoryName" class="form-control rounded-3" placeholder="Ví dụ: Phụ tùng máy" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase" for="parentCategory">Danh mục cha</label>
+                        <select id="parentCategory" class="form-select rounded-3 shadow-none">
+                            <option value="">Không có (Danh mục chính)</option>
+                            @if (ViewBag.ParentCategories != null)
+                            {
+                                foreach (var pc in (IEnumerable<MotoShop.Data.Models.Category>)ViewBag.ParentCategories)
+                                {
+                                    <option value="@pc.CategoryId">@pc.CategoryName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light-subtle p-4 border-top">
+                <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary px-4 rounded-pill" id="saveCategoryBtn" onclick="handleSave()">Lưu dữ liệu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+
+        function openCreateModal() {
+            $('#modalTitle').text('Thêm loại sản phẩm mới');
+            $('#categoryForm')[0].reset();
+            $('#categoryId').val('');
+            categoryModal.show();
+        }
+
+        function openEditModal(id, name, parentId) {
+            $('#modalTitle').text('Cập nhật loại sản phẩm');
+            $('#categoryId').val(id);
+            $('#categoryName').val(name);
+            $('#parentCategory').val(parentId);
+            categoryModal.show();
+        }
+
+        function handleSave() {
+            const data = {
+                id: $('#categoryId').val(),
+                name: $('#categoryName').val(),
+                parentId: $('#parentCategory').val()
+            };
+
+            if (!data.name) { UI.toast('Vui lòng nhập tên danh mục', 'warning'); return; }
+
+            showLoader();
+            $.post('/Admin/Category/Upsert', data, function(res) {
+                hideLoader();
+                if (res.success) {
+                    categoryModal.hide();
+                    UI.toast('Lưu thành công!', 'success');
+                    location.reload();
+                } else {
+                    UI.toast(res.message, 'error');
+                }
+            });
+        }
+
+        function confirmDelete(id, name) {
+            UI.confirm({
+                title: 'Xác nhận xóa',
+                message: `Bạn có chắc chắn muốn xóa danh mục "<strong>${name}</strong>"?`,
+                onConfirm: function() {
+                    showLoader();
+                    $.post('/Admin/Category/Delete', { id: id }, function(res) {
+                        hideLoader();
+                        if (res.success) {
+                            UI.toast('Đã xóa thành công', 'success');
+                            location.reload();
+                        } else {
+                            UI.toast(res.message, 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

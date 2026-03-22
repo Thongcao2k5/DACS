@@ -1,0 +1,164 @@
+@model MotoShop.Data.Models.Order
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng " + Model.OrderCode;
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <style>
+      .info-label { font-size: 0.7rem; font-weight: 700; color: #a1acb8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block; }
+      .info-value { font-size: 0.95rem; color: #32475c; font-weight: 600; display: block; }
+      .product-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
+      .order-total-card { background: #E60023; color: #fff; border-radius: 12px; }
+      .order-total-card .info-label { color: rgba(255,255,255,0.8); }
+      .order-total-card .info-value { color: #fff; font-size: 1.5rem; }
+    </style>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold m-0 text-uppercase">Chi tiết đơn hàng: #@Model.OrderCode</h4>
+    <button class="btn btn-primary px-4 shadow-sm" onclick="openStatusModal(@Model.OrderId, '@Model.OrderCode', '@Model.Status')">
+        <i class="bx bx-git-branch me-1"></i> Cập nhật trạng thái
+    </button>
+</div>
+
+<div class="row">
+    <!-- Cột trái: Thông tin chính -->
+    <div class="col-lg-8">
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="fw-bold mb-4"><i class="bx bx-info-circle me-2 text-primary"></i>THÔNG TIN ĐƠN HÀNG</h6>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <label class="info-label">Mã đơn hàng</label>
+                        <span class="info-value text-primary">#@Model.OrderCode</span>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="info-label">Ngày đặt</label>
+                        <span class="info-value">@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="info-label">Trạng thái hiện tại</label>
+                        <span class="badge bg-label-info px-3 py-2">@Model.Status.ToUpper()</span>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="info-label">Khách hàng</label>
+                        <span class="info-value text-dark">@(Model.Customer?.FullName ?? "Khách lẻ")</span>
+                        <small class="text-muted">@(Model.Customer?.Phone ?? "N/A")</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4 border-0 shadow-sm overflow-hidden">
+            <div class="card-header border-bottom py-3">
+                <h6 class="m-0 fw-bold"><i class="bx bx-package me-2 text-primary"></i>DANH SÁCH SẢN PHẨM</h6>
+            </div>
+            <div class="table-responsive text-nowrap">
+                <table class="table table-hover m-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 70px">Ảnh</th>
+                            <th>Sản phẩm</th>
+                            <th>Biến thể</th>
+                            <th class="text-end">Giá bán</th>
+                            <th class="text-center">Số lượng</th>
+                            <th class="text-end">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.OrderItems)
+                        {
+                            <tr>
+                                <td>
+                                    <img src="@(item.ProductVariant?.ImageUrl ?? "/assets/img/elements/no-image.png")" class="product-thumb">
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark">@(item.ProductVariant?.Product?.ProductName ?? "Sản phẩm đã xóa")</div>
+                                </td>
+                                <td><span class="badge bg-label-secondary">@item.ProductVariant?.VariantName</span></td>
+                                <td class="text-end">@item.Price.ToString("N0")đ</td>
+                                <td class="text-center fw-bold">@item.Quantity.ToString("D2")</td>
+                                <td class="text-end fw-bold text-dark">@((item.Price * item.Quantity).ToString("N0"))đ</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cột phải: Tổng kết -->
+    <div class="col-lg-4">
+        <div class="card mb-4 order-total-card border-0 shadow-lg">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <label class="info-label">TỔNG TIỀN ĐƠN HÀNG</label>
+                        <span class="info-value">@Model.TotalAmount.ToString("N0")đ</span>
+                    </div>
+                    <i class="bx bx-wallet fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-4">
+                <p class="text-muted small mb-0">Cảm ơn bạn đã tin dùng hệ thống MotoShop</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal cập nhật trạng thái (Dùng chung logic với Index) -->
+<div class="modal fade" id="statusModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header border-bottom p-4">
+                <h5 class="modal-title fw-bold">Cập nhật đơn hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="orderIdInp">
+                <div>
+                    <label class="form-label fw-bold small text-uppercase">Trạng thái mới</label>
+                    <select id="statusSelect" class="form-select border-primary">
+                        <option value="Pending">Chờ xử lý</option>
+                        <option value="Confirmed">Đã xác nhận</option>
+                        <option value="Shipping">Đang giao</option>
+                        <option value="Completed">Hoàn thành</option>
+                        <option value="Cancelled">Đã hủy</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer border-top p-3 px-4">
+                <button class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-primary px-4" onclick="handleSaveStatus()">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
+
+        function openStatusModal(id, code, currentStatus) {
+            $('#orderIdInp').val(id);
+            $('#statusSelect').val(currentStatus);
+            statusModal.show();
+        }
+
+        function handleSaveStatus() {
+            const id = $('#orderIdInp').val();
+            const status = $('#statusSelect').val();
+            showLoader();
+            $.post('/Admin/Order/UpdateStatus', { id: id, status: status }, function(res) {
+                hideLoader();
+                if (res.success) {
+                    location.reload();
+                }
+            });
+        }
+    </script>
+}

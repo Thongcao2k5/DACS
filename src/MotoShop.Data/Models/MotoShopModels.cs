@@ -81,6 +81,7 @@ namespace MotoShop.Data.Models
         public decimal Price { get; set; }
         [Column(TypeName = "decimal(18, 2)")]
         public decimal CostPrice { get; set; }
+        public int StockQuantity { get; set; } = 0; // Thêm trường tồn kho
         [StringLength(500)]
         public string? ImageUrl { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
@@ -89,6 +90,21 @@ namespace MotoShop.Data.Models
         public virtual Product? Product { get; set; }
         [ForeignKey("BaseUnitId")]
         public virtual Unit? BaseUnit { get; set; }
+    }
+
+    public class InventoryTransaction
+    {
+        [Key]
+        public int TransactionId { get; set; }
+        public int ProductVariantId { get; set; }
+        public int Quantity { get; set; }
+        [Required, StringLength(50)]
+        public string TransactionType { get; set; } // "IN" (Nhập), "OUT" (Xuất)
+        public DateTime TransactionDate { get; set; } = DateTime.Now;
+        public string? Note { get; set; }
+
+        [ForeignKey("ProductVariantId")]
+        public virtual ProductVariant ProductVariant { get; set; }
     }
 
     public class ProductImage
@@ -184,5 +200,35 @@ namespace MotoShop.Data.Models
         public virtual Customer Customer { get; set; }
         [ForeignKey("ServiceId")]
         public virtual Service Service { get; set; }
+    }
+
+    public class ProductReview
+    {
+        [Key]
+        public int ReviewId { get; set; }
+        public int ProductId { get; set; }
+        public int CustomerId { get; set; }
+        public int Rating { get; set; } // 1-5
+        public string? Comment { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public bool IsApproved { get; set; } = true;
+
+        [ForeignKey("ProductId")]
+        public virtual Product Product { get; set; }
+        [ForeignKey("CustomerId")]
+        public virtual Customer Customer { get; set; }
+    }
+
+    public class Promotion
+    {
+        [Key]
+        public int PromotionId { get; set; }
+        [Required, StringLength(200)]
+        public string PromotionName { get; set; }
+        public string? Description { get; set; }
+        public decimal DiscountPercentage { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }

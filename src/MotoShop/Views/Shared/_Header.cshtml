@@ -1,3 +1,7 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
 <div class="top-header">
     <div class="container d-flex justify-content-between align-items-center">
         <div>
@@ -7,88 +11,30 @@
         <div class="fw-bold text-danger d-none d-md-block">🔥 Miễn phí vận chuyển cho đơn hàng từ 500k</div>
     </div>
 </div>
+
 <div class="container">
     <header class="main-header">
         <div class="header-logo">
-            <a asp-controller="Home" asp-action="Index" class="text-decoration-none d-flex align-items-center">
+            <a asp-area="" asp-controller="Home" asp-action="Index" class="text-decoration-none d-flex align-items-center">
                 <i class='bx bxs-bolt-circle text-danger fs-1'></i>
                 <span class="fs-3 fw-bolder text-dark ms-2">MOTO<span class="text-danger">SHOP</span></span>
             </a>
         </div>
+        
         <div class="header-search">
-            <form class="input-group" asp-controller="Product" asp-action="Search" method="get">
+            <form class="input-group" asp-area="" asp-controller="Product" asp-action="Search" method="get">
                 <input type="text" name="q" class="form-control search-input" placeholder="Tìm tên phụ tùng, thương hiệu...">
                 <button class="btn search-btn" type="submit"><i class='bx bx-search'></i></button>
             </form>
         </div>
-        <div class="nav-shrink-wrapper">
-            <ul class="nav-list justify-content-center">
-                <li><a asp-controller="Home" asp-action="Index" class="nav-link-main">TRANG CHỦ</a></li>
-                <li class="mega-menu-wrapper">
-                    <a asp-controller="Product" asp-action="Index" class="nav-link-main">DANH MỤC <i class='bx bx-chevron-down'></i></a>
-                    <div class="mega-menu">
-                        <div class="container">
-                            <div class="row p-4 text-start">
-                                <div class="col-md-3">
-                                    <h6 class="fw-bold text-danger mb-3">PHỤ TÙNG MÁY</h6>
-                                    <ul class="list-unstyled">
-                                        <li><a asp-controller="Product" asp-action="Category" asp-route-id="1" class="nav-link p-1 text-dark">Bộ nồi (Côn)</a></li>
-                                        <li><a asp-controller="Product" asp-action="Category" asp-route-id="2" class="nav-link p-1 text-dark">Lòng, piston, bạc</a></li>
-                                        <li><a asp-controller="Product" asp-action="Category" asp-route-id="3" class="nav-link p-1 text-dark">Bình xăng con / Fi</a></li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-3">
-                                    <h6 class="fw-bold text-danger mb-3">DÀN CHÂN</h6>
-                                    <ul class="list-unstyled">
-                                        <li><a asp-controller="Product" asp-action="Category" asp-route-id="4" class="nav-link p-1 text-dark">Phuộc trước / sau</a></li>
-                                        <li><a asp-controller="Product" asp-action="Category" asp-route-id="5" class="nav-link p-1 text-dark">Mâm / Vành xe</a></li>
-                                        <li><a asp-controller="Product" asp-action="Category" asp-route-id="6" class="nav-link p-1 text-dark">Hệ thống phanh</a></li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-3">
-                                    <h6 class="fw-bold text-danger mb-3">NHỚT & PHỤ GIA</h6>
-                                    <ul class="list-unstyled">
-                                        <li><a asp-controller="Product" asp-action="Category" asp-route-id="7" class="nav-link p-1 text-dark">Nhớt máy Motul</a></li>
-                                        <li><a asp-controller="Product" asp-action="Category" asp-route-id="8" class="nav-link p-1 text-dark">Nhớt máy Repsol</a></li>
-                                        <li><a asp-controller="Product" asp-action="Category" asp-route-id="9" class="nav-link p-1 text-dark">Nước giải nhiệt</a></li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-3">
-                                    <h6 class="fw-bold text-danger mb-3">ĐỒ CHƠI XE</h6>
-                                    <ul class="list-unstyled">
-                                        <li><a asp-controller="Product" asp-action="Category" asp-route-id="10" class="nav-link p-1 text-dark">Tay thắng kiểng</a></li>
-                                        <li><a asp-controller="Product" asp-action="Category" asp-route-id="11" class="nav-link p-1 text-dark">Ốc Salaya / Titan</a></li>
-                                        <li><a asp-controller="Product" asp-action="Category" asp-route-id="12" class="nav-link p-1 text-dark">Đèn trợ sáng</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-                <li><a asp-controller="Service" asp-action="Index" class="nav-link-main">DỊCH VỤ</a></li>
-                <li class="mega-menu-wrapper">
-                    <a href="#" class="nav-link-main">THƯƠNG HIỆU <i class='bx bx-chevron-down'></i></a>
-                    <div class="mega-menu">
-                        <div class="container">
-                            <div class="row p-4 text-center">
-                                <div class="col-2"><a asp-controller="Product" asp-action="Brand" asp-route-id="1" class="d-block p-3 border rounded text-dark text-decoration-none fw-bold">HONDA</a></div>
-                                <div class="col-2"><a asp-controller="Product" asp-action="Brand" asp-route-id="2" class="d-block p-3 border rounded text-dark text-decoration-none fw-bold">YAMAHA</a></div>
-                                <div class="col-2"><a asp-controller="Product" asp-action="Brand" asp-route-id="3" class="d-block p-3 border rounded text-dark text-decoration-none fw-bold">SUZUKI</a></div>
-                                <div class="col-2"><a asp-controller="Product" asp-action="Brand" asp-route-id="4" class="d-block p-3 border rounded text-dark text-decoration-none fw-bold">PIAGGIO</a></div>
-                                <div class="col-2"><a asp-controller="Product" asp-action="Brand" asp-route-id="5" class="d-block p-3 border rounded text-dark text-decoration-none fw-bold">MOTUL</a></div>
-                                <div class="col-2"><a asp-controller="Product" asp-action="Brand" asp-route-id="6" class="d-block p-3 border rounded text-dark text-decoration-none fw-bold">RCB</a></div>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-            </ul>
-        </div>
+
         <div class="header-actions">
             <div class="action-item shrink-search-toggle" onclick="UI.toggleSearch()">
                 <i class='bx bx-search'></i>
             </div>
+            
             <div class="action-item">
-                <a asp-controller="Account" asp-action="Profile" class="text-dark d-flex align-items-center">
+                <a asp-area="" asp-controller="Account" asp-action="Profile" class="text-dark d-flex align-items-center">
                     <i class='bx bx-user'></i>
                 </a>
                 <div class="dropdown-menu-custom shadow-lg">
@@ -98,63 +44,109 @@
                                 <i class='bx bxs-user-circle fs-3'></i>
                             </div>
                             <div>
-                                <div class="fw-bold text-dark small">Khách hàng</div>
-                                <div class="text-muted" style="font-size: 0.7rem;">Chào mừng bạn!</div>
+                                @if (SignInManager.IsSignedIn(User))
+                                {
+                                    <div class="fw-bold text-dark small text-truncate" style="max-width: 150px;">@User.Identity?.Name</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">Thành viên</div>
+                                }
+                                else
+                                {
+                                    <div class="fw-bold text-dark small">Khách hàng</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">Chào mừng bạn!</div>
+                                }
                             </div>
                         </div>
                     </div>
                     <ul class="list-unstyled mb-0">
-                        <li>
-                            <a asp-controller="Account" asp-action="Login" class="dropdown-item-custom">
-                                <i class='bx bx-log-in-circle me-2'></i> <span>Đăng nhập</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a asp-controller="Account" asp-action="Register" class="dropdown-item-custom">
-                                <i class='bx bx-user-plus me-2'></i> <span>Đăng ký thành viên</span>
-                            </a>
-                        </li>
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li>
+                                    <a asp-area="Admin" asp-controller="Home" asp-action="Index" class="dropdown-item-custom text-primary fw-bold">
+                                        <i class='bx bx-shield-quarter me-2'></i> <span>TRANG QUẢN TRỊ</span>
+                                    </a>
+                                </li>
+                            }
+                            <li>
+                                <a asp-area="" asp-controller="Account" asp-action="Profile" class="dropdown-item-custom">
+                                    <i class='bx bx-user me-2'></i> <span>Hồ sơ cá nhân</span>
+                                </a>
+                            </li>
+                            <li>
+                                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" id="logoutForm">
+                                    <button type="submit" class="dropdown-item-custom border-0 bg-transparent w-100 text-start">
+                                        <i class='bx bx-log-out-circle me-2'></i> <span>Đăng xuất</span>
+                                    </button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li>
+                                <a asp-area="" asp-controller="Account" asp-action="Login" class="dropdown-item-custom">
+                                    <i class='bx bx-log-in-circle me-2'></i> <span>Đăng nhập</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a asp-area="" asp-controller="Account" asp-action="Register" class="dropdown-item-custom">
+                                    <i class='bx bx-user-plus me-2'></i> <span>Đăng ký thành viên</span>
+                                </a>
+                            </li>
+                        }
                         <li><hr class="dropdown-divider my-2"></li>
                         <li>
-                            <a asp-controller="Account" asp-action="Profile" class="dropdown-item-custom">
-                                <i class='bx bx-user me-2'></i> <span>Hồ sơ cá nhân</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a asp-controller="Order" asp-action="Index" class="dropdown-item-custom">
+                            <a asp-area="" asp-controller="Order" asp-action="Index" class="dropdown-item-custom">
                                 <i class='bx bx-package me-2'></i> <span>Đơn hàng của tôi</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a asp-controller="Product" asp-action="Wishlist" class="dropdown-item-custom">
-                                <i class='bx bx-heart me-2'></i> <span>Sản phẩm yêu thích</span>
                             </a>
                         </li>
                     </ul>
                 </div>
             </div>
+
             <div class="action-item">
-                <a asp-controller="Cart" asp-action="Index" class="text-dark"><i class='bx bx-cart'></i></a>
-                <span class="badge rounded-pill cart-badge">0</span>
-            </div>
-            <div class="action-item d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu">
-                <i class='bx bx-menu'></i>
+                <a asp-area="" asp-controller="Cart" asp-action="Index" class="text-dark position-relative d-inline-block">
+                    <i class='bx bx-cart'></i>
+                    <span class="badge rounded-pill bg-danger cart-badge-floating">0</span>
+                </a>
             </div>
         </div>
     </header>
 </div>
+
 <nav class="nav-header d-none d-lg-block">
     <div class="container">
         <ul class="nav-list">
-            <li><a asp-controller="Home" asp-action="Index" class="nav-link-main">TRANG CHỦ</a></li>
-            <li class="mega-menu-wrapper">
-                <a asp-controller="Product" asp-action="Index" class="nav-link-main">DANH MỤC <i class='bx bx-chevron-down'></i></a>
-                <!-- (Mega Menu content remains similar to above) -->
-            </li>
-            <li><a asp-controller="Service" asp-action="Index" class="nav-link-main">DỊCH VỤ</a></li>
-            <li><a asp-controller="Product" asp-action="Promotion" class="nav-link-main text-danger">KHUYẾN MÃI HOT</a></li>
-            <li><a asp-controller="Blog" asp-action="Index" class="nav-link-main">TIN TỨC</a></li>
-            <li><a asp-controller="Info" asp-action="Contact" class="nav-link-main">LIÊN HỆ</a></li>
+            <li><a asp-area="" asp-controller="Home" asp-action="Index" class="nav-link-main">TRANG CHỦ</a></li>
+            <li><a asp-area="" asp-controller="Product" asp-action="Index" class="nav-link-main">DANH MỤC</a></li>
+            <li><a asp-area="" asp-controller="Service" asp-action="Index" class="nav-link-main">DỊCH VỤ</a></li>
+            <li><a asp-area="" asp-controller="Product" asp-action="Promotion" class="nav-link-main text-danger">KHUYẾN MÃI HOT</a></li>
+            <li><a asp-area="" asp-controller="Blog" asp-action="Index" class="nav-link-main">TIN TỨC</a></li>
+            <li><a asp-area="" asp-controller="Info" asp-action="Contact" class="nav-link-main">LIÊN HỆ</a></li>
         </ul>
     </div>
 </nav>
+
+<style>
+    .cart-badge-floating {
+        position: absolute;
+        top: -5px;
+        right: -10px;
+        font-size: 0.65rem;
+        padding: 0.25em 0.5em;
+        border: 2px solid white;
+    }
+    .main-header { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; }
+    .header-actions { display: flex; align-items: center; gap: 15px; }
+    .action-item { position: relative; cursor: pointer; }
+    .dropdown-menu-custom { 
+        position: absolute; top: 100%; right: 0; min-width: 220px; 
+        background: white; border-radius: 8px; display: none; z-index: 1000;
+    }
+    .action-item:hover .dropdown-menu-custom { display: block; }
+    .dropdown-item-custom { 
+        display: flex; align-items: center; padding: 10px 15px; 
+        color: #333; text-decoration: none; transition: 0.2s; 
+    }
+    .dropdown-item-custom:hover { background: #f8f9fa; color: #dc3545; }
+</style>

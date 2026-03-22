@@ -1,0 +1,114 @@
+@model IEnumerable<MotoShop.Data.Models.Order>
+@{
+    ViewData["Title"] = "Bảng điều khiển";
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <style>
+      .card-kpi { border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: 0.3s; height: 100%; }
+      .card-kpi:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+      .kpi-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+    </style>
+}
+
+<!-- KPI Cards Row -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="card card-kpi">
+            <div class="card-body text-center">
+                <div class="kpi-icon bg-label-primary mx-auto"><i class="bx bx-dollar fs-4"></i></div>
+                <span class="fw-semibold d-block mb-1 small">Tổng doanh thu</span>
+                <h5 class="card-title mb-1 fw-bold">@(ViewBag.TotalRevenue?.ToString("N0"))đ</h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card card-kpi">
+            <div class="card-body text-center">
+                <div class="kpi-icon bg-label-success mx-auto"><i class="bx bx-cart fs-4"></i></div>
+                <span class="fw-semibold d-block mb-1 small">Đơn hàng</span>
+                <h5 class="card-title mb-1 fw-bold">@ViewBag.TotalOrders</h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card card-kpi">
+            <div class="card-body text-center">
+                <div class="kpi-icon bg-label-info mx-auto"><i class="bx bx-user fs-4"></i></div>
+                <span class="fw-semibold d-block mb-1 small">Khách hàng</span>
+                <h5 class="card-title mb-1 fw-bold">@ViewBag.TotalCustomers</h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card card-kpi">
+            <div class="card-body text-center">
+                <div class="kpi-icon bg-label-secondary mx-auto"><i class="bx bx-box fs-4"></i></div>
+                <span class="fw-semibold d-block mb-1 small">Sản phẩm</span>
+                <h5 class="card-title mb-1 fw-bold">@ViewBag.TotalProducts</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Orders Table -->
+    <div class="col-md-12 mb-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header d-flex align-items-center justify-content-between bg-transparent border-0">
+                <h5 class="card-title m-0 fw-bold">Đơn hàng mới nhất</h5>
+                <a href="/Admin/Order" class="small fw-bold">Xem tất cả</a>
+            </div>
+            <div class="table-responsive text-nowrap">
+                <table class="table table-hover border-top">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Ngày đặt</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var order in Model)
+                            {
+                                <tr>
+                                    <td><span class="fw-bold">#@order.OrderCode</span></td>
+                                    <td>@(order.Customer?.FullName ?? "Khách lẻ")</td>
+                                    <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td><span class="fw-bold text-primary">@order.TotalAmount.ToString("N0")đ</span></td>
+                                    <td>
+                                        @{
+                                            var statusClass = order.Status switch
+                                            {
+                                                "Completed" => "bg-label-success",
+                                                "Pending" => "bg-label-warning",
+                                                "Cancelled" => "bg-label-danger",
+                                                _ => "bg-label-info"
+                                            };
+                                        }
+                                        <span class="badge @statusClass">@order.Status</span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-4">Chưa có đơn hàng nào.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/assets/vendor/libs/apex-charts/apexcharts.js"></script>
+}

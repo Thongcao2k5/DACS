@@ -305,6 +305,38 @@ namespace MotoShop.Data.Migrations
                     b.ToTable("Customers");
                 });
 
+            modelBuilder.Entity("MotoShop.Data.Models.InventoryTransaction", b =>
+                {
+                    b.Property<int>("TransactionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TransactionId"));
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ProductVariantId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TransactionType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("TransactionId");
+
+                    b.HasIndex("ProductVariantId");
+
+                    b.ToTable("InventoryTransactions");
+                });
+
             modelBuilder.Entity("MotoShop.Data.Models.Order", b =>
                 {
                     b.Property<int>("OrderId")
@@ -448,6 +480,41 @@ namespace MotoShop.Data.Migrations
                     b.ToTable("ProductImages");
                 });
 
+            modelBuilder.Entity("MotoShop.Data.Models.ProductReview", b =>
+                {
+                    b.Property<int>("ReviewId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReviewId"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.HasKey("ReviewId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductReviews");
+                });
+
             modelBuilder.Entity("MotoShop.Data.Models.ProductVariant", b =>
                 {
                     b.Property<int>("ProductVariantId")
@@ -479,6 +546,9 @@ namespace MotoShop.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("StockQuantity")
+                        .HasColumnType("int");
+
                     b.Property<string>("VariantName")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -491,6 +561,40 @@ namespace MotoShop.Data.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("ProductVariants");
+                });
+
+            modelBuilder.Entity("MotoShop.Data.Models.Promotion", b =>
+                {
+                    b.Property<int>("PromotionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PromotionId"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("DiscountPercentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PromotionName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("PromotionId");
+
+                    b.ToTable("Promotions");
                 });
 
             modelBuilder.Entity("MotoShop.Data.Models.Service", b =>
@@ -643,6 +747,17 @@ namespace MotoShop.Data.Migrations
                     b.Navigation("ParentCategory");
                 });
 
+            modelBuilder.Entity("MotoShop.Data.Models.InventoryTransaction", b =>
+                {
+                    b.HasOne("MotoShop.Data.Models.ProductVariant", "ProductVariant")
+                        .WithMany()
+                        .HasForeignKey("ProductVariantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProductVariant");
+                });
+
             modelBuilder.Entity("MotoShop.Data.Models.Order", b =>
                 {
                     b.HasOne("MotoShop.Data.Models.Customer", "Customer")
@@ -687,6 +802,25 @@ namespace MotoShop.Data.Migrations
                     b.HasOne("MotoShop.Data.Models.Product", "Product")
                         .WithMany("Images")
                         .HasForeignKey("ProductId");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("MotoShop.Data.Models.ProductReview", b =>
+                {
+                    b.HasOne("MotoShop.Data.Models.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MotoShop.Data.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
 
                     b.Navigation("Product");
                 });

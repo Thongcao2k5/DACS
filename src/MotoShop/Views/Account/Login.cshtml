@@ -1,4 +1,6 @@
 @using Microsoft.AspNetCore.Identity
+@using MotoShop.Models.ViewModels
+@model LoginViewModel
 @inject SignInManager<IdentityUser> SignInManager
 
 @{
@@ -28,26 +30,28 @@
                 <div asp-validation-summary="All" class="text-danger small mb-3"></div>
 
                 <div class="mb-3">
-                    <label class="form-label fw-bold small">Email *</label>
-                    <input type="email" name="Email" class="form-control rounded-pill px-4 py-2" placeholder="Nhập email của bạn" required>
+                    <label asp-for="Email" class="form-label fw-bold small">Email *</label>
+                    <input asp-for="Email" class="form-control rounded-pill px-4 py-2" placeholder="Nhập email của bạn">
+                    <span asp-validation-for="Email" class="text-danger small"></span>
                 </div>
                 
                 <div class="mb-3">
-                    <label class="form-label fw-bold small">Mật khẩu *</label>
+                    <label asp-for="Password" class="form-label fw-bold small">Mật khẩu *</label>
                     <div class="input-group">
-                        <input type="password" name="Password" id="passwordInput" class="form-control rounded-pill-start px-4 py-2" placeholder="Nhập mật khẩu" required>
+                        <input asp-for="Password" id="passwordInput" class="form-control rounded-pill-start px-4 py-2" placeholder="Nhập mật khẩu">
                         <button class="btn btn-outline-secondary rounded-pill-end px-3" type="button" onclick="togglePasswordVisibility()">
                             <i class='bx bx-hide' id="toggleIcon"></i>
                         </button>
                     </div>
+                    <span asp-validation-for="Password" class="text-danger small"></span>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mb-4 small">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="RememberMe" id="rememberMe">
+                        <input class="form-check-input" asp-for="RememberMe" id="rememberMe">
                         <label class="form-check-label text-muted" for="rememberMe">Ghi nhớ đăng nhập</label>
                     </div>
-                    <a href="#" class="text-danger text-decoration-none fw-bold">Quên mật khẩu?</a>
+                    <a href="/Account/ForgotPassword" class="text-danger text-decoration-none fw-bold">Quên mật khẩu?</a>
                 </div>
 
                 <button type="submit" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold mb-4 shadow-sm">ĐĂNG NHẬP</button>

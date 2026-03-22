@@ -1,0 +1,64 @@
+@model IEnumerable<MotoShop.Data.Models.ServiceBooking>
+@{
+    ViewData["Title"] = "Lịch đặt dịch vụ";
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <style>
+      .status-pending { color: #ffab00; background: #fff8e1; }
+      .status-confirmed { color: #03c3ec; background: #e1faff; }
+      .status-completed { color: #71dd37; background: #e8fad0; }
+      .status-cancelled { color: #ff3e1d; background: #ffe5e5; }
+    </style>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold m-0 text-uppercase">Quản lý Đặt lịch</h4>
+</div>
+
+<div class="card overflow-hidden border-0 shadow-sm">
+    <div class="table-responsive text-nowrap">
+        <table class="table table-hover m-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Mã lịch</th>
+                    <th>Khách hàng</th>
+                    <th>Dịch vụ</th>
+                    <th>Ngày hẹn</th>
+                    <th>Trạng thái</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><span class="fw-bold">#BK-@item.BookingId.ToString("D4")</span></td>
+                        <td>
+                            <div class="fw-bold text-dark">@(item.Customer?.FullName ?? "N/A")</div>
+                            <small class="text-muted">@(item.Customer?.Phone ?? "N/A")</small>
+                        </td>
+                        <td><span class="badge bg-label-secondary">@(item.Service?.ServiceName ?? "N/A")</span></td>
+                        <td>@item.BookingDate.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            @{
+                                var statusClass = item.Status?.ToLower() switch {
+                                    "pending" => "status-pending",
+                                    "confirmed" => "status-confirmed",
+                                    "completed" => "status-completed",
+                                    "cancelled" => "status-cancelled",
+                                    _ => "bg-label-secondary"
+                                };
+                            }
+                            <span class="badge @statusClass">@item.Status</span>
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-icon text-primary" onclick="updateBookingStatus(@item.BookingId, '@item.Status')"><i class="bx bx-edit-alt"></i></button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

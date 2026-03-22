@@ -33,7 +33,16 @@ namespace MotoShop.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var products = await _productRepository.GetAllAsync();
+            var products = await _productRepository.Find(p => true)
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Include(p => p.Images)
+                .Include(p => p.Variants)
+                .ToListAsync();
+
+            ViewBag.Categories = await _categoryRepository.GetAllAsync();
+            ViewBag.Brands = await _brandRepository.GetAllAsync();
+
             return View(products);
         }
 
