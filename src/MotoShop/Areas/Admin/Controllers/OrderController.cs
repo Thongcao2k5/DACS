@@ -17,12 +17,35 @@ namespace MotoShop.Areas.Admin.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? date, int? month, int? year, string? status)
         {
-            var orders = await _context.Orders
+            var query = _context.Orders
                 .Include(o => o.Customer)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(date) && DateTime.TryParse(date, out DateTime parsedDate))
+            {
+                query = query.Where(o => o.OrderDate.Date == parsedDate.Date);
+                ViewBag.FilterDate = date;
+            }
+
+            if (month.HasValue && year.HasValue)
+            {
+                query = query.Where(o => o.OrderDate.Month == month.Value && o.OrderDate.Year == year.Value);
+                ViewBag.FilterMonth = month;
+                ViewBag.FilterYear = year;
+            }
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(o => o.Status == status);
+                ViewBag.FilterStatus = status;
+            }
+
+            var orders = await query
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
+
             return View(orders);
         }
 

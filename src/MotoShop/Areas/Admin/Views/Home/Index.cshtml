@@ -1,3 +1,4 @@
+@using System.Globalization
 @{
     ViewData["Title"] = "Bảng điều khiển";
     Layout = "_AdminLayout";
@@ -24,13 +25,29 @@
         background-color: var(--color-background-secondary);
     }
 
+    a.ms-card {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        transition: all 0.15s ease;
+    }
+
+    a.ms-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border-color: var(--ms-red);
+    }
+
+    a.ms-card:active {
+        transform: translateY(0);
+    }
+
     .ms-card {
         background: var(--color-background-primary);
         border: 0.5px solid var(--color-border-tertiary);
         border-radius: var(--border-radius-lg);
         padding: 1.25rem;
         height: 100%;
-        transition: transform 0.2s;
     }
 
     .ms-metric-card {
@@ -132,65 +149,75 @@
 <div class="ms-dashboard">
     <!-- HÀNG 1 - METRIC CARDS -->
     <div class="row g-3 mb-4">
+        <!-- CARD 1 - Doanh thu hôm nay -->
         <div class="col-xl col-md-4 col-sm-6">
-            <div class="ms-card ms-metric-card">
+            <a asp-controller="Report" asp-action="Revenue" asp-route-filter="today" class="ms-card ms-metric-card">
                 <div class="ms-icon-box" style="background-color: var(--ms-red);">
                     <i class='bx bx-dollar-circle'></i>
                 </div>
                 <div class="ms-metric-info">
                     <p>Doanh thu hôm nay</p>
-                    <h3>12.5M</h3>
-                    <small class="text-success"><i class='bx bx-up-arrow-alt'></i> 15% so hôm qua</small>
+                    <h3>@ViewBag.RevenueToday.ToString("C0", new CultureInfo("vi-VN"))</h3>
+                    @{
+                        var revVsYesterday = (double)ViewBag.RevenueVsYesterday;
+                        var revClass = revVsYesterday >= 0 ? "text-success" : "text-danger";
+                        var revIcon = revVsYesterday >= 0 ? "bx-up-arrow-alt" : "bx-down-arrow-alt";
+                    }
+                    <small class="@revClass"><i class='bx @revIcon'></i> @Math.Abs(revVsYesterday).ToString("F1")% so hôm qua</small>
                 </div>
-            </div>
+            </a>
         </div>
+        <!-- CARD 2 - Đơn hàng hôm nay -->
         <div class="col-xl col-md-4 col-sm-6">
-            <div class="ms-card ms-metric-card">
+            <a asp-controller="Order" asp-action="Index" asp-route-date="@DateTime.Now.ToString("yyyy-MM-dd")" class="ms-card ms-metric-card">
                 <div class="ms-icon-box" style="background-color: var(--ms-blue);">
                     <i class='bx bx-cart'></i>
                 </div>
                 <div class="ms-metric-info">
                     <p>Đơn hàng hôm nay</p>
-                    <h3>42</h3>
-                    <small class="text-muted">35 Hoàn thành / 7 Chờ</small>
+                    <h3>@ViewBag.TotalOrdersToday</h3>
+                    <small class="text-muted">@ViewBag.CompletedOrdersToday Hoàn thành / @ViewBag.PendingOrdersToday Chờ</small>
                 </div>
-            </div>
+            </a>
         </div>
+        <!-- CARD 3 - Khách hàng -->
         <div class="col-xl col-md-4 col-sm-6">
-            <div class="ms-card ms-metric-card">
+            <a asp-controller="Customer" asp-action="Index" class="ms-card ms-metric-card">
                 <div class="ms-icon-box" style="background-color: var(--ms-green);">
                     <i class='bx bx-group'></i>
                 </div>
                 <div class="ms-metric-info">
                     <p>Khách hàng</p>
-                    <h3>1,204</h3>
-                    <small class="text-success">+12 mới hôm nay</small>
+                    <h3>@ViewBag.TotalCustomers.ToString("N0")</h3>
+                    <small class="text-success">+@ViewBag.NewCustomersToday mới hôm nay</small>
                 </div>
-            </div>
+            </a>
         </div>
+        <!-- CARD 4 - Sản phẩm -->
         <div class="col-xl col-md-4 col-sm-6">
-            <div class="ms-card ms-metric-card">
+            <a asp-controller="Product" asp-action="Index" asp-route-status="active" class="ms-card ms-metric-card">
                 <div class="ms-icon-box" style="background-color: var(--ms-orange);">
                     <i class='bx bx-package'></i>
                 </div>
                 <div class="ms-metric-info">
                     <p>Sản phẩm</p>
-                    <h3>856</h3>
+                    <h3>@ViewBag.ActiveProducts.ToString("N0")</h3>
                     <small class="text-muted">Đang bán</small>
                 </div>
-            </div>
+            </a>
         </div>
+        <!-- CARD 5 - Hóa đơn tháng này -->
         <div class="col-xl col-md-4 col-sm-6">
-            <div class="ms-card ms-metric-card">
+            <a asp-controller="Order" asp-action="Index" asp-route-month="@DateTime.Now.Month" asp-route-year="@DateTime.Now.Year" class="ms-card ms-metric-card">
                 <div class="ms-icon-box" style="background-color: var(--ms-purple);">
                     <i class='bx bx-receipt'></i>
                 </div>
                 <div class="ms-metric-info">
                     <p>Hóa đơn tháng này</p>
-                    <h3>320</h3>
-                    <small class="text-muted">280 Xong / 40 Còn lại</small>
+                    <h3>@ViewBag.TotalOrdersMonth</h3>
+                    <small class="text-muted">@ViewBag.CompletedOrdersMonth Xong / @ViewBag.PendingOrdersMonth Còn lại</small>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 

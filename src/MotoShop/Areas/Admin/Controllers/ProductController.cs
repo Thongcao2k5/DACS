@@ -31,14 +31,29 @@ namespace MotoShop.Areas.Admin.Controllers
             _brandRepository = brandRepository;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? status)
         {
-            var products = await _productRepository.Find(p => true)
+            var query = _productRepository.Find(p => true)
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
                 .Include(p => p.Images)
                 .Include(p => p.Variants)
-                .ToListAsync();
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                if (status.ToLower() == "active")
+                {
+                    query = query.Where(p => p.IsActive);
+                }
+                else if (status.ToLower() == "inactive")
+                {
+                    query = query.Where(p => !p.IsActive);
+                }
+                ViewBag.FilterStatus = status;
+            }
+
+            var products = await query.ToListAsync();
 
             ViewBag.Categories = await _categoryRepository.GetAllAsync();
             ViewBag.Brands = await _brandRepository.GetAllAsync();
