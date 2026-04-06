@@ -1,0 +1,216 @@
+@using System.Globalization
+@model IEnumerable<MotoShop.Data.Models.Order>
+@{
+    ViewData["Title"] = "Báo cáo doanh thu";
+    Layout = "_AdminLayout";
+}
+
+<style>
+    :root {
+        --ms-red: #E24B4A;
+        --ms-light-bg: #f8f9fa;
+        --ms-border: #dee2e6;
+    }
+
+    .revenue-container { font-family: 'Inter', sans-serif; background: var(--ms-light-bg); }
+    .card-kpi { background: #fff; border: 1px solid var(--ms-border); border-radius: 12px; padding: 20px; transition: transform 0.2s; }
+    .card-kpi:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+    .kpi-title { color: #666; font-size: 0.85rem; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-value { font-size: 1.6rem; font-weight: 700; color: #333; margin: 0; }
+    .growth-tag { font-size: 0.8rem; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+    .growth-up { background: #e8f5e9; color: #2e7d32; }
+    .growth-down { background: #ffebee; color: #c62828; }
+
+    .filter-section { background: #fff; border: 1px solid var(--ms-border); border-radius: 12px; padding: 15px; margin-bottom: 20px; }
+    .btn-ms-red { background: var(--ms-red); color: white; border: none; font-weight: 600; }
+    .btn-ms-red:hover { background: #c63d3c; color: white; }
+
+    .table-revenue { background: #fff; border-radius: 12px; border: 1px solid var(--ms-border); overflow: hidden; }
+    .table-revenue th { background: #fdfdfd; color: #666; font-size: 0.75rem; text-transform: uppercase; padding: 15px; border-bottom: 2px solid #eee; }
+    .table-revenue td { padding: 15px; vertical-align: middle; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+</style>
+
+<div class="revenue-container p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold m-0"><i class='bx bx-line-chart me-2' style="color: var(--ms-red)"></i>Báo cáo doanh thu</h4>
+        <button class="btn btn-outline-secondary btn-sm"><i class='bx bx-export me-1'></i> Xuất Excel</button>
+    </div>
+
+    <!-- PHẦN TRÊN: KPI CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card-kpi">
+                <p class="kpi-title">Doanh thu hôm nay</p>
+                <p class="kpi-value">@ViewBag.RevenueToday.ToString("C0", new CultureInfo("vi-VN"))</p>
+                <div class="mt-2">
+                    <span class="growth-tag @(ViewBag.GrowthMonth >= 0 ? "growth-up" : "growth-down")">
+                        <i class='bx @(ViewBag.GrowthMonth >= 0 ? "bx-up-arrow-alt" : "bx-down-arrow-alt")'></i>
+                        @(Math.Abs((double)ViewBag.GrowthMonth).ToString("F1"))% tháng này
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-kpi">
+                <p class="kpi-title">Doanh thu tháng này</p>
+                <p class="kpi-value text-primary">@ViewBag.RevenueMonth.ToString("C0", new CultureInfo("vi-VN"))</p>
+                <p class="text-muted small mt-2 m-0">Tháng @DateTime.Now.Month / @DateTime.Now.Year</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-kpi">
+                <p class="kpi-title">Doanh thu năm nay</p>
+                <p class="kpi-value text-success">@ViewBag.RevenueYear.ToString("C0", new CultureInfo("vi-VN"))</p>
+                <p class="text-muted small mt-2 m-0">Năm @DateTime.Now.Year</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- BỘ LỌC -->
+    <div class="filter-section">
+        <form method="get" asp-action="Revenue" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Từ ngày</label>
+                <input type="date" name="fromDate" value="@ViewBag.FromDate" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Đến ngày</label>
+                <input type="date" name="toDate" value="@ViewBag.ToDate" class="form-control">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Tháng</label>
+                <select name="month" class="form-select">
+                    <option value="">-- Tất cả --</option>
+                    @for (int i = 1; i <= 12; i++) {
+                        <option value="@i" selected="@(ViewBag.Month == i)">Tháng @i</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Năm</label>
+                <select name="year" class="form-select">
+                    @for (int i = DateTime.Now.Year; i >= 2024; i--) {
+                        <option value="@i" selected="@(ViewBag.Year == i)">Năm @i</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-ms-red w-100"><i class='bx bx-filter-alt me-1'></i> Lọc dữ liệu</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- BIỂU ĐỒ -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card-kpi">
+                <h6 class="fw-bold mb-4 text-uppercase small">Biến động doanh thu 7 ngày gần nhất</h6>
+                <div style="height: 300px;">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BẢNG CHI TIẾT -->
+    <div class="table-revenue">
+        <table class="table table-hover m-0">
+            <thead>
+                <tr>
+                    <th>MÃ ĐƠN</th>
+                    <th>KHÁCH HÀNG</th>
+                    <th>SẢN PHẨM / DỊCH VỤ</th>
+                    <th>TỔNG TIỀN</th>
+                    <th>NGÀY TẠO</th>
+                    <th>TRẠNG THÁI</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model) {
+                    <tr>
+                        <td class="fw-bold" style="color: var(--ms-red)">#@order.OrderCode</td>
+                        <td>
+                            <div class="fw-bold">@order.Customer?.FullName</div>
+                            <div class="text-muted small">@order.Customer?.Phone</div>
+                        </td>
+                        <td>
+                            <div class="small">
+                                @if(order.OrderItems != null && order.OrderItems.Any()) {
+                                    @string.Join(", ", order.OrderItems.Select(oi => oi.ProductVariant?.VariantName).Take(2))
+                                    @if(order.OrderItems.Count > 2) { <span>... (+@(order.OrderItems.Count - 2))</span> }
+                                } else {
+                                    <span class="text-muted">Không có dữ liệu</span>
+                                }
+                            </div>
+                        </td>
+                        <td class="fw-bold">@order.TotalAmount.ToString("N0")₫</td>
+                        <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            @{
+                                var badgeClass = order.Status switch {
+                                    "Completed" => "bg-success",
+                                    "Pending" => "bg-warning",
+                                    "Processing" => "bg-info",
+                                    "Delivered" => "bg-primary",
+                                    _ => "bg-secondary"
+                                };
+                            }
+                            <span class="badge @badgeClass">@order.Status</span>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any()) {
+                    <tr><td colspan="6" class="text-center py-4 text-muted">Không tìm thấy dữ liệu phù hợp</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    
+    // Gradient fill
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(226, 75, 74, 0.4)');
+    gradient.addColorStop(1, 'rgba(226, 75, 74, 0)');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: @Html.Raw(Json.Serialize(ViewBag.ChartLabels)),
+            datasets: [{
+                label: 'Doanh thu (VNĐ)',
+                data: @Html.Raw(Json.Serialize(ViewBag.ChartValues)),
+                borderColor: '#E24B4A',
+                borderWidth: 3,
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#E24B4A',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { borderDash: [5, 5] },
+                    ticks: {
+                        callback: function(value) {
+                            return (value / 1000000).toFixed(1) + 'M';
+                        }
+                    }
+                },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+</script>

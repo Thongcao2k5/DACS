@@ -110,6 +110,12 @@
                 
                 <!-- KINH DOANH -->
                 <li class="menu-header small text-uppercase"><span class="menu-header-text">Kinh doanh</span></li>
+                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Report" && ViewContext.RouteData.Values["action"]?.ToString() == "Revenue" ? "active" : "")">
+                    <a asp-area="Admin" asp-controller="Report" asp-action="Revenue" class="menu-link">
+                        <i class="menu-icon tf-icons bx bx-line-chart"></i>
+                        <div>Báo cáo doanh thu</div>
+                    </a>
+                </li>
                 <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Order" ? "active" : "")">
                     <a asp-area="Admin" asp-controller="Order" asp-action="Index" class="menu-link">
                         <i class="menu-icon tf-icons bx bx-cart"></i>
