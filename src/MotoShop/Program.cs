@@ -3,9 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
 using MotoShop.Data.Interfaces;
 using MotoShop.Data.Repositories;
-
 using MotoShop.Business.Mappings;
-
 using MotoShop.Business.Interfaces;
 using MotoShop.Business.Services;
 using Serilog;
@@ -46,9 +44,13 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
 // Register Repositories
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Register Services
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IBrandService, BrandService>();
+builder.Services.AddScoped<IMotorbikeModelService, MotorbikeModelService>();
 builder.Services.AddScoped<IFileService, FileService>();
 
 var app = builder.Build();
@@ -61,16 +63,13 @@ using (var scope = app.Services.CreateScope())
     var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     
-    // Đảm bảo database và các bảng được tạo trước khi seed dữ liệu
     await context.Database.MigrateAsync();
     await DbSeeder.SeedAsync(context, userManager, roleManager);
 }
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -90,6 +89,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();

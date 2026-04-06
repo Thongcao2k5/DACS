@@ -1,0 +1,45 @@
+NHẬT KÝ TIẾN ĐỘ DỰ ÁN MOTOSHOP - NGÀY 04/04/2026
+=====================================================
+
+1. CẤU HÌNH KIẾN TRÚC & HẠ TẦNG (ARCHITECTURE)
+- Thiết lập kiến trúc 3 lớp chuẩn .NET 9.0 (Presentation, Business, Data).
+- Cài đặt đầy đủ các gói NuGet: EF Core 9.0, Identity, AutoMapper, Serilog, ImageSharp.
+- Triển khai Design Pattern: Generic Repository kết hợp Unit of Work để quản lý Transaction.
+- Cấu hình AutoMapper cho các DTOs (Product, Category, Brand, MotorbikeModel).
+
+2. CƠ SỞ DỮ LIỆU & MODELS (DATABASE)
+- Map toàn bộ 25+ bảng từ SQL và yêu cầu readme vào MotoShopModels.cs.
+- Bổ sung các bảng mới: MotorbikeModels (dòng xe), Blogs, CustomerAddresses, Notifications, Coupons, ShippingMethods.
+- Thống nhất logic tồn kho (StockQuantity + InventoryTransactions) và Wishlist (theo ProductId).
+- Thực thi Migration và cập nhật thành công Database "MotoShop_Final" trên SQL Server.
+
+3. BẢO MẬT & PHÂN QUYỀN (IDENTITY)
+- Cấu hình Identity với 3 Role: Admin, Staff, Customer.
+- Tạo tài khoản Admin mặc định: admin@motoshop.com / Admin123!
+- Cập nhật AccountController: Tự động gán quyền Customer khi đăng ký, điều hướng người dùng sau khi đăng nhập.
+- Áp dụng Authorize cho các Controller trong phân hệ Admin.
+
+4. PHÁT TRIỂN MODULE & SERVICES
+- Triển khai CRUD Services cho: Category, Brand, MotorbikeModel.
+- Cấu hình lại thư mục Services chuyên nghiệp: Services/[Module]/[ServiceName].cs.
+- Cập nhật InventoryController và View History để tương thích với Schema InventoryTransactions mới.
+
+5. GIAO DIỆN QUẢN TRỊ (ADMIN UI)
+- Cấu hình lại Sidebar Admin theo phân cấp chuyên nghiệp (Kho hàng, Kinh doanh, Nội dung, Hệ thống).
+- Thiết kế trang Dashboard Admin hiện đại:
+  + Sử dụng Chart.js vẽ biểu đồ Doanh thu (Bar) và Doanh thu theo giờ (Line).
+  + 5 thẻ Metric chỉ số (Doanh thu, Đơn hàng, Khách hàng, Sản phẩm, Hóa đơn tháng).
+  + Các Widget: Đơn hàng gấp, Lịch dịch vụ, Top sản phẩm bán chạy, Cảnh báo tồn kho.
+  + Tích hợp hàm xử lý sendPrompt().
+
+TÌNH TRẠNG HIỆN TẠI:
+- Project Build Succeeded (0 error).
+- Database đã sẵn sàng.
+- Khung bảo mật và hạ tầng Service đã hoàn thiện.
+- Giao diện Dashboard (Mock Data) đã hoàn thành.
+
+KẾ HOẠCH TIẾP THEO:
+- Đổ dữ liệu thật từ Database vào Dashboard.
+- Phát triển Module Sản phẩm nâng cao (nhiều biến thể, thuộc tính, hình ảnh).
+- Tích hợp tính năng giỏ hàng và thanh toán.
+=====================================================

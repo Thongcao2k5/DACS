@@ -46,7 +46,7 @@ namespace MotoShop.Areas.Admin.Controllers
             var variant = await _context.ProductVariants.FindAsync(variantId);
             if (variant == null) return Json(new { success = false, message = "Không tìm thấy sản phẩm" });
 
-            // Cập nhật số lượng tồn
+            // Cập nhật số lượng tồn (tính nhanh)
             variant.StockQuantity += quantity;
 
             // Lưu lịch sử giao dịch

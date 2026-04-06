@@ -20,7 +20,7 @@ namespace MotoShop.Data.Repositories
             _dbSet = _context.Set<T>();
         }
 
-        public async Task<T> GetByIdAsync(int id)
+        public async Task<T?> GetByIdAsync(int id)
         {
             return await _dbSet.FindAsync(id);
         }
@@ -50,9 +50,16 @@ namespace MotoShop.Data.Repositories
             _dbSet.Update(entity);
         }
 
-        public void Remove(T entity)
+        public void Delete(T entity)
         {
             _dbSet.Remove(entity);
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            var entity = await _dbSet.FindAsync(id);
+            if (entity != null)
+                _dbSet.Remove(entity);
         }
 
         public void RemoveRange(IEnumerable<T> entities)

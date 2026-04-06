@@ -15,10 +15,13 @@ namespace MotoShop.Data.Data
             // 0. Seed Roles and Admin User (New)
             if (roleManager != null && userManager != null)
             {
-                if (!await roleManager.RoleExistsAsync("Admin"))
+                string[] roles = { "Admin", "Staff", "Customer" };
+                foreach (var role in roles)
                 {
-                    await roleManager.CreateAsync(new IdentityRole("Admin"));
-                    await roleManager.CreateAsync(new IdentityRole("Customer"));
+                    if (!await roleManager.RoleExistsAsync(role))
+                    {
+                        await roleManager.CreateAsync(new IdentityRole(role));
+                    }
                 }
 
                 var adminUser = await userManager.FindByEmailAsync("admin@motoshop.com");

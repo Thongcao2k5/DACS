@@ -72,6 +72,9 @@ namespace MotoShop.Controllers
 
                 if (result.Succeeded)
                 {
+                    // Gán role Customer mặc định
+                    await _userManager.AddToRoleAsync(user, "Customer");
+
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     return RedirectToAction("Index", "Home");
                 }
