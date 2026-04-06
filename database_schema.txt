@@ -1,0 +1,273 @@
+DANH SÁCH CÁC BẢNG DỮ LIỆU (DATABASE SCHEMA) - MOTOSHOP
+
+1. Category (Danh mục sản phẩm)
+   - CategoryId (PK)
+   - CategoryName
+   - Slug
+   - ParentId (FK)
+   - Description
+   - ImageUrl
+
+2. Brand (Thương hiệu)
+   - BrandId (PK)
+   - BrandName
+   - LogoUrl
+   - Description
+
+3. MotorbikeModel (Dòng xe)
+   - ModelId (PK)
+   - ModelName
+   - Manufacturer
+   - ParentId (FK)
+
+4. Product (Sản phẩm)
+   - ProductId (PK)
+   - CategoryId (FK)
+   - BrandId (FK)
+   - ProductName
+   - Slug
+   - Description
+   - IsFeatured
+   - IsActive
+   - CreatedDate
+
+5. Unit (Đơn vị tính)
+   - UnitId (PK)
+   - UnitName
+   - Symbol
+
+6. ProductVariant (Biến thể sản phẩm)
+   - ProductVariantId (PK)
+   - ProductId (FK)
+   - BaseUnitId (FK)
+   - ModelId (FK)
+   - SKU
+   - VariantName
+   - Price
+   - CostPrice
+   - StockQuantity
+   - ImageUrl
+   - CreatedDate
+
+7. ProductImage (Hình ảnh sản phẩm)
+   - ImageId (PK)
+   - ProductId (FK)
+   - ImageUrl
+   - IsPrimary
+   - DisplayOrder
+
+8. Customer (Khách hàng)
+   - CustomerId (PK)
+   - UserId
+   - FullName
+   - Email
+   - Phone
+   - Address
+   - CreatedDate
+
+9. CustomerAddress (Địa chỉ khách hàng)
+   - Id (PK)
+   - CustomerId (FK)
+   - FullName
+   - Phone
+   - Address
+   - IsDefault
+
+10. Order (Đơn hàng)
+    - OrderId (PK)
+    - OrderCode (Computed)
+    - CustomerId (FK)
+    - StoreId (FK)
+    - CreatedByStaffId (FK)
+    - CouponId (FK)
+    - ShippingMethodId (FK)
+    - OrderDate
+    - TotalAmount
+    - Status
+    - ShippingAddress
+    - PaymentStatus
+    - Note
+
+11. OrderItem (Chi tiết đơn hàng)
+    - OrderItemId (PK)
+    - OrderId (FK)
+    - ProductVariantId (FK)
+    - Quantity
+    - Price
+
+12. Service (Dịch vụ)
+    - ServiceId (PK)
+    - ServiceName
+    - Price
+    - Description
+    - ImageUrl
+
+13. ServiceBooking (Đặt lịch dịch vụ)
+    - BookingId (PK)
+    - CustomerId (FK)
+    - ServiceId (FK)
+    - CreatedByStaffId (FK)
+    - AssignedStaffId (FK)
+    - BookingDate
+    - ServiceDate
+    - Status
+    - Notes
+
+14. ProductReview (Đánh giá sản phẩm)
+    - ReviewId (PK)
+    - ProductId (FK)
+    - ProductVariantId (FK)
+    - CustomerId (FK)
+    - Rating
+    - Comment
+    - CreatedDate
+    - IsApproved
+
+15. Promotion (Chương trình khuyến mãi)
+    - PromotionId (PK)
+    - PromotionName
+    - Description
+    - DiscountPercentage
+    - DiscountAmount
+    - StartDate
+    - EndDate
+    - IsActive
+
+16. Store (Cửa hàng)
+    - StoreId (PK)
+    - StoreName
+    - Address
+    - Phone
+
+17. Staff (Nhân viên)
+    - StaffId (PK)
+    - UserId
+    - StoreId (FK)
+    - StaffCode
+    - Position
+    - CreatedDate
+
+18. Banner (Banner quảng cáo)
+    - BannerId (PK)
+    - Title
+    - ImageUrl
+    - LinkUrl
+    - Position
+    - IsActive
+
+19. Slider (Slider trang chủ)
+    - SliderId (PK)
+    - Title
+    - ImageUrl
+    - LinkUrl
+    - Position
+    - IsActive
+
+20. Cart (Giỏ hàng)
+    - CartId (PK)
+    - CustomerId (FK)
+    - CreatedDate
+
+21. CartItem (Chi tiết giỏ hàng)
+    - CartItemId (PK)
+    - CartId (FK)
+    - ProductVariantId (FK)
+    - Quantity
+
+22. Payment (Thanh toán)
+    - PaymentId (PK)
+    - OrderId (FK)
+    - PaymentMethod
+    - PaymentStatus
+    - PaidDate
+
+23. OrderStatusHistory (Lịch sử trạng thái đơn hàng)
+    - HistoryId (PK)
+    - OrderId (FK)
+    - Status
+    - ChangedDate
+
+24. InventoryTransaction (Giao dịch kho)
+    - TransactionId (PK)
+    - ProductVariantId (FK)
+    - Quantity
+    - TransactionType
+    - TransactionDate
+    - Note
+
+25. Wishlist (Danh sách yêu thích)
+    - WishlistId (PK)
+    - CustomerId (FK)
+    - CreatedDate
+
+26. WishlistItem (Sản phẩm yêu thích)
+    - WishlistItemId (PK)
+    - WishlistId (FK)
+    - ProductId (FK)
+    - CreatedDate
+
+27. ProductAttribute (Thuộc tính sản phẩm)
+    - AttributeId (PK)
+    - AttributeName
+
+28. AttributeValue (Giá trị thuộc tính)
+    - ValueId (PK)
+    - AttributeId (FK)
+    - Value
+
+29. StoreSetting (Cấu hình hệ thống)
+    - SettingID (PK)
+    - StoreName
+    - LogoUrl
+    - Phone
+    - Email
+    - Address
+    - Facebook
+    - Zalo
+
+30. BlogCategory (Danh mục tin tức)
+    - Id (PK)
+    - Name
+    - Slug
+
+31. Blog (Bài viết tin tức)
+    - Id (PK)
+    - Title
+    - Slug
+    - Content
+    - Thumbnail
+    - CategoryId (FK)
+    - AuthorId
+    - IsPublished
+    - CreatedDate
+
+32. Notification (Thông báo)
+    - Id (PK)
+    - UserId
+    - Title
+    - Message
+    - IsRead
+    - CreatedDate
+
+33. Coupon (Mã giảm giá)
+    - Id (PK)
+    - Code
+    - DiscountValue
+    - DiscountType
+    - ExpiryDate
+    - IsActive
+
+34. ShippingMethod (Phương thức vận chuyển)
+    - Id (PK)
+    - Name
+    - Cost
+    - EstimatedDays
+
+35. Identity Tables (Bảng định danh người dùng)
+    - AspNetUsers
+    - AspNetRoles
+    - AspNetUserRoles
+    - AspNetUserClaims
+    - AspNetUserLogins
+    - AspNetUserTokens
+    - AspNetRoleClaims
