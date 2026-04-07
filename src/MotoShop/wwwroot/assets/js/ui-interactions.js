@@ -1,11 +1,19 @@
 /**
  * UI Interaction System - MotoShop Admin
+ * Đã tối ưu context và handle lỗi crash
  */
 
 const UI = {
     // 1. Toast Notification
     showToast: function(message, type = 'success') {
-        let container = document.querySelector('.toast-container') || this._createToastContainer();
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'toast-container';
+            container.style = 'position: fixed; top: 20px; right: 20px; z-index: 10000;';
+            document.body.appendChild(container);
+        }
+
         const icons = {
             success: 'bx-check-circle text-success',
             error: 'bx-error-circle text-danger',
@@ -15,100 +23,77 @@ const UI = {
 
         const toast = document.createElement('div');
         toast.className = `custom-toast ${type}`;
+        toast.style = 'background: #fff; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 10px; display: flex; align-items: center; min-width: 250px; transition: all 0.3s ease; border-left: 4px solid #696cff;';
+        if(type === 'error') toast.style.borderLeftColor = '#ff3e1d';
+        
         toast.innerHTML = `
-            <i class="bx ${icons[type]} toast-icon"></i>
-            <div class="toast-message">${message}</div>
+            <i class="bx ${icons[type] || icons.info} me-2 fs-4"></i>
+            <div class="toast-message" style="color: #333; font-weight: 500;">${message}</div>
         `;
         container.appendChild(toast);
 
         setTimeout(() => {
             toast.style.opacity = '0';
-            toast.style.transform = 'translateX(100%)';
+            toast.style.transform = 'translateX(20px)';
             setTimeout(() => toast.remove(), 300);
         }, 4000);
     },
 
-    _createToastContainer: function() {
-        const div = document.createElement('div');
-        div.className = 'toast-container';
-        document.body.appendChild(div);
-        return div;
+    toast: function(message, type = 'success') {
+        UI.showToast(message, type);
     },
 
-    // 2. Modern Modal Xác nhận Xóa
-    confirmDelete: function({ title = 'Xác nhận xóa', message, onConfirm }) {
-        const modalId = 'globalDeleteModal';
-        let modalEl = document.getElementById(modalId);
-        
-        if (!modalEl) {
-            const html = `
-                <div class="modal fade modal-confirm-delete" id="${modalId}" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered modal-sm">
-                        <div class="modal-content border-0">
-                            <div class="modal-header">
-                                <h5 class="modal-title fw-bold">
-                                    <i class="bx bx-trash"></i> ${title}
-                                </h5>
-                            </div>
-                            <div class="modal-body text-dark">
-                                <div id="deleteModalMessage">${message}</div>
-                                <span class="warning-text">Hành động này không thể hoàn tác.</span>
-                            </div>
-                            <div class="modal-footer border-0">
-                                <button type="button" class="btn btn-modern btn-cancel" data-bs-dismiss="modal">Hủy bỏ</button>
-                                <button type="button" class="btn btn-modern btn-danger-modern" id="globalDeleteBtn">
-                                    <span class="btn-text">Đồng ý xóa</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-            document.body.insertAdjacentHTML('beforeend', html);
-            modalEl = document.getElementById(modalId);
-        } else {
-            document.getElementById('deleteModalMessage').innerHTML = message;
-        }
-
-        const modal = new bootstrap.Modal(modalEl);
-        const confirmBtn = document.getElementById('globalDeleteBtn');
-        const cancelBtn = modalEl.querySelector('.btn-cancel');
-        const btnText = confirmBtn.querySelector('.btn-text');
-
-        confirmBtn.disabled = false;
-        cancelBtn.disabled = false;
-        btnText.innerText = 'Đồng ý xóa';
-
-        confirmBtn.onclick = () => {
-            confirmBtn.disabled = true;
-            cancelBtn.disabled = true;
-            btnText.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang xóa...';
-
-            setTimeout(() => {
-                if (onConfirm) onConfirm();
-                modal.hide();
-                this.showToast('Xóa dữ liệu thành công', 'success');
-            }, 1200);
-        };
-
-        modal.show();
-        modalEl.addEventListener('shown.bs.modal', () => { cancelBtn.focus(); }, { once: true });
-    },
-
+    // 2. Global Loader (Sửa lỗi treo)
     showLoader: function() {
-        let loader = document.querySelector('.page-loader') || this._createLoader();
+        let loader = document.getElementById('admin-global-loader');
+        if (!loader) {
+            loader = document.createElement('div');
+            loader.id = 'admin-global-loader';
+            loader.style = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); display:none; justify-content:center; align-items:center; z-index:99999;';
+            loader.innerHTML = '<div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div><div style="margin-left: 15px; font-weight: bold; color: #696cff;">Đang xử lý...</div>';
+            document.body.appendChild(loader);
+        }
         loader.style.display = 'flex';
     },
 
     hideLoader: function() {
-        const loader = document.querySelector('.page-loader');
+        const loader = document.getElementById('admin-global-loader');
         if (loader) loader.style.display = 'none';
+        // Tắt cả các loader cũ nếu có
+        $('.page-loader').hide();
+        $('#adminLoader').addClass('d-none');
     },
 
-    _createLoader: function() {
-        const div = document.createElement('div');
-        div.className = 'page-loader';
-        div.innerHTML = '<div class="spinner-border text-primary" role="status"></div>';
-        document.body.appendChild(div);
-        return div;
+    // 3. Modal Xác nhận
+    confirm: function({ title = 'Xác nhận', message, onConfirm, type = 'primary' }) {
+        const modalId = 'globalConfirmModal';
+        let modalEl = document.getElementById(modalId);
+        if (modalEl) modalEl.remove();
+
+        const isDanger = type === 'danger' || type === 'error';
+        const html = `
+            <div class="modal fade" id="${modalId}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-sm">
+                    <div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title fw-bold">
+                                <i class="bx ${isDanger ? 'bx-trash text-danger' : 'bx-help-circle text-primary'}"></i> ${title}
+                            </h5>
+                        </div>
+                        <div class="modal-body py-3">${message}</div>
+                        <div class="modal-footer border-0 pt-0">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="button" class="btn btn-sm ${isDanger ? 'btn-danger' : 'btn-primary'}" id="globalConfirmBtn">Đồng ý</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        document.body.insertAdjacentHTML('beforeend', html);
+        const modal = new bootstrap.Modal(document.getElementById(modalId));
+        document.getElementById('globalConfirmBtn').onclick = () => {
+            if (onConfirm) onConfirm();
+            modal.hide();
+        };
+        modal.show();
     }
 };

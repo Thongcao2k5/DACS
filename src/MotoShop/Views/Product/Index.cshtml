@@ -3,14 +3,18 @@
 
 @{
     ViewData["Title"] = "Tất cả sản phẩm";
+    var searchTerm = Context.Request.Query["searchTerm"];
+    var categoryId = Context.Request.Query["categoryId"];
+    var brandId = Context.Request.Query["brandId"];
+    var sort = Context.Request.Query["sort"];
 }
 
 <!-- 1. BREADCRUMB -->
-<div class="breadcrumb-wrapper">
+<div class="breadcrumb-wrapper py-3 bg-light border-bottom mb-4">
     <div class="container">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none text-danger">Trang chủ</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Tất cả sản phẩm</li>
             </ol>
         </nav>
@@ -18,140 +22,206 @@
 </div>
 
 <main class="container mb-5">
-    <div class="row">
-        <!-- 2. FILTER SIDEBAR (Desktop) -->
-        <aside class="col-lg-3 d-none d-lg-block">
-            <div class="filter-sidebar">
-                <!-- Category Filter -->
-                <div class="filter-widget">
-                    <h5 class="filter-title">Danh mục</h5>
-                    <ul class="filter-list">
-                        <!-- Sẽ load dynamic sau -->
-                        <li class="filter-item">
-                            <div class="d-flex align-items-center">
-                                <input type="checkbox" id="cat1">
-                                <label for="cat1">Phụ tùng máy</label>
-                            </div>
-                        </li>
-                        <li class="filter-item">
-                            <div class="d-flex align-items-center">
-                                <input type="checkbox" id="cat2">
-                                <label for="cat2">Dàn chân</label>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Brand Filter -->
-                <div class="filter-widget">
-                    <h5 class="filter-title">Thương hiệu</h5>
-                    <ul class="filter-list">
-                        <li class="filter-item">
-                            <div class="d-flex align-items-center">
-                                <input type="checkbox" id="brand1">
-                                <label for="brand1">Honda</label>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Price Filter -->
-                <div class="filter-widget">
-                    <h5 class="filter-title">Khoảng giá (đ)</h5>
-                    <div class="price-range-inputs">
-                        <input type="number" placeholder="Từ">
-                        <span>-</span>
-                        <input type="number" placeholder="Đến">
-                    </div>
-                    <button class="btn btn-danger btn-sm w-100 mt-3 rounded-pill">ÁP DỤNG</button>
-                </div>
-            </div>
-        </aside>
-
-        <!-- 3. MAIN CONTENT -->
-        <div class="col-lg-9">
-            <!-- Mobile Filter Button -->
-            <button class="btn btn-outline-dark mobile-filter-btn d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#mobileFilter">
-                <i class='bx bx-filter-alt'></i> BỘ LỌC
-            </button>
-
-            <!-- Page Title & Sort Bar -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bold mb-0">Tất cả sản phẩm</h3>
-                <p class="text-muted mb-0 d-none d-md-block">Tìm thấy @Model.TotalCount sản phẩm</p>
-            </div>
-
-            <div class="shop-control-bar">
-                <div class="d-flex align-items-center">
-                    <span class="text-muted me-3 small">Sắp xếp:</span>
-                    <select class="sort-select">
-                        <option>Mặc định</option>
-                        <option>Giá tăng dần</option>
-                        <option>Giá giảm dần</option>
-                        <option>Sản phẩm mới</option>
-                        <option>Bán chạy nhất</option>
-                    </select>
-                </div>
-                <div class="d-flex align-items-center">
-                    <span class="text-muted me-3 small d-none d-md-block">Chế độ xem:</span>
-                    <button class="view-mode-btn active" title="Grid View"><i class='bx bxs-grid-alt'></i></button>
-                    <button class="view-mode-btn" title="List View"><i class='bx bx-list-ul'></i></button>
-                </div>
-            </div>
-
-            <!-- Product Grid -->
-            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="productGrid">
-                @foreach (var product in Model)
-                {
-                    <div class="col">
-                        <div class="product-card h-100 d-flex flex-column">
-                            <div class="product-img-wrapper">
-                                <a asp-action="Details" asp-route-slug="@product.Slug">
-                                    <img src="@(string.IsNullOrEmpty(product.PrimaryImageUrl) ? "https://via.placeholder.com/400x400?text=No+Image" : product.PrimaryImageUrl)" 
-                                         alt="@product.ProductName" loading="lazy">
-                                </a>
-                            </div>
-                            <div class="product-info flex-grow-1">
-                                <span class="brand text-uppercase">@product.BrandName</span>
-                                <h6 class="name">
-                                    <a asp-action="Details" asp-route-slug="@product.Slug" class="text-decoration-none text-dark">
-                                        @product.ProductName
-                                    </a>
-                                </h6>
-                                <div class="product-price">
-                                    <span class="current text-danger fw-bold">@product.MinPrice.ToString("N0")đ</span>
-                                </div>
-                            </div>
-                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3">
-                                <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
+    <form id="filterForm" method="get" asp-action="Index">
+        <div class="row">
+            <!-- 2. FILTER SIDEBAR (Desktop) -->
+            <aside class="col-lg-3">
+                <div class="filter-sidebar card border-0 shadow-sm p-4 rounded-4 sticky-top" style="top: 20px;">
+                    <h4 class="fw-bold mb-4">BỘ LỌC</h4>
+                    
+                    <!-- Search Widget -->
+                    <div class="filter-widget mb-4">
+                        <h6 class="filter-title fw-bold mb-3">Tìm kiếm</h6>
+                        <div class="input-group">
+                            <input type="text" name="searchTerm" class="form-control rounded-start-pill border-end-0" placeholder="Tên sản phẩm..." value="@searchTerm">
+                            <button class="btn btn-outline-secondary border-start-0 rounded-end-pill" type="submit">
+                                <i class='bx bx-search'></i>
                             </button>
                         </div>
                     </div>
-                }
-            </div>
 
-            <!-- 4. PAGINATION -->
-            @if (Model.TotalPages > 1)
-            {
-                <nav class="pagination-wrapper mt-5">
-                    <ul class="pagination justify-content-center">
-                        <li class="page-item @(!Model.HasPrevious ? "disabled" : "")">
-                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)"><i class='bx bx-chevron-left'></i></a>
-                        </li>
-                        
-                        @for (int i = 1; i <= Model.TotalPages; i++)
+                    <!-- Category Filter -->
+                    <div class="filter-widget mb-4">
+                        <h6 class="filter-title fw-bold mb-3">Danh mục</h6>
+                        <select name="categoryId" class="form-select rounded-3 border-secondary-subtle py-2 shadow-none filter-select" asp-items="ViewBag.CategoryList">
+                            <option value="">-- Tất cả danh mục --</option>
+                        </select>
+                    </div>
+
+                    <!-- Brand Filter -->
+                    <div class="filter-widget mb-4">
+                        <h6 class="filter-title fw-bold mb-3">Thương hiệu</h6>
+                        <select name="brandId" class="form-select rounded-3 border-secondary-subtle py-2 shadow-none filter-select" asp-items="ViewBag.BrandList">
+                            <option value="">-- Tất cả thương hiệu --</option>
+                        </select>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" id="applyBtn" class="btn btn-danger rounded-pill py-2 fw-bold">ÁP DỤNG BỘ LỌC</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill py-2 small">XÓA TẤT CẢ</a>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 3. MAIN CONTENT -->
+            <div class="col-lg-9 mt-4 mt-lg-0">
+                <!-- Page Title & Sort Bar -->
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+                    <div>
+                        <h3 class="fw-bold mb-1 text-uppercase">Danh sách sản phẩm</h3>
+                        <p class="text-muted mb-0 small">Hiển thị @Model.Count trên tổng số @Model.TotalCount sản phẩm</p>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted small flex-shrink-0">Sắp xếp:</span>
+                        <select name="sort" class="form-select rounded-pill border-secondary-subtle py-2 shadow-none small px-3 filter-select" style="min-width: 180px;" asp-items="ViewBag.SortList">
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Product Grid Wrapper with Loading Overlay -->
+                <div class="position-relative" id="gridWrapper">
+                    <div id="loadingOverlay" class="position-absolute top-0 start-0 w-100 h-100 bg-white opacity-50 d-none justify-content-center align-items-start pt-5" style="z-index: 10;">
+                        <div class="spinner-border text-danger" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+
+                    @if (Model.Any())
+                    {
+                        <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-4" id="productGrid">
+                            @foreach (var product in Model)
+                            {
+                                <div class="col">
+                                    <div class="product-card h-100 d-flex flex-column border rounded-4 overflow-hidden shadow-sm hover-shadow transition">
+                                        <div class="product-img-wrapper position-relative overflow-hidden" style="aspect-ratio: 1/1;">
+                                            <a asp-action="Details" asp-route-slug="@product.Slug" class="d-block h-100">
+                                                <img src="@(string.IsNullOrEmpty(product.PrimaryImageUrl) ? "https://via.placeholder.com/400x400?text=No+Image" : product.PrimaryImageUrl)" 
+                                                     alt="@product.ProductName" class="w-100 h-100 object-fit-cover transition-scale" loading="lazy">
+                                            </a>
+                                            @if (product.MinPrice == 0)
+                                            {
+                                                <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2 rounded-pill">Liên hệ</span>
+                                            }
+                                        </div>
+                                        <div class="product-info p-3 flex-grow-1 d-flex flex-column">
+                                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                                <span class="brand text-uppercase text-danger fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">@product.BrandName</span>
+                                            </div>
+                                            <h6 class="name mb-2 line-clamp-2" style="font-size: 0.95rem; line-height: 1.4; height: 2.8em;">
+                                                <a asp-action="Details" asp-route-slug="@product.Slug" class="text-decoration-none text-dark hover-danger fw-semibold">
+                                                    @product.ProductName
+                                                </a>
+                                            </h6>
+                                            <div class="product-price mt-auto">
+                                                @if (product.MinPrice > 0)
+                                                {
+                                                    <span class="current text-danger fw-bolder fs-5">@product.MinPrice.ToString("N0")đ</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="current text-muted fw-bold">Liên hệ giá</span>
+                                                }
+                                            </div>
+                                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill fw-bold mt-3 transition-bg">
+                                                <i class='bx bx-cart-add fs-5 me-1'></i> THÊM GIỎ
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- 4. PAGINATION -->
+                        @if (Model.TotalPages > 1)
                         {
-                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
-                                <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
-                            </li>
-                        }
+                            <nav class="pagination-wrapper mt-5">
+                                <ul class="pagination justify-content-center gap-2">
+                                    <li class="page-item @(!Model.HasPrevious ? "disabled" : "")">
+                                        <a class="page-link rounded-circle border-0 shadow-sm" asp-action="Index" 
+                                           asp-route-page="@(Model.CurrentPage - 1)" 
+                                           asp-route-searchTerm="@searchTerm" 
+                                           asp-route-categoryId="@categoryId" 
+                                           asp-route-brandId="@brandId" 
+                                           asp-route-sort="@sort">
+                                            <i class='bx bx-chevron-left'></i>
+                                        </a>
+                                    </li>
+                                    
+                                    @for (int i = 1; i <= Model.TotalPages; i++)
+                                    {
+                                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                            <a class="page-link rounded-circle border-0 shadow-sm" asp-action="Index" 
+                                               asp-route-page="@i" 
+                                               asp-route-searchTerm="@searchTerm" 
+                                               asp-route-categoryId="@categoryId" 
+                                               asp-route-brandId="@brandId" 
+                                               asp-route-sort="@sort">@i</a>
+                                        </li>
+                                    }
 
-                        <li class="page-item @(!Model.HasNext ? "disabled" : "")">
-                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)"><i class='bx bx-chevron-right'></i></a>
-                        </li>
-                    </ul>
-                </nav>
-            }
+                                    <li class="page-item @(!Model.HasNext ? "disabled" : "")">
+                                        <a class="page-link rounded-circle border-0 shadow-sm" asp-action="Index" 
+                                           asp-route-page="@(Model.CurrentPage + 1)" 
+                                           asp-route-searchTerm="@searchTerm" 
+                                           asp-route-categoryId="@categoryId" 
+                                           asp-route-brandId="@brandId" 
+                                           asp-route-sort="@sort">
+                                            <i class='bx bx-chevron-right'></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 bg-white rounded-4 shadow-sm">
+                            <i class='bx bx-search-alt fs-1 text-muted mb-3 d-block'></i>
+                            <h5 class="fw-bold">Rất tiếc, không tìm thấy sản phẩm nào!</h5>
+                            <p class="text-muted mb-4">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm khác.</p>
+                            <a asp-action="Index" class="btn btn-danger rounded-pill px-4">XEM TẤT CẢ SẢN PHẨM</a>
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
-    </div>
+    </form>
 </main>
+
+<style>
+    .hover-shadow:hover { box-shadow: 0 .5rem 1.5rem rgba(0,0,0,.1)!important; }
+    .transition { transition: all 0.3s ease; }
+    .transition-scale { transition: transform 0.5s ease; }
+    .product-img-wrapper:hover .transition-scale { transform: scale(1.1); }
+    .hover-danger:hover { color: #dc3545!important; }
+    .transition-bg:hover { background-color: #dc3545!important; color: white!important; }
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .page-link { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: #333; }
+    .page-item.active .page-link { background-color: #dc3545; color: white; }
+    .filter-widget select { font-size: 0.9rem; cursor: pointer; }
+    .filter-sidebar { background: #fff; z-index: 100; }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Auto-submit form when a select dropdown changes
+            $('.filter-select').on('change', function () {
+                $('#filterForm').submit();
+            });
+
+            // Handle form submission: show loading and disable button
+            $('#filterForm').on('submit', function() {
+                $('#loadingOverlay').removeClass('d-none').addClass('d-flex');
+                $('#applyBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> ĐANG LỌC...');
+            });
+        });
+    </script>
+}

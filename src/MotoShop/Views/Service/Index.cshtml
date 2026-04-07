@@ -1,3 +1,6 @@
+@using MotoShop.Business.Helpers
+@model PagedList<MotoShop.Data.Models.Service>
+
 @{
     ViewData["Title"] = "Dịch vụ sửa chữa & Bảo dưỡng";
 }
@@ -25,105 +28,80 @@
 </header>
 
 <main class="container mb-5">
-    <!-- 3. SERVICE CATEGORIES -->
-    <div class="service-cat-tabs">
-        <button class="service-cat-btn active">Tất cả dịch vụ</button>
-        <button class="service-cat-btn">Bảo dưỡng xe</button>
-        <button class="service-cat-btn">Vệ sinh chuyên sâu</button>
-        <button class="service-cat-btn">Sửa chữa nhanh</button>
-        <button class="service-cat-btn">Nâng cấp hiệu suất</button>
+    <!-- Search Bar -->
+    <div class="row mb-4 justify-content-center">
+        <div class="col-md-6">
+            <form asp-action="Index" method="get" class="input-group">
+                <input type="text" name="searchTerm" class="form-control rounded-start-pill ps-4" placeholder="Tìm kiếm dịch vụ..." value="@Context.Request.Query["searchTerm"]">
+                <button class="btn btn-danger rounded-end-pill px-4" type="submit">
+                    <i class='bx bx-search'></i>
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- 4. SERVICE LIST -->
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="serviceList">
-        <!-- Service 1 -->
-        <div class="col">
-            <div class="service-card">
-                <div class="service-img-box">
-                    <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=600" alt="Service">
-                    <button class="service-quick-detail" title="Xem chi tiết" data-bs-toggle="modal" data-bs-target="#serviceDetailModal">
-                        <i class='bx bx-search-alt'></i>
-                    </button>
-                </div>
-                <div class="service-info">
-                    <h5 class="service-name">Vệ sinh kim phun xăng điện tử Fi</h5>
-                    <p class="service-desc">Làm sạch kim phun bằng thiết bị sóng siêu âm chuyên dụng, giúp xe chạy êm, bốc hơn và tiết kiệm xăng rõ rệt.</p>
-                    <div class="service-price-row">
-                        <span class="service-price-current">150.000đ</span>
-                        <span class="service-price-old">200.000đ</span>
+        @if (Model.Any())
+        {
+            @foreach (var service in Model)
+            {
+                <div class="col">
+                    <div class="service-card h-100 d-flex flex-column">
+                        <div class="service-img-box">
+                            <img src="@(string.IsNullOrEmpty(service.ImageUrl) ? "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=600" : service.ImageUrl)" alt="@service.ServiceName">
+                            <a asp-action="Details" asp-route-id="@service.ServiceId" class="service-quick-detail" title="Xem chi tiết">
+                                <i class='bx bx-search-alt'></i>
+                            </a>
+                        </div>
+                        <div class="service-info flex-grow-1 d-flex flex-column">
+                            <h5 class="service-name">@service.ServiceName</h5>
+                            <p class="service-desc">@(service.Description?.Length > 100 ? service.Description.Substring(0, 100) + "..." : service.Description)</p>
+                            <div class="service-price-row mt-auto">
+                                <span class="service-price-current">@service.Price.ToString("N0")đ</span>
+                            </div>
+                            <div class="service-actions mt-3">
+                                <a asp-controller="Service" asp-action="Booking" asp-route-serviceId="@service.ServiceId" class="btn btn-danger w-100 rounded-pill fw-bold">ĐẶT LỊCH NGAY</a>
+                            </div>
+                        </div>
                     </div>
-                    <div class="service-actions">
-                        <a asp-controller="Service" asp-action="Booking" class="btn btn-danger w-100 rounded-pill fw-bold">ĐẶT LỊCH NGAY</a>
-                    </div>
                 </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5">
+                <i class='bx bx-info-circle fs-1 text-muted mb-3'></i>
+                <p class="text-muted">Không tìm thấy dịch vụ nào phù hợp.</p>
+                <a asp-action="Index" class="btn btn-outline-danger rounded-pill">Xem tất cả dịch vụ</a>
             </div>
-        </div>
-
-        <!-- Service 2 -->
-        <div class="col">
-            <div class="service-card">
-                <div class="service-img-box">
-                    <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=600" alt="Service">
-                    <button class="service-quick-detail" title="Xem chi tiết" data-bs-toggle="modal" data-bs-target="#serviceDetailModal">
-                        <i class='bx bx-search-alt'></i>
-                    </button>
-                </div>
-                <div class="service-info">
-                    <h5 class="service-name">Bảo dưỡng xe tay ga 10 bước tiêu chuẩn</h5>
-                    <p class="service-desc">Gói bảo dưỡng toàn diện từ bộ nồi, phanh, lọc gió đến thay nhớt máy, nhớt số... Đảm bảo xe như mới sau dịch vụ.</p>
-                    <div class="service-price-row">
-                        <span class="service-price-current">350.000đ</span>
-                    </div>
-                    <div class="service-actions">
-                        <a asp-controller="Service" asp-action="Booking" class="btn btn-danger w-100 rounded-pill fw-bold">ĐẶT LỊCH NGAY</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        }
     </div>
 
     <!-- 5. PAGINATION -->
-    <nav class="pagination-wrapper mt-5">
-        <ul class="pagination">
-            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">2</a></li>
-            <li class="page-item"><a class="page-link" href="#"><i class='bx bx-chevron-right'></i></a></li>
-        </ul>
-    </nav>
-</main>
+    @if (Model.TotalPages > 1)
+    {
+        <nav class="pagination-wrapper mt-5">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(!Model.HasPrevious ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)" asp-route-searchTerm="@Context.Request.Query["searchTerm"]">
+                        <i class='bx bx-chevron-left'></i>
+                    </a>
+                </li>
+                
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-searchTerm="@Context.Request.Query["searchTerm"]">@i</a>
+                    </li>
+                }
 
-@section Scripts {
-    <!-- QUICK DETAIL MODAL -->
-    <div class="modal fade" id="serviceDetailModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">CHI TIẾT DỊCH VỤ</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="row g-4">
-                        <div class="col-md-5">
-                            <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=600" class="img-fluid rounded-4" alt="Service">
-                        </div>
-                        <div class="col-md-7">
-                            <h4 class="fw-bold mb-3">Vệ sinh kim phun Fi chuyên sâu</h4>
-                            <p class="text-muted">Dịch vụ giúp tối ưu hóa hệ thống phun xăng điện tử, đảm bảo lượng xăng phun tơi và đều, giúp quá trình cháy hoàn hảo nhất.</p>
-                            
-                            <div class="bg-light p-3 rounded-3 mb-3">
-                                <ul class="list-unstyled mb-0 small">
-                                    <li class="mb-2"><strong><i class='bx bx-time-five me-2'></i>Thời gian:</strong> Khoảng 45 - 60 phút</li>
-                                    <li class="mb-2"><strong><i class='bx bx-check-circle me-2'></i>Áp dụng:</strong> Các dòng xe Fi (phun xăng điện tử)</li>
-                                    <li><strong><i class='bx bx-info-circle me-2'></i>Lưu ý:</strong> Nên làm mỗi 10.000km một lần.</li>
-                                </ul>
-                            </div>
-                            
-                            <h3 class="text-danger fw-bold mb-4">150.000đ</h3>
-                            <a asp-controller="Service" asp-action="Booking" class="btn btn-danger w-100 rounded-pill fw-bold py-3">ĐẶT LỊCH NGAY</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-}
+                <li class="page-item @(!Model.HasNext ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)" asp-route-searchTerm="@Context.Request.Query["searchTerm"]">
+                        <i class='bx bx-chevron-right'></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+</main>

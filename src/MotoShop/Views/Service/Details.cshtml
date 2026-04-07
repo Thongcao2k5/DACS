@@ -1,0 +1,116 @@
+@model MotoShop.Data.Models.Service
+
+@{
+    ViewData["Title"] = Model.ServiceName;
+}
+
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Service" asp-action="Index">Dịch vụ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.ServiceName</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<main class="container mb-5">
+    <!-- 2. SERVICE DETAIL LAYOUT -->
+    <div class="row g-5">
+        <!-- LEFT - SERVICE IMAGE -->
+        <div class="col-lg-6">
+            <div class="service-gallery">
+                <div class="main-img-wrapper mb-3" style="aspect-ratio: 16/9;">
+                    <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800" : Model.ImageUrl)" 
+                         class="w-100 h-100 object-fit-cover rounded-4 shadow-sm" alt="@Model.ServiceName">
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT - SERVICE INFORMATION -->
+        <div class="col-lg-6">
+            <div class="service-detail-info">
+                <h1 class="fw-bold mb-3">@Model.ServiceName</h1>
+                <div class="mb-4">
+                    <p class="text-muted fs-5">@Model.Description</p>
+                </div>
+                
+                <div class="service-meta-info mb-4">
+                    <div class="meta-item d-flex align-items-center mb-2">
+                        <i class='bx bx-time-five me-2 text-danger fs-4'></i>
+                        <span class="text-uppercase fw-semibold">Thời gian: 30-60 phút (tùy tình trạng xe)</span>
+                    </div>
+                    <div class="meta-item d-flex align-items-center mb-2">
+                        <i class='bx bx-check-shield me-2 text-success fs-4'></i>
+                        <span class="text-uppercase fw-semibold">Bảo hành vận hành sau dịch vụ</span>
+                    </div>
+                    <div class="meta-item d-flex align-items-center mb-2">
+                        <i class='bx bx-user-voice me-2 text-info fs-4'></i>
+                        <span class="text-uppercase fw-semibold">Tư vấn kỹ thuật miễn phí</span>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-3 mb-5">
+                    <h2 class="text-danger fw-bold mb-0 display-6">@Model.Price.ToString("N0")đ</h2>
+                </div>
+
+                <div class="d-flex gap-3">
+                    <a asp-controller="Service" asp-action="Booking" asp-route-serviceId="@Model.ServiceId" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold flex-grow-1 py-3 shadow-sm">
+                        ĐẶT LỊCH DỊCH VỤ NGAY
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. SERVICE PROCESS (Static for now, can be expanded) -->
+    <div class="row mt-5 pt-5">
+        <div class="col-lg-8">
+            <div class="card border-0 bg-light rounded-4 p-4 p-md-5">
+                <h4 class="fw-bold mb-4 text-uppercase border-bottom pb-3">Quy trình thực hiện chuyên nghiệp</h4>
+                <div class="service-process-list">
+                    <div class="process-step mb-4 d-flex gap-4">
+                        <div class="process-step-number bg-danger text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; font-weight: bold;">1</div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Kiểm tra & Tư vấn</h6>
+                            <p class="text-muted mb-0 small">Kỹ thuật viên kiểm tra tình trạng thực tế của xe và tư vấn giải pháp tối ưu nhất cho khách hàng.</p>
+                        </div>
+                    </div>
+                    <div class="process-step mb-4 d-flex gap-4">
+                        <div class="process-step-number bg-danger text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; font-weight: bold;">2</div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Thực hiện dịch vụ</h6>
+                            <p class="text-muted mb-0 small">Tiến hành các bước kỹ thuật chuyên sâu bằng thiết bị hiện đại và phụ tùng chính hãng.</p>
+                        </div>
+                    </div>
+                    <div class="process-step mb-4 d-flex gap-4">
+                        <div class="process-step-number bg-danger text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; font-weight: bold;">3</div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Kiểm tra vận hành</h6>
+                            <p class="text-muted mb-0 small">Sau khi hoàn tất, xe được nổ máy và chạy thử để đảm bảo mọi thông số đều ổn định.</p>
+                        </div>
+                    </div>
+                    <div class="process-step d-flex gap-4">
+                        <div class="process-step-number bg-danger text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; font-weight: bold;">4</div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Bàn giao & Bảo hành</h6>
+                            <p class="text-muted mb-0 small">Bàn giao xe kèm phiếu bảo hành dịch vụ và hướng dẫn khách hàng cách bảo quản xe tốt hơn.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="service-note-box bg-dark text-white p-4 rounded-4 shadow-sm h-100">
+                <h6 class="fw-bold mb-3"><i class='bx bx-info-circle me-2'></i> LƯU Ý KỸ THUẬT</h6>
+                <p class="small opacity-75 mb-4">Để đảm bảo xe luôn trong trạng thái vận hành tốt nhất, quý khách nên thực hiện kiểm tra định kỳ theo khuyến cáo của nhà sản xuất.</p>
+                <div class="d-grid">
+                    <a asp-action="Index" class="btn btn-outline-light rounded-pill btn-sm fw-bold">XEM CÁC DỊCH VỤ KHÁC</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>

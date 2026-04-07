@@ -1,107 +1,353 @@
 @model MotoShop.Data.Models.Product
 
 @{
-    ViewData["Title"] = "Chỉnh sửa sản phẩm";
-    Layout = "_Layout";
+    ViewData["Title"] = "Chỉnh sửa sản phẩm: " + Model.ProductName;
+    Layout = "_AdminLayout";
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
-    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Sản phẩm /</span> Chỉnh sửa</h4>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0"><span class="text-muted fw-light">Sản phẩm /</span> Chỉnh sửa</h4>
+            <small class="text-muted">ID: #@Model.ProductId | Ngày tạo: @Model.CreatedDate.ToString("dd/MM/yyyy")</small>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Quay lại</a>
+            <button type="button" onclick="submitProductForm()" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">
+                LƯU THAY ĐỔI
+            </button>
+        </div>
+    </div>
 
-    <div class="row">
-        <div class="col-xl">
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Hình ảnh sản phẩm (Kéo thả để sắp xếp)</h5>
-                </div>
-                <div class="card-body">
-                    <div id="sortable-images" class="d-flex flex-wrap gap-3">
-                        @foreach (var img in Model.Images.OrderBy(i => i.DisplayOrder))
-                        {
-                            <div class="image-item" data-id="@img.ImageId" style="position: relative; cursor: move;">
-                                <img src="@img.ImageUrl" class="img-thumbnail" style="width: 150px; height: 150px; object-fit: cover;" />
-                                @if (img.IsPrimary)
-                                {
-                                    <span class="badge bg-primary position-absolute top-0 start-0">Chính</span>
-                                }
-                                <div class="order-number position-absolute bottom-0 end-0 bg-dark text-white px-1" style="font-size: 0.8rem; opacity: 0.7;">
-                                    #@img.DisplayOrder
-                                </div>
-                            </div>
-                        }
+    <form id="editProductForm" asp-action="Edit" method="post" enctype="multipart/form-data" onsubmit="event.preventDefault(); submitProductForm();">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ProductId" />
+        
+        <div class="row">
+            <!-- Cột trái: Thông tin chính -->
+            <div class="col-lg-8">
+                <!-- 1. Thông tin chung -->
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0 fw-bold text-primary">Thông tin chung</h5>
                     </div>
-                    <div class="mt-4">
-                        <p class="text-muted small">* Ảnh ở vị trí đầu tiên sẽ tự động được chọn làm ảnh chính.</p>
-                        <button id="saveOrderBtn" class="btn btn-success d-none">Lưu thứ tự</button>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Tên sản phẩm *</label>
+                            <input type="text" asp-for="ProductName" class="form-control custom-input" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small text-muted">Danh mục</label>
+                                <select asp-for="CategoryId" class="form-select custom-input" asp-items="@(new SelectList(ViewBag.Categories, "CategoryId", "CategoryName"))">
+                                    <option value="">-- Chọn danh mục --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small text-muted">Thương hiệu</label>
+                                <select asp-for="BrandId" class="form-select custom-input" asp-items="@(new SelectList(ViewBag.Brands, "BrandId", "BrandName"))">
+                                    <option value="">-- Chọn thương hiệu --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label fw-bold small text-muted">Mô tả sản phẩm</label>
+                            <textarea asp-for="Description" class="form-control custom-input" rows="5" placeholder="Mô tả chi tiết sản phẩm..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Quản lý Biến thể -->
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold text-primary">Biến thể & Giá bán</h5>
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" onclick="addVariantRow()">
+                            <i class="bx bx-plus me-1"></i> Thêm biến thể
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="variantTable">
+                                <thead class="table-light">
+                                    <tr class="small text-uppercase">
+                                        <th class="ps-4">Tên biến thể</th>
+                                        <th>Giá bán (VNĐ)</th>
+                                        <th>SKU</th>
+                                        <th>Tồn kho</th>
+                                        <th class="text-center" style="width: 50px"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < Model.Variants.Count; i++)
+                                    {
+                                        var variant = Model.Variants.ElementAt(i);
+                                        <tr class="variant-row">
+                                            <input type="hidden" name="Variants[@i].ProductVariantId" value="@variant.ProductVariantId" />
+                                            <td class="ps-4">
+                                                <input type="text" name="Variants[@i].VariantName" value="@variant.VariantName" class="form-control form-control-sm border-0 bg-transparent fw-bold" required />
+                                            </td>
+                                            <td>
+                                                <input type="number" name="Variants[@i].Price" value="@((int)variant.Price)" class="form-control form-control-sm border-0 bg-transparent" required />
+                                            </td>
+                                            <td>
+                                                <input type="text" name="Variants[@i].SKU" value="@variant.SKU" class="form-control form-control-sm border-0 bg-transparent" />
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="badge @(variant.StockQuantity > 10 ? "bg-label-success" : "bg-label-danger") me-2">@variant.StockQuantity</span>
+                                                    <input type="number" name="Variants[@i].StockQuantity" value="@variant.StockQuantity" class="form-control form-control-sm border-0 bg-transparent" style="width: 60px" />
+                                                </div>
+                                            </td>
+                                            <td class="text-center pe-4">
+                                                <button type="button" class="btn btn-sm btn-icon text-danger" onclick="removeVariantRow(this, @variant.ProductVariantId)">
+                                                    <i class="bx bx-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                    @if (!Model.Variants.Any())
+                                    {
+                                        <tr id="noVariantRow">
+                                            <td colspan="5" class="text-center py-4 text-muted small italic">Sản phẩm này chưa có biến thể. Vui lòng thêm ít nhất một biến thể để bán hàng.</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột phải: Hình ảnh & Trạng thái -->
+            <div class="col-lg-4">
+                <!-- 3. Trạng thái & Phân loại -->
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0 fw-bold text-primary">Cấu hình hiển thị</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" asp-for="IsActive" checked="@Model.IsActive">
+                            <label class="form-check-label fw-bold">Đang hoạt động (Hiển thị trên web)</label>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" asp-for="IsFeatured" checked="@Model.IsFeatured">
+                            <label class="form-check-label fw-bold text-warning"><i class="bx bxs-star me-1"></i> Sản phẩm nổi bật</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Quản lý Hình ảnh -->
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold text-primary">Hình ảnh</h5>
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" onclick="document.getElementById('newImages').click()">
+                            <i class="bx bx-upload me-1"></i> Thêm ảnh
+                        </button>
+                        <input type="file" id="newImages" name="NewImages" multiple class="d-none" accept="image/*" onchange="previewNewImages(this)">
+                    </div>
+                    <div class="card-body">
+                        <div id="sortable-images" class="d-flex flex-wrap gap-2">
+                            @foreach (var img in Model.Images.OrderBy(i => i.DisplayOrder))
+                            {
+                                <div class="image-item" data-id="@img.ImageId" style="position: relative; cursor: move; width: calc(50% - 5px);">
+                                    <img src="@img.ImageUrl" class="img-thumbnail rounded-3" style="width: 100%; aspect-ratio: 1; object-fit: cover;" />
+                                    @if (img.IsPrimary)
+                                    {
+                                        <span class="badge bg-primary position-absolute top-0 start-0 m-1" style="font-size: 8px;">CHÍNH</span>
+                                    }
+                                    <button type="button" class="btn btn-xs btn-danger position-absolute top-0 end-0 m-1 p-0 rounded-circle" style="width:18px; height:18px;" onclick="removeImage(@img.ImageId, this)">
+                                        <i class="bx bx-x" style="font-size: 12px;"></i>
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                        <div id="newImagesPreview" class="d-flex flex-wrap gap-2 mt-2"></div>
+                        <small class="text-muted d-block mt-3">* Kéo thả để thay đổi thứ tự. Ảnh đầu tiên là ảnh chính.</small>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
 
+<style>
+    .page-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); display: none; justify-content: center; align-items: center; z-index: 9999; }
+    .custom-input { border-radius: 12px !important; border: 1px solid #e0e0e0; padding: 12px 16px; transition: 0.3s; background-color: #fcfcfc; }
+    .custom-input:focus { border-color: #696cff; background-color: #fff; box-shadow: 0 0 0 0.25rem rgba(105, 108, 255, 0.1); }
+    .image-item { transition: 0.3s; }
+    .image-item:hover { transform: scale(1.02); }
+    .variant-row:hover { background-color: #f8f9ff !important; }
+    .variant-row input:focus { background-color: #fff !important; border: 1px solid #d9dee3 !important; box-shadow: none; border-radius: 4px; }
+</style>
+
 @section Scripts {
-    <!-- Thêm thư viện SortableJS -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    
     <script>
-        const el = document.getElementById('sortable-images');
-        const sortable = new Sortable(el, {
-            animation: 150,
-            ghostClass: 'bg-light',
-            onEnd: function (evt) {
-                updateOrders();
-            }
-        });
+        let variantIndex = @Model.Variants.Count;
+        const deletedVariantIds = [];
+        const deletedImageIds = [];
 
-        function updateOrders() {
-            const items = document.querySelectorAll('.image-item');
-            const newOrder = [];
-            
-            items.forEach((item, index) => {
-                const order = index + 1;
-                const imageId = item.getAttribute('data-id');
-                newOrder.push({ imageId: parseInt(imageId), order: order });
-                
-                // Cập nhật số hiển thị tạm thời trên giao diện
-                item.querySelector('.order-number').innerText = '#' + order;
-                
-                // Cập nhật badge 'Chính' tạm thời
-                const badge = item.querySelector('.badge');
-                if (order === 1) {
-                    if (!badge) {
-                        const newBadge = document.createElement('span');
-                        newBadge.classList.add('badge', 'bg-primary', 'position-absolute', 'top-0', 'start-0');
-                        newBadge.innerText = 'Chính';
-                        item.appendChild(newBadge);
-                    }
-                } else {
-                    if (badge) badge.remove();
-                }
-            });
+        function addVariantRow() {
+            const tbody = document.querySelector('#variantTable tbody');
+            const noRow = document.getElementById('noVariantRow');
+            if (noRow) noRow.remove();
 
-            // Gửi AJAX lưu thứ tự mới
-            saveNewOrder(newOrder);
+            const tr = document.createElement('tr');
+            tr.className = 'variant-row';
+            tr.innerHTML = `
+                <td class="ps-4">
+                    <input type="text" name="Variants[${variantIndex}].VariantName" class="form-control form-control-sm" placeholder="Tên biến thể" required />
+                </td>
+                <td>
+                    <input type="number" name="Variants[${variantIndex}].Price" class="form-control form-control-sm" placeholder="0" required />
+                </td>
+                <td>
+                    <input type="text" name="Variants[${variantIndex}].SKU" class="form-control form-control-sm" placeholder="SKU" />
+                </td>
+                <td>
+                    <input type="number" name="Variants[${variantIndex}].StockQuantity" class="form-control form-control-sm" value="0" style="width: 60px" />
+                </td>
+                <td class="text-center pe-4">
+                    <button type="button" class="btn btn-sm btn-icon text-danger" onclick="removeVariantRow(this)">
+                        <i class="bx bx-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            variantIndex++;
         }
 
-        function saveNewOrder(data) {
-            fetch('@Url.Action("UpdateImageOrder", "Product", new { area = "Admin" })', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    console.log('Thứ tự ảnh đã được cập nhật');
-                } else {
-                    alert('Lỗi: ' + result.message);
+        function removeVariantRow(btn, id) {
+            if (id) {
+                deletedVariantIds.push(id);
+            }
+            btn.closest('tr').remove();
+            reIndexVariants();
+        }
+
+        function reIndexVariants() {
+            const rows = document.querySelectorAll('.variant-row');
+            rows.forEach((row, index) => {
+                row.querySelectorAll('input').forEach(input => {
+                    const name = input.getAttribute('name');
+                    if (name && name.includes('Variants[')) {
+                        input.setAttribute('name', name.replace(/Variants\[\d+\]/, `Variants[${index}]`));
+                    }
+                });
+            });
+            variantIndex = rows.length;
+        }
+
+        function removeImage(id, btn) {
+            deletedImageIds.push(id);
+            btn.closest('.image-item').remove();
+            updateImageOrders();
+        }
+
+        function previewNewImages(input) {
+            const container = document.getElementById('newImagesPreview');
+            container.innerHTML = '';
+            if (input.files) {
+                Array.from(input.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const div = document.createElement('div');
+                        div.style.width = 'calc(25% - 5px)';
+                        div.innerHTML = `<img src="${e.target.result}" class="img-thumbnail rounded-3" style="width: 100%; aspect-ratio: 1; object-fit: cover;" />`;
+                        container.appendChild(div);
+                    }
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
+
+        // Kéo thả ảnh
+        const el = document.getElementById('sortable-images');
+        if (el) {
+            new Sortable(el, {
+                animation: 150,
+                onEnd: updateImageOrders
+            });
+        }
+
+        function updateImageOrders() {
+            const items = document.querySelectorAll('.image-item');
+            const orderData = [];
+            items.forEach((item, index) => {
+                const id = parseInt(item.getAttribute('data-id'));
+                const order = index + 1;
+                orderData.push({ ImageId: id, Order: order }); // Gửi đúng ImageId và Order
+                
+                // UI update
+                const badge = item.querySelector('.badge');
+                if (index === 0) {
+                    if (!badge) {
+                        const b = document.createElement('span');
+                        b.className = 'badge bg-primary position-absolute top-0 start-0 m-1';
+                        b.style.fontSize = '8px';
+                        b.innerText = 'CHÍNH';
+                        item.appendChild(b);
+                    }
+                } else if (badge) {
+                    badge.remove();
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
+            });
+            return orderData;
+        }
+
+        async function submitProductForm() {
+            const form = document.getElementById('editProductForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Ngăn chặn submit nhiều lần
+            const btn = document.querySelector('button[onclick="submitProductForm()"]');
+            if(btn.disabled) return;
+
+            UI.showLoader();
+            btn.disabled = true;
+            
+            const formData = new FormData(form);
+            
+            // Thêm danh sách ID cần xóa
+            deletedVariantIds.forEach(id => formData.append('DeletedVariantIds', id));
+            deletedImageIds.forEach(id => formData.append('DeletedImageIds', id));
+
+            // Thêm thứ tự ảnh mới
+            const imageOrders = updateImageOrders();
+            formData.append('ImageOrdersJson', JSON.stringify(imageOrders));
+
+            $.ajax({
+                url: form.action,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (result) {
+                    UI.hideLoader();
+                    if (result.success) {
+                        UI.toast('Cập nhật sản phẩm thành công!', 'success');
+                        setTimeout(() => {
+                            window.location.href = '@Url.Action("Index")';
+                        }, 800);
+                    } else {
+                        UI.toast(result.message || 'Có lỗi xảy ra', 'error');
+                        btn.disabled = false;
+                    }
+                },
+                error: function (xhr, status, error) {
+                    UI.hideLoader();
+                    let message = 'Lỗi hệ thống (500) khi cập nhật. Vui lòng kiểm tra lại.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    UI.toast(message, 'error');
+                    console.error('Edit AJAX Error:', status, error, xhr.responseText);
+                    btn.disabled = false;
+                }
             });
         }
     </script>

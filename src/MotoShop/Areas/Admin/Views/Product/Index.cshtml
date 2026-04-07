@@ -16,56 +16,165 @@
 }
 
 <!-- Actions Bar -->
-<partial name="_AdminTableActions" model='new { EntityName = "Sản phẩm", AddUrl = Url.Action("Create", "Product", new { area = "Admin" }) }' />
-
-<!-- Filter Bar -->
-<div class="card mb-4 shadow-sm border-0">
-    <div class="card-body">
-        <form id="filterForm" class="row g-3" method="get">
-            <div class="col-lg-4 col-md-6">
-                <div class="input-group input-group-merge">
-                    <span class="input-group-text"><i class="bx bx-search"></i></span>
-                    <input type="text" name="searchTerm" class="form-control" placeholder="Tìm tên sản phẩm hoặc mã SKU..." value="@ViewContext.HttpContext.Request.Query["searchTerm"]">
-                </div>
-            </div>
-            <div class="col-lg-2 col-md-3">
-                <select class="form-select shadow-sm" name="categoryId">
-                    <option value="">Loại sản phẩm</option>
-                    @if (ViewBag.Categories != null)
-                    {
-                        foreach (var cat in (IEnumerable<MotoShop.Data.Models.Category>)ViewBag.Categories)
-                        {
-                            <option value="@cat.CategoryId">@cat.CategoryName</option>
-                        }
-                    }
-                </select>
-            </div>
-            <div class="col-lg-2 col-md-3">
-                <select class="form-select shadow-sm" name="brandId">
-                    <option value="">Thương hiệu</option>
-                    @if (ViewBag.Brands != null)
-                    {
-                        foreach (var brand in (IEnumerable<MotoShop.Data.Models.Brand>)ViewBag.Brands)
-                        {
-                            <option value="@brand.BrandId">@brand.BrandName</option>
-                        }
-                    }
-                </select>
-            </div>
-            <div class="col-lg-2 col-md-6">
-                <select class="form-select shadow-sm" name="sort">
-                    <option value="newest">Mới nhất</option>
-                    <option value="az">Tên A-Z</option>
-                    <option value="za">Tên Z-A</option>
-                </select>
-            </div>
-            <div class="col-lg-2 col-md-6">
-                <button type="submit" class="btn btn-outline-primary w-100 shadow-sm"><i class="bx bx-filter-alt me-1"></i> Lọc dữ liệu</button>
-            </div>
-        </form>
+<div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 shadow-sm">
+    <div>
+        <h4 class="fw-bold mb-0">Quản lý Sản phẩm</h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/Admin">Dashboard</a></li>
+                <li class="breadcrumb-item active">Sản phẩm</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-danger rounded-pill px-4 fw-bold d-none btn-bulk-delete-action" onclick="handleBulkDelete()">
+            <i class="bx bx-trash me-1"></i> XÓA ĐÃ CHỌN (<span class="selected-count-span">0</span>)
+        </button>
+        <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addProductModal">
+            <i class="bx bx-plus-circle me-1"></i> THÊM SẢN PHẨM MỚI
+        </button>
     </div>
 </div>
 
+<!-- Modal Thêm Sản Phẩm -->
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 p-4 pb-0">
+                <h5 class="modal-title fw-bold text-uppercase fs-5">Thêm sản phẩm mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createProductForm" asp-area="Admin" asp-controller="Product" asp-action="Create" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="IsActive" value="true">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Tên sản phẩm *</label>
+                        <input type="text" name="ProductName" class="form-control custom-input" placeholder="Nhập tên sản phẩm" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold small text-muted">Danh mục</label>
+                            <select name="CategoryId" class="form-select custom-input" asp-items="ViewBag.CategoryList">
+                                <option value="">-- Chọn danh mục --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold small text-muted">Thương hiệu</label>
+                            <select name="BrandId" class="form-select custom-input" asp-items="ViewBag.BrandList">
+                                <option value="">-- Chọn thương hiệu --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Mô tả</label>
+                        <textarea name="Description" class="form-control custom-input" rows="3" placeholder="Mô tả ngắn gọn..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Hình ảnh sản phẩm</label>
+                        <input type="file" name="Images" class="form-control custom-input" multiple accept="image/*">
+                        <div id="modalImagePreview" class="d-flex flex-wrap gap-2 mt-2"></div>
+                    </div>
+
+                    <!-- BẮT ĐẦU PHẦN BIẾN THỂ -->
+                    <hr class="my-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <label class="form-label fw-bold text-primary mb-0"><i class="bx bx-list-ul me-1"></i> BIẾN THỂ SẢN PHẨM</label>
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" onclick="addVariantRow()">
+                            <i class="bx bx-plus me-1"></i> Thêm biến thể
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-borderless align-middle" id="variantTable">
+                            <thead>
+                                <tr class="text-muted small">
+                                    <th style="width: 40%">Tên biến thể *</th>
+                                    <th>Giá bán</th>
+                                    <th>SKU</th>
+                                    <th>Kho</th>
+                                    <th style="width: 40px"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Dòng mặc định -->
+                                <tr class="variant-row">
+                                    <td><input type="text" name="Variants[0].VariantName" class="form-control form-control-sm" placeholder="Mặc định" required></td>
+                                    <td><input type="number" name="Variants[0].Price" class="form-control form-control-sm" placeholder="0" required></td>
+                                    <td><input type="text" name="Variants[0].SKU" class="form-control form-control-sm" placeholder="SKU"></td>
+                                    <td><input type="number" name="Variants[0].StockQuantity" class="form-control form-control-sm" value="0"></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- KẾT THÚC PHẦN BIẾN THỂ -->
+
+                    <div class="form-check form-switch mt-3">
+                        <input class="form-check-input" type="checkbox" name="IsFeatured" value="true">
+                        <label class="form-check-label fw-bold">Sản phẩm nổi bật</label>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" id="btnSaveProduct" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                        LƯU SẢN PHẨM
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .custom-input { border-radius: 10px !important; border: 1px solid #ddd; padding: 10px 15px; transition: 0.3s; }
+    .custom-input:focus { border-color: #696cff; box-shadow: 0 0 0 0.2rem rgba(105, 108, 255, 0.1); }
+    .modal-content { animation: slideIn 0.3s ease-out; }
+    @@keyframes slideIn {
+        from { transform: translateY(-30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    .preview-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; }
+</style>
+
+<!-- Filter Bar -->
+<form id="filterForm" class="d-flex flex-wrap-nowrap gap-2 align-items-center" method="get">
+
+    <div style="flex:2;">
+        <div class="input-group">
+            <span class="input-group-text"><i class="bx bx-search"></i></span>
+            <input type="text" name="searchTerm" class="form-control"
+                   placeholder="Tìm tên sản phẩm..."
+                   value="@ViewContext.HttpContext.Request.Query["searchTerm"]">
+        </div>
+    </div>
+
+    <div style="flex:1;">
+        <select name="categoryId" class="form-select" asp-items="ViewBag.CategoryList">
+            <option value="">Loại</option>
+        </select>
+    </div>
+
+    <div style="flex:1;">
+        <select name="brandId" class="form-select" asp-items="ViewBag.BrandList">
+            <option value="">Thương hiệu</option>
+        </select>
+    </div>
+
+    <div style="flex:1;">
+        <select name="sort" class="form-select" asp-items="ViewBag.SortList">
+            <option value="">Sắp xếp</option>
+        </select>
+    </div>
+
+    <div style="flex:1; display:flex; gap:5px;">
+        <button type="submit" class="btn btn-primary w-100">Lọc</button>
+        <a asp-action="Index" class="btn btn-outline-secondary w-100">Đặt lại</a>
+        <button type="button" class="btn btn-danger d-none fw-bold" id="btnBulkDelete" onclick="handleBulkDelete()" style="white-space: nowrap; min-width: 100px;">
+            XÓA (<span id="selectedCount">0</span>)
+        </button>
+    </div>
+
+</form>
 <!-- Table -->
 <div class="card shadow-sm border-0 overflow-hidden">
     <div class="table-responsive text-nowrap">
@@ -137,14 +246,48 @@
 
 @section Scripts {
     <script>
+        let variantIndex = 1;
+        function addVariantRow() {
+            const tbody = document.querySelector('#variantTable tbody');
+            const newRow = document.createElement('tr');
+            newRow.className = 'variant-row';
+            newRow.innerHTML = `
+                <td><input type="text" name="Variants[${variantIndex}].VariantName" class="form-control form-control-sm" placeholder="Tên biến thể" required></td>
+                <td><input type="number" name="Variants[${variantIndex}].Price" class="form-control form-control-sm" placeholder="0" required></td>
+                <td><input type="text" name="Variants[${variantIndex}].SKU" class="form-control form-control-sm" placeholder="SKU"></td>
+                <td><input type="number" name="Variants[${variantIndex}].StockQuantity" class="form-control form-control-sm" value="0"></td>
+                <td><button type="button" class="btn btn-sm text-danger p-0" onclick="removeVariantRow(this)"><i class="bx bx-trash"></i></button></td>
+            `;
+            tbody.appendChild(newRow);
+            variantIndex++;
+        }
+
+        function removeVariantRow(btn) {
+            btn.closest('tr').remove();
+            reIndexVariants();
+        }
+
+        function reIndexVariants() {
+            const rows = document.querySelectorAll('.variant-row');
+            rows.forEach((row, index) => {
+                row.querySelectorAll('input').forEach(input => {
+                    const name = input.getAttribute('name');
+                    if (name) {
+                        input.setAttribute('name', name.replace(/\[\d+\]/, `[${index}]`));
+                    }
+                });
+            });
+            variantIndex = rows.length;
+        }
+
         $(document).ready(function() {
             // 1. Logic chọn nhiều dòng và hiển thị nút Xóa hàng loạt
             function updateBulkDeleteButton() {
                 const checkedCount = $('.row-checkbox:checked').length;
-                const $btnBulk = $('#btnBulkDelete');
-                const $countSpan = $('#selectedCount');
+                const $btnBulk = $('.btn-bulk-delete-action, #btnBulkDelete');
+                const $countSpan = $('.selected-count-span, #selectedCount');
                 
-                if (checkedCount >= 2) {
+                if (checkedCount >= 1) {
                     $btnBulk.removeClass('d-none');
                     $countSpan.text(checkedCount);
                 } else {
@@ -194,40 +337,136 @@
 
             // 3. Hiệu ứng Loading Spinner khi submit form lọc
             $('#filterForm').on('submit', function() {
-                $('#adminLoader').removeClass('d-none');
+                if (typeof UI !== 'undefined' && UI.showLoader) UI.showLoader();
+            });
+
+            // 4. Auto-submit on select change (Chỉ áp dụng cho thanh lọc dữ liệu)
+            $('#filterForm .form-select').on('change', function() {
+                $('#filterForm').submit();
+            });
+
+            // 5. AJAX Form Submission for Modal
+            $('#createProductForm').on('submit', function (e) {
+                e.preventDefault(); 
+                
+                const form = $(this);
+                const btn = $('#btnSaveProduct');
+                const formData = new FormData(this);
+
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Đang lưu...');
+                if (typeof UI !== 'undefined' && UI.showLoader) UI.showLoader();
+
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        if (typeof UI !== 'undefined' && UI.hideLoader) UI.hideLoader();
+                        
+                        if (response.success) {
+                            $('#addProductModal').modal('hide');
+                            UI.toast('Thêm sản phẩm thành công!', 'success');
+                            setTimeout(() => location.reload(), 800);
+                        } else {
+                            let errorMsg = response.message || 'Lỗi lưu dữ liệu!';
+                            UI.toast(errorMsg, 'error');
+                            btn.prop('disabled', false).text('LƯU SẢN PHẨM');
+                        }
+                    },
+                    error: function (xhr) {
+                        if (typeof UI !== 'undefined' && UI.hideLoader) UI.hideLoader();
+                        UI.toast('Lỗi hệ thống (500)', 'error');
+                        btn.prop('disabled', false).text('LƯU SẢN PHẨM');
+                    }
+                });
+            });
+
+            // 6. Modal Image Preview
+            $('input[name="Images"]').on('change', function (e) {
+                const preview = $('#modalImagePreview');
+                preview.empty();
+                const files = e.target.files;
+                for (let i = 0; i < files.length; i++) {
+                    const reader = new FileReader();
+                    reader.onload = function (event) {
+                        preview.append(`<img src="${event.target.result}" class="preview-thumb">`);
+                    };
+                    reader.readAsDataURL(files[i]);
+                }
             });
         });
 
-        // 4. Modal xác nhận xóa dùng chung (Sử dụng UI Design Rules)
         function confirmDelete(id, name) {
             UI.confirm({
                 title: 'Xác nhận xóa',
-                message: `Bạn có chắc chắn muốn xóa sản phẩm "<strong>${name}</strong>" không? Dữ liệu đã xóa sẽ không thể khôi phục.`,
+                message: `Bạn có chắc chắn muốn xóa sản phẩm "<strong>${name}</strong>" không?`,
+                type: 'danger',
                 onConfirm: function() {
-                    $('#adminLoader').removeClass('d-none');
-                    // Logic xóa thật qua AJAX sẽ viết ở đây
-                    setTimeout(() => {
-                        $('#adminLoader').addClass('d-none');
-                        UI.toast('Đã xóa sản phẩm thành công', 'success');
-                    }, 1000);
+                    if (typeof UI !== 'undefined' && UI.showLoader) UI.showLoader();
+                    
+                    $.ajax({
+                        url: '@Url.Action("Delete", "Product", new { area = "Admin" })',
+                        type: 'POST',
+                        data: { 
+                            id: id,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function (response) {
+                            if (typeof UI !== 'undefined' && UI.hideLoader) UI.hideLoader();
+                            if (response.success) {
+                                UI.toast(response.message || 'Đã xóa sản phẩm thành công', 'success');
+                                setTimeout(() => location.reload(), 800);
+                            } else {
+                                UI.toast(response.message || 'Lỗi khi xóa sản phẩm', 'error');
+                            }
+                        },
+                        error: function () {
+                            if (typeof UI !== 'undefined' && UI.hideLoader) UI.hideLoader();
+                            UI.toast('Lỗi hệ thống khi xóa sản phẩm', 'error');
+                        }
+                    });
                 }
             });
         }
 
         function handleBulkDelete() {
-            const count = $('.row-checkbox:checked').length;
+            const selectedIds = $('.row-checkbox:checked').map(function() {
+                return parseInt($(this).val());
+            }).get();
+            
+            const count = selectedIds.length;
+            
             UI.confirm({
                 title: 'Xác nhận xóa nhiều',
                 message: `Bạn có chắc muốn xóa vĩnh viễn <strong>${count}</strong> sản phẩm đã chọn?`,
                 type: 'danger',
                 onConfirm: function() {
-                    $('#adminLoader').removeClass('d-none');
-                    // AJAX xóa hàng loạt
-                    setTimeout(() => {
-                        $('#adminLoader').addClass('d-none');
-                        UI.toast(`Đã xóa ${count} sản phẩm thành công`, 'success');
-                        location.reload();
-                    }, 1500);
+                    if (typeof UI !== 'undefined' && UI.showLoader) UI.showLoader();
+                    
+                    $.ajax({
+                        url: '@Url.Action("DeleteSelected", "Product", new { area = "Admin" })',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        headers: {
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        data: JSON.stringify(selectedIds),
+                        success: function (response) {
+                            if (typeof UI !== 'undefined' && UI.hideLoader) UI.hideLoader();
+                            if (response.success) {
+                                UI.toast(response.message || `Đã xóa ${count} sản phẩm thành công`, 'success');
+                                setTimeout(() => location.reload(), 800);
+                            } else {
+                                UI.toast(response.message || 'Lỗi khi xóa nhiều sản phẩm', 'error');
+                            }
+                        },
+                        error: function () {
+                            if (typeof UI !== 'undefined' && UI.hideLoader) UI.hideLoader();
+                            UI.toast('Lỗi hệ thống khi xóa nhiều sản phẩm', 'error');
+                        }
+                    });
                 }
             });
         }

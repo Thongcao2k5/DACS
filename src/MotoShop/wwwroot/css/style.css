@@ -2097,3 +2097,19 @@ footer h5 {
     color: #fff;
     opacity: 1 !important;
 }
+.filter-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+
+    .filter-bar > * {
+        flex: 1;
+    }
+#filterForm {
+    flex-wrap: nowrap !important;
+}
+
+    #filterForm > div {
+        min-width: 0; /* fix tràn */
+    }

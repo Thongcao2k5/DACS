@@ -22,8 +22,8 @@
         </div>
         
         <div class="header-search">
-            <form class="input-group" asp-area="" asp-controller="Product" asp-action="Search" method="get">
-                <input type="text" name="q" class="form-control search-input" placeholder="Tìm tên phụ tùng, thương hiệu...">
+            <form class="input-group" asp-area="" asp-controller="Product" asp-action="Index" method="get">
+                <input type="text" name="searchTerm" class="form-control search-input" placeholder="Tìm tên phụ tùng, thương hiệu..." value="@Context.Request.Query["searchTerm"]">
                 <button class="btn search-btn" type="submit"><i class='bx bx-search'></i></button>
             </form>
         </div>

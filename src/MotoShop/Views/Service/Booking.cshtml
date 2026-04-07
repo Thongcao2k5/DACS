@@ -1,5 +1,7 @@
+@using MotoShop.Data.Models
 @{
     ViewData["Title"] = "Đặt lịch dịch vụ";
+    var selectedService = ViewBag.SelectedService as Service;
 }
 
 <div class="breadcrumb-wrapper">
@@ -19,96 +21,108 @@
         <!-- LEFT COLUMN: FORMS -->
         <div class="col-lg-8">
             <!-- 3. BOOKING FORM (Customer Info) -->
-            <div class="booking-form-section">
-                <h5 class="fw-bold mb-4"><i class='bx bx-user-pin text-danger me-2'></i> THÔNG TIN LIÊN HỆ</h5>
+            <div class="booking-form-section p-4 bg-white rounded-4 shadow-sm mb-4">
+                <h5 class="fw-bold mb-4 border-bottom pb-2"><i class='bx bx-user-pin text-danger me-2'></i> THÔNG TIN LIÊN HỆ</h5>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label-custom">Họ và tên *</label>
-                        <input type="text" class="form-control form-control-custom" placeholder="Nhập họ tên người đặt" required>
+                        <label class="form-label small fw-bold text-muted">Họ và tên *</label>
+                        <input type="text" class="form-control rounded-3" placeholder="Nhập họ tên người đặt" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label-custom">Số điện thoại *</label>
-                        <input type="tel" class="form-control form-control-custom" placeholder="Nhập số điện thoại" required>
+                        <label class="form-label small fw-bold text-muted">Số điện thoại *</label>
+                        <input type="tel" class="form-control rounded-3" placeholder="Nhập số điện thoại" required>
                     </div>
                     <div class="col-md-12">
-                        <label class="form-label-custom">Địa chỉ Email (Không bắt buộc)</label>
-                        <input type="email" class="form-control form-control-custom" placeholder="Nhập email để nhận thông báo">
+                        <label class="form-label small fw-bold text-muted">Địa chỉ Email (Không bắt buộc)</label>
+                        <input type="email" class="form-control rounded-3" placeholder="Nhập email để nhận thông báo">
                     </div>
                 </div>
             </div>
 
             <!-- 4. VEHICLE INFORMATION -->
-            <div class="booking-form-section">
-                <h5 class="fw-bold mb-4"><i class='bx bx-cycling text-danger me-2'></i> THÔNG TIN PHƯƠNG TIỆN</h5>
+            <div class="booking-form-section p-4 bg-white rounded-4 shadow-sm mb-4">
+                <h5 class="fw-bold mb-4 border-bottom pb-2"><i class='bx bx-cycling text-danger me-2'></i> THÔNG TIN PHƯƠNG TIỆN</h5>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label-custom">Hãng xe *</label>
-                        <select class="form-select form-control-custom h-auto py-2" required>
+                        <label class="form-label small fw-bold text-muted">Hãng xe *</label>
+                        <select class="form-select rounded-3" required>
                             <option selected disabled>Chọn hãng xe</option>
                             <option>Honda</option>
                             <option>Yamaha</option>
                             <option>Suzuki</option>
                             <option>Piaggio</option>
+                            <option>Khác</option>
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label-custom">Dòng xe / Đời xe *</label>
-                        <input type="text" class="form-control form-control-custom" placeholder="Ví dụ: Exciter 150 (2019)" required>
+                        <label class="form-label small fw-bold text-muted">Dòng xe / Đời xe *</label>
+                        <input type="text" class="form-control rounded-3" placeholder="Ví dụ: Exciter 150 (2019)" required>
                     </div>
                     <div class="col-md-12">
-                        <label class="form-label-custom">Biển số xe (Không bắt buộc)</label>
-                        <input type="text" class="form-control form-control-custom" placeholder="Ví dụ: 59-X1 123.45">
+                        <label class="form-label small fw-bold text-muted">Biển số xe (Không bắt buộc)</label>
+                        <input type="text" class="form-control rounded-3" placeholder="Ví dụ: 59-X1 123.45">
                     </div>
                 </div>
             </div>
 
             <!-- 6. NOTE FIELD -->
-            <div class="booking-form-section">
-                <h5 class="fw-bold mb-4"><i class='bx bx-edit text-danger me-2'></i> GHI CHÚ CHO KỸ THUẬT VIÊN</h5>
-                <textarea class="form-control form-control-custom h-auto" style="height: 100px; padding-top: 15px;" placeholder="Mô tả tình trạng xe hoặc các yêu cầu thêm..."></textarea>
+            <div class="booking-form-section p-4 bg-white rounded-4 shadow-sm">
+                <h5 class="fw-bold mb-4 border-bottom pb-2"><i class='bx bx-edit text-danger me-2'></i> GHI CHÚ CHO KỸ THUẬT VIÊN</h5>
+                <textarea class="form-control rounded-3" style="height: 120px;" placeholder="Mô tả tình trạng xe hoặc các yêu cầu thêm..."></textarea>
             </div>
         </div>
 
         <!-- RIGHT COLUMN: SUMMARY & TIME -->
         <div class="col-lg-4">
-            <div class="booking-summary-card">
+            <div class="booking-summary-card p-4 bg-white rounded-4 shadow-sm sticky-top" style="top: 20px;">
                 <!-- 2. SERVICE SUMMARY -->
-                <h5 class="fw-bold mb-4">DỊCH VỤ ĐÃ CHỌN</h5>
-                <div class="booking-service-preview">
-                    <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=200" alt="S">
-                    <div>
-                        <h6 class="fw-bold mb-1">Vệ sinh kim phun xăng Fi</h6>
-                        <p class="text-danger fw-bold mb-0">150.000đ</p>
-                        <span class="text-muted small">Thời gian: 30-45 phút</span>
+                <h5 class="fw-bold mb-4 border-bottom pb-2">DỊCH VỤ ĐÃ CHỌN</h5>
+                
+                @if (selectedService != null)
+                {
+                    <div class="booking-service-preview d-flex gap-3 mb-4 p-3 bg-light rounded-3 border">
+                        <img src="@(string.IsNullOrEmpty(selectedService.ImageUrl) ? "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=200" : selectedService.ImageUrl)" 
+                             alt="@selectedService.ServiceName" class="rounded-3" style="width: 80px; height: 80px; object-fit: cover;">
+                        <div>
+                            <h6 class="fw-bold mb-1 small">@selectedService.ServiceName</h6>
+                            <p class="text-danger fw-bold mb-0">@selectedService.Price.ToString("N0")đ</p>
+                            <span class="text-muted" style="font-size: 0.75rem;">Thời gian: ~60 phút</span>
+                        </div>
                     </div>
-                </div>
+                }
+                else
+                {
+                    <div class="alert alert-warning small mb-4">
+                        <i class='bx bx-error-circle me-1'></i> Bạn chưa chọn dịch vụ cụ thể. Vui lòng ghi rõ yêu cầu trong phần ghi chú.
+                    </div>
+                }
 
                 <!-- 5. BOOKING TIME SELECTION -->
                 <div class="mb-4">
-                    <label class="form-label-custom">CHỌN NGÀY HẸN *</label>
-                    <input type="date" class="form-control form-control-custom h-auto py-2" required>
+                    <label class="form-label small fw-bold text-muted">CHỌN NGÀY HẸN *</label>
+                    <input type="date" class="form-control rounded-3" required min="@DateTime.Now.ToString("yyyy-MM-dd")">
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label-custom">CHỌN KHUNG GIỜ *</label>
-                    <div class="booking-time-grid">
-                        <button class="btn-time-slot" onclick="selectTime(this)">08:00</button>
-                        <button class="btn-time-slot" onclick="selectTime(this)">09:00</button>
-                        <button class="btn-time-slot active" onclick="selectTime(this)">10:00</button>
-                        <button class="btn-time-slot" onclick="selectTime(this)">11:00</button>
-                        <button class="btn-time-slot disabled" title="Đã có khách">14:00</button>
-                        <button class="btn-time-slot" onclick="selectTime(this)">15:00</button>
-                        <button class="btn-time-slot" onclick="selectTime(this)">16:00</button>
-                        <button class="btn-time-slot" onclick="selectTime(this)">17:00</button>
+                    <label class="form-label small fw-bold text-muted">CHỌN KHUNG GIỜ *</label>
+                    <div class="booking-time-grid d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill flex-grow-1 py-2 time-slot" onclick="selectTime(this)">08:00</button>
+                        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill flex-grow-1 py-2 time-slot" onclick="selectTime(this)">09:00</button>
+                        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill flex-grow-1 py-2 time-slot active" onclick="selectTime(this)">10:00</button>
+                        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill flex-grow-1 py-2 time-slot" onclick="selectTime(this)">11:00</button>
+                        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill flex-grow-1 py-2 time-slot" onclick="selectTime(this)">14:00</button>
+                        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill flex-grow-1 py-2 time-slot" onclick="selectTime(this)">15:00</button>
+                        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill flex-grow-1 py-2 time-slot" onclick="selectTime(this)">16:00</button>
+                        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill flex-grow-1 py-2 time-slot" onclick="selectTime(this)">17:00</button>
                     </div>
                 </div>
 
-                <div class="alert alert-info py-2 small mb-4">
+                <div class="alert alert-info py-2 small mb-4" style="font-size: 0.8rem;">
                     <i class='bx bx-info-circle me-1'></i> Vui lòng đến sớm 5-10 phút để được phục vụ tốt nhất.
                 </div>
 
                 <!-- 7. CONFIRM BUTTON -->
-                <button class="btn btn-danger btn-lg w-100 rounded-pill fw-bold py-3" onclick="location.href='@Url.Action("BookingSuccess", "Service")'">
+                <button type="button" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold py-3 shadow-sm" onclick="location.href='@Url.Action("BookingSuccess", "Service")'">
                     XÁC NHẬN ĐẶT LỊCH
                 </button>
             </div>
@@ -116,11 +130,18 @@
     </div>
 </main>
 
+<style>
+    .time-slot.active {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: white;
+    }
+</style>
+
 @section Scripts {
     <script>
         function selectTime(btn) {
-            if(btn.classList.contains('disabled')) return;
-            document.querySelectorAll('.btn-time-slot').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.time-slot').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
         }
     </script>

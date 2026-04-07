@@ -51,8 +51,11 @@ namespace MotoShop.Business.Services
         {
             if (file == null) return null;
 
-            var extension = ".jpg"; // Force to jpg for consistency
-            var fileName = Guid.NewGuid().ToString();
+            // Chỉ lưu 1 file duy nhất, không Resize để tăng tốc độ tối đa
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            if (string.IsNullOrEmpty(extension)) extension = ".jpg";
+            
+            var fileName = $"{Guid.NewGuid()}{extension}";
             var wwwrootPath = _environment.WebRootPath;
             var baseFolder = Path.Combine("uploads", subFolder);
             var folderPath = Path.Combine(wwwrootPath, baseFolder);
@@ -60,39 +63,20 @@ namespace MotoShop.Business.Services
             if (!Directory.Exists(folderPath))
                 Directory.CreateDirectory(folderPath);
 
-            var results = new Dictionary<string, string>();
+            var fullPath = Path.Combine(folderPath, fileName);
+            var relativePath = $"/{baseFolder}/{fileName}".Replace("\\", "/");
 
-            using var image = await Image.LoadAsync(file.OpenReadStream());
-            
-            // 1. Save Original (Optimized)
-            var originalName = $"{fileName}-full{extension}";
-            var originalPath = Path.Combine(folderPath, originalName);
-            await image.SaveAsJpegAsync(originalPath, new JpegEncoder { Quality = 80 });
-            results.Add("Full", $"/{baseFolder}/{originalName}");
-
-            // 2. Save Medium (Width: 600)
-            var mediumName = $"{fileName}-medium{extension}";
-            var mediumPath = Path.Combine(folderPath, mediumName);
-            using (var mediumImg = image.Clone(x => x.Resize(new ResizeOptions { 
-                Size = new Size(600, 0), 
-                Mode = ResizeMode.Max 
-            })))
+            using (var stream = new FileStream(fullPath, FileMode.Create))
             {
-                await mediumImg.SaveAsJpegAsync(mediumPath, new JpegEncoder { Quality = 75 });
-                results.Add("Medium", $"/{baseFolder}/{mediumName}");
+                await file.CopyToAsync(stream);
             }
 
-            // 3. Save Thumbnail (150x150 Square)
-            var thumbName = $"{fileName}-thumb{extension}";
-            var thumbPath = Path.Combine(folderPath, thumbName);
-            using (var thumbImg = image.Clone(x => x.Resize(new ResizeOptions { 
-                Size = new Size(150, 150), 
-                Mode = ResizeMode.Crop 
-            })))
+            var results = new Dictionary<string, string>
             {
-                await thumbImg.SaveAsJpegAsync(thumbPath, new JpegEncoder { Quality = 70 });
-                results.Add("Thumb", $"/{baseFolder}/{thumbName}");
-            }
+                { "Full", relativePath },
+                { "Medium", relativePath }, // Dùng chung 1 ảnh để tránh lỗi code chỗ khác
+                { "Thumb", relativePath }
+            };
 
             return results;
         }
