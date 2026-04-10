@@ -368,6 +368,7 @@ namespace MotoShop.Data.Models
         [ForeignKey("CustomerId")]
         public virtual Customer? Customer { get; set; }
         public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
+        public string UserId { get; set; }
     }
 
     public class CartItem
@@ -382,6 +383,7 @@ namespace MotoShop.Data.Models
         public virtual Cart? Cart { get; set; }
         [ForeignKey("ProductVariantId")]
         public virtual ProductVariant? ProductVariant { get; set; }
+        public decimal Price { get; set; }
     }
 
     public class Payment

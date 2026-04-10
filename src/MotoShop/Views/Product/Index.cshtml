@@ -124,7 +124,7 @@
                                                     <span class="current text-muted fw-bold">Liên hệ giá</span>
                                                 }
                                             </div>
-                                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill fw-bold mt-3 transition-bg">
+                                            <button type="button" onclick="addToCart(@product.DefaultVariantId)" class="btn btn-outline-danger btn-sm rounded-pill fw-bold mt-3 transition-bg">
                                                 <i class='bx bx-cart-add fs-5 me-1'></i> THÊM GIỎ
                                             </button>
                                         </div>
@@ -210,18 +210,57 @@
 </style>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
-            // Auto-submit form when a select dropdown changes
             $('.filter-select').on('change', function () {
                 $('#filterForm').submit();
             });
 
-            // Handle form submission: show loading and disable button
             $('#filterForm').on('submit', function() {
                 $('#loadingOverlay').removeClass('d-none').addClass('d-flex');
                 $('#applyBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> ĐANG LỌC...');
             });
         });
+
+        async function addToCart(variantId) {
+            if (!variantId || variantId === 0) {
+                Swal.fire('Chú ý', 'Sản phẩm này hiện chưa có biến thể để đặt hàng. Vui lòng liên hệ shop!', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch('/Cart/AddToCart', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `variantId=${variantId}&quantity=1`
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Tuyệt vời!',
+                        text: data.message,
+                        showConfirmButton: false,
+                        timer: 1500,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                    // Cập nhật số hiển thị trên biểu tượng giỏ hàng ở Header
+                    if (typeof updateCartBadge === "function") {
+                        updateCartBadge(); 
+                    }
+                    if (typeof showCartSuccessToast === "function") {
+                        showCartSuccessToast(data.message);
+                    }
+                } else {
+                    Swal.fire('Thông báo', data.message, 'info');
+                }
+            } catch (error) {
+                Swal.fire('Lỗi', 'Không thể kết nối đến máy chủ để thêm vào giỏ hàng.', 'error');
+            }
+        }
     </script>
 }

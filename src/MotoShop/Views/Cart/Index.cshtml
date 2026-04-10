@@ -1,5 +1,7 @@
+@model List<MotoShop.Business.DTOs.CartItemDto>
 @{
     ViewData["Title"] = "Giỏ hàng";
+    var totalAmount = Model.Sum(i => i.Total);
 }
 
 <div class="breadcrumb-wrapper">
@@ -14,220 +16,158 @@
 </div>
 
 <main class="container mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold mb-0">Giỏ hàng <span class="fs-5 text-muted fw-normal">(3 sản phẩm)</span></h2>
-    </div>
+    @if (Model.Any())
+    {
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0">Giỏ hàng <span class="fs-5 text-muted fw-normal">(@Model.Count sản phẩm)</span></h2>
+        </div>
 
-    <div class="row g-4">
-        <!-- 2. CART ITEMS (Left) -->
-        <div class="col-lg-8">
-            <!-- Desktop Table -->
-            <div class="cart-table-wrapper">
-                <table class="cart-table">
-                    <thead>
-                        <tr>
-                            <th>Sản phẩm</th>
-                            <th>Giá</th>
-                            <th style="width: 150px;">Số lượng</th>
-                            <th>Tổng cộng</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Item 1 -->
-                        <tr class="cart-item-row" data-price="1250000">
-                            <td>
-                                <div class="cart-product">
-                                    <div class="cart-product-img">
-                                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=200" alt="Product">
-                                    </div>
-                                    <div class="cart-product-info">
-                                        <a href="/Product/Detail/1" class="name">Bộ Nồi Trước Honda SH Chính Hãng</a>
-                                        <span class="variant">Dòng xe: SH 150i | Chất liệu: Nhôm Ý</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><div class="cart-price">1.250.000đ</div></td>
-                            <td>
-                                <div class="qty-selector">
-                                    <button class="qty-btn" onclick="updateCartQty(this, -1)"><i class='bx bx-minus'></i></button>
-                                    <input type="text" class="qty-input" value="1" readonly>
-                                    <button class="qty-btn" onclick="updateCartQty(this, 1)"><i class='bx bx-plus'></i></button>
-                                </div>
-                            </td>
-                            <td><div class="cart-subtotal">1.250.000đ</div></td>
-                            <td><button class="btn-remove" onclick="removeCartItem(this)"><i class='bx bx-trash'></i></button></td>
-                        </tr>
-                        <!-- Item 2 -->
-                        <tr class="cart-item-row" data-price="450000">
-                            <td>
-                                <div class="cart-product">
-                                    <div class="cart-product-img">
-                                        <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=200" alt="Product">
-                                    </div>
-                                    <div class="cart-product-info">
-                                        <a href="/Product/Detail/2" class="name">Nhớt Motul 300V Factory Line 10W40</a>
-                                        <span class="variant">Dung tích: 1 Lít</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><div class="cart-price">450.000đ</div></td>
-                            <td>
-                                <div class="qty-selector">
-                                    <button class="qty-btn" onclick="updateCartQty(this, -1)"><i class='bx bx-minus'></i></button>
-                                    <input type="text" class="qty-input" value="2" readonly>
-                                    <button class="qty-btn" onclick="updateCartQty(this, 1)"><i class='bx bx-plus'></i></button>
-                                </div>
-                            </td>
-                            <td><div class="cart-subtotal">900.000đ</div></td>
-                            <td><button class="btn-remove" onclick="removeCartItem(this)"><i class='bx bx-trash'></i></button></td>
-                        </tr>
-                    </tbody>
-                </table>
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="cart-table-wrapper bg-white rounded-4 shadow-sm overflow-hidden">
+                    <table class="cart-table w-100">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="p-3">Sản phẩm</th>
+                                <th class="p-3 text-center">Giá</th>
+                                <th class="p-3 text-center" style="width: 150px;">Số lượng</th>
+                                <th class="p-3 text-center">Tổng cộng</th>
+                                <th class="p-3"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr class="cart-item-row border-bottom" data-variant-id="@item.ProductVariantId" data-price="@item.Price">
+                                    <td class="p-3">
+                                        <div class="cart-product d-flex align-items-center gap-3">
+                                            <div class="cart-product-img" style="width: 80px; height: 80px;">
+                                                <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/assets/img/elements/no-image.png" : item.ImageUrl)" class="w-100 h-100 object-fit-cover rounded" alt="@item.ProductName">
+                                            </div>
+                                            <div class="cart-product-info">
+                                                <a href="/Product/Details/@item.ProductVariantId" class="name fw-bold text-dark text-decoration-none d-block">@item.ProductName</a>
+                                                <span class="variant text-muted small">@item.VariantName</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-3 text-center"><div class="cart-price fw-semibold">@item.Price.ToString("N0")đ</div></td>
+                                    <td class="p-3 text-center">
+                                        <div class="qty-selector d-flex align-items-center justify-content-center">
+                                            <button class="btn btn-sm btn-outline-secondary rounded-circle" onclick="updateCartQty(this, -1)"><i class='bx bx-minus'></i></button>
+                                            <input type="text" class="qty-input form-control form-control-sm text-center border-0 fw-bold" style="width: 40px;" value="@item.Quantity" readonly>
+                                            <button class="btn btn-sm btn-outline-secondary rounded-circle" onclick="updateCartQty(this, 1)"><i class='bx bx-plus'></i></button>
+                                        </div>
+                                    </td>
+                                    <td class="p-3 text-center"><div class="cart-subtotal fw-bold text-danger">@item.Total.ToString("N0")đ</div></td>
+                                    <td class="p-3 text-center"><button class="btn btn-link text-muted p-0" onclick="removeCartItem(this)"><i class='bx bx-trash fs-5'></i></button></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            <!-- Mobile List (Hidden on Desktop) -->
-            <div class="d-lg-none">
-                <div class="cart-item-mobile">
-                    <button class="btn-remove"><i class='bx bx-trash'></i></button>
-                    <div class="d-flex gap-3">
-                        <div class="cart-product-img" style="width: 70px; height: 70px;">
-                            <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=200" alt="Product">
-                        </div>
-                        <div>
-                            <a href="/Product/Detail/1" class="name fw-bold text-dark text-decoration-none">Bộ Nồi Trước Honda SH...</a>
-                            <div class="small text-muted mt-1">SH 150i | Nhôm Ý</div>
-                            <div class="cart-price mt-2">1.250.000đ</div>
-                        </div>
+            <div class="col-lg-4">
+                <div class="cart-summary-card bg-white rounded-4 shadow-sm p-4 sticky-top" style="top: 20px;">
+                    <h5 class="fw-bold mb-4 text-uppercase">TỔNG ĐƠN HÀNG</h5>
+                    <div class="summary-item d-flex justify-content-between mb-3 pb-3 border-bottom">
+                        <span class="text-muted">Tạm tính</span>
+                        <span class="fw-bold" id="totalSubtotal">@totalAmount.ToString("N0")đ</span>
                     </div>
-                    <div class="mobile-qty-row">
-                        <div class="qty-selector">
-                            <button class="qty-btn"><i class='bx bx-minus'></i></button>
-                            <input type="text" class="qty-input" value="1" readonly>
-                            <button class="qty-btn"><i class='bx bx-plus'></i></button>
-                        </div>
-                        <div class="cart-subtotal">1.250.000đ</div>
+                    <div class="summary-item d-flex justify-content-between mb-3">
+                        <span class="text-muted">Phí vận chuyển</span>
+                        <span class="text-muted small">Tính lúc thanh toán</span>
                     </div>
+                    <div class="summary-total d-flex justify-content-between align-items-center mb-4">
+                        <span class="fw-bold fs-5">TỔNG CỘNG</span>
+                        <span class="price fs-3 fw-bolder text-danger" id="totalFinal">@totalAmount.ToString("N0")đ</span>
+                    </div>
+                    <a href="/Cart/Checkout" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold mb-3 py-3 shadow-sm">TIẾN HÀNH THANH TOÁN</a>
+                    <a href="/Product" class="btn btn-outline-secondary btn-lg w-100 rounded-pill fw-bold py-3">TIẾP TỤC MUA HÀNG</a>
                 </div>
             </div>
         </div>
-
-        <!-- 3. CART SUMMARY (Right) -->
-        <div class="col-lg-4">
-            <div class="cart-summary-card">
-                <h5 class="fw-bold mb-4">TỔNG ĐƠN HÀNG</h5>
-                <div class="summary-item">
-                    <span>Tạm tính</span>
-                    <span class="fw-bold" id="totalSubtotal">2.150.000đ</span>
-                </div>
-                <div class="summary-item">
-                    <span>Phí vận chuyển</span>
-                    <span class="text-muted small">Tính lúc thanh toán</span>
-                </div>
-                <div class="summary-total">
-                    <span>Tổng cộng</span>
-                    <span class="price" id="totalFinal">2.150.000đ</span>
-                </div>
-                <a href="/Cart/Checkout" class="btn btn-checkout d-flex align-items-center justify-content-center text-decoration-none">TIẾN HÀNH THANH TOÁN</a>
-                <a href="/Product" class="btn btn-continue">TIẾP TỤC MUA HÀNG</a>
-                
-                <div class="mt-4 pt-4 border-top">
-                    <p class="small text-muted mb-2"><i class='bx bx-info-circle me-1'></i> Miễn phí vận chuyển cho đơn hàng từ 500k toàn quốc.</p>
-                    <div class="d-flex gap-2 opacity-50 fs-3">
-                        <i class='bx bxl-visa'></i>
-                        <i class='bx bxl-mastercard'></i>
-                        <i class='bx bx-qr-scan'></i>
-                    </div>
-                </div>
-            </div>
+    }
+    else
+    {
+        <div class="container text-center py-5">
+            <div class="empty-cart-icon mb-4"><i class='bx bx-shopping-bag display-1 text-muted opacity-25'></i></div>
+            <h3 class="fw-bold">Giỏ hàng của bạn đang trống</h3>
+            <p class="text-muted mb-4">Có vẻ như bạn chưa thêm sản phẩm nào vào giỏ hàng.</p>
+            <a href="/Product" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold shadow-sm">QUAY LẠI CỬA HÀNG</a>
         </div>
-    </div>
-
-    <!-- 4. SUGGESTED PRODUCTS -->
-    <section class="mt-5 pt-5 border-top">
-        <div class="section-title-wrapper">
-            <h3 class="fw-bold text-uppercase">Có thể bạn cũng thích</h3>
-        </div>
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
-            <div class="col">
-                <div class="product-card">
-                    <div class="product-img-wrapper">
-                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400" alt="Product" loading="lazy">
-                    </div>
-                    <div class="product-info flex-grow-1">
-                        <span class="brand">MICHELIN</span>
-                        <h6 class="name">Lốp Michelin City Grip 2 Cho Honda SH</h6>
-                        <div class="product-price"><span class="current">1.850.000đ</span></div>
-                    </div>
-                    <button class="btn btn-add-cart rounded-pill fw-bold mt-3">
-                        <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
-                    </button>
-                </div>
-            </div>
-            <div class="col">
-                <div class="product-card">
-                    <div class="product-img-wrapper">
-                        <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=400" alt="Product" loading="lazy">
-                    </div>
-                    <div class="product-info flex-grow-1">
-                        <span class="brand">BANDO</span>
-                        <h6 class="name">Dây Curoa Bando 2 Mặt Cho Honda SH</h6>
-                        <div class="product-price"><span class="current">680.000đ</span></div>
-                    </div>
-                    <button class="btn btn-add-cart rounded-pill fw-bold mt-3">
-                        <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </section>
+    }
 </main>
 
-<!-- Empty Cart Template (Hidden by default) -->
-<div id="emptyCartTemplate" class="d-none">
-    <div class="container empty-cart-wrapper">
-        <div class="empty-cart-icon"><i class='bx bx-shopping-bag'></i></div>
-        <h3 class="fw-bold">Giỏ hàng của bạn đang trống</h3>
-        <p class="text-muted mb-4">Có vẻ như bạn chưa thêm sản phẩm nào vào giỏ hàng.</p>
-        <a href="/Product" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold">QUAY LẠI CỬA HÀNG</a>
-    </div>
-</div>
-
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // Cập nhật số lượng và thành tiền từng dòng
-        function updateCartQty(btn, val) {
+        async function updateCartQty(btn, val) {
             const row = btn.closest('.cart-item-row');
+            const variantId = row.getAttribute('data-variant-id');
             const input = row.querySelector('.qty-input');
             const price = parseInt(row.getAttribute('data-price'));
             const subtotalEl = row.querySelector('.cart-subtotal');
             
-            let current = parseInt(input.value);
-            current += val;
-            if (current < 1) current = 1;
-            
-            input.value = current;
-            const subtotal = price * current;
-            subtotalEl.innerText = subtotal.toLocaleString('vi-VN') + 'đ';
-            
-            updateTotalCart();
-        }
+            let newQty = parseInt(input.value) + val;
+            if (newQty < 1) return;
 
-        // Xóa sản phẩm
-        function removeCartItem(btn) {
-            if(confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?')) {
-                const row = btn.closest('.cart-item-row');
-                row.style.opacity = '0';
-                row.style.transform = 'translateX(20px)';
-                setTimeout(() => {
-                    row.remove();
+            try {
+                const response = await fetch('/Cart/UpdateQuantity', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `variantId=${variantId}&quantity=${newQty}`
+                });
+                const data = await response.json();
+                if (data.success) {
+                    input.value = newQty;
+                    const subtotal = price * newQty;
+                    subtotalEl.innerText = subtotal.toLocaleString('vi-VN') + 'đ';
                     updateTotalCart();
-                    checkEmptyCart();
-                }, 300);
+                } else {
+                    Swal.fire('Lỗi', 'Không thể cập nhật số lượng. Có thể do hết hàng.', 'error');
+                }
+            } catch (error) {
+                console.error(error);
             }
         }
 
-        // Cập nhật tổng tiền toàn bộ giỏ
+        async function removeCartItem(btn) {
+            const result = await Swal.fire({
+                title: 'Xóa sản phẩm?',
+                text: "Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Có, xóa ngay!',
+                cancelButtonText: 'Hủy'
+            });
+
+            if (result.isConfirmed) {
+                const row = btn.closest('.cart-item-row');
+                const variantId = row.getAttribute('data-variant-id');
+
+                try {
+                    const response = await fetch('/Cart/RemoveFromCart', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `variantId=${variantId}`
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        row.remove();
+                        updateTotalCart();
+                        if (document.querySelectorAll('.cart-item-row').length === 0) {
+                            window.location.reload();
+                        }
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+        }
+
         function updateTotalCart() {
             let total = 0;
             document.querySelectorAll('.cart-item-row').forEach(row => {
@@ -239,14 +179,7 @@
             const formatted = total.toLocaleString('vi-VN') + 'đ';
             document.getElementById('totalSubtotal').innerText = formatted;
             document.getElementById('totalFinal').innerText = formatted;
-        }
-
-        // Kiểm tra giỏ hàng trống
-        function checkEmptyCart() {
-            const items = document.querySelectorAll('.cart-item-row');
-            if (items.length === 0) {
-                document.querySelector('main').innerHTML = document.getElementById('emptyCartTemplate').innerHTML;
-            }
+            if (typeof updateCartBadge === "function") updateCartBadge();
         }
     </script>
 }

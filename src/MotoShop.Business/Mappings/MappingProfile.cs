@@ -14,6 +14,7 @@ namespace MotoShop.Business.Mappings
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.CategoryName : string.Empty))
                 .ForMember(dest => dest.BrandName, opt => opt.MapFrom(src => src.Brand != null ? src.Brand.BrandName : string.Empty))
                 .ForMember(dest => dest.MinPrice, opt => opt.MapFrom(src => src.Variants.Any() ? src.Variants.Min(v => v.Price) : 0))
+                .ForMember(dest => dest.DefaultVariantId, opt => opt.MapFrom(src => src.Variants.Any() ? src.Variants.FirstOrDefault().ProductVariantId : 0))
                 .ForMember(dest => dest.PrimaryImageUrl, opt => opt.MapFrom(src => src.Images.FirstOrDefault(i => i.IsPrimary) != null ? src.Images.FirstOrDefault(i => i.IsPrimary).ImageUrl : (src.Images.Any() ? src.Images.First().ImageUrl : string.Empty)));
 
             // Category Mapping

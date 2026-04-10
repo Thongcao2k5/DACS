@@ -4,6 +4,8 @@
     ViewData["Title"] = "Đăng ký tài khoản";
 }
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
 <div class="breadcrumb-wrapper">
     <div class="container">
         <nav aria-label="breadcrumb">
@@ -17,88 +19,176 @@
 
 <main class="auth-wrapper">
     <div class="container">
-        <div class="auth-card">
-            <div class="auth-header">
-                <h2>ĐĂNG KÝ TÀI KHOẢN</h2>
-                <p>Trở thành thành viên MotoShop để nhận ngay các ưu đãi đặc biệt.</p>
+        <div class="auth-card shadow-lg border-0 rounded-4 p-4">
+            <div class="auth-header text-center mb-4">
+                <h2 class="fw-bold text-dark">ĐĂNG KÝ TÀI KHOẢN</h2>
+                <p class="text-muted">Tham gia MotoShop để nhận nhiều ưu đãi phụ tùng và dịch vụ.</p>
             </div>
 
-            <form asp-action="Register" method="post">
-                <div asp-validation-summary="All" class="text-danger small mb-3"></div>
+            <form asp-action="Register" method="post" id="mainRegisterForm">
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
 
-                <div class="mb-3">
-                    <label asp-for="FullName" class="form-label-custom">Họ và tên *</label>
-                    <input asp-for="FullName" class="form-control form-control-custom" placeholder="Nhập họ và tên của bạn">
-                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                <div id="step1">
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label-custom">Họ và tên *</label>
+                        <input asp-for="FullName" class="form-control form-control-custom" placeholder="Nhập họ tên">
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label-custom">Email *</label>
+                            <input asp-for="Email" id="emailInput" class="form-control form-control-custom" placeholder="email@example.com">
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PhoneNumber" class="form-label-custom">Số điện thoại *</label>
+                            <input asp-for="PhoneNumber" class="form-control form-control-custom" placeholder="09xxx">
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label-custom">Mật khẩu *</label>
+                        <div class="password-group position-relative">
+                            <input asp-for="Password" type="password" id="regPassword" class="form-control form-control-custom">
+                            <i class='bx bx-hide password-toggle-icon' style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer;" onclick="togglePass('regPassword', this)"></i>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ConfirmPassword" class="form-label-custom">Xác nhận mật khẩu *</label>
+                        <div class="password-group position-relative">
+                            <input asp-for="ConfirmPassword" type="password" id="regConfirmPassword" class="form-control form-control-custom">
+                            <i class='bx bx-hide password-toggle-icon' style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer;" onclick="togglePass('regConfirmPassword', this)"></i>
+                        </div>
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
+
+                    <button type="button" id="btnSendOtp" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold mb-3 py-3">
+                        TIẾP TỤC & GỬI MÃ XÁC NHẬN
+                    </button>
                 </div>
 
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label asp-for="Email" class="form-label-custom">Email *</label>
-                        <input asp-for="Email" class="form-control form-control-custom" placeholder="email@vi dụ.com">
-                        <span asp-validation-for="Email" class="text-danger small"></span>
+                <div id="step2" style="display:none;" class="animate__animated animate__fadeIn">
+                    <div class="text-center mb-4">
+                        <div class="display-1 text-danger mb-2"><i class='bx bx-mail-send'></i></div>
+                        <h5 class="fw-bold">XÁC THỰC EMAIL</h5>
+                        <p class="small text-muted">Chúng tôi đã gửi mã 6 số đến email của bạn.</p>
                     </div>
-                    <div class="col-md-6">
-                        <label asp-for="PhoneNumber" class="form-label-custom">Số điện thoại *</label>
-                        <input asp-for="PhoneNumber" class="form-control form-control-custom" placeholder="Nhập số điện thoại">
-                        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <label asp-for="Password" class="form-label-custom">Mật khẩu *</label>
-                    <div class="password-group">
-                        <input asp-for="Password" id="regPassword" class="form-control form-control-custom" placeholder="Tối thiểu 6 ký tự">
-                        <i class='bx bx-hide password-toggle-icon' onclick="togglePass('regPassword', this)"></i>
-                    </div>
-                    <span asp-validation-for="Password" class="text-danger small"></span>
-                </div>
 
-                <div class="mb-3">
-                    <label asp-for="ConfirmPassword" class="form-label-custom">Xác nhận mật khẩu *</label>
-                    <div class="password-group">
-                        <input asp-for="ConfirmPassword" id="regConfirmPassword" class="form-control form-control-custom" placeholder="Nhập lại mật khẩu">
-                        <i class='bx bx-hide password-toggle-icon' onclick="togglePass('regConfirmPassword', this)"></i>
+                    <div class="mb-4">
+                        <input asp-for="VerificationCode" type="text" id="otpInput" class="form-control text-center fs-2 fw-bold border-danger" maxlength="6" placeholder="000000">
+                        <span asp-validation-for="VerificationCode" class="text-danger small d-block text-center mt-2"></span>
                     </div>
-                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
-                </div>
 
-                <div class="mb-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="termsCheck" required>
-                        <label class="form-check-label text-muted small" for="termsCheck">
-                            Tôi đồng ý với <a href="/Info/Terms" class="text-danger">Điều khoản sử dụng</a> và Chính sách bảo mật của MotoShop.
-                        </label>
+                    <button type="submit" class="btn btn-success btn-lg w-100 rounded-pill fw-bold mb-3 py-3">
+                        XÁC NHẬN & ĐĂNG KÝ
+                    </button>
+
+                    <div class="text-center">
+                        <p id="timerText" class="small text-muted">Gửi lại mã sau: <span id="countdown" class="fw-bold text-danger">60</span>s</p>
+                        <button type="button" id="btnResendOtp" class="btn btn-link btn-sm text-danger text-decoration-none d-none fw-bold" onclick="sendOtp()">
+                            GỬI LẠI MÃ NGAY
+                        </button>
                     </div>
+                    <button type="button" class="btn btn-link btn-sm w-100 text-muted mt-2" onclick="backToStep1()">Quay lại chỉnh sửa thông tin</button>
                 </div>
-
-                <button type="submit" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold mb-4">ĐĂNG KÝ NGAY</button>
             </form>
-
-            <!-- 4. ADDITIONAL OPTIONS -->
-            <div class="text-center">
-                <p class="text-muted small mb-0">Đã có tài khoản? <a href="/Account/Login" class="text-danger fw-bold text-decoration-none">Đăng nhập</a></p>
-            </div>
-
-            <div class="social-auth-divider">
-                <span>Hoặc đăng ký nhanh bằng</span>
-            </div>
-
-            <div class="social-btns">
-                <a href="#" class="btn-social btn-google">
-                    <i class='bx bxl-google'></i> Google
-                </a>
-                <a href="#" class="btn-social btn-facebook">
-                    <i class='bx bxl-facebook-circle'></i> Facebook
-                </a>
-            </div>
         </div>
     </div>
 </main>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-        // Hàm ẩn hiện mật khẩu dùng chung
+        // 1. Gửi OTP (Sử dụng đoạn logic bạn cung cấp)
+        document.getElementById('btnSendOtp').addEventListener('click', async function () {
+            const email = document.getElementById('emailInput').value;
+            if (!email) {
+                Swal.fire('Chú ý!', 'Vui lòng nhập Email!', 'warning');
+                return;
+            }
+
+            this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang gửi...';
+            this.disabled = true;
+
+            try {
+                const response = await fetch('/Account/SendOtp', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('step1').style.display = 'none';
+                    document.getElementById('step2').style.display = 'block';
+                    startTimer();
+                } else {
+                    Swal.fire('Lỗi!', data.message, 'error');
+                    this.innerHTML = 'TIẾP TỤC & GỬI MÃ XÁC NHẬN';
+                    this.disabled = false;
+                }
+            } catch (error) {
+                Swal.fire('Lỗi!', 'Không thể kết nối máy chủ', 'error');
+                this.disabled = false;
+            }
+        });
+
+        // 2. Xử lý đăng ký cuối cùng
+        document.getElementById('mainRegisterForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const btn = this.querySelector('button[type="submit"]');
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang tạo tài khoản...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Đăng ký thành công!',
+                        text: data.message,
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = data.redirectUrl;
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Thất bại',
+                        html: data.message,
+                        icon: 'error'
+                    });
+                    btn.innerHTML = 'XÁC NHẬN & ĐĂNG KÝ';
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                Swal.fire('Lỗi!', 'Không thể kết nối đến máy chủ.', 'error');
+                btn.innerHTML = 'XÁC NHẬN & ĐĂNG KÝ';
+                btn.disabled = false;
+            }
+        });
+
+        // 3. Các hàm hỗ trợ (giữ nguyên)
         function togglePass(inputId, icon) {
             const input = document.getElementById(inputId);
             if (input.type === 'password') {
@@ -110,20 +200,31 @@
             }
         }
 
-        // Xử lý đăng ký demo
-        function handleRegister(e) {
-            e.preventDefault();
-            const pass = document.getElementById('regPassword').value;
-            const confirm = document.getElementById('regConfirmPassword').value;
-            const errorMsg = document.getElementById('registerError');
+        function startTimer() {
+            let timeLeft = 60;
+            const countdownEl = document.getElementById('countdown');
+            const timerText = document.getElementById('timerText');
+            const resendBtn = document.getElementById('btnResendOtp');
+            timerText.style.display = 'block';
+            resendBtn.classList.add('d-none');
 
-            if (pass !== confirm) {
-                alert('Mật khẩu xác nhận không khớp!');
-                return;
-            }
-            
-            // Giả lập check lỗi
-            errorMsg.classList.remove('d-none');
+            const timer = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    timerText.style.display = 'none';
+                    resendBtn.classList.remove('d-none');
+                } else {
+                    countdownEl.innerText = timeLeft;
+                }
+                timeLeft -= 1;
+            }, 1000);
+        }
+
+        function backToStep1() {
+            document.getElementById('step1').style.display = 'block';
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('btnSendOtp').disabled = false;
+            document.getElementById('btnSendOtp').innerHTML = 'TIẾP TỤC & GỬI MÃ XÁC NHẬN';
         }
     </script>
 }

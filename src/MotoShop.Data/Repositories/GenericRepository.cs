@@ -25,6 +25,12 @@ namespace MotoShop.Data.Repositories
             return await _dbSet.FindAsync(id);
         }
 
+        public async Task<T?> GetByIdAsync(int? id)
+        {
+            if (id == null) return null;
+            return await _dbSet.FindAsync(id);
+        }
+
         public async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _dbSet.ToListAsync();
