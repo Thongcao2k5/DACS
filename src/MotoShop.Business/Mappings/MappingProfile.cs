@@ -20,11 +20,11 @@ namespace MotoShop.Business.Mappings
             // Category Mapping
             CreateMap<Category, CategoryDto>()
                 .ForMember(dest => dest.ParentCategoryName, opt => opt.MapFrom(src => src.ParentCategory != null ? src.ParentCategory.CategoryName : string.Empty))
-                .ForMember(dest => dest.ProductCount, opt => opt.MapFrom(src => src.Products.Count));
+                .ForMember(dest => dest.ProductCount, opt => opt.MapFrom(src => src.Products != null ? src.Products.Count : 0));
 
             // Brand Mapping
             CreateMap<Brand, BrandDto>()
-                .ForMember(dest => dest.ProductCount, opt => opt.MapFrom(src => src.Products.Count));
+                .ForMember(dest => dest.ProductCount, opt => opt.MapFrom(src => src.Products != null ? src.Products.Count : 0));
 
             // MotorbikeModel Mapping
             CreateMap<MotorbikeModel, MotorbikeModelDto>()

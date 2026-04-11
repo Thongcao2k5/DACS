@@ -25,6 +25,19 @@ builder.Host.UseSerilog();
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        builder =>
+        {
+            builder.SetIsOriginAllowed(origin => true) // Cho phép tất cả origin
+                   .AllowAnyMethod()
+                   .AllowAnyHeader()
+                   .AllowCredentials(); // RẤT QUAN TRỌNG: Cho phép gửi Cookies/Auth
+        });
+});
+
 // Register AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
@@ -83,6 +96,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();

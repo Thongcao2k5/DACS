@@ -4,18 +4,12 @@ using MotoShop.Data.Models;
 using AutoMapper;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MotoShop.Business.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace MotoShop.Business.Services
 {
-    public interface ICategoryService
-    {
-        Task<IEnumerable<CategoryDto>> GetAllAsync();
-        Task<CategoryDto?> GetByIdAsync(int id);
-        Task<bool> CreateAsync(CategoryDto categoryDto);
-        Task<bool> UpdateAsync(CategoryDto categoryDto);
-        Task<bool> DeleteAsync(int id);
-    }
-
     public class CategoryService : ICategoryService
     {
         private readonly IUnitOfWork _uow;
@@ -29,13 +23,22 @@ namespace MotoShop.Business.Services
 
         public async Task<IEnumerable<CategoryDto>> GetAllAsync()
         {
-            var categories = await _uow.Repository<Category>().GetAllAsync();
+            // Nạp thêm danh sách sản phẩm để AutoMapper có thể đếm chính xác số lượng
+            var categories = await _uow.Repository<Category>()
+                .Find(c => true)
+                .Include(c => c.Products)
+                .ToListAsync();
+                
             return _mapper.Map<IEnumerable<CategoryDto>>(categories);
         }
 
         public async Task<CategoryDto?> GetByIdAsync(int id)
         {
-            var category = await _uow.Repository<Category>().GetByIdAsync(id);
+            var category = await _uow.Repository<Category>()
+                .Find(c => c.CategoryId == id)
+                .Include(c => c.Products)
+                .FirstOrDefaultAsync();
+                
             return _mapper.Map<CategoryDto>(category);
         }
 

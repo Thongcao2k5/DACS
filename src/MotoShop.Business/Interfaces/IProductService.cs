@@ -19,6 +19,7 @@ namespace MotoShop.Business.Interfaces
         Task<IEnumerable<CategoryDto>> GetAllCategoriesAsync();
         Task<IEnumerable<BrandDto>> GetAllBrandsAsync();
         Task<IEnumerable<ProductDto>> GetFeaturedProductsAsync(int count);
+        Task<IEnumerable<ProductDto>> GetRandomProductsAsync(int count);
         Task<ProductDto> GetProductBySlugAsync(string slug);
     }
 }

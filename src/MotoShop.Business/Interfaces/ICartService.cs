@@ -1,9 +1,8 @@
 using MotoShop.Business.DTOs;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MotoShop.Business.Services
+namespace MotoShop.Business.Interfaces
 {
     public interface ICartService
     {

@@ -1,5 +1,9 @@
+@using MotoShop.Business.DTOs
+@using MotoShop.Business.Helpers
+@model PagedList<ProductDto>
+
 @{
-    ViewData["Title"] = "Phụ tùng máy chính hãng - MotoShop";
+    ViewData["Title"] = $"{ViewBag.CategoryName} - MotoShop";
 }
 
 <!-- 1. BREADCRUMB -->
@@ -8,7 +12,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Phụ tùng máy</li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewBag.CategoryName</li>
             </ol>
         </nav>
     </div>
@@ -18,98 +22,107 @@
 <section class="category-header-section">
     <div class="container">
         <div class="category-header-content">
-            <h1>PHỤ TÙNG MÁY</h1>
-            <p>Tổng hợp các loại linh kiện động cơ, bộ nồi, piston, xi lanh chính hãng giúp tối ưu hóa hiệu suất vận hành và độ bền cho xế yêu của bạn.</p>
+            <h1 class="text-uppercase">@ViewBag.CategoryName</h1>
+            <p>Tổng hợp các loại @ViewBag.CategoryName chính hãng giúp tối ưu hóa hiệu suất vận hành và độ bền cho xế yêu của bạn.</p>
         </div>
     </div>
 </section>
 
 <main class="container mb-5">
     <!-- 4. FILTER & SORT BAR (Inline) -->
-    <div class="inline-filter-bar">
+    <div class="inline-filter-bar d-flex justify-content-between align-items-center p-3 bg-light rounded-3 mb-4 shadow-sm">
         <div class="d-flex align-items-center gap-3 flex-wrap">
-            <div class="d-flex align-items-center gap-2">
-                <span class="small fw-bold text-muted">THƯƠNG HIỆU:</span>
-                <select class="form-select form-control-custom h-auto py-1 px-3 small" style="width: auto;">
-                    <option selected>Tất cả thương hiệu</option>
-                    <option>Honda</option>
-                    <option>Yamaha</option>
-                    <option>Suzuki</option>
-                    <option>Bando</option>
-                </select>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="small fw-bold text-muted">KHOẢNG GIÁ:</span>
-                <select class="form-select form-control-custom h-auto py-1 px-3 small" style="width: auto;">
-                    <option selected>Tất cả giá</option>
-                    <option>Dưới 500.000đ</option>
-                    <option>500.000đ - 2.000.000đ</option>
-                    <option>Trên 2.000.000đ</option>
-                </select>
-            </div>
+            <span class="text-muted small fw-bold text-uppercase">@Model.TotalCount SẢN PHẨM</span>
         </div>
         
         <div class="d-flex align-items-center gap-3">
-            <span class="text-muted small fw-bold">128 SẢN PHẨM</span>
-            <select class="form-select border-0 bg-transparent fw-bold small p-0" style="width: auto; box-shadow: none;">
-                <option>Mặc định</option>
-                <option>Giá: Thấp đến Cao</option>
-                <option>Giá: Cao đến Thấp</option>
-                <option>Bán chạy nhất</option>
+            <span class="text-muted small fw-bold">SẮP XẾP:</span>
+            <select class="form-select border-0 bg-transparent fw-bold small p-0" style="width: auto; box-shadow: none;" onchange="location.href='?id=@ViewBag.CurrentCategoryId&sort=' + this.value">
+                <option value="newest">Mới nhất</option>
+                <option value="price_asc">Giá: Thấp đến Cao</option>
+                <option value="price_desc">Giá: Cao đến Thấp</option>
             </select>
         </div>
     </div>
 
     <!-- 5. PRODUCTS GRID -->
     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="categoryProductGrid">
-        <!-- Product 1 -->
-        <div class="col">
-            <div class="product-card">
-                <div class="product-img-wrapper">
-                    <a asp-action="Details" asp-route-slug="bo-noi-truoc-honda-sh">
-                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400" alt="Product" loading="lazy">
-                    </a>
-                </div>
-                <div class="product-info flex-grow-1">
-                    <span class="brand">HONDA</span>
-                    <h6 class="name"><a asp-action="Details" asp-route-slug="bo-noi-truoc-honda-sh" class="text-decoration-none text-dark">Bộ Nồi Trước Honda SH Chính Hãng - Made in Italy</a></h6>
-                    <div class="product-price">
-                        <span class="current">1.250.000đ</span>
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var p in Model)
+            {
+                <div class="col">
+                    <div class="product-card h-100 d-flex flex-column">
+                        <div class="product-img-wrapper">
+                            <a asp-action="Details" asp-route-slug="@p.Slug">
+                                <img src="@(string.IsNullOrEmpty(p.PrimaryImageUrl) ? "https://via.placeholder.com/400" : p.PrimaryImageUrl)" alt="@p.ProductName" loading="lazy">
+                            </a>
+                        </div>
+                        <div class="product-info flex-grow-1">
+                            <span class="brand text-uppercase text-muted small">@p.BrandName</span>
+                            <h6 class="name"><a asp-action="Details" asp-route-slug="@p.Slug" class="text-decoration-none text-dark fw-bold">@p.ProductName</a></h6>
+                            <div class="product-price">
+                                <span class="current text-danger fw-bold">@string.Format("{0:N0}đ", p.MinPrice)</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-add-cart w-100 rounded-pill fw-bold mt-3" onclick="handleAddToCart(@p.DefaultVariantId)">
+                            <i class='bx bx-cart-add fs-4'></i> <span class="ms-1">THÊM VÀO GIỎ</span>
+                        </button>
                     </div>
                 </div>
-                <button class="btn btn-add-cart w-100 rounded-pill fw-bold mt-3">THÊM VÀO GIỎ</button>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5">
+                <i class='bx bx-package display-1 text-muted opacity-25'></i>
+                <h4 class="mt-3 text-muted">Hiện chưa có sản phẩm nào trong danh mục này.</h4>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-danger rounded-pill px-4 mt-3">Quay lại trang chủ</a>
             </div>
-        </div>
-
-        <!-- Product 2 -->
-        <div class="col">
-            <div class="product-card">
-                <span class="product-badge badge-hot">Hot</span>
-                <div class="product-img-wrapper">
-                    <a asp-action="Details" asp-route-slug="day-curoa-bando">
-                        <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=400" alt="Product" loading="lazy">
-                    </a>
-                </div>
-                <div class="product-info flex-grow-1">
-                    <span class="brand">BANDO</span>
-                    <h6 class="name"><a asp-action="Details" asp-route-slug="day-curoa-bando" class="text-decoration-none text-dark">Dây Curoa Bando 2 Mặt Cho Honda SH 150i</a></h6>
-                    <div class="product-price">
-                        <span class="current">680.000đ</span>
-                    </div>
-                </div>
-                <button class="btn btn-add-cart w-100 rounded-pill fw-bold mt-3">THÊM VÀO GIỎ</button>
-            </div>
-        </div>
-
-        <!-- Add more products... -->
+        }
     </div>
 
     <!-- 6. PAGINATION -->
-    <nav class="pagination-wrapper mt-5">
-        <ul class="pagination">
-            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">2</a></li>
-            <li class="page-item"><a class="page-link" href="#"><i class='bx bx-chevron-right'></i></a></li>
-        </ul>
-    </nav>
+    @if (Model.TotalPages > 1)
+    {
+        <nav class="pagination-wrapper mt-5 d-flex justify-content-center">
+            <ul class="pagination">
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                        <a class="page-link" href="?id=@ViewBag.CurrentCategoryId&page=@i">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
 </main>
+
+@section Scripts {
+    <script>
+        async function handleAddToCart(variantId) {
+            if (!variantId || variantId == 0) {
+                alert("Sản phẩm chưa sẵn sàng.");
+                return;
+            }
+            const formData = new FormData();
+            formData.append('variantId', variantId);
+            formData.append('quantity', 1);
+
+            try {
+                const response = await fetch('/Cart/AddToCart', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                alert(result.message);
+                if (!result.success && result.message.toLowerCase().includes('đăng nhập')) {
+                    window.location.href = '/Account/Login';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi thêm vào giỏ hàng.');
+            }
+        }
+    </script>
+}

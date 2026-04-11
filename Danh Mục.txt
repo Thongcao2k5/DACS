@@ -1,0 +1,732 @@
+﻿DANH MỤC: PHỤ TÙNG MÁY
+1. Piston UMA Racing
+Thông tin chung
+Loại: Piston
+Mô tả:
+Piston UMA Racing là dòng piston nâng cấp hiệu suất cao, giúp tăng dung tích xi-lanh và cải thiện khả năng tăng tốc của xe. Sản phẩm được sản xuất từ hợp kim nhôm cao cấp, có trọng lượng nhẹ nhưng độ bền cao, giúp động cơ vận hành ổn định ở vòng tua lớn. Phù hợp cho người dùng muốn nâng cấp nhẹ động cơ mà vẫn đảm bảo độ bền lâu dài.
+Thông số kỹ thuật
+Chất liệu: Hợp kim nhôm CNC
+Đường kính piston: 62mm / 65mm
+Khả năng chịu nhiệt: ~300°C
+Tương thích: Exciter, Winner
+Trọng lượng: ~180g
+Biến thể
+62mm – 850.000 – UMA-P62
+65mm – 950.000 – UMA-P65
+Ảnh: https://umaracing.com/wp-content/uploads/2022/04/Racing-Piston.png
+2. Trục cam BRT
+Thông tin chung
+Loại: Trục cam
+Mô tả:
+Trục cam BRT giúp cải thiện thời gian đóng mở xupap, từ đó tăng hiệu suất nạp và xả nhiên liệu. Khi lắp đặt, xe sẽ có độ bốc tốt hơn và vòng tua cao hơn so với cam zin. Đây là phụ tùng rất phổ biến trong giới chơi xe độ.
+Thông số kỹ thuật
+Chất liệu: Thép chịu lực
+Loại cam: Cam độ Stage 1 / Stage 2
+Tương thích: Xe 150cc – 155cc
+Độ nâng cam: 6.5mm – 7.2mm
+Xuất xứ: Indonesia
+Biến thể
+Stage 1 – 1.200.000 – BRT-C1
+Stage 2 – 1.500.000 – BRT-C2
+Ảnh: https://product.hstatic.net/1000375176/product/dsc04816_5e2fee57d0eb45e8802c2d37348db04b_master.jpg
+3. Xupap Inox Racing
+Thông tin chung
+Loại: Xupap
+Mô tả:
+Xupap inox giúp tăng độ bền và khả năng chịu nhiệt của động cơ, đặc biệt khi xe vận hành ở vòng tua cao hoặc trong điều kiện khắc nghiệt.
+Thông số kỹ thuật
+Chất liệu: Inox chịu nhiệt
+Đường kính: 22mm / 24mm
+Nhiệt độ tối đa: 700°C
+Biến thể
+Intake – 300.000 – XV-IN
+Exhaust – 350.000 – XV-EX
+Ảnh:
+https://cdn.hstatic.net/products/200000263155/screenshot_2025-07-23_043343_85f7674fde2b40a39576bb947c03f8a7.png
+4. Bugi NGK Iridium
+Thông tin chung
+Loại: Bugi
+Mô tả:
+Bugi Iridium NGK giúp tăng hiệu suất đánh lửa, giúp động cơ hoạt động mượt mà hơn và tiết kiệm nhiên liệu đáng kể.
+Thông số kỹ thuật
+Loại: Iridium
+Tuổi thọ: ~30.000 km
+Điện áp: 12V
+Biến thể
+CR7 – 220.000 – NGK-CR7
+CR8 – 240.000 – NGK-CR8
+Ảnh:
+https://ngkntk.com.vn/upload/images/Laser%201.jpg
+5. Lọc gió DNA
+Thông tin chung
+Loại: Lọc gió
+Mô tả:
+Lọc gió DNA giúp tăng lượng khí sạch vào buồng đốt, cải thiện công suất động cơ và giảm hao xăng.
+Thông số kỹ thuật
+Chất liệu: Sợi tổng hợp
+Hiệu suất lọc: 98%
+Tuổi thọ: 20.000 km
+Biến thể
+Exciter – 800.000 – DNA-EX
+Winner – 780.000 – DNA-WIN
+Ảnh:
+https://shop2banh.vn/images/thumbs/2022/10/loc-gio-dna-chinh-hang-danh-cho-honda-sh350i-1938-slide-products-63468754645dc.jpg
+6. Mobin sườn Racing Boy
+Thông tin chung
+Loại: Mobin
+Mô tả:
+Mobin giúp tăng cường dòng điện đánh lửa, giúp bugi hoạt động hiệu quả hơn.
+Thông số kỹ thuật
+Điện áp: 12V
+Chất liệu: Đồng + nhựa chịu nhiệt
+Biến thể
+Tiêu chuẩn – 500.000 – MOBIN-RCB
+Ảnh:
+https://tuantienracing.com/thumbs/600x400x2/upload/product/vai-tro-mobin-suon-1574.jpg
+7. Kim phun xăng Bosch
+Thông tin chung
+Loại: Kim phun
+Mô tả:
+Kim phun Bosch giúp tối ưu lượng nhiên liệu phun vào buồng đốt, tăng hiệu suất và tiết kiệm xăng.
+Thông số kỹ thuật
+Áp suất: 3 bar
+Lưu lượng: 120cc/min
+Biến thể
+Tiêu chuẩn – 700.000 – INJ-BOSCH
+Ảnh:
+https://product.hstatic.net/200000536179/product/51epfgw8qwl._ac_sl1500__a422140993ba4853bda6d47f91dc72ce_1024x1024.jpg
+8. Bơm xăng điện Denso
+Thông tin chung
+Loại: Bơm xăng
+Mô tả:
+Bơm xăng điện Denso giúp cung cấp nhiên liệu ổn định cho động cơ, đảm bảo xe hoạt động mượt mà.
+Thông số kỹ thuật
+Điện áp: 12V
+Lưu lượng: 90L/h
+Biến thể
+Tiêu chuẩn – 900.000 – PUMP-DEN
+Ảnh:
+https://densovietnam.vn/wp-content/uploads/2021/04/195131-9300-1-scaled.jpg
+9. ECU độ UMA Racing
+Thông tin chung
+Loại: ECU
+Mô tả:
+ECU độ cho phép điều chỉnh các thông số động cơ như xăng, lửa để tối ưu hiệu suất.
+Thông số kỹ thuật
+Điện áp: 12V
+Chức năng: Mapping
+Biến thể
+Standard – 3.500.000 – ECU-UMA
+Ảnh:
+https://product.hstatic.net/200000263155/product/c29a346f-4136-46b9-9748-9810aae498cf_369233d893474d7286a5069d7a789212.jpg
+10. Bộ nồi SSS Racing
+Thông tin chung
+Loại: Bộ nồi
+Mô tả:
+Bộ nồi SSS giúp xe tăng tốc nhanh hơn, giảm trượt nồi và cải thiện độ bốc.
+Thông số kỹ thuật
+Chất liệu: Hợp kim chịu nhiệt
+Độ bền: Cao
+Biến thể
+Full bộ – 2.200.000 – SSS-FULL
+Ảnh:
+https://cdn.hstatic.net/products/200000692635/b__c_n_sau_wave_s_110__rsx_110__wave_blade_honda___22100k09l01___53f57beb54d147709a9bc07c1dc58695_1024x1024.jpg
+DANH MỤC: DÀN CHÂN 
+1. Mâm RCB Racing Boy
+Thông tin chung
+Loại: Mâm xe
+Mô tả:
+Mâm RCB (Racing Boy) là dòng mâm độ cao cấp với thiết kế thể thao và độ hoàn thiện cực kỳ tinh xảo. Sản phẩm giúp giảm trọng lượng không tải của xe, từ đó cải thiện khả năng tăng tốc và độ ổn định khi vào cua. Ngoài ra, lớp sơn tĩnh điện giúp chống ăn mòn và giữ màu bền lâu theo thời gian.
+Thông số kỹ thuật
+Kích thước: 17 inch
+Chất liệu: Hợp kim nhôm CNC
+Công nghệ: Sơn tĩnh điện
+Tải trọng: ~200kg
+Trọng lượng: ~3.5kg
+Biến thể
+Đen – 6.500.000 – RCB-B
+Vàng – 6.800.000 – RCB-G
+Ảnh:
+https://shop2banh.vn/images/thumbs/2018/03/mam-rcb-chinh-hang-cho-wave-dream-future-sirius-jupiter-exciter-135-doi-dau-695-slide-products-5aa09bfe05fd6.jpg
+
+
+2. Phuộc trước Ohlins Upside Down
+Thông tin chung
+Loại: Phuộc trước
+Mô tả:
+Phuộc Ohlins Upside Down là dòng phuộc cao cấp chuyên dùng cho xe hiệu suất cao. Sản phẩm mang lại khả năng hấp thụ xung lực cực tốt, giúp xe vận hành ổn định và êm ái ngay cả khi chạy tốc độ cao hoặc đường xấu.
+Thông số kỹ thuật
+Loại: Upside Down
+Hành trình: 120mm
+Điều chỉnh: Compression + Rebound
+Chất liệu: Nhôm + thép
+Xuất xứ: Thụy Điển
+Biến thể
+Tiêu chuẩn – 12.000.000 – OHL-F
+Ảnh:
+https://detailingnation.vn/cdn/shop/files/OhlinsFRGT219745mmYamahaR1_3ca3f66a-47d7-437f-8b09-912a9f465253_1080x.png?v=1724121441
+
+
+3. Phuộc sau YSS G-Sport
+Thông tin chung
+Loại: Phuộc sau
+Mô tả:
+Phuộc YSS G-Sport mang lại cảm giác lái êm ái, giúp xe ổn định hơn khi đi đường dài hoặc địa hình xấu. Có thể điều chỉnh độ cứng phù hợp với từng nhu cầu sử dụng.
+Thông số kỹ thuật
+Hành trình: 110mm
+Điều chỉnh: 3 cấp độ
+Chất liệu: Thép + nhôm
+Biến thể
+Tiêu chuẩn – 3.500.000 – YSS-R
+Ảnh:
+https://shop2banh.vn/images/thumbs/2022/08/phuoc-yss-g-sport-chinh-hang-cho-honda-ab160-1893-slide-products-62f1daef99ab7.jpg
+
+
+4. Heo dầu Brembo M4
+Thông tin chung
+Loại: Heo dầu (phanh)
+Mô tả:
+Heo dầu Brembo M4 giúp tăng lực phanh đáng kể, mang lại độ an toàn cao hơn khi di chuyển tốc độ cao hoặc phanh gấp.
+Thông số kỹ thuật
+Số piston: 4
+Chất liệu: Nhôm CNC
+Kích thước: 100mm
+Biến thể
+Tiêu chuẩn – 6.500.000 – BR-M4
+Ảnh:
+https://product.hstatic.net/200000341373/product/m4-108-01_956affece1fd4584aba1542ea3902994.jpg
+
+
+5. Đĩa thắng Galfer
+Thông tin chung
+Loại: Đĩa phanh
+Mô tả:
+Đĩa thắng Galfer có khả năng tản nhiệt tốt, giúp giảm hiện tượng bó cứng phanh khi sử dụng liên tục.
+Thông số kỹ thuật
+Đường kính: 260mm
+Chất liệu: Thép carbon
+Độ dày: 4mm
+Biến thể
+260mm – 2.200.000 – GAL-260
+Ảnh:
+https://bizweb.dktcdn.net/thumb/1024x1024/100/477/832/products/6695bf01-34db-47df-b6c2-6c1cfe7a4cc3.jpg?v=1679503242737
+
+
+6. Dây dầu HEL Performance
+Thông tin chung
+Loại: Dây dầu phanh
+Mô tả:
+Dây dầu HEL giúp tăng độ chính xác khi bóp phanh, hạn chế giãn nở khi nhiệt độ cao.
+Thông số kỹ thuật
+Chất liệu: Thép bọc teflon
+Chiều dài: 90–110cm
+Áp suất chịu: 3000 PSI
+Biến thể
+Đỏ – 600.000 – HEL-R
+Xanh – 600.000 – HEL-B
+Ảnh:
+https://ttracing.net/wp-content/uploads/2025/04/DAY-HEL-CHINH-HANG-BAM-VESPA.jpeg
+
+
+7. Gác chân CNC Racing
+Thông tin chung
+Loại: Gác chân
+Mô tả:
+Gác chân CNC giúp tăng độ bám và chống trượt, đồng thời nâng cao tính thẩm mỹ cho xe.
+Thông số kỹ thuật
+Chất liệu: Nhôm CNC
+Trọng lượng: ~300g
+Bề mặt: Chống trượt
+Biến thể
+Đen – 500.000 – GC-B
+Đỏ – 520.000 – GC-R
+Ảnh:
+https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRC04MQIMp52-XbZoMr5wTd2zDZXYyO1D0tFw&s
+
+
+8. Pát heo dầu CNC
+Thông tin chung
+Loại: Pát heo
+Mô tả:
+Pát heo giúp gắn heo dầu lớn lên xe zin, hỗ trợ nâng cấp hệ thống phanh dễ dàng.
+Thông số kỹ thuật
+Chất liệu: Nhôm CNC
+Độ dày: 10mm
+Biến thể
+Tiêu chuẩn – 350.000 – PAT-CNC
+Ảnh:
+https://down-vn.img.susercontent.com/file/sg-11134201-7rbl5-lm8sigdr5wa1c0
+
+
+9. Chảng ba CNC Racing
+Thông tin chung
+Loại: Chảng ba
+Mô tả:
+Chảng ba CNC giúp tăng độ cứng vững phần đầu xe, giúp xe ổn định hơn khi chạy tốc độ cao.
+Thông số kỹ thuật
+Chất liệu: Nhôm CNC
+Đường kính cổ: 30mm
+Biến thể
+Tiêu chuẩn – 2.500.000 – CHANG-BA
+Ảnh:
+https://bizweb.dktcdn.net/thumb/1024x1024/100/455/876/products/pst17r-02.jpg?v=1664879598100
+
+
+10. Trục bánh trước sau Titan
+Thông tin chung
+Loại: Trục bánh
+Mô tả:
+Trục bánh Titan giúp giảm trọng lượng và tăng độ bền so với trục zin.
+Thông số kỹ thuật
+Chất liệu: Titan
+Trọng lượng: ~200g
+Độ cứng: Cao
+Biến thể
+Trước – 700.000 – TRUC-T
+Sau – 800.000 – TRUC-S
+Ảnh:
+https://img.lazcdn.com/g/p/0a5fb4b0c21dd2f536db8cc1c4b4f2c6.jpg_720x720q80.jpg
+DANH MỤC: NHỚT MÁY 
+
+
+1. Motul 300V Factory Line
+Thông tin chung
+Loại: Dầu nhớt tổng hợp cao cấp
+Mô tả:
+Motul 300V Factory Line là dòng nhớt hiệu suất cao được phát triển dành cho xe thể thao và xe đua. Với công nghệ Ester Core độc quyền, sản phẩm giúp giảm ma sát tối đa, bảo vệ động cơ trong điều kiện vận hành khắc nghiệt và duy trì hiệu suất ổn định ở nhiệt độ cao.
+Thông số kỹ thuật
+Loại: 100% Synthetic
+Độ nhớt: 10W40
+Dung tích: 1L / 2L
+Tiêu chuẩn: API SN, JASO MA2
+Nhiệt độ hoạt động: -10°C đến 300°C
+Biến thể
+1L – 420.000 – MOTUL-1
+2L – 800.000 – MOTUL-2
+Ảnh:
+https://product.hstatic.net/200000038440/product/0-09_2fdeaf1e233a4acca1348fa2a85d04f3_cbc538665d7547269cad642ed2e30e1a_29d7ead10d254242b9ffbe2d5655e7e8_master.jpg
+
+
+2. Castrol Power1 Racing
+Thông tin chung
+Loại: Dầu nhớt tổng hợp
+Mô tả:
+Castrol Power1 Racing giúp động cơ tăng tốc nhanh hơn nhờ khả năng giảm ma sát và tối ưu hiệu suất đốt cháy nhiên liệu. Phù hợp cho xe côn tay và xe thể thao.
+Thông số kỹ thuật
+Độ nhớt: 10W50
+Dung tích: 1L
+Tiêu chuẩn: API SN
+Biến thể
+1L – 300.000 – CASTROL-R
+Ảnh:
+https://www.fc-moto.de/WebRoot/FCMotoDB/Shops/10207048/6139/E498/7667/5994/DCD1/AC1E/1405/D41D/POWER1_RACING_4T_5W-40_1l_png_img_500_medium_2_ml.jpg
+
+
+3. Shell Advance Ultra
+Thông tin chung
+Loại: Dầu nhớt tổng hợp
+Mô tả:
+Shell Advance Ultra sử dụng công nghệ PurePlus giúp làm sạch động cơ, giảm cặn bẩn và kéo dài tuổi thọ máy.
+Thông số kỹ thuật
+Độ nhớt: 10W40
+Dung tích: 1L
+Tiêu chuẩn: API SN
+Biến thể
+1L – 280.000 – SHELL-U
+Ảnh:
+https://product.hstatic.net/200000341373/product/shell_advance_10w40_692c68c826d141abac25bde72c23dbd0_1024x1024.jpg
+
+
+4. Repsol Moto Racing
+Thông tin chung
+Loại: Dầu nhớt hiệu suất cao
+Mô tả:
+Repsol Racing là dòng nhớt chuyên cho xe thể thao, có khả năng chịu nhiệt cực tốt và giữ độ ổn định khi chạy tốc độ cao.
+Thông số kỹ thuật
+Độ nhớt: 10W40
+Dung tích: 1L
+Tiêu chuẩn: JASO MA2
+Biến thể
+1L – 350.000 – REPSOL-R
+Ảnh:
+https://shop2banh.vn/images/thumbs/2023/06/nhot-repsol-racing-10w40-1l-508-slide-products-6488398ce5378.png
+
+
+5. Liqui Moly Street Race
+Thông tin chung
+Loại: Dầu nhớt cao cấp
+Mô tả:
+Liqui Moly là thương hiệu đến từ Đức, nổi tiếng với khả năng bảo vệ động cơ vượt trội và giúp xe vận hành êm ái.
+Thông số kỹ thuật
+Độ nhớt: 10W40
+Dung tích: 1L
+Xuất xứ: Đức
+Biến thể
+1L – 400.000 – LIQUI
+Ảnh:
+https://bizweb.dktcdn.net/100/360/787/products/15-9fde6dfc-da4f-417a-b4fe-672cc24bacdf.jpg?v=1751006533747
+
+
+6. Total Hi-Perf 4T
+Thông tin chung
+Loại: Dầu nhớt bán tổng hợp
+Mô tả:
+Total Hi-Perf 4T phù hợp cho xe đi phố, giúp tiết kiệm nhiên liệu và bảo vệ động cơ ở mức ổn định.
+Thông số kỹ thuật
+Độ nhớt: 10W40
+Dung tích: 1L
+Biến thể
+1L – 250.000 – TOTAL
+Ảnh:
+https://dxm.content-center.totalenergies.com/api/wedia/dam/transform/xysh7dg731ta74k8f43wbfpxgr/hi-perf-4t-700-10w-40-0.8l.webp
+
+
+7. Motorex Top Speed
+Thông tin chung
+Loại: Dầu nhớt tổng hợp
+Mô tả:
+Motorex Top Speed giúp động cơ vận hành mượt mà, giảm rung và tăng tuổi thọ các chi tiết bên trong.
+Thông số kỹ thuật
+Độ nhớt: 10W40
+Dung tích: 1L
+Biến thể
+1L – 450.000 – MOTOREX
+Ảnh:
+https://cdn.shopify.com/s/files/1/2637/7322/files/Motorex_15W50_Top_Speed_720x.jpg?v=1719917727
+
+
+8. Fuchs Silkolene Pro 4
+Thông tin chung
+Loại: Dầu nhớt cao cấp
+Mô tả:
+Fuchs Silkolene Pro 4 là dòng nhớt dành cho xe hiệu suất cao, giúp giảm hao mòn và duy trì độ ổn định của động cơ.
+Thông số kỹ thuật
+Độ nhớt: 10W50
+Dung tích: 1L
+Biến thể
+1L – 420.000 – FUCHS
+Ảnh:
+https://shop2banh.vn/images/thumbs/2022/10/nhot-fuchs-silkolene-pro-4-10w40-xp-1064-slide-products-635f32393264d.jpg
+
+
+9. ENEOS Racing Street
+Thông tin chung
+Loại: Dầu nhớt
+Mô tả:
+ENEOS là thương hiệu Nhật Bản, nổi tiếng với độ ổn định và khả năng tiết kiệm nhiên liệu tốt.
+Thông số kỹ thuật
+Độ nhớt: 10W40
+Dung tích: 1L
+Biến thể
+1L – 270.000 – ENEOS
+Ảnh:
+https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSVsL2wrx-xzINnu2OomsLAeFZQBQ_xuxu4A&s
+
+
+10. Amsoil Metric Motorcycle Oil
+Thông tin chung
+Loại: Dầu nhớt cao cấp
+Mô tả:
+Amsoil là dòng nhớt cao cấp của Mỹ, giúp bảo vệ động cơ tối đa và kéo dài chu kỳ thay nhớt.
+Thông số kỹ thuật
+Độ nhớt: 10W40
+Dung tích: 1L
+Xuất xứ: Mỹ
+Biến thể
+1L – 500.000 – AMSOIL
+Ảnh:
+https://shop2banh.vn/images/thumbs/2022/12/nhot-amsoil-10w40-synthetic-metric-946ml-362-slide-products-639fe35a385e3.jpg
+DANH MỤC: ĐỒ CHƠI XE 
+
+
+1. Tay thắng CRG Folding
+Thông tin chung
+Loại: Tay thắng
+Mô tả:
+Tay thắng CRG Folding là dòng tay thắng cao cấp được gia công CNC với độ chính xác cao. Sản phẩm có khả năng gập chống gãy khi xảy ra va chạm, giúp giảm thiểu hư hỏng. Ngoài ra, tay thắng còn có thể điều chỉnh khoảng cách phù hợp với từng người dùng, mang lại cảm giác bóp phanh chính xác và êm ái hơn.
+Thông số kỹ thuật
+Chất liệu: Nhôm CNC
+Tính năng: Gập + chỉnh khoảng cách
+Trọng lượng: ~250g
+Tương thích: Xe phổ thông & PKL
+Biến thể
+Đen – 1.800.000 – CRG-B
+Đỏ – 1.850.000 – CRG-R
+Ảnh:
+https://www.tinomotor.vn/storage/pagedata/100113/img/slide/product/3292/277786935_2744964482466268_7290132748879786037_n.jpg
+
+
+2. Gương Rizoma Reverse
+Thông tin chung
+Loại: Gương chiếu hậu
+Mô tả:
+Gương Rizoma Reverse mang phong cách thể thao, thiết kế nhỏ gọn nhưng vẫn đảm bảo góc nhìn rộng. Sản phẩm giúp tăng tính thẩm mỹ và phù hợp cho các dòng xe độ.
+Thông số kỹ thuật
+Chất liệu: Nhôm CNC
+Kích thước: 80mm
+Góc xoay: 360°
+Biến thể
+Đen – 1.200.000 – RIZ-B
+Ảnh:
+https://imgwebikenet-8743.kxcdn.com/catalogue/images/159436/35_01_imgi_232_bs072a_backview_jpg.jpg
+
+
+3. Đèn LED trợ sáng L4X
+Thông tin chung
+Loại: Đèn trợ sáng
+Mô tả:
+Đèn LED trợ sáng L4X giúp tăng khả năng chiếu sáng khi di chuyển ban đêm hoặc đi tour đường dài. Ánh sáng mạnh, tiết kiệm điện và có tuổi thọ cao.
+Thông số kỹ thuật
+Công suất: 40W
+Điện áp: 12V
+Tuổi thọ: 30.000 giờ
+Biến thể
+1 bóng – 500.000 – LED-L4X
+Ảnh:
+https://dailydaunhot.com/wp-content/uploads/2019/05/%C4%90%C3%A8n-Tr%E1%BB%A3-S%C3%A1ng-L4x.jpg
+
+
+4. Móc treo đồ CNC
+Thông tin chung
+Loại: Móc treo
+Mô tả:
+Móc treo CNC là phụ kiện nhỏ gọn nhưng rất tiện lợi, giúp treo đồ khi đi chợ hoặc di chuyển hằng ngày. Đồng thời tăng điểm nhấn thẩm mỹ cho xe.
+Thông số kỹ thuật
+Chất liệu: Nhôm CNC
+Tải trọng: ~5kg
+Biến thể
+Đen – 120.000 – MOC-B
+Đỏ – 130.000 – MOC-R
+Ảnh:
+https://shop2banh.vn/images/thumbs/2022/11/moc-treo-do-cnc-cho-honda-sh-1954-slide-products-636339ae0f583.jpg
+
+
+5. Pad biển số CNC
+Thông tin chung
+Loại: Pad biển số
+Mô tả:
+Pad biển số giúp cố định biển số chắc chắn và tăng tính thẩm mỹ cho phần đuôi xe. Phù hợp cho xe độ phong cách thể thao.
+Thông số kỹ thuật
+Chất liệu: Nhôm CNC
+Kích thước: Chuẩn biển số VN
+Biến thể
+Đen – 300.000 – PAD-B
+Ảnh:
+https://www.vnride.com/wp-content/uploads/2024/05/z5461231207594_45485a0005b31e19b584698471e09908.jpg
+
+
+6. Bao tay Domino
+Thông tin chung
+Loại: Bao tay
+Mô tả:
+Bao tay Domino giúp tăng độ bám khi cầm lái, hạn chế trơn trượt và mang lại cảm giác lái tốt hơn.
+Thông số kỹ thuật
+Chất liệu: Cao su cao cấp
+Chiều dài: 120mm
+Biến thể
+Đen – 250.000 – DOM-B
+Xanh – 260.000 – DOM-X
+Ảnh:
+https://detailingnation.vn/cdn/shop/files/DSC0240.jpg?v=1685597937
+
+
+7. Ốp pô Carbon
+Thông tin chung
+Loại: Ốp pô
+Mô tả:
+Ốp pô Carbon giúp bảo vệ pô xe khỏi trầy xước và tăng tính thẩm mỹ với phong cách thể thao mạnh mẽ.
+Thông số kỹ thuật
+Chất liệu: Sợi carbon
+Chịu nhiệt: 500°C
+Biến thể
+Tiêu chuẩn – 600.000 – OP-CARBON
+Ảnh:
+https://img.websosanh.vn/v2/users/wss/images/op-po-e-vision-moi-2021/e8a02c45872c4.jpg
+
+
+8. Kính chắn gió mini
+Thông tin chung
+Loại: Kính chắn gió
+Mô tả:
+Kính chắn gió giúp giảm lực gió tác động vào người lái khi di chuyển tốc độ cao, tăng sự thoải mái khi đi xa.
+Thông số kỹ thuật
+Chất liệu: Nhựa ABS
+Chiều cao: 25cm
+Biến thể
+Trong suốt – 400.000 – KINH-TS
+Ảnh:
+https://product.hstatic.net/200000925405/product/kinh_chan_gio_mini_honda_cgx150_honda_wuyang__4__7fb65f4132e94db1a80863b9261b6ee9_master.jpg
+
+
+9. Đèn xi nhan LED Spirit Beast
+Thông tin chung
+Loại: Xi nhan
+Mô tả:
+Xi nhan LED Spirit Beast có thiết kế nhỏ gọn, ánh sáng mạnh và tiết kiệm điện, phù hợp cho xe độ.
+Thông số kỹ thuật
+Công suất: 5W
+Điện áp: 12V
+Biến thể
+Cặp – 350.000 – SIGNAL-SB
+Ảnh:
+https://ctshop.vn/wp-content/uploads/2019/08/z6546952445041_e1e71a6f1ea4926b2c655cb135fb136e-scaled.jpg
+
+
+10. Tem dán xe phản quang
+Thông tin chung
+Loại: Tem xe
+Mô tả:
+Tem phản quang giúp xe nổi bật hơn vào ban đêm, đồng thời tăng độ an toàn khi di chuyển.
+Thông số kỹ thuật
+Chất liệu: Decal phản quang
+Tuổi thọ: 3 năm
+Biến thể
+Bộ full – 200.000 – TEM-R
+Ảnh:
+https://down-vn.img.susercontent.com/file/606db21d23e3e254f20cca13a47b4e96
+DANH MỤC: VỎ LỐP XE 
+1. Michelin Pilot Street 2
+Thông tin chung
+Loại: Lốp xe
+Mô tả:
+Michelin Pilot Street 2 là dòng lốp cao cấp dành cho xe phổ thông, được thiết kế tối ưu cho điều kiện đường phố đô thị. Với rãnh gai cải tiến, lốp mang lại độ bám đường tốt kể cả khi trời mưa, đồng thời giúp xe vận hành ổn định và an toàn ở tốc độ cao. Đây là lựa chọn hàng đầu cho người dùng đề cao độ bền và hiệu suất.
+Thông số kỹ thuật
+Kích thước: 70/90-17
+Loại: Không săm (Tubeless)
+Áp suất khuyến nghị: 29–33 PSI
+Tuổi thọ: ~20.000 km
+Biến thể
+Trước – 550.000 – MIC-F
+Sau – 750.000 – MIC-R
+Ảnh:
+https://dxm.contentcenter.michelin.com/api/wedia/dam/transform/b98rpyxf61b4qzptzsictt3x6a/mo-93_tire_michelin_pilot-street-2_ww_set_a_main_1-30_nopad.webp?t=resize&height=500
+
+
+2. Pirelli Diablo Rosso Sport
+Thông tin chung
+Loại: Lốp thể thao
+Mô tả:
+Pirelli Diablo Rosso Sport mang đến độ bám đường vượt trội, đặc biệt khi vào cua tốc độ cao. Thiết kế gai lốp thể thao giúp tăng độ ổn định và kiểm soát tốt hơn.
+Thông số kỹ thuật
+Kích thước: 110/70-17
+Loại: Tubeless
+Tốc độ tối đa: 210 km/h
+Biến thể
+Trước – 1.200.000 – PIR-F
+Sau – 1.800.000 – PIR-R
+Ảnh:
+https://shop2banh.vn/images/thumbs/2025/09/lop-pirelli-diablo-rosso-sport-9080-17-12070-17-2058-slide-products-68b80eaebdf85.jpg
+
+
+3. IRC NR77
+Thông tin chung
+Loại: Lốp phổ thông
+Mô tả:
+IRC NR77 là dòng lốp giá rẻ, phù hợp cho xe đi hằng ngày với độ bền cao và khả năng vận hành ổn định.
+Thông số kỹ thuật
+Kích thước: 70/90-17
+Tuổi thọ: ~15.000 km
+Biến thể
+Tiêu chuẩn – 400.000 – IRC
+Ảnh:
+https://konquer.ca/wp-content/uploads/2023/02/IRC-NR77-Tire.webp
+
+
+4. Dunlop TT900
+Thông tin chung
+Loại: Lốp thể thao
+Mô tả:
+Dunlop TT900 là dòng lốp được ưa chuộng nhờ độ bám tốt và khả năng xử lý linh hoạt khi vào cua.
+Thông số kỹ thuật
+Kích thước: 90/80-17
+Loại: Tubeless
+Biến thể
+Trước – 900.000 – DUN-F
+Sau – 1.100.000 – DUN-R
+Ảnh:
+https://images.genialmotor.it/DUNLOP/SENZA_CORNICE/tt900.jpg
+
+
+5. Maxxis M6029
+Thông tin chung
+Loại: Lốp phổ thông
+Mô tả:
+Maxxis M6029 có giá thành hợp lý, phù hợp với người dùng phổ thông cần lốp bền và ổn định.
+Thông số kỹ thuật
+Kích thước: 80/90-17
+Tuổi thọ: ~18.000 km
+Biến thể
+Tiêu chuẩn – 500.000 – MAX
+Ảnh:
+https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-DQU_Isy0H4g-5cRt3mLniU9R4g6Ucb4ZYA&s
+
+
+6. Bridgestone Battlax BT39
+Thông tin chung
+Loại: Lốp thể thao cao cấp
+Mô tả:
+Battlax BT39 mang lại độ bám đường cực cao, đặc biệt phù hợp cho xe chạy tốc độ cao hoặc xe độ.
+Thông số kỹ thuật
+Kích thước: 100/80-17
+Tốc độ tối đa: 240 km/h
+Biến thể
+Trước – 1.500.000 – BS-F
+Sau – 2.000.000 – BS-R
+Ảnh:
+https://www.bridgestone.com/products/motorcycle_tires/products/assets/img/detail/pr016-detail_01.png
+
+
+7. Metzeler Sportec Street
+Thông tin chung
+Loại: Lốp thể thao
+Mô tả:
+Metzeler Sportec Street là dòng lốp cao cấp với độ bám tốt và tuổi thọ cao, phù hợp cho cả đi phố và touring.
+Thông số kỹ thuật
+Kích thước: 120/70-17
+Tuổi thọ: ~22.000 km
+Biến thể
+Tiêu chuẩn – 1.300.000 – METZ
+Ảnh:
+https://www.rubbex.com/images/thumbs/081/0814188_Metzeler-80-90-14-40S-Sportec-Street-Rear-M-C-15240696-full.jpg_550.webp
+
+
+8. Continental ContiGo
+Thông tin chung
+Loại: Lốp touring
+Mô tả:
+Continental ContiGo được thiết kế cho xe đi đường dài, mang lại sự ổn định và độ bền cao.
+Thông số kỹ thuật
+Kích thước: 90/90-17
+Loại: Tubeless
+Biến thể
+Tiêu chuẩn – 1.200.000 – CONTI
+Ảnh:
+https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT10rLMlQ_8kt12jklFsWncrnVU_ggWYiV_PQ&s
+
+
+9. CST Adreno Sport
+Thông tin chung
+Loại: Lốp thể thao
+Mô tả:
+CST Adreno Sport có thiết kế gai thể thao, giúp tăng độ bám đường và khả năng xử lý khi chạy tốc độ cao.
+Thông số kỹ thuật
+Kích thước: 110/70-17
+Tuổi thọ: ~18.000 km
+Biến thể
+Tiêu chuẩn – 800.000 – CST
+Ảnh:
+https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR6i10FEohDZkA_olH0hcew5jw9l3et4fGHhg&s
+
+
+10. Kenda K775
+Thông tin chung
+Loại: Lốp đa dụng
+Mô tả:
+Kenda K775 phù hợp cho cả đường phố và địa hình nhẹ, mang lại độ bám tốt và độ bền cao.
+Thông số kỹ thuật
+Kích thước: 90/90-17
+Loại: Tubeless
+Biến thể
+Tiêu chuẩn – 700.000 – KENDA
+Ảnh:
+https://cdn11.bigcommerce.com/s-t49hlhoupu/images/stencil/1280x1280/products/5860/11939/13365956035ebabe967af9c1589296790__10335.1597769469.jpg?c=1

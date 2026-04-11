@@ -8,5 +8,6 @@ namespace MotoShop.Models.ViewModels
         public IEnumerable<ProductDto> FeaturedProducts { get; set; }
         public IEnumerable<ProductDto> BestSellingProducts { get; set; }
         public IEnumerable<ProductDto> NewProducts { get; set; }
+        public IEnumerable<CategoryDto> TopCategories { get; set; }
     }
 }
