@@ -4,60 +4,289 @@
     Layout = "_AdminLayout";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold m-0 text-uppercase">Phản hồi khách hàng</h4>
+@section Styles {
+    <style>
+        :root { --ms-red: #E24B4A; }
+        .btn-ms-red { background: var(--ms-red); color: white; border: none; }
+        .star-rating { color: #ffab00; font-size: 1.1rem; }
+        .comment-text { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; }
+        .filter-section { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #eee; margin-bottom: 25px; }
+        .table-container { background: #fff; border-radius: 12px; border: 1px solid #eee; overflow: hidden; }
+        .badge-pending { background-color: #fff2e2; color: #fdac41; }
+        .badge-approved { background-color: #e8fadf; color: #71dd37; }
+        .badge-hidden { background-color: #f5f5f9; color: #8592a3; }
+    </style>
+}
+
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div><h4 class="fw-bold m-0 text-uppercase"><i class='bx bxs-star me-2 text-warning'></i>Quản lý Đánh giá</h4></div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-danger d-none" id="btnBulkDelete" onclick="bulkAction('Delete')"><i class="bx bx-trash me-1"></i>Xóa đã chọn</button>
+            <button class="btn btn-outline-success" onclick="exportToExcel()"><i class='bx bx-export me-1'></i>Xuất Excel</button>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class='bx bx-columns me-1'></i>Chọn cột</button>
+                <ul class="dropdown-menu dropdown-menu-end p-3" style="min-width: 200px;">
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="1" checked><label class="form-check-label">Sản phẩm</label></div></li>
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="2" checked><label class="form-check-label">Khách hàng</label></div></li>
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="3" checked><label class="form-check-label">Số sao</label></div></li>
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="4" checked><label class="form-check-label">Nội dung</label></div></li>
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="5" checked><label class="form-check-label">Trạng thái</label></div></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Professional Filter Bar -->
+    <div class="filter-section shadow-sm border-0 mb-4 bg-white p-3 rounded-3">
+        <form id="filterForm" method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-4 col-md-6">
+                    <label class="form-label small text-uppercase fw-bold text-muted mb-1">Tìm kiếm</label>
+                    <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control bg-light border-0" placeholder="Tên sản phẩm hoặc khách hàng...">
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label small text-uppercase fw-bold text-muted mb-1">Số sao</label>
+                    <select name="stars" class="form-select bg-light border-0">
+                        <option value="">Tất cả sao</option>
+                        @for (int i = 5; i >= 1; i--) {
+                            <option value="@i" selected="@(ViewBag.Stars == i)">@i sao</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label small text-uppercase fw-bold text-muted mb-1">Trạng thái</label>
+                    <select name="status" class="form-select bg-light border-0">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Pending" selected="@(ViewBag.Status == "Pending")">Chờ duyệt</option>
+                        <option value="Approved" selected="@(ViewBag.Status == "Approved")">Đã duyệt</option>
+                        <option value="Hidden" selected="@(ViewBag.Status == "Hidden")">Đã ẩn</option>
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-12 text-end">
+                    <div class="d-flex gap-2 justify-content-lg-end">
+                        <button type="submit" class="btn btn-ms-red px-4 fw-bold">Lọc dữ liệu</button>
+                        <a href="/Admin/Review" class="btn btn-light px-3 border"><i class='bx bx-refresh fs-4'></i></a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-container shadow-sm">
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover align-middle m-0" id="reviewTable">
+                <thead class="bg-light">
+                    <tr>
+                        <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                        <th>Sản phẩm</th>
+                        <th>Khách hàng</th>
+                        <th>Số sao</th>
+                        <th>Nội dung</th>
+                        <th>Ngày</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end px-4">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model) {
+                        <tr>
+                            <td><input class="form-check-input row-checkbox" type="checkbox" value="@item.ReviewId"></td>
+                            <td class="fw-bold">@item.Product?.ProductName</td>
+                            <td>@item.Customer?.FullName</td>
+                            <td class="star-rating">
+                                @for (int i = 1; i <= 5; i++) {
+                                    <i class="bx @(i <= item.Rating ? "bxs-star" : "bx-star")"></i>
+                                }
+                            </td>
+                            <td><span class="comment-text text-muted small">@item.Comment</span></td>
+                            <td>@item.CreatedDate.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @{
+                                    var (sClass, sText) = item.Status switch {
+                                        "Approved" => ("approved", "Đã duyệt"),
+                                        "Hidden" => ("hidden", "Đã ẩn"),
+                                        _ => ("pending", "Chờ duyệt")
+                                    };
+                                }
+                                <span class="badge badge-@sClass">@sText</span>
+                            </td>
+                            <td class="text-end px-4">
+                                <button type="button" class="btn btn-sm btn-icon btn-outline-info btn-view-review" title="Xem đầy đủ" 
+                                        data-review='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new { 
+                                            ReviewId = item.ReviewId,
+                                            Rating = item.Rating,
+                                            Comment = item.Comment,
+                                            CreatedDate = item.CreatedDate,
+                                            Status = item.Status,
+                                            ProductName = item.Product?.ProductName,
+                                            CustomerName = item.Customer?.FullName
+                                        }))'><i class="bx bx-show"></i></button>
+                                
+                                @if (item.Status == "Pending" || item.Status == "Hidden") {
+                                    <button type="button" class="btn btn-sm btn-icon btn-outline-success btn-update-review" title="Duyệt / Hiển thị lại" 
+                                            data-id="@item.ReviewId" data-status="Approved"><i class="bx bx-check"></i></button>
+                                }
+                                
+                                @if (item.Status == "Approved") {
+                                    <button type="button" class="btn btn-sm btn-icon btn-outline-secondary btn-update-review" title="Ẩn đánh giá" 
+                                            data-id="@item.ReviewId" data-status="Hidden"><i class="bx bx-hide"></i></button>
+                                }
+                                
+                                <button type="button" class="btn btn-sm btn-icon btn-outline-danger btn-delete-review" title="Xóa" 
+                                        data-id="@item.ReviewId"><i class="bx bx-trash"></i></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (ViewBag.TotalItems > 0) {
+            <div class="pagination-container d-flex flex-column align-items-center py-4 bg-light border-top">
+                <div class="mb-2"><span class="text-muted small">Hiển thị trang <b>@ViewBag.CurrentPage</b> / <b>@ViewBag.TotalPages</b> (Tổng <b>@ViewBag.TotalItems</b> đánh giá)</span></div>
+                <nav>
+                    <ul class="pagination pagination-sm m-0 gap-1 justify-content-center">
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++) {
+                            <li class="page-item @(ViewBag.CurrentPage == i ? "active" : "")">
+                                <a class="page-link border-0 shadow-sm @(ViewBag.CurrentPage == i ? "btn-ms-red" : "bg-white")" href="?page=@i&searchTerm=@ViewBag.SearchTerm&status=@ViewBag.Status&stars=@ViewBag.Stars">@i</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            </div>
+        }
+    </div>
 </div>
 
-<div class="card overflow-hidden border-0 shadow-sm">
-    <div class="table-responsive text-nowrap">
-        <table class="table table-hover m-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Khách hàng</th>
-                    <th>Sản phẩm</th>
-                    <th class="text-center">Đánh giá</th>
-                    <th>Nội dung</th>
-                    <th>Ngày gửi</th>
-                    <th class="text-end">Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td><span class="fw-bold">@item.Customer?.FullName</span></td>
-                        <td><small>@item.Product?.ProductName</small></td>
-                        <td class="text-center">
-                            @for(int i=1; i<=5; i++) {
-                                <i class='bx bxs-star @(i <= item.Rating ? "text-warning" : "text-light")'></i>
-                            }
-                        </td>
-                        <td><small class="text-muted">@item.Comment</small></td>
-                        <td>@item.CreatedDate.ToString("dd/MM/yyyy")</td>
-                        <td class="text-end">
-                            @if (item.IsApproved)
-                            {
-                                <button class="btn btn-sm btn-outline-secondary" onclick="hideReview(@item.ReviewId)">Ẩn</button>
-                            }
-                            else
-                            {
-                                <button class="btn btn-sm btn-primary" onclick="approveReview(@item.ReviewId)">Hiện</button>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+<!-- Modal Chi tiết Đánh giá -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-bottom p-4">
+                <h5 class="modal-title fw-bold">Chi tiết đánh giá</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <div class="small text-muted mb-1 text-uppercase fw-bold">Sản phẩm</div>
+                    <div id="mProd" class="fw-bold text-ms-red"></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <div class="small text-muted mb-1 text-uppercase fw-bold">Khách hàng</div>
+                        <div id="mCust" class="fw-bold"></div>
+                    </div>
+                    <div class="col-6">
+                        <div class="small text-muted mb-1 text-uppercase fw-bold">Ngày đánh giá</div>
+                        <div id="mDate" class="small"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-muted mb-1 text-uppercase fw-bold">Xếp hạng</div>
+                    <div id="mStars" class="star-rating"></div>
+                </div>
+                <div class="mb-4">
+                    <div class="small text-muted mb-1 text-uppercase fw-bold">Nội dung</div>
+                    <div id="mComm" class="p-3 bg-light rounded-3 border italic"></div>
+                </div>
+                <div id="modalActions" class="d-flex gap-2">
+                    <!-- Nút hành động sẽ render qua JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-body p-4 text-center">
+                <i class='bx bx-error-circle text-danger' style="font-size: 4rem"></i>
+                <h5 class="fw-bold mt-3">Xóa đánh giá này?</h5>
+                <div class="d-flex gap-2 justify-content-center mt-4">
+                    <button class="btn btn-outline-secondary border-0 px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button class="btn btn-danger px-4" id="btnConfirmDelete">Xác nhận</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        function approveReview(id) {
-            $.post('/Admin/Review/Approve', { id: id }, function() { location.reload(); });
+        const dModal = new bootstrap.Modal(document.getElementById('detailModal'));
+        const delModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        let targetId = 0;
+
+        $(document).on('click', '.btn-view-review', function() {
+            const data = $(this).data('review');
+            if (!data) return;
+
+            $('#mProd').text(data.Product?.ProductName || data.product?.productName || 'N/A');
+            $('#mCust').text(data.Customer?.FullName || data.customer?.fullName || 'N/A');
+            
+            const date = data.CreatedDate || data.createdDate;
+            $('#mDate').text(new Date(date).toLocaleDateString('vi-VN'));
+            $('#mComm').text(data.Comment || data.comment || '(Không có nội dung)');
+            
+            const rating = data.Rating || data.rating;
+            let stars = '';
+            for(let i=1; i<=5; i++) stars += `<i class="bx ${i <= rating ? 'bxs-star' : 'bx-star'}"></i>`;
+            $('#mStars').html(stars);
+
+            const status = data.Status || data.status;
+            const reviewId = data.ReviewId || data.reviewId;
+
+            let btns = '';
+            if (status === 'Pending') btns += `<button class="btn btn-success flex-grow-1 btn-update-review" data-id="${reviewId}" data-status="Approved"><i class="bx bx-check me-1"></i>Duyệt ngay</button>`;
+            if (status === 'Approved') btns += `<button class="btn btn-secondary flex-grow-1 btn-update-review" data-id="${reviewId}" data-status="Hidden"><i class="bx bx-hide me-1"></i>Ẩn đánh giá</button>`;
+            btns += `<button class="btn btn-outline-danger flex-grow-1 btn-delete-review" data-id="${reviewId}"><i class="bx bx-trash me-1"></i>Xóa</button>`;
+            $('#modalActions').html(btns);
+
+            dModal.show();
+        });
+
+        $(document).on('click', '.btn-update-review', function() {
+            const id = $(this).data('id');
+            const status = $(this).data('status');
+            $.post('/Admin/Review/UpdateStatus', { id: id, status: status }, function(res) {
+                if (res.success) {
+                    UI.toast(res.message, 'success');
+                    setTimeout(() => location.reload(), 1000);
+                }
+            });
+        });
+
+        $(document).on('click', '.btn-delete-review', function() {
+            targetId = $(this).data('id');
+            dModal.hide();
+            delModal.show();
+        });
+
+        $('#btnConfirmDelete').on('click', function() {
+            $.post('/Admin/Review/Delete', { id: targetId }, function(res) {
+                if (res.success) { UI.toast(res.message, 'success'); setTimeout(() => location.reload(), 1000); }
+            });
+        });
+
+        function exportToExcel() {
+            const formData = $('#filterForm').serialize();
+            window.location.href = '/Admin/Review/ExportExcel?' + formData;
         }
-        function hideReview(id) {
-            $.post('/Admin/Review/Hide', { id: id }, function() { location.reload(); });
+
+        $('#checkAll').on('change', function() { $('.row-checkbox').prop('checked', this.checked); updateBulkAction(); });
+        $('.row-checkbox').on('change', function() { updateBulkAction(); });
+        function updateBulkAction() { const count = $('.row-checkbox:checked').length; $('#btnBulkDelete').toggleClass('d-none', count === 0).html(`<i class="bx bx-trash me-1"></i>Xóa đã chọn (${count})`); }
+
+        function bulkAction(action) {
+            const ids = [];
+            $('.row-checkbox:checked').each(function() { ids.push($(this).val()); });
+            if (confirm(`Thực hiện hành động này trên ${ids.length} mục đã chọn?`)) {
+                $.post('/Admin/Review/BulkAction', { ids: ids, action: action }, function(res) {
+                    if (res.success) { UI.toast(res.message, 'success'); setTimeout(() => location.reload(), 1000); }
+                });
+            }
         }
     </script>
 }

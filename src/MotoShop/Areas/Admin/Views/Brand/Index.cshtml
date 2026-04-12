@@ -48,8 +48,10 @@
                         <td><small class="text-muted text-truncate d-block" style="max-width: 300px;">@item.Description</small></td>
                         <td class="text-center"><span class="badge bg-label-info">@item.Products.Count</span></td>
                         <td class="text-end">
-                            <button class="btn btn-sm btn-icon text-primary" onclick="openEditModal(@item.BrandId, '@item.BrandName', '@item.LogoUrl', '@item.Description')"><i class="bx bx-edit-alt"></i></button>
-                            <button class="btn btn-sm btn-icon text-danger" onclick="confirmDelete(@item.BrandId, '@item.BrandName')"><i class="bx bx-trash"></i></button>
+                            <button type="button" class="btn btn-sm btn-icon text-primary btn-edit-brand" 
+                                    data-brand='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(item))'><i class="bx bx-edit-alt"></i></button>
+                            <button type="button" class="btn btn-sm btn-icon text-danger btn-delete-brand" 
+                                    data-id="@item.BrandId" data-name="@item.BrandName"><i class="bx bx-trash"></i></button>
                         </td>
                     </tr>
                 }
@@ -102,39 +104,22 @@
             brandModal.show();
         }
 
-        function openEditModal(id, name, logo, desc) {
+        $(document).on('click', '.btn-edit-brand', function() {
+            const data = $(this).data('brand');
+            if (!data) return;
+
             $('#modalTitle').text('Cập nhật thương hiệu');
-            $('#brandId').val(id);
-            $('#brandName').val(name);
-            $('#logoUrl').val(logo);
-            $('#description').val(desc);
+            $('#brandId').val(data.BrandId || data.brandId);
+            $('#brandName').val(data.BrandName || data.brandName);
+            $('#logoUrl').val(data.LogoUrl || data.logoUrl);
+            $('#description').val(data.Description || data.description);
             brandModal.show();
-        }
+        });
 
-        function handleSave() {
-            const data = {
-                id: $('#brandId').val(),
-                name: $('#brandName').val(),
-                logoUrl: $('#logoUrl').val(),
-                description: $('#description').val()
-            };
-
-            if (!data.name) { UI.toast('Vui lòng nhập tên thương hiệu', 'warning'); return; }
-
-            showLoader();
-            $.post('/Admin/Brand/Upsert', data, function(res) {
-                hideLoader();
-                if (res.success) {
-                    brandModal.hide();
-                    UI.toast('Lưu thành công!', 'success');
-                    location.reload();
-                } else {
-                    UI.toast(res.message, 'error');
-                }
-            });
-        }
-
-        function confirmDelete(id, name) {
+        $(document).on('click', '.btn-delete-brand', function() {
+            const id = $(this).data('id');
+            const name = $(this).data('name');
+            
             UI.confirm({
                 title: 'Xác nhận xóa',
                 message: `Bạn có chắc chắn muốn xóa thương hiệu "<strong>${name}</strong>"?`,
@@ -151,6 +136,8 @@
                     });
                 }
             });
-        }
+        });
+
+        function handleSave() {
     </script>
 }

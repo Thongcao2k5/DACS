@@ -67,6 +67,7 @@ namespace MotoShop.Data.Models
         public bool IsFeatured { get; set; } = false;
         public bool IsActive { get; set; } = true;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public bool IsDeleted { get; set; } = false;
 
         [ForeignKey("CategoryId")]
         public virtual Category? Category { get; set; }
@@ -146,6 +147,7 @@ namespace MotoShop.Data.Models
         [StringLength(500)]
         public string? Address { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public bool IsLocked { get; set; } = false;
 
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
         public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
@@ -234,6 +236,7 @@ namespace MotoShop.Data.Models
         public string? Description { get; set; }
         [StringLength(500)]
         public string? ImageUrl { get; set; }
+        public bool IsActive { get; set; } = true;
 
         public virtual ICollection<ServiceBooking> Bookings { get; set; } = new List<ServiceBooking>();
     }
@@ -242,6 +245,10 @@ namespace MotoShop.Data.Models
     {
         [Key]
         public int BookingId { get; set; }
+        
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public string? BookingCode { get; private set; }
+
         public int? CustomerId { get; set; }
         public int? ServiceId { get; set; }
         public int? CreatedByStaffId { get; set; }
@@ -249,7 +256,7 @@ namespace MotoShop.Data.Models
         public DateTime BookingDate { get; set; } = DateTime.Now;
         public DateTime? ServiceDate { get; set; }
         [StringLength(50)]
-        public string? Status { get; set; }
+        public string? Status { get; set; } // Pending, Processing, Completed, Cancelled
         public string? Notes { get; set; }
 
         [ForeignKey("CustomerId")]
@@ -272,7 +279,9 @@ namespace MotoShop.Data.Models
         public int Rating { get; set; }
         public string? Comment { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
-        public bool IsApproved { get; set; } = false;
+        
+        [StringLength(20)]
+        public string Status { get; set; } = "Pending"; // Pending, Approved, Hidden
 
         [ForeignKey("ProductId")]
         public virtual Product? Product { get; set; }
@@ -289,13 +298,41 @@ namespace MotoShop.Data.Models
         [Required, StringLength(255)]
         public string PromotionName { get; set; }
         public string? Description { get; set; }
+        
+        [Required, StringLength(20)]
+        public string DiscountType { get; set; } // "Percentage" hoặc "FixedAmount"
+        
         [Column(TypeName = "decimal(5, 2)")]
         public decimal DiscountPercentage { get; set; }
+        
         [Column(TypeName = "decimal(18, 2)")]
         public decimal DiscountAmount { get; set; }
+
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal? MinOrderValue { get; set; } // Giá trị đơn hàng tối thiểu
+        public int? MinQuantity { get; set; } // Số lượng tối thiểu
+
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public bool IsActive { get; set; } = true;
+
+        public virtual ICollection<PromotionProduct> PromotionProducts { get; set; } = new List<PromotionProduct>();
+        
+        [NotMapped]
+        public int ProductCount => PromotionProducts?.Count ?? 0;
+    }
+
+    public class PromotionProduct
+    {
+        [Key]
+        public int Id { get; set; }
+        public int PromotionId { get; set; }
+        public int ProductId { get; set; }
+
+        [ForeignKey("PromotionId")]
+        public virtual Promotion? Promotion { get; set; }
+        [ForeignKey("ProductId")]
+        public virtual Product? Product { get; set; }
     }
 
     public class Store
@@ -546,8 +583,15 @@ namespace MotoShop.Data.Models
         public string Code { get; set; }
         [Column(TypeName = "decimal(18, 2)")]
         public decimal DiscountValue { get; set; }
-        [StringLength(20)]
-        public string DiscountType { get; set; } // "Percentage", "Amount"
+        [Required, StringLength(20)]
+        public string DiscountType { get; set; } // "Percentage", "FixedAmount"
+        
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal? MinOrderValue { get; set; } // Giá trị đơn tối thiểu
+        
+        public int UsageLimit { get; set; } = 0; // 0 = Không giới hạn
+        public int UsedCount { get; set; } = 0;
+        
         public DateTime ExpiryDate { get; set; }
         public bool IsActive { get; set; } = true;
     }
@@ -558,9 +602,11 @@ namespace MotoShop.Data.Models
         public int Id { get; set; }
         [Required, StringLength(100)]
         public string Name { get; set; }
+        public string? Description { get; set; }
         [Column(TypeName = "decimal(18, 2)")]
         public decimal Cost { get; set; }
         [StringLength(100)]
         public string? EstimatedDays { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }

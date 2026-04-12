@@ -11,24 +11,30 @@ let menu, animate;
   //-----------------
 
   let layoutMenuEl = document.querySelectorAll('#layout-menu');
-  layoutMenuEl.forEach(function (element) {
-    menu = new Menu(element, {
-      orientation: 'vertical',
-      closeChildren: false
+  if (layoutMenuEl.length > 0 && typeof Menu !== 'undefined') {
+    layoutMenuEl.forEach(function (element) {
+      menu = new Menu(element, {
+        orientation: 'vertical',
+        closeChildren: false
+      });
+      // Change parameter to true if you want scroll animation
+      window.Helpers.scrollToActive((animate = false));
+      window.Helpers.mainMenu = menu;
     });
-    // Change parameter to true if you want scroll animation
-    window.Helpers.scrollToActive((animate = false));
-    window.Helpers.mainMenu = menu;
-  });
+  }
 
   // Initialize menu togglers and bind click on each
   let menuToggler = document.querySelectorAll('.layout-menu-toggle');
-  menuToggler.forEach(item => {
-    item.addEventListener('click', event => {
-      event.preventDefault();
-      window.Helpers.toggleCollapsed();
+  if (menuToggler.length > 0) {
+    menuToggler.forEach(item => {
+      item.addEventListener('click', event => {
+        event.preventDefault();
+        if (typeof window.Helpers.toggleCollapsed === 'function') {
+          window.Helpers.toggleCollapsed();
+        }
+      });
     });
-  });
+  }
 
   // Display menu toggle (layout-menu-toggle) on hover with delay
   let delay = function (elem, callback) {

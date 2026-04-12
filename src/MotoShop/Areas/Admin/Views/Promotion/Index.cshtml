@@ -1,53 +1,412 @@
-@model IEnumerable<MotoShop.Data.Models.Promotion>
+@model IEnumerable<MotoShop.Business.DTOs.PromotionDto>
 @{
-    ViewData["Title"] = "Chương trình Khuyến mãi";
+    ViewData["Title"] = "Quản lý Khuyến mãi";
     Layout = "_AdminLayout";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold m-0 text-uppercase">Khuyến mãi & Ưu đãi</h4>
-    <button class="btn btn-primary" onclick="openPromotionModal('create')">
-        <i class="bx bx-plus me-1"></i>Tạo chương trình mới
-    </button>
-</div>
+@section Styles {
+    <style>
+        :root { --ms-red: #E24B4A; --ms-red-dark: #c63d3c; }
+        .btn-ms-red { background: var(--ms-red); color: white; border: none; transition: 0.3s; }
+        .btn-ms-red:hover { background: var(--ms-red-dark); color: white; box-shadow: 0 4px 12px rgba(226, 75, 74, 0.3); }
+        
+        /* 🎨 Professional Filter UI */
+        .filter-section { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #f0f0f0; }
+        .filter-item { flex: 1; min-width: 220px; }
+        .filter-item label { font-size: 12px; font-weight: 700; color: #888; margin-bottom: 6px; display: block; text-uppercase; letter-spacing: 0.5px; }
 
-<div class="card overflow-hidden border-0 shadow-sm">
-    <div class="table-responsive text-nowrap">
-        <table class="table table-hover m-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Tên chương trình</th>
-                    <th class="text-center">Giảm giá</th>
-                    <th class="text-center">Thời hạn</th>
-                    <th>Trạng thái</th>
-                    <th class="text-end">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
+        .filter-item .form-control, .filter-item .form-select { 
+            height: 40px; border-radius: 8px; border: 1px solid #eee !important; background: #fafafa !important; font-size: 14px;
+        }
+
+        .custom-group { 
+            border-radius: 8px; overflow: hidden; border: 1px solid #eee; background: #fafafa; display: flex; align-items: center; height: 40px;
+        }
+        .custom-group .input-group-text { background: transparent; border: none; color: #aaa; padding-left: 12px; }
+        .custom-group .form-control { border: none !important; background: transparent !important; box-shadow: none !important; height: 100%; }
+
+        .filter-action { display: flex; align-items: center; gap: 8px; margin-top: 24px; }
+
+        .table-container { background: #fff; border-radius: 12px; border: 1px solid #eee; overflow: hidden; }
+        .badge-active { background-color: #e8fadf; color: #71dd37; }
+        .badge-upcoming { background-color: #e7e7ff; color: #696cff; }
+        .badge-expired { background-color: #f5f5f9; color: #8592a3; }
+        .badge-paused { background-color: #ffe5e5; color: #ff3e1d; }
+        .product-count-badge { background: #f0f2f5; color: #475f7b; padding: 4px 10px; border-radius: 20px; font-weight: 600; font-size: 0.75rem; cursor: pointer; }
+    </style>
+}
+
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div><h4 class="fw-bold m-0 text-uppercase text-dark"><i class='bx bxs-discount me-2 text-danger'></i>Quản lý Khuyến mãi</h4></div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-danger d-none" id="btnBulkDelete"><i class="bx bx-trash me-1"></i>Xóa đã chọn</button>
+            <button class="btn btn-ms-red px-4 shadow-sm" onclick="openPromotionModal()"><i class='bx bx-plus-circle me-1'></i>Thêm mới</button>
+            <button class="btn btn-outline-success" onclick="exportToExcel()"><i class='bx bx-export me-1'></i>Xuất Excel</button>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-section shadow-sm mb-4">
+        <form id="filterForm" method="get">
+            <div class="d-flex flex-wrap gap-3 align-items-start">
+                <div class="filter-item" style="flex: 1.5;">
+                    <label>Tìm kiếm chương trình</label>
+                    <div class="input-group custom-group">
+                        <span class="input-group-text"><i class="bx bx-search"></i></span>
+                        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control" placeholder="Nhập tên chương trình...">
+                    </div>
+                </div>
+                <div class="filter-item">
+                    <label>Trạng thái</label>
+                    <select name="status" class="form-select">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Active" selected="@(ViewBag.Status == "Active")">Đang áp dụng</option>
+                        <option value="Upcoming" selected="@(ViewBag.Status == "Upcoming")">Sắp diễn ra</option>
+                        <option value="Expired" selected="@(ViewBag.Status == "Expired")">Đã kết thúc</option>
+                        <option value="Paused" selected="@(ViewBag.Status == "Paused")">Tạm dừng</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>Mức giảm từ</label>
+                    <div class="input-group custom-group">
+                        <input type="number" name="minDiscount" value="@ViewBag.MinDiscount" class="form-control" placeholder="0">
+                        <select name="discountUnit" class="form-select border-0 bg-transparent fw-bold text-ms-red" style="max-width: 75px; border-left: 1px solid #eee !important; border-radius: 0;">
+                            <option value="Amount" selected="@(ViewBag.DiscountUnit == "Amount")">₫</option>
+                            <option value="Percentage" selected="@(ViewBag.DiscountUnit == "Percentage")">%</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-item" style="flex: 1.5;">
+                    <label>Khoảng thời gian</label>
+                    <div class="d-flex gap-2">
+                        <input type="date" name="fromDate" value="@ViewBag.FromDate" class="form-control flex-grow-1">
+                        <input type="date" name="toDate" value="@ViewBag.ToDate" class="form-control flex-grow-1">
+                    </div>
+                </div>
+                <div class="filter-action">
+                    <button type="submit" class="btn btn-ms-red px-4 fw-bold shadow-sm" style="height: 40px;">Lọc</button>
+                    <a href="/Admin/Promotion" class="btn btn-light border" title="Làm mới" style="height: 40px; display: flex; align-items: center;"><i class='bx bx-refresh fs-4'></i></a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-container shadow-sm">
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover align-middle m-0" id="promoTable">
+                <thead class="bg-light">
                     <tr>
-                        <td><span class="fw-bold">@item.PromotionName</span></td>
-                        <td class="text-center text-danger fw-bold">@item.DiscountPercentage%</td>
-                        <td class="text-center small">
-                            @item.StartDate.ToString("dd/MM") - @item.EndDate.ToString("dd/MM/yyyy")
-                        </td>
-                        <td>
-                            @if (item.EndDate >= DateTime.Now && item.IsActive)
-                            {
-                                <span class="badge bg-label-success">Đang chạy</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-label-secondary">Kết thúc</span>
-                            }
-                        </td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-icon text-primary"><i class="bx bx-edit-alt"></i></button>
-                        </td>
+                        <th style="width: 40px" class="ps-4"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                        <th>Tên chương trình</th>
+                        <th>Mức giảm</th>
+                        <th>Thời hạn còn lại</th>
+                        <th>Thời gian áp dụng</th>
+                        <th>Sản phẩm</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end px-4">Hành động</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model) {
+                        <tr>
+                            <td class="ps-4"><input class="form-check-input row-checkbox" type="checkbox" value="@item.PromotionId"></td>
+                            <td>
+                                <div class="fw-bold text-dark">@item.PromotionName</div>
+                                <div class="small text-muted text-truncate" style="max-width: 200px;">@item.Description</div>
+                            </td>
+                            <td>
+                                @if (item.DiscountType == "Percentage") { <span class="fw-bold text-ms-red fs-5">-@item.DiscountPercentage%</span> } 
+                                else { <span class="fw-bold text-ms-red fs-5">-@item.DiscountAmount.ToString("N0")₫</span> }
+                            </td>
+                            <td>
+                                <div class="countdown fw-bold text-danger small" data-expiry="@DateTime.Parse(item.EndDate).ToString("yyyy-MM-ddTHH:mm:ss")" data-id="@item.PromotionId">
+                                    --:--:--
+                                </div>
+                            </td>
+                            <td>
+                                <div class="small fw-bold text-dark"><i class='bx bx-calendar-event me-1'></i>@DateTime.Parse(item.StartDate).ToString("dd/MM/yyyy")</div>
+                                <div class="small text-muted"><i class='bx bx-calendar-x me-1'></i>@DateTime.Parse(item.EndDate).ToString("dd/MM/yyyy")</div>
+                            </td>
+                            <td>
+                                <span class="product-count-badge" onclick="openAssignModal(@item.PromotionId, '@item.PromotionName')">
+                                    <i class='bx bx-package me-1'></i>@item.ProductCount SP
+                                </span>
+                            </td>
+                            <td><span class="badge @item.StatusClass status-badge-@item.PromotionId">@item.StatusText</span></td>
+                            <td class="text-end px-4">
+                                <button class="btn btn-sm btn-icon btn-outline-warning" title="Gán sản phẩm" onclick="openAssignModal(@item.PromotionId, '@item.PromotionName')"><i class="bx bx-link"></i></button>
+                                <button class="btn btn-sm btn-icon btn-outline-primary btn-edit-promo" data-promo='@Json.Serialize(item)' title="Sửa"><i class="bx bx-edit-alt"></i></button>
+                                <button class="btn btn-sm btn-icon btn-outline-danger" title="Xóa" onclick="confirmDelete(@item.PromotionId)"><i class="bx bx-trash"></i></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+
+<!-- Modal Thêm/Sửa -->
+<div class="modal fade" id="promotionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg">
+            <form id="promotionForm">
+                <input type="hidden" name="PromotionId" id="pId">
+                <div class="modal-header border-bottom p-4">
+                    <h5 class="modal-title fw-bold" id="modalTitle">Thiết lập chương trình</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Tên chương trình <span class="text-danger">*</span></label>
+                        <input type="text" name="PromotionName" id="pName" class="form-control" required placeholder="Ví dụ: Siêu hội phụ tùng Honda">
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Loại giảm giá</label>
+                            <select name="DiscountType" id="pType" class="form-select" onchange="toggleDiscountType()">
+                                <option value="Percentage">Theo phần trăm (%)</option>
+                                <option value="FixedAmount">Số tiền cố định (đ)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Giá trị giảm <span class="text-danger">*</span></label>
+                            <input type="number" name="DiscountPercentage" id="pPerc" class="form-control" placeholder="Ví dụ: 10">
+                            <input type="number" name="DiscountAmount" id="pAmnt" class="form-control d-none" placeholder="Ví dụ: 50000">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Ngày bắt đầu</label>
+                            <input type="date" name="StartDate" id="pStart" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Ngày kết thúc</label>
+                            <input type="date" name="EndDate" id="pEnd" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Đơn tối thiểu (đ)</label>
+                            <input type="number" name="MinOrderValue" id="pMinVal" class="form-control" placeholder="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Số lượng tối thiểu</label>
+                            <input type="number" name="MinQuantity" id="pMinQty" class="form-control" placeholder="1">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Mô tả ngắn</label>
+                        <textarea name="Description" id="pDesc" class="form-control" rows="2" placeholder="Ghi chú về chương trình..."></textarea>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="IsActive" id="pActive" value="true" checked>
+                        <label class="form-check-label fw-bold small" for="pActive">Trạng thái kích hoạt</label>
+                    </div>
+                </div>
+                <div class="modal-footer border-top p-3 px-4">
+                    <button type="button" class="btn btn-outline-secondary border-0" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-ms-red px-4">Lưu cấu hình</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Gán sản phẩm -->
+<div class="modal fade" id="assignModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-bottom p-4">
+                <h5 class="modal-title fw-bold">Gán sản phẩm áp dụng: <span id="assignTitle" class="text-ms-red"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-8">
+                        <div class="input-group custom-group shadow-sm bg-white">
+                            <span class="input-group-text"><i class='bx bx-search'></i></span>
+                            <input type="text" id="productSearch" class="form-control" placeholder="Tìm nhanh theo tên sản phẩm..." onkeyup="loadProducts()">
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <span class="text-muted small">Đã chọn: <b id="selectedProductCount" class="text-danger fs-5">0</b> sản phẩm</span>
+                    </div>
+                </div>
+                <div class="table-container shadow-sm bg-white" style="max-height: 500px; overflow-y: auto;">
+                    <table class="table table-hover align-middle m-0">
+                        <thead class="sticky-top bg-white border-bottom">
+                            <tr>
+                                <th style="width: 50px" class="ps-4">Chọn</th>
+                                <th>Sản phẩm</th>
+                                <th>Tồn kho</th>
+                                <th>Giá gốc</th>
+                                <th>Giá sau giảm</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productList"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-top p-3 px-4 bg-white">
+                <button type="button" class="btn btn-outline-secondary border-0" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-ms-red px-4" onclick="saveAssignedProducts()">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-body p-4 text-center">
+                <i class='bx bx-error-circle text-danger' style="font-size: 4rem"></i>
+                <h5 class="fw-bold mt-3">Xác nhận xóa?</h5>
+                <p class="text-muted small">Dữ liệu sẽ không thể khôi phục.</p>
+                <div class="d-flex gap-2 justify-content-center mt-4">
+                    <button class="btn btn-outline-secondary border-0 px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button class="btn btn-danger px-4" id="btnConfirmDelete">Đồng ý</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const pModal = new bootstrap.Modal(document.getElementById('promotionModal'));
+        const aModal = new bootstrap.Modal(document.getElementById('assignModal'));
+        const dModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        let currentPromoId = 0;
+
+        function toggleDiscountType() {
+            const type = $('#pType').val();
+            if (type === 'Percentage') { $('#pPerc').removeClass('d-none'); $('#pAmnt').addClass('d-none'); } 
+            else { $('#pPerc').addClass('d-none'); $('#pAmnt').removeClass('d-none'); }
+        }
+
+        function openPromotionModal() { $('#promotionForm')[0].reset(); $('#pId').val(0); $('#modalTitle').text('Thiết lập chương trình mới'); toggleDiscountType(); pModal.show(); }
+
+        // --- NÚT SỬA ---
+        $(document).on('click', '.btn-edit-promo', function() {
+            const data = $(this).data('promo');
+            editPromotion(data);
+        });
+
+        function editPromotion(data) {
+            $('#pId').val(data.PromotionId || data.promotionId);
+            $('#pName').val(data.PromotionName || data.promotionName);
+            $('#pDesc').val(data.Description || data.description);
+            $('#pType').val(data.DiscountType || data.discountType);
+            $('#pPerc').val(data.DiscountPercentage ?? data.discountPercentage);
+            $('#pAmnt').val(data.DiscountAmount ?? data.discountAmount);
+            $('#pMinVal').val(data.MinOrderValue ?? data.minOrderValue);
+            $('#pMinQty').val(data.MinQuantity ?? data.minQuantity);
+            
+            const start = data.StartDate || data.startDate;
+            const end = data.EndDate || data.endDate;
+            if (start) $('#pStart').val(start.substring(0, 10));
+            if (end) $('#pEnd').val(end.substring(0, 10));
+            
+            $('#pActive').prop('checked', data.IsActive ?? data.isActive);
+            $('#modalTitle').text('Chỉnh sửa cấu hình');
+            toggleDiscountType();
+            pModal.show();
+        }
+
+        $('#promotionForm').on('submit', function(e) {
+            e.preventDefault();
+            $.post('/Admin/Promotion/Save', $(this).serialize(), function(res) {
+                if (res.success) { UI.toast(res.message, 'success'); setTimeout(() => location.reload(), 1000); }
+            });
+        });
+
+        function openAssignModal(id, name) { currentPromoId = id; $('#assignTitle').text(name); loadProducts(); aModal.show(); }
+
+        function loadProducts() {
+            const search = $('#productSearch').val();
+            $.get('/Admin/Promotion/GetProducts', { promotionId: currentPromoId, searchTerm: search }, function(res) {
+                let html = '';
+                res.forEach(p => {
+                    html += `<tr>
+                        <td class="ps-4"><input class="form-check-input prod-assign-check" type="checkbox" value="${p.productId}" ${p.isAssigned ? 'checked' : ''} onchange="updateSelectedCount()"></td>
+                        <td><div class="fw-bold">${p.productName}</div></td>
+                        <td><span class="badge bg-label-info">${p.stock}</span></td>
+                        <td><del class="text-muted small">${new Intl.NumberFormat('vi-VN').format(p.basePrice)}₫</del></td>
+                        <td><span class="text-danger fw-bold">${new Intl.NumberFormat('vi-VN').format(p.discountedPrice)}₫</span></td>
+                    </tr>`;
+                });
+                $('#productList').html(html);
+                updateSelectedCount();
+            });
+        }
+
+        function updateSelectedCount() { $('#selectedProductCount').text($('.prod-assign-check:checked').length); }
+
+        function saveAssignedProducts() {
+            const productIds = [];
+            $('.prod-assign-check:checked').each(function() { productIds.push($(this).val()); });
+            $.post('/Admin/Promotion/AssignProducts', { promotionId: currentPromoId, productIds: productIds }, function(res) {
+                if (res.success) { UI.toast(res.message, 'success'); aModal.hide(); setTimeout(() => location.reload(), 500); }
+            });
+        }
+
+        function confirmDelete(id) { currentPromoId = id; dModal.show(); }
+        $('#btnConfirmDelete').on('click', function() {
+            $.post('/Admin/Promotion/BulkDelete', { ids: [currentPromoId] }, function(res) {
+                if (res.success) { UI.toast(res.message, 'success'); setTimeout(() => location.reload(), 1000); }
+            });
+        });
+
+        function exportToExcel() { window.location.href = '/Admin/Promotion/ExportExcel?' + $('#filterForm').serialize(); }
+
+        $('#checkAll').on('change', function() { $('.row-checkbox').prop('checked', this.checked); updateBulkAction(); });
+        $('.row-checkbox').on('change', function() { updateBulkAction(); });
+        function updateBulkAction() {
+            const count = $('.row-checkbox:checked').length;
+            $('#btnBulkDelete').toggleClass('d-none', count === 0).html(`<i class="bx bx-trash me-1"></i>Xóa đã chọn (${count})`);
+        }
+
+        $('.col-toggle').on('change', function() {
+            const idx = parseInt($(this).val()) + 1;
+            $(`#promoTable thead th:nth-child(${idx}), #promoTable tbody td:nth-child(${idx})`).toggle(this.checked);
+        });
+
+        // Countdown Logic
+        function updateCountdowns() {
+            $('.countdown').each(function() {
+                const $this = $(this);
+                const expiryDate = new Date($this.data('expiry')).getTime();
+                const now = new Date().getTime();
+                const diff = expiryDate - now;
+                const id = $this.data('id');
+
+                if (diff <= 0) {
+                    $this.html('<span class="text-secondary small fw-bold">KẾT THÚC</span>');
+                    const $badge = $(`.status-badge-${id}`);
+                    if (!$badge.hasClass('badge-expired')) {
+                        $badge.removeClass('badge-active badge-upcoming badge-paused').addClass('badge-expired').text('Đã kết thúc');
+                        // Tùy chọn: Gửi request lên server để cập nhật trạng thái IsActive = false
+                        $.post('/Admin/Promotion/Deactivate', { id: id });
+                    }
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+                let display = '';
+                if (days > 0) display += days + 'n ';
+                display += (hours < 10 ? '0' : '') + hours + ':' + (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+                $this.text(display);
+            });
+        }
+
+        setInterval(updateCountdowns, 1000);
+        updateCountdowns();
+    </script>
+}

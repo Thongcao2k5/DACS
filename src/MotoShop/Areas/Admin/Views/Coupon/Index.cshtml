@@ -1,0 +1,384 @@
+@model IEnumerable<MotoShop.Data.Models.Coupon>
+@{
+    ViewData["Title"] = "Quản lý Mã giảm giá";
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <style>
+        :root { --ms-red: #E24B4A; --ms-red-dark: #c63d3c; }
+        .btn-ms-red { background: var(--ms-red); color: white; border: none; }
+        .btn-ms-red:hover { background: var(--ms-red-dark); color: white; }
+        .text-ms-red { color: var(--ms-red); }
+        .badge-valid { background-color: #e8fadf; color: #71dd37; }
+        .badge-expired { background-color: #f5f5f9; color: #8592a3; }
+        .badge-out { background-color: #ffe5e5; color: #ff3e1d; }
+        .coupon-code { font-family: 'Monaco', 'Consolas', monospace; font-weight: 700; color: #333; background: #f0f0f0; padding: 4px 8px; border-radius: 4px; border: 1px dashed #ccc; }
+        .filter-section { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #eee; margin-bottom: 25px; }
+        .table-container { background: #fff; border-radius: 12px; border: 1px solid #eee; overflow: hidden; }
+        .pagination-container { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-top: 1px solid #eee; background: #fdfdfd; }
+    </style>
+}
+
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold m-0 text-uppercase"><i class='bx bxs-coupon me-2 text-danger'></i>Quản lý Mã giảm giá</h4>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-danger d-none" id="btnBulkDelete"><i class="bx bx-trash me-1"></i>Xóa đã chọn</button>
+            <button class="btn btn-ms-red px-4 shadow-sm" onclick="openCouponModal()"><i class='bx bx-plus-circle me-1'></i>Thêm mới</button>
+            <button class="btn btn-outline-success" onclick="exportToExcel()"><i class='bx bx-export me-1'></i>Xuất Excel</button>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class='bx bx-columns me-1'></i>Chọn cột</button>
+                <ul class="dropdown-menu dropdown-menu-end p-3" style="min-width: 200px;">
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="1" id="col1" checked><label class="form-check-label" for="col1">Mã Code</label></div></li>
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="2" id="col2" checked><label class="form-check-label" for="col2">Loại giảm</label></div></li>
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="3" id="col3" checked><label class="form-check-label" for="col3">Giá trị</label></div></li>
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="4" id="col4" checked><label class="form-check-label" for="col4">Sử dụng</label></div></li>
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="5" id="col5" checked><label class="form-check-label" for="col5">Hết hạn</label></div></li>
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="6" id="col6" checked><label class="form-check-label" for="col6">Trạng thái</label></div></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Professional Filter Bar -->
+    <div class="filter-section shadow-sm border-0 mb-4 bg-white p-3 rounded-3">
+        <form id="filterForm" method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-4 col-md-6">
+                    <label class="form-label small text-uppercase fw-bold text-muted mb-1"><i class='bx bx-search-alt-2 me-1'></i>Tìm kiếm mã</label>
+                    <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control bg-light border-0" placeholder="Nhập mã code (Vd: SUMMER2024)...">
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label small text-uppercase fw-bold text-muted mb-1"><i class='bx bx-list-check me-1'></i>Trạng thái</label>
+                    <select name="status" class="form-select bg-light border-0">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Valid" selected="@(ViewBag.Status == "Valid")">Còn hiệu lực</option>
+                        <option value="Expired" selected="@(ViewBag.Status == "Expired")">Đã hết hạn</option>
+                        <option value="OutOfUses" selected="@(ViewBag.Status == "OutOfUses")">Hết lượt dùng</option>
+                    </select>
+                </div>
+                <div class="col-lg-5 col-md-12 text-end">
+                    <div class="d-flex gap-2 justify-content-lg-end">
+                        <button type="submit" class="btn btn-ms-red px-4 fw-bold"><i class='bx bx-filter-alt me-1'></i>Lọc dữ liệu</button>
+                        <a href="/Admin/Coupon" class="btn btn-light px-3 border"><i class='bx bx-refresh fs-4'></i></a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-container shadow-sm">
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover m-0" id="couponTable">
+                <thead class="bg-light">
+                    <tr>
+                        <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                        <th>Mã Code</th>
+                        <th>Loại giảm</th>
+                        <th>Giá trị</th>
+                        <th>Đã dùng / Giới hạn</th>
+                        <th>Ngày hết hạn</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end px-4">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model) {
+                        <tr>
+                            <td><input class="form-check-input row-checkbox" type="checkbox" value="@item.Id"></td>
+                            <td><span class="coupon-code">@item.Code</span></td>
+                            <td>@(item.DiscountType == "Percentage" ? "Phần trăm (%)" : "Tiền mặt (đ)")</td>
+                            <td class="fw-bold text-ms-red">
+                                @(item.DiscountType == "Percentage" ? item.DiscountValue + "%" : item.DiscountValue.ToString("N0") + "đ")
+                            </td>
+                            <td>
+                                <div class="small fw-bold">@item.UsedCount / @(item.UsageLimit == 0 ? "∞" : item.UsageLimit)</div>
+                                <div class="progress mt-1" style="height: 4px; width: 100px;">
+                                    @{
+                                        var percent = item.UsageLimit > 0 ? (item.UsedCount * 100 / item.UsageLimit) : 0;
+                                        var progressColor = percent >= 100 ? "bg-danger" : "bg-success";
+                                    }
+                                    <div class="progress-bar @progressColor" style="width: @(percent > 100 ? 100 : percent)%"></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="countdown fw-bold text-danger small" data-expiry="@item.ExpiryDate.ToString("yyyy-MM-ddTHH:mm:ss")" data-id="@item.Id">
+                                    --:--:--
+                                </div>
+                                <div class="text-muted" style="font-size: 0.75rem;">@item.ExpiryDate.ToString("dd/MM/yyyy")</div>
+                            </td>
+                            <td>
+                                @{
+                                    var now = DateTime.Now;
+                                    var isExpired = item.ExpiryDate < now;
+                                    var isFull = item.UsageLimit > 0 && item.UsedCount >= item.UsageLimit;
+                                    var statusClass = isExpired ? "badge-expired" : (isFull ? "badge-out" : "badge-valid");
+                                    var statusText = isExpired ? "Hết hạn" : (isFull ? "Hết lượt" : "Còn hiệu lực");
+                                }
+                                <span class="badge @statusClass status-badge-@item.Id">@statusText</span>
+                            </td>
+                            <td class="text-end px-4">
+                                <button type="button" class="btn btn-sm btn-icon btn-outline-info" title="Sao chép mã" onclick="copyToClipboard('@item.Code')"><i class="bx bx-copy"></i></button>
+                                <button type="button" class="btn btn-sm btn-icon btn-outline-primary btn-edit-coupon" title="Sửa" 
+                                        data-coupon='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(item))'>
+                                    <i class="bx bx-edit-alt"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-icon btn-outline-danger" title="Xóa" onclick="confirmDelete(@item.Id)"><i class="bx bx-trash"></i></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (ViewBag.TotalItems > 0) {
+            <div class="pagination-container">
+                <div><span class="text-muted small">Số dòng: <b>@ViewBag.PageSize</b> / <b>@ViewBag.TotalItems</b></span></div>
+                <nav>
+                    <ul class="pagination pagination-sm m-0 gap-1">
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++) {
+                            <li class="page-item @(ViewBag.CurrentPage == i ? "active" : "")">
+                                <a class="page-link border-0 @(ViewBag.CurrentPage == i ? "btn-ms-red" : "bg-light")" href="?page=@i&searchTerm=@ViewBag.SearchTerm&status=@ViewBag.Status">@i</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+                <div><span class="text-muted small">Trang <b>@ViewBag.CurrentPage</b> trên <b>@ViewBag.TotalPages</b></span></div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal Thêm/Sửa -->
+<div class="modal fade" id="couponModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg">
+            <form id="couponForm">
+                <input type="hidden" name="Id" id="cId">
+                <div class="modal-header border-bottom p-4">
+                    <h5 class="modal-title fw-bold" id="modalTitle">Thiết lập mã giảm giá</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Mã Code <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="text" name="Code" id="cCode" class="form-control text-uppercase fw-bold" required placeholder="VÍ DỤ: MOTO2024" style="letter-spacing: 1px;">
+                            <button class="btn btn-outline-secondary" type="button" onclick="generateRandomCode()">Tạo ngẫu nhiên</button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Loại giảm giá</label>
+                        <div class="d-flex gap-4 mt-1">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="DiscountType" value="Percentage" id="typePerc" checked onchange="toggleDiscountType()">
+                                <label class="form-check-label" for="typePerc">Phần trăm (%)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="DiscountType" value="FixedAmount" id="typeAmnt" onchange="toggleDiscountType()">
+                                <label class="form-check-label" for="typeAmnt">Số tiền cố định (đ)</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Giá trị giảm <span class="text-danger">*</span></label>
+                            <input type="number" name="DiscountValue" id="cValue" class="form-control" required placeholder="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Ngày hết hạn <span class="text-danger">*</span></label>
+                            <input type="date" name="ExpiryDate" id="cExpiry" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Giới hạn số lần dùng</label>
+                            <input type="number" name="UsageLimit" id="cLimit" class="form-control" value="0">
+                            <small class="text-muted">0 = Không giới hạn</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Đơn tối thiểu (đ)</label>
+                            <input type="number" name="MinOrderValue" id="cMinVal" class="form-control" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" name="IsActive" id="cActive" value="true" checked>
+                        <label class="form-check-label fw-bold small" for="cActive">Trạng thái kích hoạt</label>
+                    </div>
+                </div>
+                <div class="modal-footer border-top p-3 px-4">
+                    <button type="button" class="btn btn-outline-secondary border-0" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-ms-red px-4">Lưu mã giảm giá</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-body p-4 text-center">
+                <i class='bx bx-error-circle text-danger' style="font-size: 4rem"></i>
+                <h5 class="fw-bold mt-3">Xác nhận xóa?</h5>
+                <p class="text-muted small">Mã giảm giá này sẽ bị gỡ bỏ vĩnh viễn.</p>
+                <div class="d-flex gap-2 justify-content-center mt-4">
+                    <button class="btn btn-outline-secondary border-0 px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button class="btn btn-danger px-4" id="btnConfirmDelete">Đồng ý</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const cModal = new bootstrap.Modal(document.getElementById('couponModal'));
+        const dModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        let currentId = 0;
+
+        function toggleDiscountType() {
+            const type = $('input[name="DiscountType"]:checked').val();
+            const placeholder = type === 'Percentage' ? 'Nhập % giảm' : 'Nhập số tiền giảm';
+            $('#cValue').attr('placeholder', placeholder);
+        }
+
+        function generateRandomCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+            $('#cCode').val(code);
+        }
+
+        function openCouponModal() {
+            $('#couponForm')[0].reset();
+            $('#cId').val(0);
+            $('#modalTitle').text('Thêm mã giảm giá mới');
+            $('#cExpiry').val(new Date().toISOString().split('T')[0]);
+            toggleDiscountType();
+            cModal.show();
+        }
+
+        // Bắt sự kiện click vào nút Edit dùng class .btn-edit-coupon
+        $(document).on('click', '.btn-edit-coupon', function () {
+            const data = $(this).data('coupon');
+            if (!data) return;
+
+            // Đổ dữ liệu vào form (Lưu ý: thuộc tính có thể viết hoa hoặc thường tùy theo JSON serializer)
+            $('#cId').val(data.Id || data.id);
+            $('#cCode').val(data.Code || data.code);
+            $('#cValue').val(data.DiscountValue || data.discountValue);
+            
+            const expiry = data.ExpiryDate || data.expiryDate;
+            if (expiry) {
+                $('#cExpiry').val(expiry.split('T')[0]);
+            }
+            
+            $('#cLimit').val(data.UsageLimit || data.usageLimit);
+            $('#cMinVal').val(data.MinOrderValue || data.minOrderValue);
+            
+            const isActive = (data.IsActive !== undefined) ? data.IsActive : data.isActive;
+            $('#cActive').prop('checked', isActive);
+            
+            const type = data.DiscountType || data.discountType;
+            $(`input[name="DiscountType"][value="${type}"]`).prop('checked', true);
+            
+            $('#modalTitle').text('Chỉnh sửa mã giảm giá');
+            toggleDiscountType();
+            cModal.show();
+        });
+
+        $('#couponForm').on('submit', function(e) {
+            e.preventDefault();
+            const data = $(this).serialize();
+            $.post('/Admin/Coupon/Save', data, function(res) {
+                if (res.success) {
+                    UI.toast(res.message, 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    UI.toast(res.message, 'error');
+                }
+            });
+        });
+
+        function confirmDelete(id) { currentId = id; dModal.show(); }
+        $('#btnConfirmDelete').on('click', function() {
+            $.post('/Admin/Coupon/Delete', { id: currentId }, function(res) {
+                if (res.success) { UI.toast(res.message, 'success'); setTimeout(() => location.reload(), 1000); }
+            });
+        });
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                UI.toast('Đã sao chép mã: ' + text, 'success');
+            });
+        }
+
+        function exportToExcel() {
+            const formData = $('#filterForm').serialize();
+            window.location.href = '/Admin/Coupon/ExportExcel?' + formData;
+        }
+
+        // Column Toggle & Bulk Actions
+        $('#checkAll').on('change', function() { $('.row-checkbox').prop('checked', this.checked); updateBulkAction(); });
+        $('.row-checkbox').on('change', function() { updateBulkAction(); });
+        function updateBulkAction() {
+            const count = $('.row-checkbox:checked').length;
+            $('#btnBulkDelete').toggleClass('d-none', count === 0).html(`<i class="bx bx-trash me-1"></i>Xóa đã chọn (${count})`);
+        }
+
+        $('#btnBulkDelete').on('click', function() {
+            const ids = [];
+            $('.row-checkbox:checked').each(function() { ids.push($(this).val()); });
+            if (confirm(`Xóa ${ids.length} mã đã chọn?`)) {
+                $.post('/Admin/Coupon/BulkDelete', { ids: ids }, function(res) {
+                    if (res.success) { UI.toast(res.message, 'success'); setTimeout(() => location.reload(), 1000); }
+                });
+            }
+        });
+
+        $('.col-toggle').on('change', function() {
+            const idx = parseInt($(this).val()) + 1;
+            const check = $(this).is(':checked');
+            $(`#couponTable thead th:nth-child(${idx}), #couponTable tbody td:nth-child(${idx})`).toggle(check);
+        });
+
+        // Countdown Logic
+        function updateCountdowns() {
+            $('.countdown').each(function() {
+                const $this = $(this);
+                const expiryDate = new Date($this.data('expiry')).getTime();
+                const now = new Date().getTime();
+                const diff = expiryDate - now;
+                const id = $this.data('id');
+
+                if (diff <= 0) {
+                    $this.html('<span class="text-secondary small fw-bold">HẾT HẠN</span>');
+                    const $badge = $(`.status-badge-${id}`);
+                    if (!$badge.hasClass('badge-expired')) {
+                        $badge.removeClass('badge-valid badge-out').addClass('badge-expired').text('Hết hạn');
+                        // Tùy chọn: Gửi request lên server để cập nhật trạng thái IsActive = false
+                        $.post('/Admin/Coupon/Deactivate', { id: id });
+                    }
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+                let display = '';
+                if (days > 0) display += days + 'n ';
+                display += (hours < 10 ? '0' : '') + hours + ':' + (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+                $this.text(display);
+            });
+        }
+
+        setInterval(updateCountdowns, 1000);
+        updateCountdowns();
+    </script>
+}

@@ -17,7 +17,7 @@ namespace MotoShop.Data.Repositories
         public async Task<IEnumerable<Product>> GetFeaturedProductsAsync(int count)
         {
             return await _dbSet
-                .Where(p => p.IsFeatured && p.IsActive)
+                .Where(p => p.IsFeatured && p.IsActive && !p.IsDeleted)
                 .OrderByDescending(p => p.CreatedDate)
                 .Take(count)
                 .Include(p => p.Images)
@@ -28,7 +28,7 @@ namespace MotoShop.Data.Repositories
         public async Task<IEnumerable<Product>> GetProductsByCategoryAsync(int categoryId)
         {
             return await _dbSet
-                .Where(p => p.CategoryId == categoryId && p.IsActive)
+                .Where(p => p.CategoryId == categoryId && p.IsActive && !p.IsDeleted)
                 .Include(p => p.Images)
                 .Include(p => p.Variants)
                 .ToListAsync();

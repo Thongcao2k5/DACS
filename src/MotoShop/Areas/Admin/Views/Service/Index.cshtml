@@ -1,50 +1,167 @@
 @model IEnumerable<MotoShop.Data.Models.Service>
 @{
-    ViewData["Title"] = "Danh sách Dịch vụ";
+    ViewData["Title"] = "Quản lý Dịch vụ";
     Layout = "_AdminLayout";
 }
 
-@section Styles {
-    <style>
-      .service-name { font-weight: 700; color: #32475c; font-size: 0.95rem; }
-      .service-desc { font-size: 0.8rem; color: #697a8d; white-space: normal; max-width: 400px; }
-      .service-price { font-weight: 700; color: #E60023; }
-    </style>
-}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div><h4 class="fw-bold m-0 text-uppercase"><i class='bx bx-wrench me-2 text-danger'></i>Danh sách dịch vụ</h4></div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-ms-red px-4 shadow-sm" onclick="openServiceModal()"><i class='bx bx-plus-circle me-1'></i>Thêm mới</button>
+            <button class="btn btn-outline-success" onclick="location.href='/Admin/Service/ExportExcel'"><i class='bx bx-export me-1'></i>Xuất Excel</button>
+        </div>
+    </div>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold m-0 text-uppercase">Dịch vụ kỹ thuật</h4>
-    <a asp-action="Create" class="btn btn-primary">
-        <i class="bx bx-plus me-1"></i>Thêm dịch vụ mới
-    </a>
-</div>
+    <!-- Filter Bar -->
+    <div class="filter-section shadow-sm border-0 mb-4 bg-white p-3 rounded-3">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small text-uppercase fw-bold text-muted mb-1">Tìm kiếm dịch vụ</label>
+                <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control bg-light border-0" placeholder="Nhập tên dịch vụ cần tìm...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-uppercase fw-bold text-muted mb-1">Trạng thái</label>
+                <select name="status" class="form-select bg-light border-0">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Active" selected="@(ViewBag.Status == "Active")">Đang cung cấp</option>
+                    <option value="Inactive" selected="@(ViewBag.Status == "Inactive")">Tạm ngừng</option>
+                </select>
+            </div>
+            <div class="col-md-4 text-end">
+                <button type="submit" class="btn btn-ms-red px-4 fw-bold">Lọc dữ liệu</button>
+                <a href="/Admin/Service" class="btn btn-light border px-3"><i class='bx bx-refresh fs-4'></i></a>
+            </div>
+        </form>
+    </div>
 
-<div class="card overflow-hidden border-0 shadow-sm">
-    <div class="table-responsive text-nowrap">
-        <table class="table table-hover m-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Tên dịch vụ & Mô tả</th>
-                    <th>Giá dịch vụ</th>
-                    <th class="text-end">Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
+    <div class="table-container shadow-sm">
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover align-middle m-0">
+                <thead class="bg-light">
                     <tr>
-                        <td>
-                            <div class="service-name">@item.ServiceName</div>
-                            <div class="service-desc text-truncate">@item.Description</div>
-                        </td>
-                        <td><span class="service-price">@item.Price.ToString("N0")đ</span></td>
-                        <td class="text-end">
-                            <a asp-action="Edit" asp-route-id="@item.ServiceId" class="btn btn-sm btn-icon text-primary"><i class="bx bx-edit-alt"></i></a>
-                            <button class="btn btn-sm btn-icon text-danger" onclick="confirmDelete(@item.ServiceId, '@item.ServiceName')"><i class="bx bx-trash"></i></button>
-                        </td>
+                        <th style="width: 80px">Hình ảnh</th>
+                        <th>Tên dịch vụ</th>
+                        <th>Giá dịch vụ</th>
+                        <th>Mô tả</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end px-4">Hành động</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model) {
+                        <tr>
+                            <td>
+                                <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/assets/img/elements/18.jpg" : item.ImageUrl)" class="rounded shadow-sm" style="width: 50px; height: 50px; object-fit: cover;">
+                            </td>
+                            <td class="fw-bold">@item.ServiceName</td>
+                            <td class="text-ms-red fw-bold">@item.Price.ToString("N0")đ</td>
+                            <td><div class="small text-muted text-truncate" style="max-width: 250px;">@item.Description</div></td>
+                            <td>
+                                @if (item.IsActive) {
+                                    <span class="badge bg-label-success">Đang cung cấp</span>
+                                } else {
+                                    <span class="badge bg-label-secondary">Tạm ngừng</span>
+                                }
+                            </td>
+                            <td class="text-end px-4">
+                                <button type="button" class="btn btn-sm btn-icon btn-outline-primary btn-edit-service" 
+                                        data-service='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(item))'><i class="bx bx-edit-alt"></i></button>
+                                <button type="button" class="btn btn-sm btn-icon btn-outline-danger btn-delete-service" 
+                                        data-id="@item.ServiceId"><i class="bx bx-trash"></i></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+
+<!-- Modal Thêm/Sửa -->
+<div class="modal fade" id="serviceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg">
+            <form id="serviceForm" enctype="multipart/form-data">
+                <input type="hidden" name="ServiceId" id="sId">
+                <div class="modal-header border-bottom p-4">
+                    <h5 class="modal-title fw-bold" id="modalTitle">Thông tin dịch vụ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <img id="imgPreview" src="/assets/img/elements/18.jpg" class="rounded shadow-sm mb-2" style="width: 120px; height: 120px; object-fit: cover;">
+                        <div>
+                            <label for="imageFile" class="btn btn-sm btn-outline-primary">Chọn ảnh dịch vụ</label>
+                            <input type="file" id="imageFile" name="imageFile" class="d-none" onchange="previewImage(this)">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Tên dịch vụ <span class="text-danger">*</span></label>
+                        <input type="text" name="ServiceName" id="sName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Giá dự kiến (đ) <span class="text-danger">*</span></label>
+                        <input type="number" name="Price" id="sPrice" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Mô tả</label>
+                        <textarea name="Description" id="sDesc" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="IsActive" id="sActive" value="true" checked>
+                        <label class="form-check-label fw-bold small">Đang cung cấp</label>
+                    </div>
+                </div>
+                <div class="modal-footer border-top p-3 px-4">
+                    <button type="button" class="btn btn-outline-secondary border-0" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-ms-red px-4">Lưu dịch vụ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const sModal = new bootstrap.Modal(document.getElementById('serviceModal'));
+
+        function openServiceModal() {
+            $('#serviceForm')[0].reset();
+            $('#sId').val(0);
+            $('#imgPreview').attr('src', '/assets/img/elements/18.jpg');
+            $('#modalTitle').text('Thêm dịch vụ mới');
+            sModal.show();
+        }
+
+        $(document).on('click', '.btn-edit-service', function() {
+            const data = $(this).data('service');
+            if (!data) return;
+
+            $('#sId').val(data.ServiceId || data.serviceId);
+            $('#sName').val(data.ServiceName || data.serviceName);
+            $('#sPrice').val(data.Price || data.price);
+            $('#sDesc').val(data.Description || data.description);
+            
+            const isActive = (data.IsActive !== undefined) ? data.IsActive : data.isActive;
+            $('#sActive').prop('checked', isActive);
+            
+            const imageUrl = data.ImageUrl || data.imageUrl;
+            if (imageUrl) $('#imgPreview').attr('src', imageUrl);
+            
+            $('#modalTitle').text('Chỉnh sửa dịch vụ');
+            sModal.show();
+        });
+
+        $(document).on('click', '.btn-delete-service', function() {
+            const id = $(this).data('id');
+            if(confirm("Bạn có chắc muốn xóa dịch vụ này?")) {
+                $.post('/Admin/Service/Delete', { id: id }, function(res) {
+                    if (res.success) { UI.toast(res.message, 'success'); setTimeout(() => location.reload(), 1000); }
+                });
+            }
+        });
+
+        function previewImage(input) {
+    </script>
+}

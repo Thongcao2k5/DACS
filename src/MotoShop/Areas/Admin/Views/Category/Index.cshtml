@@ -48,8 +48,10 @@
                         <td>-</td>
                         <td class="text-center"><span class="badge bg-label-info">@item.Products.Count</span></td>
                         <td class="text-end">
-                            <button class="btn btn-sm btn-icon text-primary" onclick="openEditModal(@item.CategoryId, '@item.CategoryName', '')"><i class="bx bx-edit-alt"></i></button>
-                            <button class="btn btn-sm btn-icon text-danger" onclick="confirmDelete(@item.CategoryId, '@item.CategoryName')"><i class="bx bx-trash"></i></button>
+                            <button type="button" class="btn btn-sm btn-icon text-primary btn-edit-category" 
+                                    data-id="@item.CategoryId" data-name="@item.CategoryName" data-parent=""><i class="bx bx-edit-alt"></i></button>
+                            <button type="button" class="btn btn-sm btn-icon text-danger btn-delete-category" 
+                                    data-id="@item.CategoryId" data-name="@item.CategoryName"><i class="bx bx-trash"></i></button>
                         </td>
                     </tr>
                     
@@ -62,8 +64,10 @@
                             <td>@item.CategoryName</td>
                             <td class="text-center"><span class="badge bg-label-secondary">@sub.Products.Count</span></td>
                             <td class="text-end">
-                                <button class="btn btn-sm btn-icon text-primary" onclick="openEditModal(@sub.CategoryId, '@sub.CategoryName', '@item.CategoryId')"><i class="bx bx-edit-alt"></i></button>
-                                <button class="btn btn-sm btn-icon text-danger" onclick="confirmDelete(@sub.CategoryId, '@sub.CategoryName')"><i class="bx bx-trash"></i></button>
+                                <button type="button" class="btn btn-sm btn-icon text-primary btn-edit-category" 
+                                        data-id="@sub.CategoryId" data-name="@sub.CategoryName" data-parent="@item.CategoryId"><i class="bx bx-edit-alt"></i></button>
+                                <button type="button" class="btn btn-sm btn-icon text-danger btn-delete-category" 
+                                        data-id="@sub.CategoryId" data-name="@sub.CategoryName"><i class="bx bx-trash"></i></button>
                             </td>
                         </tr>
                     }
@@ -122,37 +126,22 @@
             categoryModal.show();
         }
 
-        function openEditModal(id, name, parentId) {
+        $(document).on('click', '.btn-edit-category', function() {
+            const id = $(this).data('id');
+            const name = $(this).data('name');
+            const parentId = $(this).data('parent');
+            
             $('#modalTitle').text('Cập nhật loại sản phẩm');
             $('#categoryId').val(id);
             $('#categoryName').val(name);
             $('#parentCategory').val(parentId);
             categoryModal.show();
-        }
+        });
 
-        function handleSave() {
-            const data = {
-                id: $('#categoryId').val(),
-                name: $('#categoryName').val(),
-                parentId: $('#parentCategory').val()
-            };
-
-            if (!data.name) { UI.toast('Vui lòng nhập tên danh mục', 'warning'); return; }
-
-            showLoader();
-            $.post('/Admin/Category/Upsert', data, function(res) {
-                hideLoader();
-                if (res.success) {
-                    categoryModal.hide();
-                    UI.toast('Lưu thành công!', 'success');
-                    location.reload();
-                } else {
-                    UI.toast(res.message, 'error');
-                }
-            });
-        }
-
-        function confirmDelete(id, name) {
+        $(document).on('click', '.btn-delete-category', function() {
+            const id = $(this).data('id');
+            const name = $(this).data('name');
+            
             UI.confirm({
                 title: 'Xác nhận xóa',
                 message: `Bạn có chắc chắn muốn xóa danh mục "<strong>${name}</strong>"?`,
@@ -169,6 +158,8 @@
                     });
                 }
             });
-        }
+        });
+
+        function handleSave() {
     </script>
 }

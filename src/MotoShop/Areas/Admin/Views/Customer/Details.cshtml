@@ -1,0 +1,198 @@
+@model MotoShop.Data.Models.Customer
+@{
+    ViewData["Title"] = "Chi tiết Khách hàng";
+    Layout = "_AdminLayout";
+    var serviceHistory = ViewBag.ServiceHistory as List<MotoShop.Data.Models.ServiceBooking>;
+}
+
+@section Styles {
+    <style>
+        :root { --ms-red: #E24B4A; }
+        .stats-card { border: none; border-radius: 12px; transition: transform 0.3s; }
+        .stats-card:hover { transform: translateY(-5px); }
+        .avatar-lg { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: white; }
+        .nav-tabs-ms .nav-link { border: none; color: #6c757d; font-weight: 600; padding: 12px 20px; }
+        .nav-tabs-ms .nav-link.active { color: var(--ms-red); border-bottom: 3px solid var(--ms-red); background: none; }
+    </style>
+}
+
+<div class="p-4">
+    <div class="mb-4">
+        <a asp-action="Index" class="text-muted small fw-bold text-uppercase text-decoration-none"><i class='bx bx-left-arrow-alt me-1'></i>Quay lại danh sách</a>
+        <div class="d-flex justify-content-between align-items-end mt-2">
+            <h4 class="fw-bold m-0 text-uppercase">Hồ sơ khách hàng</h4>
+            <div class="d-flex gap-2">
+                <button class="btn @(Model.IsLocked ? "btn-success" : "btn-danger")" onclick="toggleStatus(@Model.CustomerId)">
+                    <i class='bx @(Model.IsLocked ? "bx-lock-open-alt" : "bx-lock-alt") me-1'></i>
+                    @(Model.IsLocked ? "Mở khóa tài khoản" : "Khóa tài khoản")
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sidebar Info -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-body text-center p-4">
+                    @{
+                        var initials = Model.FullName.Substring(0, 1).ToUpper();
+                        var colors = new[] { "#696cff", "#71dd37", "#03c3ec", "#ffab00", "#ff3e1d" };
+                        var randomColor = colors[Math.Abs(Model.FullName.GetHashCode()) % colors.Length];
+                    }
+                    <div class="avatar-lg mx-auto mb-3 shadow-sm" style="background-color: @randomColor">@initials</div>
+                    <h5 class="fw-bold mb-1">@Model.FullName</h5>
+                    <span class="badge @(Model.IsLocked ? "bg-label-danger" : "bg-label-success") mb-3">
+                        @(Model.IsLocked ? "Tài khoản bị khóa" : "Đang hoạt động")
+                    </span>
+                    
+                    <div class="text-start mt-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="btn btn-sm btn-icon btn-light rounded-circle me-3"><i class='bx bx-envelope'></i></div>
+                            <div><div class="small text-muted">Email</div><div class="fw-600">@Model.Email</div></div>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="btn btn-sm btn-icon btn-light rounded-circle me-3"><i class='bx bx-phone'></i></div>
+                            <div><div class="small text-muted">Số điện thoại</div><div class="fw-600">@Model.Phone</div></div>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="btn btn-sm btn-icon btn-light rounded-circle me-3"><i class='bx bx-map'></i></div>
+                            <div><div class="small text-muted">Địa chỉ mặc định</div><div class="fw-600 small">@Model.Address</div></div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="btn btn-sm btn-icon btn-light rounded-circle me-3"><i class='bx bx-calendar'></i></div>
+                            <div><div class="small text-muted">Tham gia từ</div><div class="fw-600">@Model.CreatedDate.ToString("dd/MM/yyyy")</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="card border-0 shadow-sm stats-card bg-primary text-white p-3 text-center">
+                        <div class="small opacity-75">Tổng đơn hàng</div>
+                        <h4 class="fw-bold m-0 mt-1">@Model.Orders.Count</h4>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card border-0 shadow-sm stats-card bg-success text-white p-3 text-center">
+                        <div class="small opacity-75">Tổng chi tiêu</div>
+                        <h4 class="fw-bold m-0 mt-1">@ViewBag.TotalSpend.ToString("N0")đ</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                <div class="card-header bg-white border-bottom p-0">
+                    <ul class="nav nav-tabs nav-tabs-ms border-0" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#tab-orders" role="tab"><i class='bx bx-shopping-bag me-2'></i>Đơn hàng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#tab-services" role="tab"><i class='bx bx-wrench me-2'></i>Dịch vụ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#tab-addresses" role="tab"><i class='bx bx-map-pin me-2'></i>Sổ địa chỉ</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body p-0">
+                    <div class="tab-content">
+                        <!-- Tab Đơn hàng -->
+                        <div class="tab-pane fade show active" id="tab-orders">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle m-0">
+                                    <thead class="bg-light small text-uppercase">
+                                        <tr>
+                                            <th class="ps-4">Mã đơn</th>
+                                            <th>Ngày đặt</th>
+                                            <th>Tổng tiền</th>
+                                            <th>Trạng thái</th>
+                                            <th class="text-end pe-4"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var order in Model.Orders.OrderByDescending(o => o.OrderDate)) {
+                                            <tr>
+                                                <td class="ps-4 fw-bold">#@order.OrderCode</td>
+                                                <td>@order.OrderDate.ToString("dd/MM/yyyy")</td>
+                                                <td class="fw-bold">@order.TotalAmount.ToString("N0")đ</td>
+                                                <td><span class="badge bg-label-info">@order.Status</span></td>
+                                                <td class="text-end pe-4">
+                                                    <a href="/Admin/Order/Details/@order.OrderId" class="btn btn-sm btn-icon btn-light"><i class='bx bx-chevron-right'></i></a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tab Dịch vụ -->
+                        <div class="tab-pane fade" id="tab-services">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle m-0">
+                                    <thead class="bg-light small text-uppercase">
+                                        <tr>
+                                            <th class="ps-4">Dịch vụ</th>
+                                            <th>Ngày đặt</th>
+                                            <th>Lịch hẹn</th>
+                                            <th>Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var booking in serviceHistory) {
+                                            <tr>
+                                                <td class="ps-4 fw-bold">@booking.Service?.ServiceName</td>
+                                                <td>@booking.BookingDate.ToString("dd/MM/yyyy")</td>
+                                                <td>@(booking.ServiceDate?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa xếp lịch")</td>
+                                                <td><span class="badge bg-label-warning">@booking.Status</span></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tab Địa chỉ -->
+                        <div class="tab-pane fade p-4" id="tab-addresses">
+                            <div class="row g-3">
+                                @foreach (var addr in Model.CustomerAddresses) {
+                                    <div class="col-md-6">
+                                        <div class="border rounded-3 p-3 position-relative">
+                                            @if (addr.IsDefault) {
+                                                <span class="badge bg-label-primary position-absolute top-0 end-0 m-3">Mặc định</span>
+                                            }
+                                            <div class="fw-bold mb-1">@addr.FullName</div>
+                                            <div class="small text-muted mb-2"><i class='bx bx-phone me-1'></i>@addr.Phone</div>
+                                            <div class="small">@addr.Address</div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleStatus(id) {
+            if (confirm("Xác nhận thay đổi trạng thái khóa tài khoản của khách hàng này?")) {
+                $.post('/Admin/Customer/ToggleStatus', { id: id }, function(res) {
+                    if (res.success) {
+                        UI.toast(res.message, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                });
+            }
+        }
+    </script>
+}

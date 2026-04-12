@@ -24,6 +24,7 @@ namespace MotoShop.Areas.Admin.Controllers
             var stock = await _context.ProductVariants
                 .Include(pv => pv.Product)
                 .Include(pv => pv.BaseUnit)
+                .Where(pv => !pv.Product.IsDeleted)
                 .ToListAsync();
             return View(stock);
         }

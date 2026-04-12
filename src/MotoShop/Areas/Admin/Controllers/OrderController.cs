@@ -4,6 +4,8 @@ using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 using System.Linq;
 using System.Threading.Tasks;
+using ClosedXML.Excel;
+using System.IO;
 
 namespace MotoShop.Areas.Admin.Controllers
 {
@@ -17,36 +19,125 @@ namespace MotoShop.Areas.Admin.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index(string? date, int? month, int? year, string? status)
+        public async Task<IActionResult> Index(string? searchTerm, string? status, DateTime? fromDate, DateTime? toDate, string? paymentMethod, int page = 1, int pageSize = 10)
+        {
+            var query = GetFilteredOrdersQuery(searchTerm, status, fromDate, toDate, paymentMethod);
+
+            // 5. Phân trang
+            var totalItems = await query.CountAsync();
+            var orders = await query
+                .OrderByDescending(o => o.OrderDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.SearchTerm = searchTerm;
+            ViewBag.Status = status;
+            ViewBag.FromDate = fromDate?.ToString("yyyy-MM-dd");
+            ViewBag.ToDate = toDate?.ToString("yyyy-MM-dd");
+            ViewBag.PaymentMethod = paymentMethod;
+            ViewBag.CurrentPage = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+            return View(orders);
+        }
+
+        private IQueryable<Order> GetFilteredOrdersQuery(string? searchTerm, string? status, DateTime? fromDate, DateTime? toDate, string? paymentMethod)
         {
             var query = _context.Orders
                 .Include(o => o.Customer)
+                .Include(o => o.Payments)
+                .AsNoTracking()
                 .AsQueryable();
 
-            if (!string.IsNullOrEmpty(date) && DateTime.TryParse(date, out DateTime parsedDate))
+            // 1. Tìm kiếm (OrderCode, Tên khách, SĐT)
+            if (!string.IsNullOrEmpty(searchTerm))
             {
-                query = query.Where(o => o.OrderDate.Date == parsedDate.Date);
-                ViewBag.FilterDate = date;
+                query = query.Where(o => (o.OrderCode != null && o.OrderCode.Contains(searchTerm)) || 
+                                       (o.Customer != null && o.Customer.FullName.Contains(searchTerm)) ||
+                                       (o.Customer != null && o.Customer.Phone.Contains(searchTerm)));
             }
 
-            if (month.HasValue && year.HasValue)
-            {
-                query = query.Where(o => o.OrderDate.Month == month.Value && o.OrderDate.Year == year.Value);
-                ViewBag.FilterMonth = month;
-                ViewBag.FilterYear = year;
-            }
-
+            // 2. Lọc theo trạng thái
             if (!string.IsNullOrEmpty(status))
             {
                 query = query.Where(o => o.Status == status);
-                ViewBag.FilterStatus = status;
             }
 
-            var orders = await query
+            // 3. Lọc theo khoảng ngày
+            if (fromDate.HasValue)
+            {
+                var startDate = fromDate.Value.Date;
+                query = query.Where(o => o.OrderDate >= startDate);
+            }
+            if (toDate.HasValue)
+            {
+                var endDate = toDate.Value.Date.AddDays(1).AddTicks(-1);
+                query = query.Where(o => o.OrderDate <= endDate);
+            }
+
+            // 4. Lọc theo phương thức thanh toán
+            if (!string.IsNullOrEmpty(paymentMethod))
+            {
+                query = query.Where(o => o.Payments.Any(p => p.PaymentMethod == paymentMethod));
+            }
+
+            return query;
+        }
+
+        public async Task<IActionResult> ExportExcel(string? searchTerm, string? status, DateTime? fromDate, DateTime? toDate, string? paymentMethod)
+        {
+            var orders = await GetFilteredOrdersQuery(searchTerm, status, fromDate, toDate, paymentMethod)
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
 
-            return View(orders);
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Danh sách đơn hàng");
+                var currentRow = 1;
+
+                // Header
+                worksheet.Cell(currentRow, 1).Value = "Mã đơn";
+                worksheet.Cell(currentRow, 2).Value = "Khách hàng";
+                worksheet.Cell(currentRow, 3).Value = "Số điện thoại";
+                worksheet.Cell(currentRow, 4).Value = "Ngày đặt";
+                worksheet.Cell(currentRow, 5).Value = "Tổng tiền";
+                worksheet.Cell(currentRow, 6).Value = "Trạng thái";
+                worksheet.Cell(currentRow, 7).Value = "Thanh toán";
+                worksheet.Cell(currentRow, 8).Value = "Địa chỉ nhận hàng";
+
+                // Format Header
+                var headerRange = worksheet.Range(1, 1, 1, 8);
+                headerRange.Style.Font.Bold = true;
+                headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#E24B4A");
+                headerRange.Style.Font.FontColor = XLColor.White;
+
+                // Data
+                foreach (var order in orders)
+                {
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = "#" + order.OrderCode;
+                    worksheet.Cell(currentRow, 2).Value = order.Customer?.FullName ?? "Khách lẻ";
+                    worksheet.Cell(currentRow, 3).Value = order.Customer?.Phone ?? "N/A";
+                    worksheet.Cell(currentRow, 4).Value = order.OrderDate.ToString("dd/MM/yyyy HH:mm");
+                    worksheet.Cell(currentRow, 5).Value = order.TotalAmount;
+                    worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0";
+                    worksheet.Cell(currentRow, 6).Value = order.Status;
+                    worksheet.Cell(currentRow, 7).Value = order.PaymentStatus;
+                    worksheet.Cell(currentRow, 8).Value = order.ShippingAddress;
+                }
+
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Danh_sach_don_hang_{DateTime.Now:yyyyMMddHHmm}.xlsx");
+                }
+            }
         }
 
         public async Task<IActionResult> Details(int id)
@@ -72,6 +163,33 @@ namespace MotoShop.Areas.Admin.Controllers
             order.Status = status;
             await _context.SaveChangesAsync();
             return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            var order = await _context.Orders.FindAsync(id);
+            if (order == null) return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
+
+            if (order.Status == "Completed")
+                return Json(new { success = false, message = "Không thể hủy đơn hàng đã hoàn thành" });
+
+            order.Status = "Cancelled";
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Đã hủy đơn hàng thành công" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> BulkDelete([FromBody] int[] ids)
+        {
+            if (ids == null || ids.Length == 0) return Json(new { success = false });
+            
+            var orders = await _context.Orders.Where(o => ids.Contains(o.OrderId)).ToListAsync();
+            // Optional: check if orders can be deleted (e.g. only Cancelled or Pending)
+            _context.Orders.RemoveRange(orders);
+            await _context.SaveChangesAsync();
+            
+            return Json(new { success = true, message = $"Đã xóa {orders.Count} đơn hàng" });
         }
     }
 }

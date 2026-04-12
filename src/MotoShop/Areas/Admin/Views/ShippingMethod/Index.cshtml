@@ -1,0 +1,145 @@
+@model IEnumerable<MotoShop.Data.Models.ShippingMethod>
+@{
+    ViewData["Title"] = "Phương thức vận chuyển";
+    Layout = "_AdminLayout";
+}
+
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div><h4 class="fw-bold m-0 text-uppercase"><i class='bx bx-truck me-2 text-danger'></i>Phương thức vận chuyển</h4></div>
+        <button class="btn btn-ms-red px-4 shadow-sm" onclick="openMethodModal()"><i class='bx bx-plus-circle me-1'></i>Thêm mới</button>
+    </div>
+
+    <div class="table-container shadow-sm bg-white rounded-3">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle m-0">
+                <thead class="bg-light small text-uppercase">
+                    <tr>
+                        <th class="ps-4">Tên phương thức</th>
+                        <th>Mô tả chi tiết</th>
+                        <th>Phí vận chuyển</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end px-4">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model) {
+                        <tr>
+                            <td class="ps-4 fw-bold">@item.Name</td>
+                            <td><div class="small text-muted text-truncate" style="max-width: 300px;">@item.Description</div></td>
+                            <td class="fw-bold @(item.Cost == 0 ? "text-success" : "text-ms-red")">
+                                @(item.Cost == 0 ? "Miễn phí" : item.Cost.ToString("N0") + "đ")
+                            </td>
+                            <td>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" @(item.IsActive ? "checked" : "") onchange="toggleStatus(@item.Id)">
+                                </div>
+                            </td>
+                            <td class="text-end px-4">
+                                <button type="button" class="btn btn-sm btn-icon btn-outline-primary btn-edit-method" 
+                                        data-method='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(item))'><i class="bx bx-edit-alt"></i></button>
+                                <button type="button" class="btn btn-sm btn-icon btn-outline-danger btn-delete-method" 
+                                        data-id="@item.Id"><i class="bx bx-trash"></i></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Thêm/Sửa -->
+<div class="modal fade" id="methodModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg">
+            <form id="methodForm">
+                <input type="hidden" name="Id" id="mId">
+                <div class="modal-header border-bottom p-4">
+                    <h5 class="modal-title fw-bold">Thông tin vận chuyển</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Tên phương thức <span class="text-danger">*</span></label>
+                        <input type="text" name="Name" id="mName" class="form-control" placeholder="Ví dụ: Giao hàng nhanh, Nhận tại shop..." required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Phí vận chuyển (đ)</label>
+                        <input type="number" name="Cost" id="mCost" class="form-control" value="0">
+                        <small class="text-muted">Nhập 0 nếu miễn phí vận chuyển</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Mô tả ngắn</label>
+                        <textarea name="Description" id="mDesc" class="form-control" rows="3" placeholder="Ghi chú về thời gian giao hàng, phạm vi áp dụng..."></textarea>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="IsActive" id="mActive" value="true" checked>
+                        <label class="form-check-label small fw-bold">Kích hoạt phương thức này</label>
+                    </div>
+                </div>
+                <div class="modal-footer border-top p-3 px-4">
+                    <button type="button" class="btn btn-outline-secondary border-0" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-ms-red px-4">Lưu phương thức</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const mModal = new bootstrap.Modal(document.getElementById('methodModal'));
+
+        function openMethodModal() {
+            $('#methodForm')[0].reset();
+            $('#mId').val(0);
+            mModal.show();
+        }
+
+        $(document).on('click', '.btn-edit-method', function() {
+            const data = $(this).data('method');
+            if (!data) return;
+
+            $('#mId').val(data.Id || data.id);
+            $('#mName').val(data.Name || data.name);
+            $('#mCost').val(data.Cost || data.cost);
+            $('#mDesc').val(data.Description || data.description);
+            
+            const isActive = (data.IsActive !== undefined) ? data.IsActive : data.isActive;
+            $('#mActive').prop('checked', isActive);
+            
+            mModal.show();
+        });
+
+        $(document).on('click', '.btn-delete-method', function() {
+            const id = $(this).data('id');
+            if(confirm("Xác nhận xóa phương thức vận chuyển này?")) {
+                $.post('/Admin/ShippingMethod/Delete', { id: id }, function(res) {
+                    if (res.success) { UI.toast(res.message, 'success'); setTimeout(() => location.reload(), 1000); }
+                });
+            }
+        });
+
+        $('#methodForm').on('submit', function(e) {
+            e.preventDefault();
+            $.post('/Admin/ShippingMethod/Save', $(this).serialize(), function(res) {
+                if (res.success) { UI.toast(res.message, 'success'); setTimeout(() => location.reload(), 1000); }
+            });
+        });
+
+        function toggleStatus(id) {
+            $.post('/Admin/ShippingMethod/ToggleStatus', { id: id }, function(res) {
+                if (res.success) UI.toast('Cập nhật trạng thái thành công', 'success');
+            });
+        }
+
+        function confirmDelete(id) {
+            if(confirm("Xác nhận xóa phương thức vận chuyển này?")) {
+                $.post('/Admin/ShippingMethod/Delete', { id: id }, function(res) {
+                    if (res.success) { UI.toast(res.message, 'success'); setTimeout(() => location.reload(), 1000); }
+                });
+            }
+        }
+    </script>
+}

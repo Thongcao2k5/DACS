@@ -6,85 +6,231 @@
 
 @section Styles {
     <style>
-      .order-code { font-weight: 700; color: #E60023; font-size: 0.9rem; }
-      .badge-status { min-width: 100px; padding: 0.5em 0.75em; }
-      .bg-label-waiting { background-color: #fff2d6 !important; color: #ffab00 !important; }
-      .bg-label-confirmed { background-color: #e7e7ff !important; color: #696cff !important; }
-      .bg-label-shipping { background-color: #e1faff !important; color: #03c3ec !important; }
-      .bg-label-completed { background-color: #e8fadf !important; color: #71dd37 !important; }
-      .bg-label-cancelled { background-color: #ffe5e5 !important; color: #ff3e1d !important; }
+        .order-code { font-weight: 700; color: #E24B4A; font-size: 0.9rem; }
+        .badge-status { min-width: 100px; padding: 0.5em 0.75em; border-radius: 6px; }
+        .bg-label-waiting { background-color: #fff2d6 !important; color: #ffab00 !important; }
+        .bg-label-confirmed { background-color: #e7e7ff !important; color: #696cff !important; }
+        .bg-label-shipping { background-color: #e1faff !important; color: #03c3ec !important; }
+        .bg-label-completed { background-color: #e8fadf !important; color: #71dd37 !important; }
+        .bg-label-cancelled { background-color: #ffe5e5 !important; color: #ff3e1d !important; }
+        
+        .filter-section { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #eee; margin-bottom: 25px; }
+        .btn-ms-red { background: #E24B4A; color: white; border: none; }
+        .btn-ms-red:hover { background: #c63d3c; color: white; }
+        
+        .table-container { background: #fff; border-radius: 12px; border: 1px solid #eee; overflow: hidden; }
+        .pagination-container { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-top: 1px solid #eee; background: #fdfdfd; }
+        
+        .checkbox-cell { width: 40px; text-align: center; }
+        .action-btns { visibility: hidden; opacity: 0; transition: all 0.3s; }
+        .tr-selected .action-btns { visibility: visible; opacity: 1; }
     </style>
 }
 
-<!-- Header Actions -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold m-0 text-uppercase">Danh sách Đơn hàng</h4>
-    <div class="d-flex gap-2">
-        <button class="btn btn-outline-danger d-none" id="btnBulkDelete">
-            <i class="bx bx-trash me-1"></i>Xóa đã chọn (<span id="selectedCount">0</span>)
-        </button>
-        <button class="btn btn-outline-success">
-            <i class="bx bx-export me-1"></i>Xuất Excel
-        </button>
+<div class="p-4">
+    <!-- Header & Actions -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold m-0 text-uppercase"><i class='bx bx-cart-alt me-2 text-danger'></i>Quản lý Đơn hàng</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/Admin/Dashboard">Bảng điều khiển</a></li>
+                    <li class="breadcrumb-item active">Đơn hàng</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-danger d-none" id="btnBulkDelete">
+                <i class="bx bx-trash me-1"></i>Xóa đã chọn (<span id="selectedCount">0</span>)
+            </button>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="columnSelector" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class='bx bx-columns me-1'></i>Chọn cột
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="columnSelector" style="min-width: 200px;">
+                    <li><h6 class="dropdown-header px-0 text-uppercase small fw-bold">Hiển thị cột</h6></li>
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="1" id="col1" checked><label class="form-check-label" for="col1">Mã đơn</label></div></li>
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="2" id="col2" checked><label class="form-check-label" for="col2">Khách hàng</label></div></li>
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="3" id="col3" checked><label class="form-check-label" for="col3">PT Thanh toán</label></div></li>
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="4" id="col4" checked><label class="form-check-label" for="col4">Trạng thái TT</label></div></li>
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="5" id="col5" checked><label class="form-check-label" for="col5">Ngày đặt</label></div></li>
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="6" id="col6" checked><label class="form-check-label" for="col6">Tổng tiền</label></div></li>
+                    <li><div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="7" id="col7" checked><label class="form-check-label" for="col7">Trạng thái đơn</label></div></li>
+                </ul>
+            </div>
+            <button class="btn btn-outline-success" onclick="exportToExcel()">
+                <i class='bx bx-export me-1'></i>Xuất Excel
+            </button>
+        </div>
     </div>
-</div>
 
-<!-- Table -->
-<div class="card overflow-hidden border-0 shadow-sm">
-    <div class="table-responsive text-nowrap">
-        <table class="table table-hover m-0">
-            <thead class="table-light">
-                <tr>
-                    <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
-                    <th>Mã đơn</th>
-                    <th>Khách hàng</th>
-                    <th>Ngày đặt</th>
-                    <th>Tổng tiền</th>
-                    <th>Trạng thái</th>
-                    <th class="text-center">Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
+    <!-- Filters -->
+    <div class="filter-section shadow-sm">
+        <form id="filterForm" method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Tìm kiếm nhanh</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class='bx bx-search text-muted'></i></span>
+                    <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control bg-light border-start-0" placeholder="Mã đơn, Tên khách, SĐT...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Trạng thái</label>
+                <select name="status" class="form-select border-0 bg-light">
+                    <option value="">-- Tất cả --</option>
+                    <option value="Pending" selected="@(ViewBag.Status == "Pending")">Chờ xử lý</option>
+                    <option value="Confirmed" selected="@(ViewBag.Status == "Confirmed")">Đã xác nhận</option>
+                    <option value="Shipping" selected="@(ViewBag.Status == "Shipping")">Đang giao</option>
+                    <option value="Completed" selected="@(ViewBag.Status == "Completed")">Hoàn thành</option>
+                    <option value="Cancelled" selected="@(ViewBag.Status == "Cancelled")">Đã hủy</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Phương thức TT</label>
+                <select name="paymentMethod" class="form-select border-0 bg-light">
+                    <option value="">-- Tất cả --</option>
+                    <option value="COD" selected="@(ViewBag.PaymentMethod == "COD")">Tiền mặt (COD)</option>
+                    <option value="BankTransfer" selected="@(ViewBag.PaymentMethod == "BankTransfer")">Chuyển khoản</option>
+                    <option value="VNPay" selected="@(ViewBag.PaymentMethod == "VNPay")">Ví VNPay</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Khoảng ngày đặt</label>
+                <div class="d-flex gap-2 align-items-center">
+                    <input type="date" name="fromDate" value="@ViewBag.FromDate" class="form-control border-0 bg-light">
+                    <span class="text-muted">→</span>
+                    <input type="date" name="toDate" value="@ViewBag.ToDate" class="form-control border-0 bg-light">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-ms-red w-100 fw-bold">Lọc dữ liệu</button>
+                    <a href="/Admin/Order" class="btn btn-outline-secondary" title="Xóa lọc"><i class='bx bx-reset'></i></a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container shadow-sm">
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover m-0" id="orderTable">
+                <thead style="background: #fdfdfd">
                     <tr>
-                        <td><input class="form-check-input row-checkbox" type="checkbox" value="@item.OrderId"></td>
-                        <td><span class="order-code">#@item.OrderCode</span></td>
-                        <td>
-                            <div class="fw-bold text-dark">@(item.Customer?.FullName ?? "Khách lẻ")</div>
-                            <small class="text-muted">@(item.Customer?.Phone ?? "N/A")</small>
-                        </td>
-                        <td>@item.OrderDate.ToString("dd/MM/yyyy")</td>
-                        <td class="fw-bold text-dark">@item.TotalAmount.ToString("N0")đ</td>
-                        <td>
-                            @{
-                                var statusClass = item.Status switch {
-                                    "Pending" => "bg-label-waiting",
-                                    "Confirmed" => "bg-label-confirmed",
-                                    "Shipping" => "bg-label-shipping",
-                                    "Completed" => "bg-label-completed",
-                                    "Cancelled" => "bg-label-cancelled",
-                                    _ => "bg-label-secondary"
-                                };
-                                var statusText = item.Status switch {
-                                    "Pending" => "Chờ xử lý",
-                                    "Confirmed" => "Đã xác nhận",
-                                    "Shipping" => "Đang giao",
-                                    "Completed" => "Hoàn thành",
-                                    "Cancelled" => "Đã hủy",
-                                    _ => item.Status
-                                };
-                            }
-                            <span class="badge @statusClass badge-status">@statusText</span>
-                        </td>
-                        <td class="text-center">
-                            <a asp-action="Details" asp-route-id="@item.OrderId" class="btn btn-sm btn-icon text-info" title="Xem chi tiết"><i class="bx bx-show"></i></a>
-                            <button class="btn btn-sm btn-icon text-primary" title="Cập nhật trạng thái" onclick="openStatusModal(@item.OrderId, '@item.OrderCode', '@item.Status')"><i class="bx bx-edit-alt"></i></button>
-                        </td>
+                        <th class="checkbox-cell"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                        <th>Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th>PT Thanh toán</th>
+                        <th>Trạng thái TT</th>
+                        <th>Ngày đặt</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái đơn</th>
+                        <th class="text-end px-4">Thao tác</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @if (Model.Any()) {
+                        @foreach (var item in Model) {
+                            <tr id="row-@item.OrderId">
+                                <td class="checkbox-cell"><input class="form-check-input row-checkbox" type="checkbox" value="@item.OrderId"></td>
+                                <td><span class="order-code">#@item.OrderCode</span></td>
+                                <td>
+                                    <div class="fw-bold text-dark">@(item.Customer?.FullName ?? "Khách lẻ")</div>
+                                    <small class="text-muted"><i class='bx bx-phone-call me-1'></i>@(item.Customer?.Phone ?? "N/A")</small>
+                                </td>
+                                <td>
+                                    @* Giả sử hiển thị phương thức từ database *@
+                                    <div class="small fw-600"><i class='bx bx-wallet me-1'></i>Tiền mặt (COD)</div>
+                                </td>
+                                <td>
+                                    <span class="badge @(item.PaymentStatus == "Paid" ? "bg-label-success" : "bg-label-warning")">
+                                        @(item.PaymentStatus == "Paid" ? "Đã thanh toán" : "Chờ thanh toán")
+                                    </span>
+                                </td>
+                                <td>@item.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="fw-bold text-dark">@item.TotalAmount.ToString("N0")đ</td>
+                                <td>
+                                    @{
+                                        var statusClass = item.Status switch {
+                                            "Pending" => "bg-label-waiting",
+                                            "Confirmed" => "bg-label-confirmed",
+                                            "Shipping" => "bg-label-shipping",
+                                            "Completed" => "bg-label-completed",
+                                            "Cancelled" => "bg-label-cancelled",
+                                            _ => "bg-label-secondary"
+                                        };
+                                        var statusText = item.Status switch {
+                                            "Pending" => "Chờ xử lý",
+                                            "Confirmed" => "Đã xác nhận",
+                                            "Shipping" => "Đang giao",
+                                            "Completed" => "Hoàn thành",
+                                            "Cancelled" => "Đã hủy",
+                                            _ => item.Status
+                                        };
+                                    }
+                                    <span class="badge @statusClass badge-status">@statusText</span>
+                                </td>
+                                <td class="text-end px-4">
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <a asp-action="Details" asp-route-id="@item.OrderId" class="btn btn-sm btn-icon btn-outline-info" title="Xem chi tiết"><i class="bx bx-show"></i></a>
+                                        <button class="btn btn-sm btn-icon btn-outline-primary" title="Cập nhật" onclick="openStatusModal(@item.OrderId, '@item.OrderCode', '@item.Status')"><i class="bx bx-edit-alt"></i></button>
+                                        @if (item.Status != "Cancelled" && item.Status != "Completed")
+                                        {
+                                            <button class="btn btn-sm btn-icon btn-outline-danger" title="Hủy đơn" onclick="confirmCancel(@item.OrderId, '@item.OrderCode')"><i class="bx bx-x-circle"></i></button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    } else {
+                        <tr>
+                            <td colspan="9" class="text-center py-5">
+                                <div class="py-4">
+                                    <i class='bx bx-calendar-x text-muted' style="font-size: 4rem"></i>
+                                    <p class="mt-3 text-muted">Chưa có dữ liệu đơn hàng nào phù hợp với bộ lọc.</p>
+                                    <a href="/Admin/Order" class="btn btn-sm btn-outline-danger">Xóa tất cả bộ lọc</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination (3 Columns) -->
+        @if (ViewBag.TotalItems > 0) {
+            <div class="pagination-container">
+                <div class="col-left">
+                    <span class="text-muted small">Hiển thị <b>@Model.Count()</b> / <b>@ViewBag.TotalItems</b> bản ghi</span>
+                </div>
+                <div class="col-center">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination pagination-sm m-0 gap-1">
+                            @if (ViewBag.CurrentPage > 1) {
+                                <li class="page-item"><a class="page-link border-0 shadow-none bg-light" href="@Url.Action("Index", new { page = ViewBag.CurrentPage - 1, searchTerm = ViewBag.SearchTerm, status = ViewBag.Status, fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate })"><i class='bx bx-chevron-left'></i></a></li>
+                            }
+
+                            @for (int i = 1; i <= ViewBag.TotalPages; i++) {
+                                <li class="page-item @(ViewBag.CurrentPage == i ? "active" : "")">
+                                    <a class="page-link border-0 shadow-none @(ViewBag.CurrentPage == i ? "btn-ms-red text-white" : "bg-light")" href="@Url.Action("Index", new { page = i, searchTerm = ViewBag.SearchTerm, status = ViewBag.Status, fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate })">@i</a>
+                                </li>
+                            }
+
+                            @if (ViewBag.CurrentPage < ViewBag.TotalPages) {
+                                <li class="page-item"><a class="page-link border-0 shadow-none bg-light" href="@Url.Action("Index", new { page = ViewBag.CurrentPage + 1, searchTerm = ViewBag.SearchTerm, status = ViewBag.Status, fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate })"><i class='bx bx-chevron-right'></i></a></li>
+                            }
+                        </ul>
+                    </nav>
+                </div>
+                <div class="col-right">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted small">Trang</span>
+                        <input type="number" class="form-control form-control-sm text-center" value="@ViewBag.CurrentPage" style="width: 50px" readonly>
+                        <span class="text-muted small">trên @ViewBag.TotalPages</span>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 </div>
 
@@ -104,7 +250,7 @@
                 </div>
                 <div>
                     <label class="form-label fw-bold small text-uppercase">Trạng thái mới</label>
-                    <select id="statusSelect" class="form-select border-primary">
+                    <select id="statusSelect" class="form-select border-primary shadow-none">
                         <option value="Pending">Chờ xử lý</option>
                         <option value="Confirmed">Đã xác nhận</option>
                         <option value="Shipping">Đang giao</option>
@@ -114,8 +260,8 @@
                 </div>
             </div>
             <div class="modal-footer border-top p-3 px-4">
-                <button class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Hủy</button>
-                <button class="btn btn-primary px-4" id="btnSaveStatus" onclick="handleSaveStatus()">Lưu thay đổi</button>
+                <button class="btn btn-outline-secondary px-4 border-0" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-ms-red px-4 shadow-sm" id="btnSaveStatus" onclick="handleSaveStatus()">Lưu thay đổi</button>
             </div>
         </div>
     </div>
@@ -124,6 +270,76 @@
 @section Scripts {
     <script>
         const statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
+
+        // Xử lý Checkbox All
+        $('#checkAll').on('change', function() {
+            $('.row-checkbox').prop('checked', this.checked);
+            updateBulkActionVisibility();
+        });
+
+        $(document).on('change', '.row-checkbox', function() {
+            updateBulkActionVisibility();
+        });
+
+        function updateBulkActionVisibility() {
+            const selectedCount = $('.row-checkbox:checked').length;
+            if (selectedCount > 0) {
+                $('#btnBulkDelete').removeClass('d-none').attr('onclick', 'handleBulkDelete()');
+                $('#selectedCount').text(selectedCount);
+            } else {
+                $('#btnBulkDelete').addClass('d-none');
+            }
+        }
+
+        function handleBulkDelete() {
+            const selectedIds = $('.row-checkbox:checked').map(function() {
+                return parseInt($(this).val());
+            }).get();
+            
+            UI.confirm({
+                title: 'Xác nhận xóa',
+                message: `Bạn có chắc chắn muốn xóa vĩnh viễn <strong>${selectedIds.length}</strong> đơn hàng đã chọn không?`,
+                type: 'danger',
+                onConfirm: function() {
+                    showLoader();
+                    $.ajax({
+                        url: '/Admin/Order/BulkDelete',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(selectedIds),
+                        success: function(res) {
+                            hideLoader();
+                            if (res.success) {
+                                UI.toast(res.message, 'success');
+                                setTimeout(() => location.reload(), 1000);
+                            } else {
+                                UI.toast('Lỗi khi xóa hàng loạt', 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        function confirmCancel(id, code) {
+            UI.confirm({
+                title: 'Xác nhận hủy đơn',
+                message: `Bạn có chắc muốn hủy đơn hàng <strong>#${code}</strong> không?`,
+                type: 'danger',
+                onConfirm: function() {
+                    showLoader();
+                    $.post('/Admin/Order/Cancel', { id: id }, function(res) {
+                        hideLoader();
+                        if (res.success) {
+                            UI.toast(res.message, 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            UI.toast(res.message || 'Lỗi khi hủy đơn', 'error');
+                        }
+                    });
+                }
+            });
+        }
 
         function openStatusModal(id, code, currentStatus) {
             $('#orderIdInp').val(id);
@@ -141,11 +357,60 @@
                 hideLoader();
                 if (res.success) {
                     UI.toast('Cập nhật trạng thái thành công', 'success');
-                    location.reload();
+                    setTimeout(() => location.reload(), 1000);
                 } else {
                     UI.toast('Có lỗi xảy ra', 'error');
                 }
             });
+        }
+
+        // Xử lý Chọn cột
+        $('.col-toggle').on('change', function() {
+            const colIdx = parseInt($(this).val());
+            const isChecked = $(this).is(':checked');
+            
+            // Toggle header (Dùng index + 1 vì nth-child bắt đầu từ 1, và cột đầu tiên là checkbox index 0)
+            const targetCol = colIdx + 1;
+            $(`#orderTable thead th:nth-child(${targetCol})`).toggle(isChecked);
+            $(`#orderTable tbody tr`).each(function() {
+                $(this).find(`td:nth-child(${targetCol})`).toggle(isChecked);
+            });
+            
+            // Lưu tùy chọn vào localStorage
+            const preferences = {};
+            $('.col-toggle').each(function() {
+                preferences[$(this).attr('id')] = $(this).is(':checked');
+            });
+            localStorage.setItem('orderColumnPreferences', JSON.stringify(preferences));
+        });
+
+        // Load tùy chọn cột từ localStorage
+        $(document).ready(function() {
+            const savedPrefs = localStorage.getItem('orderColumnPreferences');
+            if (savedPrefs) {
+                try {
+                    const prefs = JSON.parse(savedPrefs);
+                    for (const id in prefs) {
+                        const isChecked = prefs[id];
+                        const $el = $(`#${id}`);
+                        if ($el.length) {
+                            $el.prop('checked', isChecked);
+                            // Cập nhật giao diện ngay lập tức mà không cần trigger change để tránh lặp
+                            const colIdx = parseInt($el.val()) + 1;
+                            $(`#orderTable thead th:nth-child(${colIdx})`).toggle(isChecked);
+                            $(`#orderTable tbody tr`).each(function() {
+                                $(this).find(`td:nth-child(${colIdx})`).toggle(isChecked);
+                            });
+                        }
+                    }
+                } catch (e) { console.error("Error loading column preferences", e); }
+            }
+        });
+
+        // Hàm xuất Excel (Lấy dữ liệu từ Form lọc để chính xác nhất)
+        function exportToExcel() {
+            const formData = $('#filterForm').serialize();
+            window.location.href = '/Admin/Order/ExportExcel?' + formData;
         }
     </script>
 }

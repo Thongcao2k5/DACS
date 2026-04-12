@@ -26,6 +26,7 @@ namespace MotoShop.Data.Data
         public DbSet<ServiceBooking> ServiceBookings { get; set; }
         public DbSet<ProductReview> ProductReviews { get; set; }
         public DbSet<Promotion> Promotions { get; set; }
+        public DbSet<PromotionProduct> PromotionProducts { get; set; }
         public DbSet<Store> Stores { get; set; }
         public DbSet<Staff> Staffs { get; set; }
         public DbSet<Banner> Banners { get; set; }
@@ -54,6 +55,10 @@ namespace MotoShop.Data.Data
             builder.Entity<Order>()
                 .Property(o => o.OrderCode)
                 .HasComputedColumnSql("'DH'+right('000000'+CONVERT([nvarchar],[OrderId]),(6))", stored: true);
+
+            builder.Entity<ServiceBooking>()
+                .Property(b => b.BookingCode)
+                .HasComputedColumnSql("'DV'+right('000000'+CONVERT([nvarchar],[BookingId]),(6))", stored: true);
         }
     }
 }

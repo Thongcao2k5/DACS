@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MotoShop.Data.Data;
 
@@ -11,9 +12,11 @@ using MotoShop.Data.Data;
 namespace MotoShop.Data.Migrations
 {
     [DbContext(typeof(MotoShopDbContext))]
-    partial class MotoShopDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260410061923_UpdatePromotionFinal_v3")]
+    partial class UpdatePromotionFinal_v3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -475,15 +478,6 @@ namespace MotoShop.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<decimal?>("MinOrderValue")
-                        .HasColumnType("decimal(18, 2)");
-
-                    b.Property<int>("UsageLimit")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UsedCount")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.ToTable("Coupons");
@@ -512,9 +506,6 @@ namespace MotoShop.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<bool>("IsLocked")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Phone")
                         .HasMaxLength(50)
@@ -913,6 +904,9 @@ namespace MotoShop.Data.Migrations
                     b.Property<int?>("CustomerId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
                     b.Property<int?>("ProductId")
                         .HasColumnType("int");
 
@@ -921,11 +915,6 @@ namespace MotoShop.Data.Migrations
 
                     b.Property<int>("Rating")
                         .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("ReviewId");
 
@@ -1076,9 +1065,6 @@ namespace MotoShop.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18, 2)");
 
@@ -1102,11 +1088,6 @@ namespace MotoShop.Data.Migrations
 
                     b.Property<int?>("AssignedStaffId")
                         .HasColumnType("int");
-
-                    b.Property<string>("BookingCode")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("nvarchar(max)")
-                        .HasComputedColumnSql("'DV'+right('000000'+CONVERT([nvarchar],[BookingId]),(6))", true);
 
                     b.Property<DateTime>("BookingDate")
                         .HasColumnType("datetime2");
@@ -1154,15 +1135,9 @@ namespace MotoShop.Data.Migrations
                     b.Property<decimal>("Cost")
                         .HasColumnType("decimal(18, 2)");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("EstimatedDays")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()

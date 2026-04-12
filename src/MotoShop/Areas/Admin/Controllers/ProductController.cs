@@ -35,7 +35,7 @@ namespace MotoShop.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index(string? searchTerm, int? categoryId, int? brandId, string? status, string? sort)
         {
-            var query = _productRepository.Find(p => true)
+            var query = _productRepository.Find(p => !p.IsDeleted)
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
                 .Include(p => p.Images)
@@ -346,20 +346,9 @@ namespace MotoShop.Areas.Admin.Controllers
 
                 if (product == null) return Json(new { success = false, message = "Không tìm thấy sản phẩm" });
 
-                // Kiểm tra xem có đơn hàng nào liên quan không
-                // Nếu có, không cho xóa hoặc chỉ nên ẩn đi (IsActive = false)
-                // Ở đây ta thực hiện xóa vì yêu cầu là "nút xóa"
-
-                // Xóa ảnh vật lý
-                if (product.Images != null)
-                {
-                    foreach (var img in product.Images)
-                    {
-                        _fileService.DeleteFile(img.ImageUrl);
-                    }
-                }
-
-                _productRepository.Delete(product);
+                // Soft Delete: Chỉ đánh dấu là đã xóa, không xóa vật lý
+                product.IsDeleted = true;
+                _productRepository.Update(product);
                 await _productRepository.SaveChangesAsync();
 
                 return Json(new { success = true, message = "Đã xóa sản phẩm thành công" });
