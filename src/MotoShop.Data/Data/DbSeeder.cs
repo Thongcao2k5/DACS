@@ -33,12 +33,22 @@ namespace MotoShop.Data.Data
                 await userManager.AddToRoleAsync(admin, "Admin");
             }
 
-            // 3. CLEAR OLD DATA (Dọn dẹp để nạp bộ dữ liệu chuẩn mới)
+            // 3. CLEAR OLD DATA (Dọn dẹp triệt để để nạp bộ dữ liệu chuẩn mới)
+            context.InventoryTransactions.RemoveRange(context.InventoryTransactions);
+            context.OrderItems.RemoveRange(context.OrderItems);
+            context.Orders.RemoveRange(context.Orders);
+            context.ProductReviews.RemoveRange(context.ProductReviews);
+            context.PromotionProducts.RemoveRange(context.PromotionProducts);
             context.ProductImages.RemoveRange(context.ProductImages);
             context.ProductVariants.RemoveRange(context.ProductVariants);
             context.Products.RemoveRange(context.Products);
             context.Categories.RemoveRange(context.Categories);
             context.Brands.RemoveRange(context.Brands);
+            context.Customers.RemoveRange(context.Customers);
+            context.Promotions.RemoveRange(context.Promotions);
+            context.Coupons.RemoveRange(context.Coupons);
+            context.Blogs.RemoveRange(context.Blogs);
+            context.BlogCategories.RemoveRange(context.BlogCategories);
             await context.SaveChangesAsync();
 
             // 4. HELPER METHODS

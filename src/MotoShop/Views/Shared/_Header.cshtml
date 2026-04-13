@@ -158,15 +158,21 @@
     document.addEventListener('DOMContentLoaded', updateCartBadge);
 </script>
 
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
+}
+
 <nav class="nav-header d-none d-lg-block">
     <div class="container">
         <ul class="nav-list">
-            <li><a asp-area="" asp-controller="Home" asp-action="Index" class="nav-link-main">TRANG CHỦ</a></li>
-            <li><a asp-area="" asp-controller="Product" asp-action="Index" class="nav-link-main">DANH MỤC</a></li>
-            <li><a asp-area="" asp-controller="Service" asp-action="Index" class="nav-link-main">DỊCH VỤ</a></li>
-            <li><a asp-area="" asp-controller="Product" asp-action="Promotion" class="nav-link-main text-danger">KHUYẾN MÃI HOT</a></li>
-            <li><a asp-area="" asp-controller="Blog" asp-action="Index" class="nav-link-main">TIN TỨC</a></li>
-            <li><a asp-area="" asp-controller="Info" asp-action="Contact" class="nav-link-main">LIÊN HỆ</a></li>
+            <li><a asp-area="" asp-controller="Home" asp-action="Index" class="nav-link-main @(currentController == "Home" ? "active" : "")">TRANG CHỦ</a></li>
+            <li><a asp-area="" asp-controller="Product" asp-action="Index" class="nav-link-main @(currentController == "Product" && currentAction == "Index" ? "active" : "")">DANH MỤC</a></li>
+            <li><a asp-area="" asp-controller="Service" asp-action="Index" class="nav-link-main @(currentController == "Service" ? "active" : "")">DỊCH VỤ</a></li>
+            <li><a asp-area="" asp-controller="Product" asp-action="Promotion" class="nav-link-main @(currentController == "Product" && currentAction == "Promotion" ? "active" : "")">KHUYẾN MÃI HOT</a></li>
+            <li><a asp-area="" asp-controller="Blog" asp-action="Index" class="nav-link-main @(currentController == "Blog" ? "active" : "")">TIN TỨC</a></li>
+            <li><a asp-area="" asp-controller="Info" asp-action="Contact" class="nav-link-main @(currentController == "Info" ? "active" : "")">LIÊN HỆ</a></li>
         </ul>
     </div>
 </nav>
@@ -243,6 +249,33 @@
         color: #333; text-decoration: none; transition: 0.2s; 
     }
     .dropdown-item-custom:hover { background: #f8f9fa; color: #dc3545; }
+    .nav-link-main {
+        color: #333;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: 0.2s ease-in-out;
+        text-decoration: none;
+        padding: 10px 15px;
+        display: inline-block;
+    }
+    .nav-link-main:hover, .nav-link-main.active {
+        color: #dc3545 !important;
+        background: transparent;
+    }
+    .nav-list {
+        display: flex;
+        justify-content: center;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        gap: 10px;
+    }
+    .nav-header {
+        border-bottom: 1px solid #eee;
+        background: #fff;
+    }
     @@media (max-width: 991.98px) {
         .cart-success-toast {
             right: -8px;

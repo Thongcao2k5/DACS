@@ -169,7 +169,10 @@
         </div>
         <!-- CARD 2 - Đơn hàng hôm nay -->
         <div class="col-xl col-md-4 col-sm-6">
-            <a asp-controller="Order" asp-action="Index" asp-route-date="@DateTime.Now.ToString("yyyy-MM-dd")" class="ms-card ms-metric-card">
+            <a asp-controller="Order" asp-action="Index" 
+               asp-route-fromDate="@DateTime.Now.ToString("yyyy-MM-dd")" 
+               asp-route-toDate="@DateTime.Now.ToString("yyyy-MM-dd")" 
+               class="ms-card ms-metric-card">
                 <div class="ms-icon-box" style="background-color: var(--ms-blue);">
                     <i class='bx bx-cart'></i>
                 </div>
@@ -208,7 +211,10 @@
         </div>
         <!-- CARD 5 - Hóa đơn tháng này -->
         <div class="col-xl col-md-4 col-sm-6">
-            <a asp-controller="Order" asp-action="Index" asp-route-month="@DateTime.Now.Month" asp-route-year="@DateTime.Now.Year" class="ms-card ms-metric-card">
+            <a asp-controller="Order" asp-action="Index" 
+               asp-route-fromDate="@(new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).ToString("yyyy-MM-dd"))" 
+               asp-route-toDate="@(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month)).ToString("yyyy-MM-dd"))" 
+               class="ms-card ms-metric-card">
                 <div class="ms-icon-box" style="background-color: var(--ms-purple);">
                     <i class='bx bx-receipt'></i>
                 </div>

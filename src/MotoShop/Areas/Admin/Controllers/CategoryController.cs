@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,6 +18,7 @@ namespace MotoShop.Areas.Admin.Controllers
             _context = context;
         }
 
+        // GET: Admin/Category
         public async Task<IActionResult> Index()
         {
             var categories = await _context.Categories
@@ -29,47 +31,84 @@ namespace MotoShop.Areas.Admin.Controllers
             return View(categories);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Upsert(int? id, string name, int? parentId)
+        // GET: Admin/Category/GetCategory/5
+        [HttpGet]
+        public async Task<IActionResult> GetCategory(int id)
         {
-            if (string.IsNullOrEmpty(name)) return Json(new { success = false, message = "Tên danh mục không được để trống" });
-
-            if (id == null || id == 0) // Create
-            {
-                var category = new Category { 
-                    CategoryName = name, 
-                    ParentId = parentId,
-                    Slug = name.ToLower().Replace(" ", "-") 
-                };
-                _context.Categories.Add(category);
-            }
-            else // Update
-            {
-                var category = await _context.Categories.FindAsync(id);
-                if (category == null) return Json(new { success = false, message = "Không tìm thấy danh mục" });
-                
-                category.CategoryName = name;
-                category.ParentId = parentId;
-                category.Slug = name.ToLower().Replace(" ", "-");
-                _context.Categories.Update(category);
-            }
-
-            await _context.SaveChangesAsync();
-            return Json(new { success = true });
+            var category = await _context.Categories.FindAsync(id);
+            if (category == null) return NotFound();
+            return Json(new { 
+                categoryId = category.CategoryId, 
+                categoryName = category.CategoryName, 
+                parentId = category.ParentId,
+                description = category.Description,
+                imageUrl = category.ImageUrl
+            });
         }
 
+        // POST: Admin/Category/Upsert
+        [HttpPost]
+        public async Task<IActionResult> Upsert(int? CategoryId, string CategoryName, int? ParentId, string Description, string ImageUrl)
+        {
+            if (string.IsNullOrEmpty(CategoryName)) 
+                return Json(new { success = false, message = "Tên danh mục không được để trống!" });
+
+            try 
+            {
+                if (CategoryId == null || CategoryId == 0) // Thêm mới
+                {
+                    var category = new Category 
+                    { 
+                        CategoryName = CategoryName, 
+                        ParentId = ParentId == 0 ? null : ParentId,
+                        Description = Description,
+                        ImageUrl = ImageUrl,
+                        Slug = CategoryName.ToLower().Replace(" ", "-").Replace("đ", "d").Replace("/", "-")
+                    };
+                    _context.Categories.Add(category);
+                }
+                else // Cập nhật
+                {
+                    var category = await _context.Categories.FindAsync(CategoryId);
+                    if (category == null) return Json(new { success = false, message = "Không tìm thấy danh mục!" });
+                    
+                    category.CategoryName = CategoryName;
+                    category.ParentId = ParentId == 0 ? null : ParentId;
+                    category.Description = Description;
+                    category.ImageUrl = ImageUrl;
+                    category.Slug = CategoryName.ToLower().Replace(" ", "-").Replace("đ", "d").Replace("/", "-");
+                    _context.Categories.Update(category);
+                }
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Lưu danh mục thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
+            }
+        }
+
+        // POST: Admin/Category/Delete/5
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
-            var category = await _context.Categories.Include(c => c.SubCategories).FirstOrDefaultAsync(c => c.CategoryId == id);
-            if (category == null) return Json(new { success = false, message = "Không tìm thấy danh mục" });
+            var category = await _context.Categories
+                .Include(c => c.SubCategories)
+                .Include(c => c.Products)
+                .FirstOrDefaultAsync(c => c.CategoryId == id);
+
+            if (category == null) return Json(new { success = false, message = "Không tìm thấy danh mục!" });
 
             if (category.SubCategories.Any())
-                return Json(new { success = false, message = "Không thể xóa danh mục này vì có chứa danh mục con" });
+                return Json(new { success = false, message = "Không thể xóa danh mục này vì đang có chứa danh mục con!" });
+
+            if (category.Products.Any())
+                return Json(new { success = false, message = "Không thể xóa danh mục này vì đang có sản phẩm thuộc về nó!" });
 
             _context.Categories.Remove(category);
             await _context.SaveChangesAsync();
-            return Json(new { success = true });
+            return Json(new { success = true, message = "Đã xóa danh mục thành công!" });
         }
     }
 }

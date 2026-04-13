@@ -72,11 +72,23 @@
                 
                 <!-- KHO HÀNG & SẢN PHẨM -->
                 <li class="menu-header small text-uppercase"><span class="menu-header-text">Kho hàng & Sản phẩm</span></li>
-                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")">
-                    <a asp-area="Admin" asp-controller="Product" asp-action="Index" class="menu-link">
+                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" || ViewContext.RouteData.Values["controller"]?.ToString() == "Category" || ViewContext.RouteData.Values["controller"]?.ToString() == "Brand" ? "active open" : "")">
+                    <a href="javascript:void(0);" class="menu-link menu-toggle">
                         <i class="menu-icon tf-icons bx bx-box"></i>
-                        <div>Sản phẩm</div>
+                        <div>Cấu hình sản phẩm</div>
                     </a>
+                    <ul class="menu-sub">
+                        <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")">
+                            <a asp-area="Admin" asp-controller="Product" asp-action="Index" class="menu-link"><div>Danh sách sản phẩm</div></a>
+                        </li>
+                        <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Category" ? "active" : "")">
+                            <a asp-area="Admin" asp-controller="Category" asp-action="Index" class="menu-link"><div>Danh mục sản phẩm</div></a>
+                        </li>
+                        <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Brand" ? "active" : "")">
+                            <a asp-area="Admin" asp-controller="Brand" asp-action="Index" class="menu-link"><div>Thương hiệu sản phẩm</div></a>
+                        </li>
+                    </ul>
+                </li>
                 
                 <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Inventory" ? "active" : "")">
                     <a asp-area="Admin" asp-controller="Inventory" asp-action="Index" class="menu-link">
@@ -262,6 +274,19 @@
             
             // Tự động mở menu khi có submenu active
             $('.menu-item.active').parents('.menu-item').addClass('active open');
+
+            // Xử lý thủ công việc đóng/mở menu nếu script mặc định bị lỗi
+            $('.menu-toggle').on('click', function(e) {
+                e.preventDefault();
+                var $parent = $(this).parent('.menu-item');
+                if ($parent.hasClass('open')) {
+                    $parent.removeClass('open');
+                } else {
+                    // Đóng các menu khác cùng cấp nếu cần (tùy chọn)
+                    // $(this).closest('.menu-inner').find('.menu-item.open').removeClass('open');
+                    $parent.addClass('open');
+                }
+            });
         });
     </script>
     @await RenderSectionAsync("Scripts", required: false)

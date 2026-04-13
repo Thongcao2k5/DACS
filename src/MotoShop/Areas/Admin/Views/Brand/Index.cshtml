@@ -4,91 +4,98 @@
     Layout = "_AdminLayout";
 }
 
-@section Styles {
-    <style>
-        .brand-logo-admin { width: 40px; height: 40px; object-fit: contain; border-radius: 4px; border: 1px solid #eee; padding: 2px; }
-    </style>
-}
-
-<!-- Actions Bar -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold m-0 text-uppercase">Thương hiệu</h4>
-    <div class="d-flex gap-2">
-        <button type="button" class="btn btn-primary" onclick="openCreateModal()">
-            <i class="bx bx-plus me-1"></i> Thêm thương hiệu
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0"><span class="text-muted fw-light">Cấu hình /</span> Thương hiệu</h4>
+            <small class="text-muted">Quản lý các thương hiệu phụ tùng & xe máy trong hệ thống</small>
+        </div>
+        <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" onclick="openCreateModal()">
+            <i class="bx bx-plus me-1"></i> THÊM THƯƠNG HIỆU
         </button>
     </div>
-</div>
 
-<!-- Table -->
-<div class="card overflow-hidden border-0 shadow-sm">
-    <div class="table-responsive text-nowrap">
-        <table class="table table-hover m-0">
-            <thead class="table-light">
-                <tr>
-                    <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
-                    <th style="width: 80px">Logo</th>
-                    <th>Tên thương hiệu</th>
-                    <th>Mô tả</th>
-                    <th class="text-center">Số SP</th>
-                    <th class="text-end">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
                     <tr>
-                        <td><input class="form-check-input row-checkbox" type="checkbox" value="@item.BrandId"></td>
-                        <td>
-                            <img src="@(string.IsNullOrEmpty(item.LogoUrl) ? "/assets/img/elements/no-image.png" : item.LogoUrl)" 
-                                 class="brand-logo-admin" 
-                                 onerror="this.src='/assets/img/elements/no-image.png'">
-                        </td>
-                        <td><span class="fw-bold text-dark">@item.BrandName</span></td>
-                        <td><small class="text-muted text-truncate d-block" style="max-width: 300px;">@item.Description</small></td>
-                        <td class="text-center"><span class="badge bg-label-info">@item.Products.Count</span></td>
-                        <td class="text-end">
-                            <button type="button" class="btn btn-sm btn-icon text-primary btn-edit-brand" 
-                                    data-brand='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(item))'><i class="bx bx-edit-alt"></i></button>
-                            <button type="button" class="btn btn-sm btn-icon text-danger btn-delete-brand" 
-                                    data-id="@item.BrandId" data-name="@item.BrandName"><i class="bx bx-trash"></i></button>
-                        </td>
+                        <th style="width: 80px;">Logo</th>
+                        <th>Tên Thương Hiệu</th>
+                        <th>Mô tả</th>
+                        <th class="text-center" style="width: 150px;">Thao tác</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody class="table-border-bottom-0">
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.LogoUrl))
+                                {
+                                    <img src="@item.LogoUrl" alt="@item.BrandName" class="rounded" style="width: 40px; height: 40px; object-fit: contain; border: 1px solid #eee;">
+                                }
+                                else
+                                {
+                                    <div class="rounded bg-light text-muted d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class='bx bx-image-alt'></i>
+                                    </div>
+                                }
+                            </td>
+                            <td><span class="fw-bold text-dark">@item.BrandName</span></td>
+                            <td><span class="text-muted small">@(string.IsNullOrEmpty(item.Description) ? "Không có mô tả" : item.Description)</span></td>
+                            <td class="text-center">
+                                <div class="dropdown">
+                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                        <i class="bx bx-dots-vertical-rounded"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item" href="javascript:void(0);" onclick="openEditModal(@item.BrandId)">
+                                            <i class="bx bx-edit-alt me-1"></i> Sửa
+                                        </a>
+                                        <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="handleDelete(@item.BrandId, '@item.BrandName')">
+                                            <i class="bx bx-trash me-1"></i> Xóa
+                                        </a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<!-- Modal Form -->
+<!-- Modal Thêm/Sửa Thương hiệu -->
 <div class="modal fade" id="brandModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg border-0 rounded-4">
-            <div class="modal-header border-bottom p-4">
-                <h5 class="modal-title fw-bold" id="modalTitle">Thêm thương hiệu</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <form id="brandForm">
-                    <input type="hidden" id="brandId">
+        <div class="modal-content shadow-lg border-0">
+            <form id="brandForm" onsubmit="handleFormSubmit(event)">
+                <div class="modal-header border-bottom p-4">
+                    <h5 class="modal-title fw-bold" id="modalTitle">Thêm thương hiệu mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="BrandId" name="BrandId">
                     <div class="mb-3">
-                        <label class="form-label fw-bold small text-uppercase" for="brandName">Tên thương hiệu <span class="text-danger">*</span></label>
-                        <input type="text" id="brandName" class="form-control rounded-3" placeholder="Ví dụ: Honda" required>
+                        <label class="form-label fw-bold small text-uppercase">Tên thương hiệu <span class="text-danger">*</span></label>
+                        <input type="text" id="BrandName" name="BrandName" class="form-control border-primary" placeholder="Nhập tên thương hiệu (VD: Honda, Yamaha...)" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold small text-uppercase" for="logoUrl">Logo URL</label>
-                        <input type="text" id="logoUrl" class="form-control rounded-3" placeholder="https://...">
+                        <label class="form-label fw-bold small text-uppercase">Đường dẫn Logo (URL)</label>
+                        <input type="url" id="LogoUrl" name="LogoUrl" class="form-control" placeholder="https://example.com/logo.png">
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small text-uppercase" for="description">Mô tả</label>
-                        <textarea id="description" class="form-control rounded-3" rows="3" placeholder="Mô tả về thương hiệu..."></textarea>
+                    <div class="mb-0">
+                        <label class="form-label fw-bold small text-uppercase">Mô tả ngắn</label>
+                        <textarea id="Description" name="Description" class="form-control" rows="3" placeholder="Nhập vài dòng giới thiệu về thương hiệu này..."></textarea>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer bg-light-subtle p-4 border-top">
-                <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary px-4 rounded-pill" id="saveBrandBtn" onclick="handleSave()">Lưu dữ liệu</button>
-            </div>
+                </div>
+                <div class="modal-footer border-top p-3 px-4">
+                    <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary px-4 rounded-pill fw-bold">LƯU THƯƠNG HIỆU</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -96,48 +103,60 @@
 @section Scripts {
     <script>
         const brandModal = new bootstrap.Modal(document.getElementById('brandModal'));
+        const brandForm = document.getElementById('brandForm');
 
         function openCreateModal() {
-            $('#modalTitle').text('Thêm thương hiệu mới');
-            $('#brandForm')[0].reset();
-            $('#brandId').val('');
+            brandForm.reset();
+            document.getElementById('BrandId').value = "";
+            document.getElementById('modalTitle').innerText = "Thêm thương hiệu mới";
             brandModal.show();
         }
 
-        $(document).on('click', '.btn-edit-brand', function() {
-            const data = $(this).data('brand');
-            if (!data) return;
+        function openEditModal(id) {
+            brandForm.reset();
+            $.get('/Admin/Brand/GetBrand/' + id, function (data) {
+                document.getElementById('BrandId').value = data.brandId;
+                document.getElementById('BrandName').value = data.brandName;
+                document.getElementById('LogoUrl').value = data.logoUrl || "";
+                document.getElementById('Description').value = data.description || "";
+                document.getElementById('modalTitle').innerText = "Cập nhật thương hiệu";
+                brandModal.show();
+            });
+        }
 
-            $('#modalTitle').text('Cập nhật thương hiệu');
-            $('#brandId').val(data.BrandId || data.brandId);
-            $('#brandName').val(data.BrandName || data.brandName);
-            $('#logoUrl').val(data.LogoUrl || data.logoUrl);
-            $('#description').val(data.Description || data.description);
-            brandModal.show();
-        });
-
-        $(document).on('click', '.btn-delete-brand', function() {
-            const id = $(this).data('id');
-            const name = $(this).data('name');
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('BrandId').value;
+            const url = id ? '/Admin/Brand/Edit' : '/Admin/Brand/Create';
+            const formData = new FormData(brandForm);
             
-            UI.confirm({
-                title: 'Xác nhận xóa',
-                message: `Bạn có chắc chắn muốn xóa thương hiệu "<strong>${name}</strong>"?`,
-                onConfirm: function() {
-                    showLoader();
-                    $.post('/Admin/Brand/Delete', { id: id }, function(res) {
-                        hideLoader();
-                        if (res.success) {
-                            UI.toast('Đã xóa thành công', 'success');
-                            location.reload();
-                        } else {
-                            UI.toast(res.message, 'error');
-                        }
-                    });
+            const data = {};
+            formData.forEach((value, key) => data[key] = value);
+
+            showLoader();
+            $.post(url, data, function (res) {
+                hideLoader();
+                if (res.success) {
+                    brandModal.hide();
+                    location.reload();
+                } else {
+                    alert(res.message);
                 }
             });
-        });
+        }
 
-        function handleSave() {
+        function handleDelete(id, name) {
+            if (confirm(`Bạn có chắc chắn muốn xóa thương hiệu "${name}"? Thao tác này không thể hoàn tác.`)) {
+                showLoader();
+                $.post('/Admin/Brand/Delete/' + id, function (res) {
+                    hideLoader();
+                    if (res.success) {
+                        location.reload();
+                    } else {
+                        alert(res.message);
+                    }
+                });
+            }
+        }
     </script>
 }

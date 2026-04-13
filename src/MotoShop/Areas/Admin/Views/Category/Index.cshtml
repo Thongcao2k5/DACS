@@ -1,116 +1,117 @@
 @model IEnumerable<MotoShop.Data.Models.Category>
 @{
-    ViewData["Title"] = "Quản lý Loại sản phẩm";
+    ViewData["Title"] = "Quản lý Danh mục";
     Layout = "_AdminLayout";
 }
 
-@section Styles {
-    <style>
-      .category-child { padding-left: 2.5rem !important; background-color: #fafafa; }
-      .tree-icon { color: #d9dee3; margin-right: 0.5rem; }
-      .filter-label { font-size: 11px; font-weight: 700; color: #a1acb8; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
-    </style>
-}
-
-<!-- Actions Bar -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold m-0 text-uppercase">Loại sản phẩm</h4>
-    <div class="d-flex gap-2">
-        <button class="btn btn-outline-danger d-none" id="btnBulkDelete" onclick="handleBulkDelete()">
-            <i class="bx bx-trash me-1"></i>Xóa đã chọn (<span id="selectedCount">0</span>)
-        </button>
-        <button type="button" class="btn btn-primary" onclick="openCreateModal()">
-            <i class="bx bx-plus me-1"></i> Thêm loại sản phẩm
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0"><span class="text-muted fw-light">Cấu hình /</span> Danh mục</h4>
+            <small class="text-muted">Quản lý các loại sản phẩm phụ tùng & xe máy</small>
+        </div>
+        <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" onclick="openCreateModal()">
+            <i class="bx bx-plus me-1"></i> THÊM DANH MỤC
         </button>
     </div>
-</div>
 
-<!-- Table -->
-<div class="card overflow-hidden border-0 shadow-sm">
-    <div class="table-responsive text-nowrap">
-        <table class="table table-hover m-0">
-            <thead class="table-light">
-                <tr>
-                    <th style="width: 40px"><input class="form-check-input" type="checkbox" id="checkAll"></th>
-                    <th style="width: 35%">Tên loại sản phẩm</th>
-                    <th>Danh mục cha</th>
-                    <th class="text-center">Số SP</th>
-                    <th class="text-end">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.Where(c => c.ParentId == null))
-                {
-                    <!-- Cấp cha -->
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
                     <tr>
-                        <td><input class="form-check-input row-checkbox" type="checkbox" value="@item.CategoryId"></td>
-                        <td><span class="fw-bold text-dark">@item.CategoryName</span></td>
-                        <td>-</td>
-                        <td class="text-center"><span class="badge bg-label-info">@item.Products.Count</span></td>
-                        <td class="text-end">
-                            <button type="button" class="btn btn-sm btn-icon text-primary btn-edit-category" 
-                                    data-id="@item.CategoryId" data-name="@item.CategoryName" data-parent=""><i class="bx bx-edit-alt"></i></button>
-                            <button type="button" class="btn btn-sm btn-icon text-danger btn-delete-category" 
-                                    data-id="@item.CategoryId" data-name="@item.CategoryName"><i class="bx bx-trash"></i></button>
-                        </td>
+                        <th style="width: 60px;">ID</th>
+                        <th>Tên Danh Mục</th>
+                        <th>Danh Mục Cha</th>
+                        <th class="text-center">Số Sản Phẩm</th>
+                        <th class="text-center" style="width: 150px;">Thao tác</th>
                     </tr>
-                    
-                    @foreach (var sub in Model.Where(c => c.ParentId == item.CategoryId))
+                </thead>
+                <tbody class="table-border-bottom-0">
+                    @foreach (var item in Model)
                     {
-                        <!-- Cấp con -->
-                        <tr class="category-child">
-                            <td><input class="form-check-input row-checkbox" type="checkbox" value="@sub.CategoryId"></td>
-                            <td><span class="tree-icon">↳</span> @sub.CategoryName</td>
-                            <td>@item.CategoryName</td>
-                            <td class="text-center"><span class="badge bg-label-secondary">@sub.Products.Count</span></td>
-                            <td class="text-end">
-                                <button type="button" class="btn btn-sm btn-icon text-primary btn-edit-category" 
-                                        data-id="@sub.CategoryId" data-name="@sub.CategoryName" data-parent="@item.CategoryId"><i class="bx bx-edit-alt"></i></button>
-                                <button type="button" class="btn btn-sm btn-icon text-danger btn-delete-category" 
-                                        data-id="@sub.CategoryId" data-name="@sub.CategoryName"><i class="bx bx-trash"></i></button>
+                        <tr>
+                            <td><span class="text-muted">#@item.CategoryId</span></td>
+                            <td>
+                                @if (item.ParentId != null)
+                                {
+                                    <span class="text-muted me-2">L—</span>
+                                }
+                                <span class="fw-bold text-dark">@item.CategoryName</span>
+                            </td>
+                            <td>
+                                @if (item.ParentCategory != null)
+                                {
+                                    <span class="badge bg-label-secondary">@item.ParentCategory.CategoryName</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-label-primary">Danh mục gốc</span>
+                                }
+                            </td>
+                            <td class="text-center"><span class="badge rounded-pill bg-light text-dark border">@item.Products?.Count</span></td>
+                            <td class="text-center">
+                                <div class="dropdown">
+                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                        <i class="bx bx-dots-vertical-rounded"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item" href="javascript:void(0);" onclick="openEditModal(@item.CategoryId)">
+                                            <i class="bx bx-edit-alt me-1"></i> Sửa
+                                        </a>
+                                        <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="handleDelete(@item.CategoryId, '@item.CategoryName')">
+                                            <i class="bx bx-trash me-1"></i> Xóa
+                                        </a>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     }
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<!-- Modal Form -->
+<!-- Modal Thêm/Sửa Danh mục -->
 <div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg border-0 rounded-4">
-            <div class="modal-header border-bottom p-4">
-                <h5 class="modal-title fw-bold" id="modalTitle">Thêm loại sản phẩm</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <form id="categoryForm">
-                    <input type="hidden" id="categoryId">
-                    <div class="mb-4">
-                        <label class="form-label fw-bold small text-uppercase" for="categoryName">Tên loại sản phẩm <span class="text-danger">*</span></label>
-                        <input type="text" id="categoryName" class="form-control rounded-3" placeholder="Ví dụ: Phụ tùng máy" required>
+        <div class="modal-content shadow-lg border-0">
+            <form id="categoryForm" onsubmit="handleFormSubmit(event)">
+                <div class="modal-header border-bottom p-4">
+                    <h5 class="modal-title fw-bold" id="modalTitle">Thêm danh mục mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="CategoryId" name="CategoryId">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Tên danh mục <span class="text-danger">*</span></label>
+                        <input type="text" id="CategoryName" name="CategoryName" class="form-control border-primary" placeholder="Nhập tên danh mục (VD: Dàn chân, Nhớt máy...)" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold small text-uppercase" for="parentCategory">Danh mục cha</label>
-                        <select id="parentCategory" class="form-select rounded-3 shadow-none">
-                            <option value="">Không có (Danh mục chính)</option>
-                            @if (ViewBag.ParentCategories != null)
+                        <label class="form-label fw-bold small text-uppercase">Danh mục cha</label>
+                        <select id="ParentId" name="ParentId" class="form-select">
+                            <option value="0">-- Chọn danh mục cha (Để trống nếu là gốc) --</option>
+                            @foreach (var p in ViewBag.ParentCategories)
                             {
-                                foreach (var pc in (IEnumerable<MotoShop.Data.Models.Category>)ViewBag.ParentCategories)
-                                {
-                                    <option value="@pc.CategoryId">@pc.CategoryName</option>
-                                }
+                                <option value="@p.CategoryId">@p.CategoryName</option>
                             }
                         </select>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer bg-light-subtle p-4 border-top">
-                <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary px-4 rounded-pill" id="saveCategoryBtn" onclick="handleSave()">Lưu dữ liệu</button>
-            </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Đường dẫn ảnh (URL)</label>
+                        <input type="url" id="ImageUrl" name="ImageUrl" class="form-control" placeholder="https://example.com/image.png">
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label fw-bold small text-uppercase">Mô tả ngắn</label>
+                        <textarea id="Description" name="Description" class="form-control" rows="3" placeholder="Nhập vài dòng giới thiệu về danh mục này..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top p-3 px-4">
+                    <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary px-4 rounded-pill fw-bold">LƯU DANH MỤC</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -118,48 +119,62 @@
 @section Scripts {
     <script>
         const categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+        const categoryForm = document.getElementById('categoryForm');
 
         function openCreateModal() {
-            $('#modalTitle').text('Thêm loại sản phẩm mới');
-            $('#categoryForm')[0].reset();
-            $('#categoryId').val('');
+            categoryForm.reset();
+            document.getElementById('CategoryId').value = "";
+            document.getElementById('modalTitle').innerText = "Thêm danh mục mới";
             categoryModal.show();
         }
 
-        $(document).on('click', '.btn-edit-category', function() {
-            const id = $(this).data('id');
-            const name = $(this).data('name');
-            const parentId = $(this).data('parent');
-            
-            $('#modalTitle').text('Cập nhật loại sản phẩm');
-            $('#categoryId').val(id);
-            $('#categoryName').val(name);
-            $('#parentCategory').val(parentId);
-            categoryModal.show();
-        });
+        function openEditModal(id) {
+            categoryForm.reset();
+            showLoader();
+            $.get('/Admin/Category/GetCategory/' + id, function (data) {
+                hideLoader();
+                document.getElementById('CategoryId').value = data.categoryId;
+                document.getElementById('CategoryName').value = data.categoryName;
+                document.getElementById('ParentId').value = data.parentId || 0;
+                document.getElementById('ImageUrl').value = data.imageUrl || "";
+                document.getElementById('Description').value = data.description || "";
+                document.getElementById('modalTitle').innerText = "Cập nhật danh mục";
+                categoryModal.show();
+            });
+        }
 
-        $(document).on('click', '.btn-delete-category', function() {
-            const id = $(this).data('id');
-            const name = $(this).data('name');
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const url = '/Admin/Category/Upsert';
+            const formData = new FormData(categoryForm);
             
-            UI.confirm({
-                title: 'Xác nhận xóa',
-                message: `Bạn có chắc chắn muốn xóa danh mục "<strong>${name}</strong>"?`,
-                onConfirm: function() {
-                    showLoader();
-                    $.post('/Admin/Category/Delete', { id: id }, function(res) {
-                        hideLoader();
-                        if (res.success) {
-                            UI.toast('Đã xóa thành công', 'success');
-                            location.reload();
-                        } else {
-                            UI.toast(res.message, 'error');
-                        }
-                    });
+            const data = {};
+            formData.forEach((value, key) => data[key] = value);
+
+            showLoader();
+            $.post(url, data, function (res) {
+                hideLoader();
+                if (res.success) {
+                    categoryModal.hide();
+                    location.reload();
+                } else {
+                    alert(res.message);
                 }
             });
-        });
+        }
 
-        function handleSave() {
+        function handleDelete(id, name) {
+            if (confirm(`Bạn có chắc chắn muốn xóa danh mục "${name}"? Thao tác này không thể hoàn tác.`)) {
+                showLoader();
+                $.post('/Admin/Category/Delete/' + id, function (res) {
+                    hideLoader();
+                    if (res.success) {
+                        location.reload();
+                    } else {
+                        alert(res.message);
+                    }
+                });
+            }
+        }
     </script>
 }

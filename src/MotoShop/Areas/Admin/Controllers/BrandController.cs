@@ -17,56 +17,65 @@ namespace MotoShop.Areas.Admin.Controllers
             _context = context;
         }
 
+        // GET: Admin/Brand
         public async Task<IActionResult> Index()
         {
-            var brands = await _context.Brands
-                .Include(b => b.Products)
-                .OrderBy(b => b.BrandName)
-                .ToListAsync();
+            var brands = await _context.Brands.OrderBy(b => b.BrandName).ToListAsync();
             return View(brands);
         }
 
+        // POST: Admin/Brand/Create
         [HttpPost]
-        public async Task<IActionResult> Upsert(int? id, string name, string logoUrl, string description)
+        public async Task<IActionResult> Create(Brand brand)
         {
-            if (string.IsNullOrEmpty(name)) return Json(new { success = false, message = "Tên thương hiệu không được để trống" });
-
-            if (id == null || id == 0) // Create
+            if (ModelState.IsValid)
             {
-                var brand = new Brand { 
-                    BrandName = name, 
-                    LogoUrl = logoUrl,
-                    Description = description
-                };
                 _context.Brands.Add(brand);
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Thêm thương hiệu thành công!" });
             }
-            else // Update
-            {
-                var brand = await _context.Brands.FindAsync(id);
-                if (brand == null) return Json(new { success = false, message = "Không tìm thấy thương hiệu" });
-                
-                brand.BrandName = name;
-                brand.LogoUrl = logoUrl;
-                brand.Description = description;
-                _context.Brands.Update(brand);
-            }
-
-            await _context.SaveChangesAsync();
-            return Json(new { success = true });
+            return Json(new { success = false, message = "Dữ liệu không hợp lệ!" });
         }
 
+        // POST: Admin/Brand/Edit
+        [HttpPost]
+        public async Task<IActionResult> Edit(Brand brand)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Entry(brand).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Cập nhật thương hiệu thành công!" });
+            }
+            return Json(new { success = false, message = "Cập nhật thất bại!" });
+        }
+
+        // GET: Admin/Brand/GetBrand/5
+        [HttpGet]
+        public async Task<IActionResult> GetBrand(int id)
+        {
+            var brand = await _context.Brands.FindAsync(id);
+            if (brand == null) return NotFound();
+            return Json(brand);
+        }
+
+        // POST: Admin/Brand/Delete/5
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
-            var brand = await _context.Brands.Include(b => b.Products).FirstOrDefaultAsync(b => b.BrandId == id);
-            if (brand == null) return Json(new { success = false, message = "Không tìm thấy thương hiệu" });
+            var brand = await _context.Brands.FindAsync(id);
+            if (brand == null) return Json(new { success = false, message = "Không tìm thấy thương hiệu!" });
 
-            if (brand.Products.Any())
-                return Json(new { success = false, message = "Không thể xóa thương hiệu này vì đang có sản phẩm thuộc thương hiệu này" });
+            // Kiểm tra xem thương hiệu có đang chứa sản phẩm nào không
+            var hasProducts = await _context.Products.AnyAsync(p => p.BrandId == id);
+            if (hasProducts)
+            {
+                return Json(new { success = false, message = "Không thể xóa thương hiệu này vì đang có sản phẩm thuộc về nó!" });
+            }
 
             _context.Brands.Remove(brand);
             await _context.SaveChangesAsync();
-            return Json(new { success = true });
+            return Json(new { success = true, message = "Đã xóa thương hiệu!" });
         }
     }
 }
