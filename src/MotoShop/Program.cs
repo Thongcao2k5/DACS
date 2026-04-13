@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
 using MotoShop.Data.Interfaces;
@@ -7,6 +7,8 @@ using MotoShop.Business.Mappings;
 using MotoShop.Business.Interfaces;
 using MotoShop.Business.Services;
 using Serilog;
+using Microsoft.AspNetCore.Identity.UI.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,12 +29,29 @@ builder.Services.AddControllersWithViews()
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        builder =>
+        {
+            builder.SetIsOriginAllowed(origin => true) // Cho phép tất cả origin
+                   .AllowAnyMethod()
+                   .AllowAnyHeader()
+                   .AllowCredentials(); // RẤT QUAN TRỌNG: Cho phép gửi Cookies/Auth
+        });
+});
+
 // Register AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // Register DbContext
 builder.Services.AddDbContext<MotoShopDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Register Email Sender
+builder.Services.AddTransient<IEmailSender, EmailSender>();
+// Đăng ký MemoryCache (cần thiết cho việc lưu OTP)
+builder.Services.AddMemoryCache();
 
 // Configure Identity
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
@@ -55,6 +74,8 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IBrandService, BrandService>();
 builder.Services.AddScoped<IMotorbikeModelService, MotorbikeModelService>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IFileService, FileService>();
 
 var app = builder.Build();
@@ -66,7 +87,7 @@ using (var scope = app.Services.CreateScope())
     var context = services.GetRequiredService<MotoShopDbContext>();
     var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-    
+
     await context.Database.MigrateAsync();
     await DbSeeder.SeedAsync(context, userManager, roleManager);
 }
@@ -79,6 +100,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();

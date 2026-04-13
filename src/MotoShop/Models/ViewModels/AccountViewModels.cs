@@ -35,5 +35,7 @@ namespace MotoShop.Models.ViewModels
         [DataType(DataType.Password)]
         [Compare("Password", ErrorMessage = "Mật khẩu xác nhận không khớp.")]
         public string ConfirmPassword { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Vui lòng nhập mã xác nhận")]
+        public string VerificationCode { get; set; } = string.Empty;
     }
 }

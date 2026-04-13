@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MotoShop.Data.Data;
 
@@ -11,9 +12,11 @@ using MotoShop.Data.Data;
 namespace MotoShop.Data.Migrations
 {
     [DbContext(typeof(MotoShopDbContext))]
-    partial class MotoShopDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260410064543_UpdateCartAndDtos")]
+    partial class UpdateCartAndDtos
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -482,15 +485,6 @@ namespace MotoShop.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<decimal?>("MinOrderValue")
-                        .HasColumnType("decimal(18, 2)");
-
-                    b.Property<int>("UsageLimit")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UsedCount")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.ToTable("Coupons");
@@ -519,9 +513,6 @@ namespace MotoShop.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<bool>("IsLocked")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Phone")
                         .HasMaxLength(50)
@@ -832,9 +823,6 @@ namespace MotoShop.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsFeatured")
                         .HasColumnType("bit");
 
@@ -920,6 +908,9 @@ namespace MotoShop.Data.Migrations
                     b.Property<int?>("CustomerId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
                     b.Property<int?>("ProductId")
                         .HasColumnType("int");
 
@@ -928,11 +919,6 @@ namespace MotoShop.Data.Migrations
 
                     b.Property<int>("Rating")
                         .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("ReviewId");
 
@@ -1015,22 +1001,11 @@ namespace MotoShop.Data.Migrations
                     b.Property<decimal>("DiscountPercentage")
                         .HasColumnType("decimal(5, 2)");
 
-                    b.Property<string>("DiscountType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
-
-                    b.Property<decimal?>("MinOrderValue")
-                        .HasColumnType("decimal(18, 2)");
-
-                    b.Property<int?>("MinQuantity")
-                        .HasColumnType("int");
 
                     b.Property<string>("PromotionName")
                         .IsRequired()
@@ -1043,29 +1018,6 @@ namespace MotoShop.Data.Migrations
                     b.HasKey("PromotionId");
 
                     b.ToTable("Promotions");
-                });
-
-            modelBuilder.Entity("MotoShop.Data.Models.PromotionProduct", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PromotionId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("PromotionId");
-
-                    b.ToTable("PromotionProducts");
                 });
 
             modelBuilder.Entity("MotoShop.Data.Models.Service", b =>
@@ -1082,9 +1034,6 @@ namespace MotoShop.Data.Migrations
                     b.Property<string>("ImageUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18, 2)");
@@ -1109,11 +1058,6 @@ namespace MotoShop.Data.Migrations
 
                     b.Property<int?>("AssignedStaffId")
                         .HasColumnType("int");
-
-                    b.Property<string>("BookingCode")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("nvarchar(max)")
-                        .HasComputedColumnSql("'DV'+right('000000'+CONVERT([nvarchar],[BookingId]),(6))", true);
 
                     b.Property<DateTime>("BookingDate")
                         .HasColumnType("datetime2");
@@ -1161,15 +1105,9 @@ namespace MotoShop.Data.Migrations
                     b.Property<decimal>("Cost")
                         .HasColumnType("decimal(18, 2)");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("EstimatedDays")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1648,25 +1586,6 @@ namespace MotoShop.Data.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("MotoShop.Data.Models.PromotionProduct", b =>
-                {
-                    b.HasOne("MotoShop.Data.Models.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MotoShop.Data.Models.Promotion", "Promotion")
-                        .WithMany("PromotionProducts")
-                        .HasForeignKey("PromotionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("Promotion");
-                });
-
             modelBuilder.Entity("MotoShop.Data.Models.ServiceBooking", b =>
                 {
                     b.HasOne("MotoShop.Data.Models.Staff", "AssignedStaff")
@@ -1797,11 +1716,6 @@ namespace MotoShop.Data.Migrations
                     b.Navigation("InventoryTransactions");
 
                     b.Navigation("OrderItems");
-                });
-
-            modelBuilder.Entity("MotoShop.Data.Models.Promotion", b =>
-                {
-                    b.Navigation("PromotionProducts");
                 });
 
             modelBuilder.Entity("MotoShop.Data.Models.Service", b =>

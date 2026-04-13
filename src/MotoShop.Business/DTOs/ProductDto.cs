@@ -12,5 +12,6 @@ namespace MotoShop.Business.DTOs
         public string BrandName { get; set; }
         public decimal MinPrice { get; set; }
         public string PrimaryImageUrl { get; set; }
+        public int DefaultVariantId { get; set; }
     }
 }

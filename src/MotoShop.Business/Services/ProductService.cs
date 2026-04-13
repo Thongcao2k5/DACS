@@ -6,6 +6,7 @@ using MotoShop.Business.Helpers;
 using MotoShop.Business.Interfaces;
 using MotoShop.Data.Interfaces;
 using MotoShop.Data.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,14 +28,14 @@ namespace MotoShop.Business.Services
 
         public async Task<PagedList<ProductDto>> GetPagedProductsAsync(int pageNumber, int pageSize)
         {
-            return await GetPagedProductsAsync(null, null, null, null, pageNumber, pageSize);
+            return await GetPagedProductsAsync(null, null, null, "newest", pageNumber, pageSize);
         }
 
         public async Task<PagedList<ProductDto>> GetPagedProductsAsync(
-            string searchTerm,
+            string? searchTerm,
             int? categoryId,
             int? brandId,
-            string sort,
+            string? sort,
             int page,
             int pageSize)
         {
@@ -45,29 +46,38 @@ namespace MotoShop.Business.Services
                 .Include(p => p.Variants)
                 .AsQueryable();
 
-            if (!string.IsNullOrEmpty(searchTerm))
+            // Lọc theo từ khóa
+            if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                var search = searchTerm.ToLower();
+                var search = searchTerm.Trim().ToLower();
                 query = query.Where(p => p.ProductName.ToLower().Contains(search) || 
                                        (p.Description != null && p.Description.ToLower().Contains(search)));
             }
 
-            if (categoryId.HasValue)
-                query = query.Where(p => p.CategoryId == categoryId);
+            // Lọc theo danh mục (chỉ lọc nếu id > 0)
+            if (categoryId.HasValue && categoryId.Value > 0)
+            {
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+            }
 
-            if (brandId.HasValue)
-                query = query.Where(p => p.BrandId == brandId);
+            // Lọc theo thương hiệu
+            if (brandId.HasValue && brandId.Value > 0)
+            {
+                query = query.Where(p => p.BrandId == brandId.Value);
+            }
 
-            query = sort switch
+            // Sắp xếp
+            query = sort?.ToLower() switch
             {
                 "az" => query.OrderBy(p => p.ProductName),
                 "za" => query.OrderByDescending(p => p.ProductName),
                 "price_asc" => query.OrderBy(p => p.Variants.Any() ? p.Variants.Min(v => v.Price) : 0),
-                "price_desc" => query.OrderByDescending(p => p.Variants.Any() ? p.Variants.Min(v => v.Price) : 0),
+                "price_desc" => query.OrderByDescending(p => p.Variants.Any() ? p.Variants.Max(v => v.Price) : 0),
                 "newest" => query.OrderByDescending(p => p.CreatedDate),
                 _ => query.OrderByDescending(p => p.CreatedDate)
             };
 
+            // Project sang DTO để tối ưu hiệu suất (chỉ lấy các trường cần thiết)
             var dtoQuery = query.ProjectTo<ProductDto>(_mapper.ConfigurationProvider);
             return await PagedList<ProductDto>.CreateAsync(dtoQuery, page, pageSize);
         }
@@ -87,6 +97,20 @@ namespace MotoShop.Business.Services
         public async Task<IEnumerable<ProductDto>> GetFeaturedProductsAsync(int count)
         {
             var products = await _productRepository.GetFeaturedProductsAsync(count);
+            return _mapper.Map<IEnumerable<ProductDto>>(products);
+        }
+
+        public async Task<IEnumerable<ProductDto>> GetRandomProductsAsync(int count)
+        {
+            var products = await _productRepository.Find(p => p.IsActive)
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Include(p => p.Images)
+                .Include(p => p.Variants)
+                .OrderBy(p => Guid.NewGuid()) // Sắp xếp ngẫu nhiên
+                .Take(count)
+                .ToListAsync();
+
             return _mapper.Map<IEnumerable<ProductDto>>(products);
         }
 

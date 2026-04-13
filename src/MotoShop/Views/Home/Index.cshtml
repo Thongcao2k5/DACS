@@ -50,40 +50,30 @@
             <h2 class="section-title center text-uppercase">Danh mục nổi bật</h2>
         </div>
         <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-3">
-            <div class="col">
-                <a asp-controller="Product" asp-action="Category" asp-route-id="1" class="cat-quick-card">
-                    <div class="cat-img-circle"><i class='bx bxs-component fs-1 text-danger'></i></div>
-                    <span>Phụ tùng máy</span>
-                </a>
-            </div>
-            <div class="col">
-                <a asp-controller="Product" asp-action="Category" asp-route-id="4" class="cat-quick-card">
-                    <div class="cat-img-circle"><i class='bx bxs-wrench fs-1 text-danger'></i></div>
-                    <span>Dàn chân</span>
-                </a>
-            </div>
-            <div class="col">
-                <a asp-controller="Product" asp-action="Category" asp-route-id="7" class="cat-quick-card">
-                    <div class="cat-img-circle"><i class='bx bxs-droplet fs-1 text-danger'></i></div>
-                    <span>Nhớt máy</span>
-                </a>
-            </div>
-            <div class="col">
-                <a asp-controller="Product" asp-action="Category" asp-route-id="10" class="cat-quick-card">
-                    <div class="cat-img-circle"><i class='bx bxs-bolt fs-1 text-danger'></i></div>
-                    <span>Đồ chơi xe</span>
-                </a>
-            </div>
-            <div class="col">
-                <a asp-controller="Product" asp-action="Category" asp-route-id="5" class="cat-quick-card">
-                    <div class="cat-img-circle"><i class='bx bxs-shield fs-1 text-danger'></i></div>
-                    <span>Vỏ lốp xe</span>
-                </a>
-            </div>
+            @if (Model.TopCategories != null)
+            {
+                foreach (var cat in Model.TopCategories)
+                {
+                    string iconClass = "bxs-component";
+                    if (cat.CategoryName.ToUpper().Contains("MÁY")) iconClass = "bxs-component";
+                    else if (cat.CategoryName.ToUpper().Contains("CHÂN")) iconClass = "bxs-wrench";
+                    else if (cat.CategoryName.ToUpper().Contains("NHỚT")) iconClass = "bxs-droplet";
+                    else if (cat.CategoryName.ToUpper().Contains("ĐỒ CHƠI")) iconClass = "bxs-bolt";
+                    else if (cat.CategoryName.ToUpper().Contains("LỐP") || cat.CategoryName.ToUpper().Contains("VỎ")) iconClass = "bxs-shield";
+
+                    <div class="col">
+                        <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@cat.CategoryId" class="cat-quick-card">
+                            <div class="cat-img-circle"><i class='bx @iconClass fs-1 text-danger'></i></div>
+                            <span class="fw-bold">@cat.CategoryName</span>
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">(@cat.ProductCount sản phẩm)</small>
+                        </a>
+                    </div>
+                }
+            }
             <div class="col">
                 <a asp-controller="Product" asp-action="Index" class="cat-quick-card">
                     <div class="cat-img-circle"><i class='bx bxs-grid fs-1 text-danger'></i></div>
-                    <span>Tất cả</span>
+                    <span class="fw-bold">Tất cả</span>
                 </a>
             </div>
         </div>
@@ -150,7 +140,7 @@
                                     <span class="current">@product.MinPrice.ToString("N0")đ</span>
                                 </div>
                             </div>
-                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3">
+                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3" onclick="addToCart(@product.DefaultVariantId)">
                                 <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
                             </button>
                         </div>
@@ -191,7 +181,7 @@
                                     <span class="current">@product.MinPrice.ToString("N0")đ</span>
                                 </div>
                             </div>
-                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3">
+                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3" onclick="addToCart(@product.DefaultVariantId)">
                                 <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
                             </button>
                         </div>
@@ -209,14 +199,43 @@
             <h5 class="text-muted text-uppercase mb-4">Thương hiệu đồng hành</h5>
         </div>
         <div class="row align-items-center justify-content-center g-4">
-            <div class="col-4 col-md-2 brand-item"><img src="https://upload.wikimedia.org/wikipedia/commons/7/7b/Honda_Logo.svg" alt="Honda"></div>
-            <div class="col-4 col-md-2 brand-item"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Yamaha_logo.svg" alt="Yamaha"></div>
-            <div class="col-4 col-md-2 brand-item"><img src="https://www.motul.com/dist/motul-logo.svg" alt="Motul"></div>
-            <div class="col-4 col-md-2 brand-item"><img src="https://ohlins.asia/wp-content/themes/ohlins/assets/img/logo-ohlins.svg" alt="Ohlins"></div>
-            <div class="col-4 col-md-2 brand-item"><img src="https://upload.wikimedia.org/wikipedia/fr/4/4e/Michelin_logo.svg" alt="Michelin"></div>
+            <div class="col-4 col-md-2 brand-item text-center">
+                <img src="~/assets/img/brand/honda.png" alt="Honda" class="brand-logo-img" asp-append-version="true">
+            </div>
+            <div class="col-4 col-md-2 brand-item text-center">
+                <img src="~/assets/img/brand/yamaha.png" alt="Yamaha" class="brand-logo-img" asp-append-version="true">
+            </div>
+            <div class="col-4 col-md-2 brand-item text-center">
+                <img src="~/assets/img/brand/mortul.png" alt="Motul" class="brand-logo-img" asp-append-version="true">
+            </div>
+            <div class="col-4 col-md-2 brand-item text-center">
+                <img src="~/assets/img/brand/brembo.png" alt="Brembo" class="brand-logo-img" asp-append-version="true">
+            </div>
+            <div class="col-4 col-md-2 brand-item text-center">
+                <img src="~/assets/img/brand/michelin.png" alt="Michelin" class="brand-logo-img" asp-append-version="true">
+            </div>
+            <div class="col-4 col-md-2 brand-item text-center">
+                <img src="~/assets/img/brand/ohlins.png" alt="Ohlins" class="brand-logo-img" asp-append-version="true">
+            </div>
         </div>
     </div>
 </section>
+
+<style>
+    .brand-logo-img {
+        max-width: 100%;
+        max-height: 70px;
+        object-fit: contain;
+        filter: grayscale(100%);
+        opacity: 0.6;
+        transition: all 0.3s ease;
+    }
+    .brand-item:hover .brand-logo-img {
+        filter: grayscale(0%);
+        opacity: 1;
+        transform: scale(1.2);
+    }
+</style>
 
 <!-- 7. NEW PRODUCTS -->
 <section class="bg-light">
@@ -248,7 +267,7 @@
                                     <span class="current">@product.MinPrice.ToString("N0")đ</span>
                                 </div>
                             </div>
-                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3">
+                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3" onclick="addToCart(@product.DefaultVariantId)">
                                 <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
                             </button>
                         </div>
@@ -362,3 +381,66 @@
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        async function addToCart(variantId) {
+            if (!variantId || variantId === 0) {
+                Swal.fire('Chú ý', 'Sản phẩm này hiện chưa có biến thể để đặt hàng. Vui lòng liên hệ shop!', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch('/Cart/AddToCart', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `variantId=${variantId}&quantity=1`
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Hiển thị toast thông báo thành công (giống trang sản phẩm)
+                    if (typeof showCartSuccessToast === "function") {
+                        showCartSuccessToast(data.message);
+                    } else {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Tuyệt vời!',
+                            text: data.message,
+                            showConfirmButton: false,
+                            timer: 1500,
+                            toast: true,
+                            position: 'top-end'
+                        });
+                    }
+                    
+                    // Cập nhật số lượng giỏ hàng trên header
+                    if (typeof updateCartBadge === "function") {
+                        updateCartBadge(); 
+                    }
+                } else {
+                    if (data.message.toLowerCase().includes('đăng nhập')) {
+                         Swal.fire({
+                            title: 'Yêu cầu đăng nhập',
+                            text: data.message,
+                            icon: 'info',
+                            showCancelButton: true,
+                            confirmButtonText: 'Đăng nhập ngay',
+                            cancelButtonText: 'Để sau'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '/Account/Login';
+                            }
+                        });
+                    } else {
+                        Swal.fire('Thông báo', data.message, 'info');
+                    }
+                }
+            } catch (error) {
+                Swal.fire('Lỗi', 'Không thể kết nối đến máy chủ để thêm vào giỏ hàng.', 'error');
+            }
+        }
+    </script>
+}

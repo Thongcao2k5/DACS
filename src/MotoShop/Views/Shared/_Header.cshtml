@@ -104,15 +104,59 @@
                 </div>
             </div>
 
-            <div class="action-item">
+            <div class="action-item cart-action-item" id="cartActionItem">
                 <a asp-area="" asp-controller="Cart" asp-action="Index" class="text-dark position-relative d-inline-block">
                     <i class='bx bx-cart'></i>
-                    <span class="badge rounded-pill bg-danger cart-badge-floating">0</span>
+                    <span class="badge rounded-pill bg-danger cart-badge-floating" id="cartBadge">0</span>
                 </a>
+                <div class="cart-success-toast" id="cartSuccessToast" role="status" aria-live="polite" aria-atomic="true">
+                    <i class='bx bxs-check-circle'></i>
+                    <span id="cartSuccessToastMessage">Đã thêm vào giỏ hàng thành công</span>
+                </div>
             </div>
         </div>
     </header>
 </div>
+
+<script>
+    let cartSuccessToastTimer;
+
+    async function updateCartBadge() {
+        try {
+            const response = await fetch('/Cart/GetCartCount');
+            const count = await response.json();
+            const badge = document.getElementById('cartBadge');
+            if (badge) {
+                badge.innerText = count;
+                badge.style.display = count > 0 ? 'block' : 'none';
+            }
+        } catch (error) {
+            console.error('Error updating cart badge:', error);
+        }
+    }
+
+    function showCartSuccessToast(message) {
+        const toast = document.getElementById('cartSuccessToast');
+        const toastMessage = document.getElementById('cartSuccessToastMessage');
+        const cartActionItem = document.getElementById('cartActionItem');
+
+        if (!toast || !toastMessage || !cartActionItem) {
+            return;
+        }
+
+        toastMessage.innerText = message || 'Đã thêm vào giỏ hàng thành công';
+        toast.classList.add('show');
+        cartActionItem.classList.add('cart-highlight');
+
+        window.clearTimeout(cartSuccessToastTimer);
+        cartSuccessToastTimer = window.setTimeout(() => {
+            toast.classList.remove('show');
+            cartActionItem.classList.remove('cart-highlight');
+        }, 2200);
+    }
+
+    document.addEventListener('DOMContentLoaded', updateCartBadge);
+</script>
 
 <nav class="nav-header d-none d-lg-block">
     <div class="container">
@@ -136,6 +180,56 @@
         padding: 0.25em 0.5em;
         border: 2px solid white;
     }
+    .cart-action-item {
+        position: relative;
+    }
+    .cart-success-toast {
+        position: absolute;
+        top: calc(100% + 12px);
+        right: -14px;
+        min-width: 240px;
+        max-width: 280px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        background: #198754;
+        color: #fff;
+        border-radius: 14px;
+        box-shadow: 0 16px 32px rgba(25, 135, 84, 0.25);
+        font-size: 0.85rem;
+        font-weight: 600;
+        line-height: 1.4;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-8px) scale(0.96);
+        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+        z-index: 1200;
+        pointer-events: none;
+    }
+    .cart-success-toast::before {
+        content: "";
+        position: absolute;
+        top: -6px;
+        right: 24px;
+        width: 12px;
+        height: 12px;
+        background: #198754;
+        transform: rotate(45deg);
+        border-radius: 2px;
+    }
+    .cart-success-toast.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0) scale(1);
+    }
+    .cart-success-toast i {
+        font-size: 1.15rem;
+        flex-shrink: 0;
+    }
+    .cart-highlight > a {
+        color: #198754 !important;
+    }
     .main-header { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; }
     .header-actions { display: flex; align-items: center; gap: 15px; }
     .action-item { position: relative; cursor: pointer; }
@@ -149,4 +243,11 @@
         color: #333; text-decoration: none; transition: 0.2s; 
     }
     .dropdown-item-custom:hover { background: #f8f9fa; color: #dc3545; }
+    @@media (max-width: 991.98px) {
+        .cart-success-toast {
+            right: -8px;
+            min-width: 220px;
+            max-width: min(260px, 75vw);
+        }
+    }
 </style>

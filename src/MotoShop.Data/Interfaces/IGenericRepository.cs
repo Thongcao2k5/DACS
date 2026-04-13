@@ -9,6 +9,7 @@ namespace MotoShop.Data.Interfaces
     public interface IGenericRepository<T> where T : class
     {
         Task<T?> GetByIdAsync(int id);
+        Task<T?> GetByIdAsync(int? id); // Thêm hỗ trợ nullable int
         Task<IEnumerable<T>> GetAllAsync();
         IQueryable<T> Find(Expression<Func<T, bool>> expression);
         Task AddAsync(T entity);
