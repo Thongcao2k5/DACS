@@ -9,10 +9,12 @@ namespace MotoShop.Business.Interfaces
     {
         Task<PagedList<ProductDto>> GetPagedProductsAsync(int pageNumber, int pageSize);
         Task<PagedList<ProductDto>> GetPagedProductsAsync(
-            string searchTerm,
-            int? categoryId,
-            int? brandId,
-            string sort,
+            string? searchTerm,
+            int[]? categoryIds,
+            int[]? brandIds,
+            decimal? minPrice,
+            decimal? maxPrice,
+            string? sort,
             int page,
             int pageSize
         );

@@ -32,7 +32,15 @@ public class HomeController : Controller
             .ToList();
 
         // Lấy sản phẩm mới nhất (thực sự mới)
-        var newProducts = await _productService.GetPagedProductsAsync(null, null, null, "newest", 1, 4);
+        var newProducts = await _productService.GetPagedProductsAsync(
+            searchTerm: null,
+            categoryIds: null,
+            brandIds: null,
+            minPrice: null,
+            maxPrice: null,
+            sort: "newest",
+            page: 1,
+            pageSize: 4);
 
         var model = new HomeViewModel
         {

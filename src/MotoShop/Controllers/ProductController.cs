@@ -21,33 +21,26 @@ namespace MotoShop.Controllers
         // Danh sách sản phẩm (Trang cửa hàng chính)
         public async Task<IActionResult> Index(
             string? searchTerm,
-            int? categoryId,
-            int? brandId,
+            int[]? categoryIds,
+            int[]? brandIds,
+            decimal? minPrice,
+            decimal? maxPrice,
             string? sort,
             int page = 1,
             int pageSize = 12)
         {
             // 1. Gọi Service lấy dữ liệu lọc thực tế
             var pagedProducts = await _productService.GetPagedProductsAsync(
-                searchTerm, categoryId, brandId, sort, page, pageSize
+                searchTerm, categoryIds, brandIds, minPrice, maxPrice, sort, page, pageSize
             );
 
             // 2. Lấy dữ liệu cho các bộ lọc (Sidebar)
             var categories = await _categoryService.GetAllAsync();
             var brands = await _productService.GetAllBrandsAsync();
 
-            // 3. Chuẩn bị SelectList cho Dropdown (Hiển thị kèm số lượng sản phẩm)
-            var categoryItems = categories.Select(c => new {
-                CategoryId = c.CategoryId,
-                CategoryNameWithCount = $"{c.CategoryName} ({c.ProductCount})"
-            });
-            ViewBag.CategoryList = new SelectList(categoryItems, "CategoryId", "CategoryNameWithCount", categoryId);
-            
-            var brandItems = brands.Select(b => new {
-                BrandId = b.BrandId,
-                BrandNameWithCount = $"{b.BrandName} ({b.ProductCount})"
-            });
-            ViewBag.BrandList = new SelectList(brandItems, "BrandId", "BrandNameWithCount", brandId);
+            // 3. Chuẩn bị dữ liệu cho View
+            ViewBag.Categories = categories;
+            ViewBag.Brands = brands;
             
             // 4. Chuẩn bị Danh sách sắp xếp
             ViewBag.SortList = new List<SelectListItem>
@@ -59,14 +52,12 @@ namespace MotoShop.Controllers
                 new SelectListItem { Value = "za", Text = "Tên Z-A", Selected = (sort == "za") }
             };
 
-            // 5. Truyền tên danh mục hiện tại để hiển thị tiêu đề
-            var currentCat = categories.FirstOrDefault(c => c.CategoryId == categoryId);
-            ViewBag.CurrentCategoryName = currentCat?.CategoryName ?? "Tất cả sản phẩm";
-            ViewBag.CurrentCategoryId = categoryId;
-            
-            // 6. Giữ lại các tham số lọc cho phân trang và form
+            // 5. Giữ lại các tham số lọc để hiển thị trên UI
             ViewBag.SearchTerm = searchTerm;
-            ViewBag.CurrentBrandId = brandId;
+            ViewBag.SelectedCategoryIds = categoryIds ?? Array.Empty<int>();
+            ViewBag.SelectedBrandIds = brandIds ?? Array.Empty<int>();
+            ViewBag.MinPrice = minPrice;
+            ViewBag.MaxPrice = maxPrice;
             ViewBag.Sort = sort;
 
             return View(pagedProducts);

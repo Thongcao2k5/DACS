@@ -73,6 +73,8 @@ builder.Services.AddScoped<IMotorbikeModelService, MotorbikeModelService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IServiceService, ServiceService>();
+builder.Services.AddScoped<IServiceBookingService, ServiceBookingService>();
 
 var app = builder.Build();
 

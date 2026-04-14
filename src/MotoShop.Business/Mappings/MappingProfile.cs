@@ -29,6 +29,10 @@ namespace MotoShop.Business.Mappings
             // MotorbikeModel Mapping
             CreateMap<MotorbikeModel, MotorbikeModelDto>()
                 .ForMember(dest => dest.ParentModelName, opt => opt.MapFrom(src => src.ParentModel != null ? src.ParentModel.ModelName : string.Empty));
+
+            // Service and ServiceBooking Mapping
+            CreateMap<Service, ServiceDto>().ReverseMap();
+            CreateMap<ServiceBooking, ServiceBookingDto>().ReverseMap();
         }
     }
 }

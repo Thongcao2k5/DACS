@@ -1,12 +1,18 @@
 @using MotoShop.Business.Helpers
-@model PagedList<MotoShop.Business.DTOs.ProductDto>
+@using MotoShop.Business.DTOs
+@model PagedList<ProductDto>
 
 @{
     ViewData["Title"] = "Tất cả sản phẩm";
-    var searchTerm = Context.Request.Query["searchTerm"];
-    var categoryId = Context.Request.Query["categoryId"];
-    var brandId = Context.Request.Query["brandId"];
-    var sort = Context.Request.Query["sort"];
+    var searchTerm = ViewBag.SearchTerm as string;
+    var selectedCategoryIds = ViewBag.SelectedCategoryIds as int[] ?? Array.Empty<int>();
+    var selectedBrandIds = ViewBag.SelectedBrandIds as int[] ?? Array.Empty<int>();
+    var minPrice = ViewBag.MinPrice as decimal?;
+    var maxPrice = ViewBag.MaxPrice as decimal?;
+    var sort = ViewBag.Sort as string;
+    
+    var categories = ViewBag.Categories as IEnumerable<CategoryDto> ?? new List<CategoryDto>();
+    var brands = ViewBag.Brands as IEnumerable<BrandDto> ?? new List<BrandDto>();
 }
 
 <!-- 1. BREADCRUMB -->
@@ -15,15 +21,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none text-danger">Trang chủ</a></li>
-                @if (ViewBag.CurrentCategoryId != null)
-                {
-                    <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none text-danger">Sản phẩm</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">@ViewBag.CurrentCategoryName</li>
-                }
-                else
-                {
-                    <li class="breadcrumb-item active" aria-current="page">Tất cả sản phẩm</li>
-                }
+                <li class="breadcrumb-item active" aria-current="page">Tất cả sản phẩm</li>
             </ol>
         </nav>
     </div>
@@ -35,10 +33,13 @@
             <!-- 2. FILTER SIDEBAR (Desktop) -->
             <aside class="col-lg-3">
                 <div class="filter-sidebar card border-0 shadow-sm p-4 rounded-4 sticky-top" style="top: 20px;">
-                    <h4 class="fw-bold mb-4">BỘ LỌC</h4>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold mb-0">BỘ LỌC</h4>
+                        <a asp-action="Index" class="text-muted small text-decoration-none hover-danger">Xóa tất cả</a>
+                    </div>
                     
                     <!-- Search Widget -->
-                    <div class="filter-widget mb-4">
+                    <div class="filter-widget mb-4 pb-4 border-bottom">
                         <h6 class="filter-title fw-bold mb-3">Tìm kiếm</h6>
                         <div class="input-group">
                             <input type="text" name="searchTerm" class="form-control rounded-start-pill border-end-0" placeholder="Tên sản phẩm..." value="@searchTerm">
@@ -49,25 +50,55 @@
                     </div>
 
                     <!-- Category Filter -->
-                    <div class="filter-widget mb-4">
+                    <div class="filter-widget mb-4 pb-4 border-bottom">
                         <h6 class="filter-title fw-bold mb-3">Danh mục</h6>
-                        <select name="categoryId" class="form-select rounded-3 border-secondary-subtle py-2 shadow-none filter-select" asp-items="ViewBag.CategoryList">
-                            <option value="">-- Tất cả danh mục --</option>
-                        </select>
+                        <div class="filter-scroll" style="max-height: 250px; overflow-y: auto;">
+                            @foreach (var cat in categories)
+                            {
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input filter-checkbox" type="checkbox" name="categoryIds" value="@cat.CategoryId" id="cat-@cat.CategoryId" @(selectedCategoryIds.Contains(cat.CategoryId) ? "checked" : "")>
+                                    <label class="form-check-label d-flex justify-content-between align-items-center w-100" for="cat-@cat.CategoryId">
+                                        <span>@cat.CategoryName</span>
+                                        <small class="text-muted">(@cat.ProductCount)</small>
+                                    </label>
+                                </div>
+                            }
+                        </div>
                     </div>
 
                     <!-- Brand Filter -->
-                    <div class="filter-widget mb-4">
+                    <div class="filter-widget mb-4 pb-4 border-bottom">
                         <h6 class="filter-title fw-bold mb-3">Thương hiệu</h6>
-                        <select name="brandId" class="form-select rounded-3 border-secondary-subtle py-2 shadow-none filter-select" asp-items="ViewBag.BrandList">
-                            <option value="">-- Tất cả thương hiệu --</option>
-                        </select>
+                        <div class="filter-scroll" style="max-height: 250px; overflow-y: auto;">
+                            @foreach (var brand in brands)
+                            {
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input filter-checkbox" type="checkbox" name="brandIds" value="@brand.BrandId" id="brand-@brand.BrandId" @(selectedBrandIds.Contains(brand.BrandId) ? "checked" : "")>
+                                    <label class="form-check-label d-flex justify-content-between align-items-center w-100" for="brand-@brand.BrandId">
+                                        <span>@brand.BrandName</span>
+                                        <small class="text-muted">(@brand.ProductCount)</small>
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Price Filter -->
+                    <div class="filter-widget mb-4">
+                        <h6 class="filter-title fw-bold mb-3">Khoảng giá (đ)</h6>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-6">
+                                <input type="number" name="minPrice" class="form-control form-control-sm rounded-pill" placeholder="Từ" value="@minPrice">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" name="maxPrice" class="form-control form-control-sm rounded-pill" placeholder="Đến" value="@maxPrice">
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="d-grid gap-2 mt-4">
+                    <div class="d-grid mt-4">
                         <button type="submit" id="applyBtn" class="btn btn-danger rounded-pill py-2 fw-bold">ÁP DỤNG BỘ LỌC</button>
-                        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill py-2 small">XÓA TẤT CẢ</a>
                     </div>
                 </div>
             </aside>
@@ -77,13 +108,13 @@
                 <!-- Page Title & Sort Bar -->
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                     <div>
-                        <h3 class="fw-bold mb-1 text-uppercase">@ViewBag.CurrentCategoryName</h3>
+                        <h3 class="fw-bold mb-1 text-uppercase">Kết quả tìm kiếm</h3>
                         <p class="text-muted mb-0 small">Hiển thị @Model.Count trên tổng số @Model.TotalCount sản phẩm</p>
                     </div>
 
                     <div class="d-flex align-items-center gap-2">
                         <span class="text-muted small flex-shrink-0">Sắp xếp:</span>
-                        <select name="sort" class="form-select rounded-pill border-secondary-subtle py-2 shadow-none small px-3 filter-select" style="min-width: 180px;" asp-items="ViewBag.SortList">
+                        <select name="sort" class="form-select rounded-pill border-secondary-subtle py-2 shadow-none small px-3 filter-change" style="min-width: 180px;" asp-items="ViewBag.SortList">
                         </select>
                     </div>
                 </div>
@@ -146,38 +177,36 @@
                         {
                             <nav class="pagination-wrapper mt-5">
                                 <ul class="pagination justify-content-center gap-2">
+                                    @{
+                                        // Xây dựng bộ tham số định tuyến chung cho tất cả các liên kết phân trang
+                                        var routeData = new Dictionary<string, string>();
+                                        routeData["searchTerm"] = searchTerm;
+                                        routeData["minPrice"] = minPrice?.ToString();
+                                        routeData["maxPrice"] = maxPrice?.ToString();
+                                        routeData["sort"] = sort;
+
+                                        // Hàm helper để thêm mảng ID vào routeData (chỉ dùng cho link ASP-ROUTE-...)
+                                        // Tuy nhiên asp-all-route-data không hỗ trợ mảng tốt. 
+                                        // Tốt nhất là sử dụng mã C# để tạo URL hoặc sử dụng form submit.
+                                    }
+
                                     <li class="page-item @(!Model.HasPrevious ? "disabled" : "")">
-                                        <a class="page-link rounded-circle border-0 shadow-sm" asp-action="Index" 
-                                           asp-route-page="@(Model.CurrentPage - 1)" 
-                                           asp-route-searchTerm="@searchTerm" 
-                                           asp-route-categoryId="@categoryId" 
-                                           asp-route-brandId="@brandId" 
-                                           asp-route-sort="@sort">
+                                        <button type="submit" name="page" value="@(Model.CurrentPage - 1)" class="page-link rounded-circle border-0 shadow-sm">
                                             <i class='bx bx-chevron-left'></i>
-                                        </a>
+                                        </button>
                                     </li>
                                     
                                     @for (int i = 1; i <= Model.TotalPages; i++)
                                     {
                                         <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
-                                            <a class="page-link rounded-circle border-0 shadow-sm" asp-action="Index" 
-                                               asp-route-page="@i" 
-                                               asp-route-searchTerm="@searchTerm" 
-                                               asp-route-categoryId="@categoryId" 
-                                               asp-route-brandId="@brandId" 
-                                               asp-route-sort="@sort">@i</a>
+                                            <button type="submit" name="page" value="@i" class="page-link rounded-circle border-0 shadow-sm">@i</button>
                                         </li>
                                     }
 
                                     <li class="page-item @(!Model.HasNext ? "disabled" : "")">
-                                        <a class="page-link rounded-circle border-0 shadow-sm" asp-action="Index" 
-                                           asp-route-page="@(Model.CurrentPage + 1)" 
-                                           asp-route-searchTerm="@searchTerm" 
-                                           asp-route-categoryId="@categoryId" 
-                                           asp-route-brandId="@brandId" 
-                                           asp-route-sort="@sort">
+                                        <button type="submit" name="page" value="@(Model.CurrentPage + 1)" class="page-link rounded-circle border-0 shadow-sm">
                                             <i class='bx bx-chevron-right'></i>
-                                        </a>
+                                        </button>
                                     </li>
                                 </ul>
                             </nav>
@@ -211,19 +240,31 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
-    .page-link { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: #333; }
-    .page-item.active .page-link { background-color: #dc3545; color: white; }
-    .filter-widget select { font-size: 0.9rem; cursor: pointer; }
-    .filter-sidebar { background: #fff; z-index: 100; }
+    .page-link { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: #333; background: #fff; }
+    .page-item.active .page-link { background-color: #dc3545!important; color: white!important; }
+    .filter-widget { position: relative; }
+    .filter-scroll::-webkit-scrollbar { width: 5px; }
+    .filter-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+    .filter-scroll::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+    .filter-scroll::-webkit-scrollbar-thumb:hover { background: #bbb; }
+    .form-check-input:checked { background-color: #dc3545; border-color: #dc3545; }
 </style>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
-            $('.filter-select').on('change', function () {
+            // Tự động submit khi thay đổi Sắp xếp
+            $('.filter-change').on('change', function () {
                 $('#filterForm').submit();
             });
+
+            // Tự động submit khi thay đổi checkbox (tùy chọn - nếu muốn lọc tức thì)
+            /*
+            $('.filter-checkbox').on('change', function () {
+                $('#filterForm').submit();
+            });
+            */
 
             $('#filterForm').on('submit', function() {
                 $('#loadingOverlay').removeClass('d-none').addClass('d-flex');
@@ -256,12 +297,8 @@
                         toast: true,
                         position: 'top-end'
                     });
-                    // Cập nhật số hiển thị trên biểu tượng giỏ hàng ở Header
                     if (typeof updateCartBadge === "function") {
                         updateCartBadge(); 
-                    }
-                    if (typeof showCartSuccessToast === "function") {
-                        showCartSuccessToast(data.message);
                     }
                 } else {
                     Swal.fire('Thông báo', data.message, 'info');

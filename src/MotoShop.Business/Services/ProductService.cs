@@ -28,13 +28,23 @@ namespace MotoShop.Business.Services
 
         public async Task<PagedList<ProductDto>> GetPagedProductsAsync(int pageNumber, int pageSize)
         {
-            return await GetPagedProductsAsync(null, null, null, "newest", pageNumber, pageSize);
+            return await GetPagedProductsAsync(
+                searchTerm: null,
+                categoryIds: null,
+                brandIds: null,
+                minPrice: null,
+                maxPrice: null,
+                sort: "newest",
+                page: pageNumber,
+                pageSize: pageSize);
         }
 
         public async Task<PagedList<ProductDto>> GetPagedProductsAsync(
             string? searchTerm,
-            int? categoryId,
-            int? brandId,
+            int[]? categoryIds,
+            int[]? brandIds,
+            decimal? minPrice,
+            decimal? maxPrice,
             string? sort,
             int page,
             int pageSize)
@@ -54,16 +64,26 @@ namespace MotoShop.Business.Services
                                        (p.Description != null && p.Description.ToLower().Contains(search)));
             }
 
-            // Lọc theo danh mục (chỉ lọc nếu id > 0)
-            if (categoryId.HasValue && categoryId.Value > 0)
+            // Lọc theo danh sách danh mục
+            if (categoryIds != null && categoryIds.Length > 0)
             {
-                query = query.Where(p => p.CategoryId == categoryId.Value);
+                query = query.Where(p => p.CategoryId.HasValue && categoryIds.Contains(p.CategoryId.Value));
             }
 
-            // Lọc theo thương hiệu
-            if (brandId.HasValue && brandId.Value > 0)
+            // Lọc theo danh sách thương hiệu
+            if (brandIds != null && brandIds.Length > 0)
             {
-                query = query.Where(p => p.BrandId == brandId.Value);
+                query = query.Where(p => p.BrandId.HasValue && brandIds.Contains(p.BrandId.Value));
+            }
+
+            // Lọc theo khoảng giá (Dựa trên giá của biến thể)
+            if (minPrice.HasValue)
+            {
+                query = query.Where(p => p.Variants.Any(v => v.Price >= minPrice.Value));
+            }
+            if (maxPrice.HasValue)
+            {
+                query = query.Where(p => p.Variants.Any(v => v.Price <= maxPrice.Value));
             }
 
             // Sắp xếp
