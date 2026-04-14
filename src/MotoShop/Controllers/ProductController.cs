@@ -87,9 +87,10 @@ namespace MotoShop.Controllers
         }
 
         // Trang khuyến mãi
-        public IActionResult Promotion()
+        public async Task<IActionResult> Promotion()
         {
-            return View();
+            var promotionProducts = await _productService.GetPromotionProductsAsync(12);
+            return View(promotionProducts);
         }
 
         // Danh sách yêu thích

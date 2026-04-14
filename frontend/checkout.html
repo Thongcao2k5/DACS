@@ -177,22 +177,27 @@
                         </ul>
 
                         <div class="coupon-group">
-                            <input type="text" class="form-control form-control-custom h-auto" placeholder="Mã giảm giá">
-                            <button type="button" class="btn btn-apply">ÁP DỤNG</button>
+                            <input type="text" id="couponCode" class="form-control form-control-custom h-auto" placeholder="Mã giảm giá">
+                            <button type="button" id="applyCouponBtn" class="btn btn-apply">ÁP DỤNG</button>
                         </div>
+                        <div id="couponMessage" class="mt-2 small" style="display: none;"></div>
 
                         <div class="mt-4 pt-4 border-top">
                             <div class="summary-item">
                                 <span>Tạm tính</span>
-                                <span class="fw-bold">2.150.000đ</span>
+                                <span id="subtotal" data-value="2150000">2.150.000đ</span>
+                            </div>
+                            <div class="summary-item" id="discountRow" style="display: none;">
+                                <span>Giảm giá (<span id="discountInfo"></span>)</span>
+                                <span class="text-danger fw-bold">-<span id="discountValue">0đ</span></span>
                             </div>
                             <div class="summary-item">
                                 <span>Phí vận chuyển</span>
-                                <span class="fw-bold">30.000đ</span>
+                                <span id="shippingFee" data-value="30000">30.000đ</span>
                             </div>
                             <div class="summary-total">
                                 <span>TỔNG CỘNG</span>
-                                <span class="price">2.180.000đ</span>
+                                <span class="price" id="totalOrder">2.180.000đ</span>
                             </div>
                         </div>
 
@@ -211,23 +216,106 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/header.js"></script>
     <script src="js/components.js"></script>
+    <script src="js/api-handler.js"></script>
     <script>
+        // Xử lý logic Coupon
+        const CheckoutManager = {
+            currentDiscount: 0,
+            
+            init() {
+                this.bindCouponEvents();
+                this.bindShippingEvents();
+            },
+
+            bindCouponEvents() {
+                const btn = document.getElementById('applyCouponBtn');
+                const input = document.getElementById('couponCode');
+                
+                btn.addEventListener('click', async () => {
+                    const code = input.value.trim();
+                    if (!code) return this.showMessage('Vui lòng nhập mã giảm giá', 'danger');
+
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                    
+                    const res = await MotoApi.validateCoupon(code);
+                    
+                    btn.disabled = false;
+                    btn.innerHTML = 'ÁP DỤNG';
+
+                    if (res && res.success) {
+                        this.applyDiscount(res.data);
+                        this.showMessage(`Áp dụng thành công: ${res.message}`, 'success');
+                    } else {
+                        this.removeDiscount();
+                        this.showMessage(res ? res.message : 'Mã giảm giá không hợp lệ hoặc đã hết hạn', 'danger');
+                    }
+                });
+            },
+
+            bindShippingEvents() {
+                // Khi thay đổi phí vận chuyển
+                document.querySelectorAll('input[name="shipping"]').forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        const feeLabel = e.target.closest('.method-card').querySelector('.method-price').innerText;
+                        const fee = parseInt(feeLabel.replace(/[^0-9]/g, ''));
+                        
+                        document.getElementById('shippingFee').innerText = feeLabel;
+                        document.getElementById('shippingFee').dataset.value = fee;
+                        this.updateTotal();
+                    });
+                });
+            },
+
+            applyDiscount(coupon) {
+                const subtotal = parseInt(document.getElementById('subtotal').dataset.value);
+                let discount = 0;
+
+                if (coupon.discountType === 'Percentage') {
+                    discount = (subtotal * coupon.discountValue) / 100;
+                    document.getElementById('discountInfo').innerText = `${coupon.discountValue}%`;
+                } else {
+                    discount = coupon.discountValue;
+                    document.getElementById('discountInfo').innerText = 'Cố định';
+                }
+
+                this.currentDiscount = discount;
+                document.getElementById('discountValue').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(discount);
+                document.getElementById('discountRow').style.display = 'flex';
+                this.updateTotal();
+            },
+
+            removeDiscount() {
+                this.currentDiscount = 0;
+                document.getElementById('discountRow').style.display = 'none';
+                this.updateTotal();
+            },
+
+            updateTotal() {
+                const subtotal = parseInt(document.getElementById('subtotal').dataset.value);
+                const shipping = parseInt(document.getElementById('shippingFee').dataset.value);
+                const total = subtotal + shipping - this.currentDiscount;
+                
+                document.getElementById('totalOrder').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total);
+            },
+
+            showMessage(text, type) {
+                const msg = document.getElementById('couponMessage');
+                msg.innerText = text;
+                msg.className = `mt-2 small text-${type}`;
+                msg.style.display = 'block';
+            }
+        };
+
+        // Khởi tạo khi load trang
+        document.addEventListener('DOMContentLoaded', () => CheckoutManager.init());
+
         // Xử lý ẩn hiện thông tin thanh toán chi tiết
         function togglePaymentDetail(detailId) {
-            // Ẩn tất cả detail trước
             document.querySelectorAll('.payment-detail').forEach(d => d.style.display = 'none');
-            // Hiện detail của cái đang chọn
             document.getElementById(detailId).style.display = 'block';
-            
-            // Cập nhật class active cho card
-            document.querySelectorAll('.method-card').forEach(card => {
-                if(card.contains(event.target) || card === event.currentTarget) {
-                    // Xử lý logic radio button bên trong nếu cần
-                }
-            });
         }
 
-        // Script để đồng bộ radio và class active (tùy chọn thêm)
         document.querySelectorAll('.method-card input[type="radio"]').forEach(radio => {
             radio.addEventListener('change', function() {
                 const parentSection = this.closest('.checkout-section');
