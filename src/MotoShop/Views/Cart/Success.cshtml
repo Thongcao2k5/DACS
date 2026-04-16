@@ -1,3 +1,4 @@
+@model MotoShop.Data.Models.Order
 @{
     ViewData["Title"] = "Đặt hàng thành công";
 }
@@ -19,64 +20,80 @@
                     <div class="info-grid">
                         <div>
                             <span class="info-label">Mã đơn hàng</span>
-                            <span class="info-value">#MS-102345</span>
+                            <span class="info-value">#MS-@Model.OrderId.ToString("D6")</span>
                         </div>
                         <div>
                             <span class="info-label">Ngày đặt hàng</span>
-                            <span class="info-value">12 Tháng 3, 2026</span>
+                            <span class="info-value">@Model.OrderDate.ToString("dd/MM/yyyy")</span>
                         </div>
                         <div>
                             <span class="info-label">Phương thức thanh toán</span>
-                            <span class="info-value">Thanh toán khi nhận hàng (COD)</span>
+                            <span class="info-value">@(Model.Payments?.FirstOrDefault()?.PaymentMethod ?? "Thanh toán khi nhận hàng (COD)")</span>
                         </div>
                         <div>
                             <span class="info-label">Trạng thái</span>
-                            <span class="badge bg-warning text-dark fw-bold">Đang xử lý</span>
+                            @{
+                                var statusClass = Model.Status switch {
+                                    "Pending" => "bg-warning text-dark",
+                                    "Processing" => "bg-info text-white",
+                                    "Shipped" => "bg-primary text-white",
+                                    "Delivered" => "bg-success text-white",
+                                    _ => "bg-secondary text-white"
+                                };
+                                var statusText = Model.Status switch {
+                                    "Pending" => "Đang chờ xử lý",
+                                    "Processing" => "Đang xử lý",
+                                    "Shipped" => "Đang giao hàng",
+                                    "Delivered" => "Đã giao hàng",
+                                    _ => Model.Status ?? "Chưa xác định"
+                                };
+                            }
+                            <span class="badge @statusClass fw-bold">@statusText</span>
                         </div>
                     </div>
                     <div class="mt-4 pt-4 border-top">
                         <span class="info-label">Địa chỉ giao hàng</span>
-                        <span class="info-value">Nguyễn Văn An - 0901 234 567<br>123 Đường ABC, Phường 5, Quận 1, TP. Hồ Chí Minh</span>
+                        <span class="info-value">@Model.ShippingAddress</span>
+                        @if (!string.IsNullOrEmpty(Model.Note))
+                        {
+                            <div class="mt-2">
+                                <span class="info-label">Ghi chú:</span>
+                                <span class="info-value text-muted small">@Model.Note</span>
+                            </div>
+                        }
                     </div>
                 </div>
 
-                <!-- 3. ORDER SUMMARY (Simplified) -->
+                <!-- 3. ORDER SUMMARY -->
                 <div class="order-info-card">
-                    <h5 class="fw-bold mb-4 border-bottom pb-3">SẢN PHẨM ĐÃ ĐẶT (2)</h5>
-                    <ul class="summary-items-list mb-0">
-                        <li class="summary-item-product">
-                            <div class="summary-item-img">
-                                <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=100" class="w-100 h-100 object-fit-contain p-1" alt="P">
-                            </div>
-                            <div class="summary-item-info flex-grow-1">
-                                <span class="name">Bộ Nồi Trước Honda SH Chính Hãng</span>
-                                <span class="qty-price">Số lượng: 1 x 1.250.000đ</span>
-                            </div>
-                            <div class="fw-bold">1.250.000đ</div>
-                        </li>
-                        <li class="summary-item-product">
-                            <div class="summary-item-img">
-                                <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=100" class="w-100 h-100 object-fit-contain p-1" alt="P">
-                            </div>
-                            <div class="summary-item-info flex-grow-1">
-                                <span class="name">Nhớt Motul 300V Factory Line 10W40</span>
-                                <span class="qty-price">Số lượng: 2 x 450.000đ</span>
-                            </div>
-                            <div class="fw-bold">900.000đ</div>
-                        </li>
+                    <h5 class="fw-bold mb-4 border-bottom pb-3">SẢN PHẨM ĐÃ ĐẶT (@(Model.OrderItems?.Count ?? 0))</h5>
+                    <ul class="summary-items-list mb-0 list-unstyled">
+                        @if (Model.OrderItems != null)
+                        {
+                            foreach (var item in Model.OrderItems)
+                            {
+                                <li class="summary-item-product d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+                                    <div class="summary-item-img" style="width: 60px; height: 60px; flex-shrink: 0;">
+                                        <img src="@(string.IsNullOrEmpty(item.ProductVariant?.ImageUrl) ? "/assets/img/elements/no-image.png" : item.ProductVariant.ImageUrl)" 
+                                             class="w-100 h-100 object-fit-cover rounded" alt="Product">
+                                    </div>
+                                    <div class="summary-item-info flex-grow-1">
+                                        <span class="name fw-bold d-block">@(item.ProductVariant?.Product?.ProductName ?? "Sản phẩm")</span>
+                                        <span class="qty-price text-muted small">@(item.ProductVariant?.VariantName) | Số lượng: @item.Quantity x @item.Price.ToString("N0")đ</span>
+                                    </div>
+                                    <div class="fw-bold">@((item.Quantity * item.Price).ToString("N0"))đ</div>
+                                </li>
+                            }
+                        }
                     </ul>
                     <div class="mt-4 pt-4 border-top">
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Tổng tiền hàng</span>
-                            <span class="fw-bold">2.150.000đ</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Phí vận chuyển</span>
-                            <span class="fw-bold">30.000đ</span>
+                            <span class="text-muted">Phí vận chuyển (@(Model.ShippingMethod?.Name ?? "Tiêu chuẩn"))</span>
+                            <span class="fw-bold">@(Model.ShippingMethod?.Cost.ToString("N0") ?? "0")đ</span>
                         </div>
                         <div class="d-flex justify-content-between mt-2 pt-2 border-top">
                             <span class="fw-bold fs-5">TỔNG CỘNG</span>
-                            <span class="fw-bold fs-5 text-danger">2.180.000đ</span>
+                            <span class="fw-bold fs-5 text-danger">@Model.TotalAmount.ToString("N0")đ</span>
                         </div>
                     </div>
                 </div>
@@ -86,13 +103,10 @@
             <div class="col-lg-5">
                 <div class="action-buttons-group">
                     <h5 class="fw-bold mb-3 text-center text-lg-start">BƯỚC TIẾP THEO?</h5>
-                    <a href="/Order/Detail/102345" class="btn btn-danger btn-lg rounded-pill fw-bold w-100 d-flex align-items-center justify-content-center">
-                        <i class='bx bx-list-check me-2 fs-4'></i> XEM CHI TIẾT ĐƠN HÀNG
+                    <a href="/Order/Tracking/@Model.OrderId" class="btn btn-danger btn-lg rounded-pill fw-bold w-100 d-flex align-items-center justify-content-center mb-3">
+                        <i class='bx bx-map-pin me-2 fs-4'></i> THEO DÕI ĐƠN HÀNG
                     </a>
-                    <a href="/Order/Tracking" class="btn-action-outline">
-                        <i class='bx bx-map-pin me-2 fs-4'></i> THEO DÕI TRẠNG THÁI
-                    </a>
-                    <a href="/Product" class="btn-action-outline">
+                    <a href="/Product" class="btn btn-outline-dark btn-lg rounded-pill fw-bold w-100 d-flex align-items-center justify-content-center">
                         <i class='bx bx-shopping-bag me-2 fs-4'></i> TIẾP TỤC MUA HÀNG
                     </a>
                 </div>
@@ -104,26 +118,15 @@
             </div>
         </div>
     </div>
-
-    <!-- 5. SUGGESTED PRODUCTS -->
-    <section class="mt-5 pt-5 border-top">
-        <div class="section-title-wrapper">
-            <h3 class="fw-bold text-uppercase">Có thể bạn quan tâm</h3>
-        </div>
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
-            <div class="col">
-                <div class="product-card">
-                    <div class="product-img-wrapper">
-                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400" alt="Product" loading="lazy">
-                    </div>
-                    <div class="product-info flex-grow-1">
-                        <span class="brand">MICHELIN</span>
-                        <h6 class="name">Lốp Michelin City Grip 2 Cho Honda SH</h6>
-                        <div class="product-price"><span class="current">1.850.000đ</span></div>
-                    </div>
-                    <button class="btn btn-add-cart w-100 rounded-pill fw-bold mt-3">THÊM VÀO GIỎ</button>
-                </div>
-            </div>
-        </div>
-    </section>
 </main>
+
+<style>
+    .success-container { text-align: center; padding: 40px 0; }
+    .success-icon-wrapper { width: 80px; height: 80px; background: #e8f5e9; color: #4caf50; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 50px; margin: 0 auto 20px; }
+    .order-info-card { background: #fff; border-radius: 20px; border: 1px solid #eee; padding: 30px; margin-bottom: 24px; }
+    .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .info-label { display: block; color: #888; font-size: 13px; margin-bottom: 4px; }
+    .info-value { display: block; color: #333; font-weight: 600; }
+    
+    .summary-item-product:last-child { border-bottom: none !important; margin-bottom: 0 !important; padding-bottom: 0 !important; }
+</style>

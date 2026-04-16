@@ -24,14 +24,20 @@
             <div class="product-gallery">
                 <div class="main-img-wrapper" id="mainImgWrapper">
                     <img src="@(string.IsNullOrEmpty(Model.PrimaryImageUrl) ? "https://via.placeholder.com/800x800?text=No+Image" : Model.PrimaryImageUrl)" 
-                         alt="@Model.ProductName" id="mainProductImg">
+                         alt="@Model.ProductName" id="mainProductImg" class="w-100 h-100 object-fit-cover rounded-4 shadow-sm">
                 </div>
-                <!-- Sẽ load thêm các ảnh khác nếu có logic ở ProductDto -->
-                <ul class="thumb-list mt-3">
-                    <li class="thumb-item active" onclick="changeImage(this, '@Model.PrimaryImageUrl')">
-                        <img src="@Model.PrimaryImageUrl" alt="Thumb">
-                    </li>
-                </ul>
+                
+                @if (Model.Images != null && Model.Images.Count > 1)
+                {
+                    <ul class="thumb-list d-flex gap-2 list-unstyled mt-3 overflow-auto pb-2">
+                        @foreach (var img in Model.Images.OrderBy(i => i.DisplayOrder))
+                        {
+                            <li class="thumb-item @(img.IsPrimary ? "active" : "")" onclick="changeImage(this, '@img.ImageUrl')" style="width: 80px; height: 80px; flex-shrink: 0; cursor: pointer;">
+                                <img src="@img.ImageUrl" alt="Thumb" class="w-100 h-100 object-fit-cover rounded-3 border">
+                            </li>
+                        }
+                    </ul>
+                }
             </div>
         </div>
 
@@ -49,42 +55,60 @@
                         <i class='bx bxs-star'></i>
                         <i class='bx bxs-star-half'></i>
                     </div>
-                    <span class="text-muted small">(24 đánh giá) | SKU: @Model.ProductId.ToString("D5")</span>
+                    <span class="text-muted small">(24 đánh giá) | SKU: <span id="displaySku">@Model.Variants.FirstOrDefault()?.SKU</span></span>
                 </div>
 
-                <div class="detail-price text-danger display-5 fw-bold mb-4">@Model.MinPrice.ToString("N0")đ</div>
+                <div class="detail-price text-danger display-5 fw-bold mb-4">
+                    <span id="displayPrice">@Model.MinPrice.ToString("N0")</span>đ
+                </div>
 
                 <p class="text-muted mb-4 fs-5">@Model.Description</p>
+
+                <!-- Variant Selection -->
+                @if (Model.Variants != null && Model.Variants.Count > 0)
+                {
+                    <div class="variant-selection mb-4">
+                        <div class="variant-title fw-bold mb-2">Chọn phân loại:</div>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var variant in Model.Variants)
+                            {
+                                <div class="variant-option @(variant.ProductVariantId == Model.DefaultVariantId ? "active" : "")" 
+                                     onclick="selectVariant(this, @variant.ProductVariantId, @variant.Price, '@variant.SKU', '@variant.ImageUrl')"
+                                     data-id="@variant.ProductVariantId">
+                                    @variant.VariantName
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
 
                 <!-- Quantity & Actions -->
                 <div class="variant-group mb-4">
                     <div class="variant-title fw-bold mb-2">Số lượng:</div>
-                    <div class="qty-selector d-flex">
-                        <button class="btn btn-outline-secondary px-3" onclick="updateQty(-1)"><i class='bx bx-minus'></i></button>
-                        <input type="text" class="form-control text-center mx-2" style="width: 60px;" value="1" id="qtyInput" readonly>
-                        <button class="btn btn-outline-secondary px-3" onclick="updateQty(1)"><i class='bx bx-plus'></i></button>
+                    <div class="qty-selector d-flex align-items-center">
+                        <button class="btn btn-outline-secondary rounded-circle" style="width: 40px; height: 40px;" onclick="updateQty(-1)"><i class='bx bx-minus'></i></button>
+                        <input type="text" class="form-control text-center mx-2 border-0 fw-bold fs-5" style="width: 60px;" value="1" id="qtyInput" readonly>
+                        <button class="btn btn-outline-secondary rounded-circle" style="width: 40px; height: 40px;" onclick="updateQty(1)"><i class='bx bx-plus'></i></button>
                     </div>
                 </div>
 
                 <div class="btn-buy-group d-flex gap-3">
-                    <button type="button" onclick="handleAddToCart(false)" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold flex-grow-1">
+                    <button type="button" onclick="handleAddToCart(false)" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold flex-grow-1 shadow">
                         <i class='bx bx-cart-add fs-4 me-2'></i> THÊM VÀO GIỎ
                     </button>
-                    <button type="button" onclick="handleAddToCart(true)" class="btn btn-dark btn-lg rounded-pill px-5 fw-bold flex-grow-1">MUA NGAY</button>
+                    <button type="button" onclick="handleAddToCart(true)" class="btn btn-dark btn-lg rounded-pill px-5 fw-bold flex-grow-1 shadow">MUA NGAY</button>
                 </div>
 
                 <div class="mt-4 pt-4 border-top">
-                    <div class="d-flex align-items-center mb-2">
-                        <i class='bx bx-check-shield text-success fs-4 me-2'></i>
-                        <span class="small fw-bold">Bảo hành chính hãng 12 tháng</span>
-                    </div>
-                    <div class="d-flex align-items-center mb-2">
-                        <i class='bx bx-refresh text-success fs-4 me-2'></i>
-                        <span class="small fw-bold">Đổi trả trong 7 ngày nếu lỗi sản xuất</span>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <i class='bx bx-package text-success fs-4 me-2'></i>
-                        <span class="small fw-bold">Còn hàng - Giao ngay toàn quốc</span>
+                    <div class="row g-3">
+                        <div class="col-md-6 d-flex align-items-center">
+                            <i class='bx bx-check-shield text-success fs-4 me-2'></i>
+                            <span class="small fw-bold">Bảo hành 12 tháng</span>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-center">
+                            <i class='bx bx-refresh text-success fs-4 me-2'></i>
+                            <span class="small fw-bold">Đổi trả 7 ngày</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -92,14 +116,48 @@
     </div>
 </main>
 
+<style>
+    .variant-option { 
+        padding: 8px 20px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 500;
+    }
+    .variant-option:hover { border-color: #dc3545; color: #dc3545; }
+    .variant-option.active { border-color: #dc3545; background-color: #dc3545; color: #fff; }
+    .thumb-item.active img { border-color: #dc3545 !important; border-width: 2px !important; }
+    .thumb-list::-webkit-scrollbar { height: 4px; }
+    .thumb-list::-webkit-scrollbar-thumb { background: #eee; border-radius: 10px; }
+</style>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        let selectedVariantId = @Model.DefaultVariantId;
+
         // Gallery logic
         function changeImage(thumb, src) {
+            if (!src) return;
             document.getElementById('mainProductImg').src = src;
-            document.querySelectorAll('.thumb-item').forEach(i => i.classList.remove('active'));
-            thumb.classList.add('active');
+            if (thumb) {
+                document.querySelectorAll('.thumb-item').forEach(i => i.classList.remove('active'));
+                thumb.classList.add('active');
+            }
+        }
+
+        // Variant Selection
+        function selectVariant(el, id, price, sku, imageUrl) {
+            selectedVariantId = id;
+            
+            // Update UI
+            document.querySelectorAll('.variant-option').forEach(v => v.classList.remove('active'));
+            el.classList.add('active');
+            
+            // Update Price & SKU
+            document.getElementById('displayPrice').innerText = price.toLocaleString('vi-VN');
+            document.getElementById('displaySku').innerText = sku || 'N/A';
+            
+            // Update Image if available
+            if (imageUrl) {
+                changeImage(null, imageUrl);
+            }
         }
 
         // Qty logic
@@ -112,11 +170,10 @@
         }
 
         async function handleAddToCart(isBuyNow) {
-            const variantId = @Model.DefaultVariantId;
             const quantity = parseInt(document.getElementById('qtyInput').value);
 
-            if (!variantId || variantId === 0) {
-                Swal.fire('Chú ý', 'Sản phẩm này hiện chưa có biến thể để đặt hàng.', 'warning');
+            if (!selectedVariantId || selectedVariantId === 0) {
+                Swal.fire('Chú ý', 'Vui lòng chọn phân loại sản phẩm.', 'warning');
                 return;
             }
 
@@ -124,7 +181,7 @@
                 const response = await fetch('/Cart/AddToCart', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `variantId=${variantId}&quantity=${quantity}`
+                    body: `variantId=${selectedVariantId}&quantity=${quantity}`
                 });
                 
                 const data = await response.json();
@@ -135,15 +192,21 @@
                     } else {
                         Swal.fire({
                             icon: 'success',
-                            title: 'Tuyệt vời!',
+                            title: 'Đã thêm vào giỏ!',
                             text: data.message,
                             showConfirmButton: false,
                             timer: 1500,
                             toast: true,
                             position: 'top-end'
                         });
-                        if (typeof updateCartBadge === "function") updateCartBadge();
-                        if (typeof showCartSuccessToast === "function") showCartSuccessToast(data.message);
+                        // Update cart count if exists
+                        const badge = document.getElementById('cart-badge');
+                        if (badge) {
+                            fetch('/Cart/GetCartCount').then(res => res.json()).then(count => {
+                                badge.innerText = count;
+                                badge.classList.remove('d-none');
+                            });
+                        }
                     }
                 } else {
                     Swal.fire('Thông báo', data.message, 'info');

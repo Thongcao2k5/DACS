@@ -34,20 +34,22 @@ namespace MotoShop.Data.Data
             }
 
             // 3. CLEAR OLD DATA (Dọn dẹp triệt để để nạp bộ dữ liệu chuẩn mới)
-            context.InventoryTransactions.RemoveRange(context.InventoryTransactions);
-            context.OrderItems.RemoveRange(context.OrderItems);
-            context.Orders.RemoveRange(context.Orders);
-            context.ProductReviews.RemoveRange(context.ProductReviews);
-            context.PromotionProducts.RemoveRange(context.PromotionProducts);
-            context.ProductImages.RemoveRange(context.ProductImages);
-            context.ProductVariants.RemoveRange(context.ProductVariants);
-            context.Products.RemoveRange(context.Products);
-            context.Categories.RemoveRange(context.Categories);
-            context.Brands.RemoveRange(context.Brands);
-            context.Customers.RemoveRange(context.Customers);
-            context.Promotions.RemoveRange(context.Promotions);
-            context.Coupons.RemoveRange(context.Coupons);
-            context.Blogs.RemoveRange(context.Blogs);
+            try {
+                context.InventoryTransactions.RemoveRange(context.InventoryTransactions);
+                context.OrderItems.RemoveRange(context.OrderItems);
+                context.Orders.RemoveRange(context.Orders);
+                context.ProductReviews.RemoveRange(context.ProductReviews);
+                context.PromotionProducts.RemoveRange(context.PromotionProducts);
+                context.ProductImages.RemoveRange(context.ProductImages);
+                context.ProductVariants.RemoveRange(context.ProductVariants);
+                context.Products.RemoveRange(context.Products);
+                context.Categories.RemoveRange(context.Categories);
+                context.Brands.RemoveRange(context.Brands);
+                context.Customers.RemoveRange(context.Customers);
+                context.Promotions.RemoveRange(context.Promotions);
+                context.Coupons.RemoveRange(context.Coupons);
+                context.Blogs.RemoveRange(context.Blogs);
+            } catch { }
             context.BlogCategories.RemoveRange(context.BlogCategories);
             await context.SaveChangesAsync();
 
@@ -505,9 +507,8 @@ namespace MotoShop.Data.Data
             {
                 context.ShippingMethods.AddRange(new List<ShippingMethod>
                 {
-                    new ShippingMethod { Name = "Giao hàng nhanh (2-3 ngày)", Cost = 30000, EstimatedDays = "2-3 ngày" },
-                    new ShippingMethod { Name = "Giao hàng hỏa tốc (2H)", Cost = 50000, EstimatedDays = "2 giờ" },
-                    new ShippingMethod { Name = "Giao hàng tiêu chuẩn", Cost = 15000, EstimatedDays = "4-5 ngày" }
+                    new ShippingMethod { Name = "Giao hàng tiêu chuẩn", Cost = 0, EstimatedDays = "3-5 ngày", Description = "Miễn phí vận chuyển cho mọi đơn hàng", IsActive = true },
+                    new ShippingMethod { Name = "Giao hàng nhanh", Cost = 35000, EstimatedDays = "1-2 ngày", Description = "Nhận hàng sớm nhất có thể", IsActive = true }
                 });
             }
 

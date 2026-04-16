@@ -44,8 +44,35 @@ namespace MotoShop.Business.Services
 
             // 3. Tính tổng tiền
             decimal totalAmount = cart.CartItems.Sum(ci => ci.Price * ci.Quantity);
+            decimal discountAmount = 0;
 
-            // TODO: Cộng thêm phí vận chuyển, trừ đi coupon nếu có ở đây
+            // Handle Coupon
+            if (!string.IsNullOrEmpty(checkoutData.CouponCode))
+            {
+                var coupon = await _unitOfWork.Repository<Coupon>().Find(c => c.Code == checkoutData.CouponCode && c.IsActive && c.ExpiryDate >= DateTime.Now).FirstOrDefaultAsync();
+                if (coupon != null && (coupon.UsageLimit == 0 || coupon.UsedCount < coupon.UsageLimit))
+                {
+                    if (coupon.MinOrderValue == null || totalAmount >= coupon.MinOrderValue)
+                    {
+                        if (coupon.DiscountType == "Percentage")
+                        {
+                            discountAmount = totalAmount * (coupon.DiscountValue / 100);
+                        }
+                        else
+                        {
+                            discountAmount = coupon.DiscountValue;
+                        }
+                        totalAmount -= discountAmount;
+                        checkoutData.CouponId = coupon.Id;
+                        
+                        // Increment used count
+                        coupon.UsedCount++;
+                        _unitOfWork.Repository<Coupon>().Update(coupon);
+                    }
+                }
+            }
+
+            // Handle Shipping Method
             if (checkoutData.ShippingMethodId.HasValue)
             {
                 var shipping = await _unitOfWork.Repository<ShippingMethod>().GetByIdAsync(checkoutData.ShippingMethodId.Value);
@@ -60,7 +87,7 @@ namespace MotoShop.Business.Services
                 TotalAmount = totalAmount,
                 Status = "Pending", // Chờ xử lý
                 PaymentStatus = "Unpaid", // Chưa thanh toán
-                ShippingAddress = $"{checkoutData.FullName} | {checkoutData.Phone} | {checkoutData.Address}",
+                ShippingAddress = $"{checkoutData.FullName} | {checkoutData.Phone} | {checkoutData.Address}, {checkoutData.Ward}, {checkoutData.District}, {checkoutData.Province}",
                 Note = checkoutData.Note,
                 ShippingMethodId = checkoutData.ShippingMethodId,
                 CouponId = checkoutData.CouponId

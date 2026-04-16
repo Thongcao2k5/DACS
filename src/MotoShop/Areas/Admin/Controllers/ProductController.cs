@@ -33,7 +33,7 @@ namespace MotoShop.Areas.Admin.Controllers
             _brandRepository = brandRepository;
         }
 
-        public async Task<IActionResult> Index(string? searchTerm, int? categoryId, int? brandId, string? status, string? sort)
+        public async Task<IActionResult> Index(string? searchTerm, int? categoryId, int? brandId, string? status, string? sort, int page = 1, int pageSize = 10)
         {
             var query = _productRepository.Find(p => !p.IsDeleted)
                 .Include(p => p.Category)
@@ -80,7 +80,9 @@ namespace MotoShop.Areas.Admin.Controllers
                 _ => query.OrderByDescending(p => p.CreatedDate)
             };
 
-            var products = await query.ToListAsync();
+            // Pagination logic
+            var totalItems = await query.CountAsync();
+            var products = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
             var categories = await _categoryRepository.GetAllAsync();
             ViewBag.CategoryList = new SelectList(categories, "CategoryId", "CategoryName", categoryId);
@@ -95,6 +97,12 @@ namespace MotoShop.Areas.Admin.Controllers
                 new SelectListItem { Value = "name_asc", Text = "Tên A-Z", Selected = sort == "name_asc" },
                 new SelectListItem { Value = "name_desc", Text = "Tên Z-A", Selected = sort == "name_desc" }
             };
+
+            // Pagination metadata
+            ViewBag.PageNumber = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
 
             return View(products);
         }

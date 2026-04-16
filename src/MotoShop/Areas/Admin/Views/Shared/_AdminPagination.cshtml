@@ -1,33 +1,89 @@
+@{
+    int pageNumber = ViewBag.PageNumber ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int pageSize = ViewBag.PageSize ?? 10;
+    int totalItems = ViewBag.TotalItems ?? 0;
+    
+    int startItem = totalItems == 0 ? 0 : (pageNumber - 1) * pageSize + 1;
+    int endItem = Math.Min(pageNumber * pageSize, totalItems);
+
+    string currentUrl = ViewContext.HttpContext.Request.Path + ViewContext.HttpContext.Request.QueryString;
+}
+
 <div class="table-pagination-footer d-flex justify-content-between align-items-center p-3 border-top bg-light-subtle">
     <!-- Cột trái: Chọn số dòng -->
     <div class="pagination-rows-selector d-flex align-items-center">
         <span class="small text-muted">Hiển thị</span>
         <select class="form-select form-select-sm d-inline-block w-auto mx-2 rounded-pill shadow-sm" onchange="changePageSize(this.value)">
-            <option value="10">10</option>
-            <option value="20">20</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
+            @foreach (var size in new[] { 10, 20, 50, 100 })
+            {
+                if (pageSize == size)
+                {
+                    <option value="@size" selected>@size</option>
+                }
+                else
+                {
+                    <option value="@size">@size</option>
+                }
+            }
         </select>
         <span class="small text-muted">dòng</span>
     </div>
 
     <!-- Cột giữa: Số trang -->
-    <nav class="pagination-nav">
-        <ul class="pagination pagination-sm m-0 gap-1">
-            <li class="page-item disabled">
-                <a class="page-link rounded-circle border-0 shadow-sm" href="#"><i class="bx bx-chevron-left"></i></a>
-            </li>
-            <li class="page-item active"><a class="page-link rounded-circle shadow-sm" href="#">1</a></li>
-            <li class="page-item"><a class="page-link rounded-circle border-0 shadow-sm" href="#">2</a></li>
-            <li class="page-item"><a class="page-link rounded-circle border-0 shadow-sm" href="#">3</a></li>
-            <li class="page-item">
-                <a class="page-link rounded-circle border-0 shadow-sm" href="#"><i class="bx bx-chevron-right"></i></a>
-            </li>
-        </ul>
-    </nav>
+    @if (totalPages > 1)
+    {
+        <nav class="pagination-nav">
+            <ul class="pagination pagination-sm m-0 gap-1">
+                <!-- Nút Previous -->
+                <li class="page-item @(pageNumber == 1 ? "disabled" : "")">
+                    <a class="page-link rounded-circle border-0 shadow-sm" href="@GetPageUrl(pageNumber - 1)"><i class="bx bx-chevron-left"></i></a>
+                </li>
+
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    if (i == 1 || i == totalPages || (i >= pageNumber - 2 && i <= pageNumber + 2))
+                    {
+                        <li class="page-item @(i == pageNumber ? "active" : "")">
+                            <a class="page-link rounded-circle shadow-sm @(i != pageNumber ? "border-0" : "")" href="@GetPageUrl(i)">@i</a>
+                        </li>
+                    }
+                    else if (i == pageNumber - 3 || i == pageNumber + 3)
+                    {
+                        <li class="page-item disabled"><span class="page-link border-0 bg-transparent">...</span></li>
+                    }
+                }
+
+                <!-- Nút Next -->
+                <li class="page-item @(pageNumber == totalPages ? "disabled" : "")">
+                    <a class="page-link rounded-circle border-0 shadow-sm" href="@GetPageUrl(pageNumber + 1)"><i class="bx bx-chevron-right"></i></a>
+                </li>
+            </ul>
+        </nav>
+    }
 
     <!-- Cột phải: Tổng số dòng -->
     <div class="pagination-info text-muted small fw-bold">
-        Hiển thị 1–10 / 124 dòng dữ liệu
+        Hiển thị @startItem–@endItem / @totalItems dòng dữ liệu
     </div>
 </div>
+
+<script>
+    function changePageSize(size) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('pageSize', size);
+        url.searchParams.set('page', 1); // Reset về trang 1 khi đổi số dòng
+        window.location.href = url.toString();
+    }
+</script>
+
+@functions {
+    public string GetPageUrl(int page)
+    {
+        var query = ViewContext.HttpContext.Request.Query.ToDictionary(k => k.Key, v => v.Value.ToString());
+        query["page"] = page.ToString();
+        
+        var queryString = string.Join("&", query.Select(x => $"{x.Key}={System.Net.WebUtility.UrlEncode(x.Value)}"));
+        return ViewContext.HttpContext.Request.Path + "?" + queryString;
+    }
+}

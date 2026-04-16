@@ -88,8 +88,23 @@ using (var scope = app.Services.CreateScope())
     var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-    await context.Database.MigrateAsync();
-    await DbSeeder.SeedAsync(context, userManager, roleManager);
+    // THỰC HIỆN HARD RESET: Xóa và tạo mới hoàn toàn Database
+    Log.Information("Performing Hard Reset: Deleting existing database...");
+    await context.Database.EnsureDeletedAsync();
+    Log.Information("Creating fresh database with correct schema...");
+    await context.Database.EnsureCreatedAsync();
+    Log.Information("Database synchronized and created successfully.");
+    
+    try 
+    {
+        Log.Information("Seeding fresh data...");
+        await DbSeeder.SeedAsync(context, userManager, roleManager);
+        Log.Information("Seeding completed successfully.");
+    }
+    catch (Exception ex)
+    {
+        Log.Error("Seeding Error: {Message}", ex.Message);
+    }
 }
 
 if (!app.Environment.IsDevelopment())

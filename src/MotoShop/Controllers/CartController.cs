@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MotoShop.Business.DTOs;
 using MotoShop.Business.Interfaces;
 using MotoShop.Business.Services;
 using MotoShop.Data.Interfaces;
+using MotoShop.Data.Models;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Linq;
@@ -29,11 +31,28 @@ namespace MotoShop.Controllers
             _orderService = orderService;
         }
 
+        private string GetCartUserId()
+        {
+            if (_userManager.GetUserId(User) != null) return _userManager.GetUserId(User);
+
+            if (Request.Cookies.ContainsKey("GuestId"))
+            {
+                return Request.Cookies["GuestId"];
+            }
+
+            string guestId = System.Guid.NewGuid().ToString();
+            Response.Cookies.Append("GuestId", guestId, new Microsoft.AspNetCore.Http.CookieOptions
+            {
+                Expires = System.DateTimeOffset.Now.AddDays(30),
+                HttpOnly = true,
+                IsEssential = true
+            });
+            return guestId;
+        }
+
         public async Task<IActionResult> Index()
         {
-            var userId = _userManager.GetUserId(User);
-            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login", "Account");
-
+            var userId = GetCartUserId();
             var cartItems = await _cartService.GetCartAsync(userId);
             return View(cartItems);
         }
@@ -42,13 +61,8 @@ namespace MotoShop.Controllers
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> AddToCart(int variantId, int quantity = 1)
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = GetCartUserId();
             
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Json(new { success = false, message = "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng." });
-            }
-
             try
             {
                 var success = await _cartService.AddToCartAsync(userId, variantId, quantity);
@@ -70,11 +84,22 @@ namespace MotoShop.Controllers
             var userId = _userManager.GetUserId(User);
             if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login", "Account");
 
+            // Sync guest cart to user cart on checkout if needed
+            if (Request.Cookies.ContainsKey("GuestId"))
+            {
+                var guestId = Request.Cookies["GuestId"];
+                await _cartService.SyncCartAsync(guestId, userId);
+                Response.Cookies.Delete("GuestId");
+            }
+
             var cartItems = await _cartService.GetCartAsync(userId);
             if (!cartItems.Any()) return RedirectToAction("Index");
 
+            var shippingMethods = await _unitOfWork.Repository<ShippingMethod>().Find(s => s.IsActive).ToListAsync();
+
             ViewBag.CartItems = cartItems;
             ViewBag.TotalAmount = cartItems.Sum(i => i.Total);
+            ViewBag.ShippingMethods = shippingMethods;
 
             return View(new CheckoutDto());
         }
@@ -86,7 +111,8 @@ namespace MotoShop.Controllers
             var userId = _userManager.GetUserId(User);
             if (string.IsNullOrEmpty(userId)) return Json(new { success = false, message = "Vui lòng đăng nhập." });
 
-            if (!ModelState.IsValid)
+            // Note is optional, so we remove manual validation if it was there
+            if (string.IsNullOrEmpty(model.FullName) || string.IsNullOrEmpty(model.Phone) || string.IsNullOrEmpty(model.Province))
             {
                 return Json(new { success = false, message = "Vui lòng điền đầy đủ thông tin giao hàng." });
             }
@@ -105,9 +131,7 @@ namespace MotoShop.Controllers
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> UpdateQuantity(int variantId, int quantity)
         {
-            var userId = _userManager.GetUserId(User);
-            if (string.IsNullOrEmpty(userId)) return Json(new { success = false });
-
+            var userId = GetCartUserId();
             var success = await _cartService.UpdateQuantityAsync(userId, variantId, quantity);
             return Json(new { success = success });
         }
@@ -116,9 +140,7 @@ namespace MotoShop.Controllers
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> RemoveFromCart(int variantId)
         {
-            var userId = _userManager.GetUserId(User);
-            if (string.IsNullOrEmpty(userId)) return Json(new { success = false });
-
+            var userId = GetCartUserId();
             var success = await _cartService.RemoveFromCartAsync(userId, variantId);
             return Json(new { success = success });
         }
@@ -126,17 +148,52 @@ namespace MotoShop.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCartCount()
         {
-            var userId = _userManager.GetUserId(User);
-            if (string.IsNullOrEmpty(userId)) return Json(0);
-
+            var userId = GetCartUserId();
             var count = await _cartService.GetCartCountAsync(userId);
             return Json(count);
         }
 
-        public IActionResult Success(int id)
+        [HttpGet]
+        public async Task<IActionResult> CheckCoupon(string code, decimal orderValue)
         {
-            ViewBag.OrderId = id;
-            return View();
+            if (string.IsNullOrEmpty(code)) return Json(new { success = false, message = "Vui lòng nhập mã." });
+
+            var coupon = await _unitOfWork.Repository<Coupon>().Find(c => c.Code == code && c.IsActive && (c.ExpiryDate == null || c.ExpiryDate >= System.DateTime.Now)).FirstOrDefaultAsync();
+            
+            if (coupon == null) return Json(new { success = false, message = "Mã giảm giá không hợp lệ hoặc đã hết hạn." });
+
+            if (coupon.UsageLimit > 0 && coupon.UsedCount >= coupon.UsageLimit)
+                return Json(new { success = false, message = "Mã giảm giá đã hết số lượt sử dụng." });
+
+            if (coupon.MinOrderValue.HasValue && orderValue < coupon.MinOrderValue.Value)
+                return Json(new { success = false, message = $"Đơn hàng tối thiểu {coupon.MinOrderValue.Value:N0}đ để sử dụng mã này." });
+
+            decimal discountAmount = 0;
+            if (coupon.DiscountType == "Percentage")
+            {
+                discountAmount = orderValue * (coupon.DiscountValue / 100);
+            }
+            else
+            {
+                discountAmount = coupon.DiscountValue;
+            }
+
+            return Json(new { success = true, message = "Áp dụng thành công", discountAmount = discountAmount });
+        }
+
+        public async Task<IActionResult> Success(int id)
+        {
+            var order = await _unitOfWork.Repository<Order>()
+                .Find(o => o.OrderId == id)
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductVariant)
+                        .ThenInclude(pv => pv.Product)
+                .Include(o => o.ShippingMethod)
+                .FirstOrDefaultAsync();
+
+            if (order == null) return NotFound();
+
+            return View(order);
         }
     }
 }
