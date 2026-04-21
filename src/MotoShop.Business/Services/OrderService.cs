@@ -97,10 +97,7 @@ namespace MotoShop.Business.Services
                 TotalAmount = totalAmount,
                 Status = "Pending",
                 PaymentStatus = "Unpaid",
-                ShippingAddress = $"{checkoutData.FullName} | {checkoutData.Phone} | {checkoutData.Address}",
                 DiscountAmount = discountAmount,
-                Status = "Pending", // Chờ xử lý
-                PaymentStatus = "Unpaid", // Chưa thanh toán
                 ShippingAddress = $"{checkoutData.FullName} | {checkoutData.Phone} | {checkoutData.Address}, {checkoutData.Ward}, {checkoutData.District}, {checkoutData.Province}",
                 Note = checkoutData.Note,
                 ShippingMethodId = checkoutData.ShippingMethodId,
@@ -178,13 +175,12 @@ namespace MotoShop.Business.Services
             };
         }
 
-        public async Task<bool> CancelOrderAsync(int orderId, string reason)
+        public async Task<bool> CancelOrderAsync(int orderId, string userId)
         {
             var order = await _unitOfWork.Repository<Order>().GetByIdAsync(orderId);
             if (order == null || order.Status != "Pending") return false;
 
             order.Status = "Cancelled";
-            order.Note = $"[LÃ½ do há»§y: {reason}] " + (order.Note ?? "");
             _unitOfWork.Repository<Order>().Update(order);
 
             

@@ -1,10 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
 using MotoShop.Business.DTOs;
 using MotoShop.Business.Interfaces;
 using MotoShop.Data.Interfaces;
@@ -35,6 +32,7 @@ namespace MotoShop.Controllers
             ViewBag.Combos = combos;
 
             return View();
+        }
         private readonly IBookingService _bookingService;
         private readonly IUnitOfWork _uow;
 
@@ -44,11 +42,7 @@ namespace MotoShop.Controllers
             _uow = uow;
         }
 
-        public async Task<IActionResult> Index()
-        {
-            var services = await _uow.Repository<Service>().Find(s => s.IsActive).ToListAsync();
-            return View(services);
-        }
+        
 
         public async Task<IActionResult> Details(int id)
         {

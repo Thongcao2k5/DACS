@@ -77,22 +77,19 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">Tỉnh / Thành phố *</label>
-                            <select class="form-select form-control-custom" required>
+                            <select class="form-select form-control-custom" id="province" required>
                                 <option value="" selected disabled>Chọn Tỉnh/Thành</option>
-                                <option>TP. Hồ Chí Minh</option>
-                                <option>Hà Nội</option>
-                                <option>Đà Nẵng</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">Quận / Huyện *</label>
-                            <select class="form-select form-control-custom" required>
+                            <select class="form-select form-control-custom" id="district" required>
                                 <option value="" selected disabled>Chọn Quận/Huyện</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">Phường / Xã *</label>
-                            <select class="form-select form-control-custom" required>
+                            <select class="form-select form-control-custom" id="ward" required>
                                 <option value="" selected disabled>Chọn Phường/Xã</option>
                             </select>
                         </div>
@@ -120,11 +117,55 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
+            initProvinceSelector();
+            
             setTimeout(() => {
                 $('#addressLoading').addClass('d-none');
                 loadAddressData();
             }, 800);
         });
+
+        function initProvinceSelector() {
+            const $province = $('#province');
+            const $district = $('#district');
+            const $ward = $('#ward');
+
+            // 1. Load Provinces
+            $.getJSON('https://provinces.open-api.vn/api/p/', function(data) {
+                data.forEach(p => {
+                    $province.append(`<option value="${p.code}">${p.name}</option>`);
+                });
+            });
+
+            // 2. Province Change -> Load Districts
+            $province.on('change', function() {
+                const pCode = $(this).val();
+                $district.html('<option value="" selected disabled>Chọn Quận/Huyện</option>');
+                $ward.html('<option value="" selected disabled>Chọn Phường/Xã</option>');
+                
+                if (pCode) {
+                    $.getJSON(`https://provinces.open-api.vn/api/p/${pCode}?depth=2`, function(data) {
+                        data.districts.forEach(d => {
+                            $district.append(`<option value="${d.code}">${d.name}</option>`);
+                        });
+                    });
+                }
+            });
+
+            // 3. District Change -> Load Wards
+            $district.on('change', function() {
+                const dCode = $(this).val();
+                $ward.html('<option value="" selected disabled>Chọn Phường/Xã</option>');
+                
+                if (dCode) {
+                    $.getJSON(`https://provinces.open-api.vn/api/d/${dCode}?depth=2`, function(data) {
+                        data.wards.forEach(w => {
+                            $ward.append(`<option value="${w.code}">${w.name}</option>`);
+                        });
+                    });
+                }
+            });
+        }
 
         function loadAddressData() {
             const hasData = true; // Giả lập có dữ liệu

@@ -3,7 +3,8 @@
  * Optimized for performance and smooth interactions
  */
 
-const UI = {
+window.UI = window.UI || {};
+Object.assign(window.UI, {
     // 1. Toggle Search Overlay
     toggleSearch: function() {
         const overlay = document.getElementById('searchOverlay');

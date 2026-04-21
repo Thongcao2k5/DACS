@@ -162,6 +162,8 @@ namespace MotoShop.Data.Models
         public string? Phone { get; set; }
         [StringLength(500)]
         public string? Address { get; set; }
+        [StringLength(500)]
+        public string? AvatarUrl { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public bool IsLocked { get; set; } = false;
 
@@ -647,6 +649,7 @@ namespace MotoShop.Data.Models
 
         [ForeignKey("CategoryId")]
         public virtual BlogCategory? Category { get; set; }
+        public bool IsPublished { get; set; }
     }
 
     public class Notification

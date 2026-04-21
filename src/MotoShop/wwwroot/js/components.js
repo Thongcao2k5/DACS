@@ -3,7 +3,8 @@
  * Lưu trữ các thành phần UI dùng chung và các tiện ích hiển thị
  */
 
-const UI = {
+window.UI = window.UI || {};
+Object.assign(window.UI, {
     // Hiển thị thông báo Toast
     showToast(message, type = 'success') {
         let toastContainer = document.getElementById('toast-container');
@@ -62,7 +63,7 @@ const UI = {
             }
         }
     }
-};
+});
 
 const UI_COMPONENTS = {
     // 1. HEADER

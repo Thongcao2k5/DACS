@@ -20,6 +20,5 @@ namespace MotoShop.Business.Interfaces
 
         // Cập nhật trạng thái thanh toán
         Task<bool> UpdatePaymentStatusAsync(int orderId, string status);
-        Task<bool> CancelOrderAsync(int orderId, string reason);
     }
 }

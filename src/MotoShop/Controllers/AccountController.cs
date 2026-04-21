@@ -1,16 +1,15 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using MotoShop.Models.ViewModels;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using System;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using MotoShop.Business.Interfaces;
 using MotoShop.Data.Interfaces;
 using MotoShop.Data.Models;
+using MotoShop.Models.ViewModels;
+using System;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
-using MotoShop.Business.Interfaces;
-using System.Linq;
+using System.Threading.Tasks;
 
 namespace MotoShop.Controllers
 {
@@ -22,15 +21,16 @@ namespace MotoShop.Controllers
         private readonly IEmailSender _emailSender;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICartService _cartService;
+        private readonly IFileService _fileService;
 
         public AccountController(
-            SignInManager<IdentityUser> signInManager, 
+            SignInManager<IdentityUser> signInManager,
             UserManager<IdentityUser> userManager,
             IMemoryCache cache,
             IEmailSender emailSender,
-            IUnitOfWork unitOfWork)
-            IEmailSender emailSender,
-            ICartService cartService)
+            IUnitOfWork unitOfWork,
+            ICartService cartService,
+            IFileService fileService)
         {
             _signInManager = signInManager;
             _userManager = userManager;
@@ -38,6 +38,7 @@ namespace MotoShop.Controllers
             _emailSender = emailSender;
             _unitOfWork = unitOfWork;
             _cartService = cartService;
+            _fileService = fileService;
         }
 
         [HttpGet]
@@ -61,11 +62,13 @@ namespace MotoShop.Controllers
                     var result = await _signInManager.PasswordSignInAsync(user.UserName!, model.Password, model.RememberMe, lockoutOnFailure: false);
                     if (result.Succeeded)
                     {
-                        // Hợp nhất giỏ hàng ngay sau khi đăng nhập thành công
                         if (Request.Cookies.ContainsKey("GuestId"))
                         {
                             var guestId = Request.Cookies["GuestId"];
-                            await _cartService.SyncCartAsync(guestId, user.Id);
+                            if (!string.IsNullOrEmpty(guestId))
+                            {
+                                await _cartService.SyncCartAsync(guestId, user.Id);
+                            }
                             Response.Cookies.Delete("GuestId");
                         }
 
@@ -78,12 +81,14 @@ namespace MotoShop.Controllers
                         {
                             return RedirectToAction("Index", "Home", new { area = "Admin" });
                         }
+
                         return RedirectToAction("Index", "Home");
                     }
                 }
 
                 ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không chính xác.");
             }
+
             return View(model);
         }
 
@@ -104,7 +109,6 @@ namespace MotoShop.Controllers
                 return Json(new { success = false, message = errors });
             }
 
-            // 1. Kiểm tra OTP từ Cache
             if (!_cache.TryGetValue($"OTP_{model.Email}", out string cachedOtp))
             {
                 return Json(new { success = false, message = "Mã xác nhận đã hết hạn. Vui lòng gửi lại mã." });
@@ -115,23 +119,21 @@ namespace MotoShop.Controllers
                 return Json(new { success = false, message = "Mã xác nhận không chính xác." });
             }
 
-            // 2. Tạo User
-            var user = new IdentityUser { 
-                UserName = model.Email, 
-                Email = model.Email, 
-                PhoneNumber = model.PhoneNumber 
+            var user = new IdentityUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                PhoneNumber = model.PhoneNumber
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded)
             {
-                // Xóa OTP sau khi sử dụng thành công
                 _cache.Remove($"OTP_{model.Email}");
 
                 await _userManager.AddToRoleAsync(user, "Customer");
-                
-                // Đồng thời tạo bản ghi Customer trong MotoShop DB
+
                 var customer = new Customer
                 {
                     UserId = user.Id,
@@ -143,7 +145,7 @@ namespace MotoShop.Controllers
                 await _unitOfWork.Repository<Customer>().AddAsync(customer);
                 await _unitOfWork.CompleteAsync();
 
-                await _signInManager.SignInAsync(user, isPersistent: false);
+                await _signInManager.SignInAsync(user, isPersistent: true);
                 return Json(new { success = true, message = "Chào mừng bạn gia nhập MotoShop!", redirectUrl = Url.Action("Index", "Home") });
             }
 
@@ -159,30 +161,26 @@ namespace MotoShop.Controllers
                 return Json(new { success = false, message = "Vui lòng cung cấp Email." });
             }
 
-            // Kiểm tra Email đã tồn tại chưa
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
             if (existingUser != null)
             {
                 return Json(new { success = false, message = "Email này đã được sử dụng bởi một tài khoản khác." });
             }
 
-            // Tạo mã OTP 6 số ngẫu nhiên
             var otp = new Random().Next(100000, 999999).ToString();
-
-            // Lưu vào Cache trong 5 phút
             _cache.Set($"OTP_{model.Email}", otp, TimeSpan.FromMinutes(5));
 
             try
             {
-                // Gửi Mail qua IEmailSender
-                await _emailSender.SendEmailAsync(model.Email, "Mã xác nhận đăng ký tài khoản MotoShop", 
+                await _emailSender.SendEmailAsync(
+                    model.Email,
+                    "Mã xác nhận đăng ký tài khoản MotoShop",
                     $"Chào bạn,<br/><br/>Mã xác nhận (OTP) của bạn là: <b>{otp}</b><br/>Mã này có hiệu lực trong 5 phút.<br/><br/>Trân trọng,<br/>Đội ngũ MotoShop.");
 
                 return Json(new { success = true });
             }
-            catch (Exception ex)
+            catch
             {
-                // Có thể log lỗi ở đây
                 return Json(new { success = false, message = "Không thể gửi email. Vui lòng kiểm tra lại cấu hình SMTP." });
             }
         }
@@ -212,8 +210,7 @@ namespace MotoShop.Controllers
             if (user == null) return RedirectToAction("Login");
 
             var customer = await _unitOfWork.Repository<Customer>().Find(c => c.UserId == user.Id).FirstOrDefaultAsync();
-            
-            // Nếu chưa có bản ghi Customer (cho các user cũ), hãy tạo mới
+
             if (customer == null)
             {
                 customer = new Customer
@@ -236,7 +233,7 @@ namespace MotoShop.Controllers
                 PhoneNumber = customer.Phone ?? user.PhoneNumber ?? "",
                 FullName = customer.FullName ?? user.UserName ?? "",
                 Address = customer.Address,
-                AvatarUrl = null,
+                AvatarUrl = customer.AvatarUrl,
                 PendingOrders = orders.Count(o => o.Status == "Pending"),
                 ShippingOrders = orders.Count(o => o.Status == "Shipping"),
                 CompletedOrders = orders.Count(o => o.Status == "Completed")
@@ -252,7 +249,8 @@ namespace MotoShop.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return Json(new { success = false, message = "Dữ liệu không hợp lệ." });
+                var errors = string.Join("<br/>", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                return Json(new { success = false, message = errors });
             }
 
             var user = await _userManager.GetUserAsync(User);
@@ -265,6 +263,29 @@ namespace MotoShop.Controllers
                 await _unitOfWork.Repository<Customer>().AddAsync(customer);
             }
 
+            // Xử lý upload ảnh đại diện
+            if (model.Avatar != null)
+            {
+                try
+                {
+                    // Xóa ảnh cũ nếu có
+                    if (!string.IsNullOrEmpty(customer.AvatarUrl))
+                    {
+                        var oldFileName = Path.GetFileName(customer.AvatarUrl);
+                        _fileService.DeleteFile(oldFileName);
+                    }
+
+                    // Lưu ảnh mới
+                    var avatarPath = await _fileService.SaveFileAsync(model.Avatar, "avatars");
+                    // Đảm bảo đường dẫn bắt đầu bằng / để trình duyệt hiểu là từ root
+                    customer.AvatarUrl = avatarPath.StartsWith("/") ? avatarPath : "/" + avatarPath;
+                }
+                catch (Exception ex)
+                {
+                    return Json(new { success = false, message = "Lỗi khi lưu ảnh đại diện: " + ex.Message });
+                }
+            }
+
             customer.FullName = model.FullName;
             customer.Phone = model.PhoneNumber;
             customer.Address = model.Address;
@@ -273,10 +294,9 @@ namespace MotoShop.Controllers
 
             _unitOfWork.Repository<Customer>().Update(customer);
             await _userManager.UpdateAsync(user);
-            
-            var result = await _unitOfWork.CompleteAsync();
+            await _unitOfWork.CompleteAsync();
 
-            return Json(new { success = true, message = "Cập nhật hồ sơ thành công!" });
+            return Json(new { success = true, message = "Cập nhật hồ sơ thành công!", avatarUrl = customer.AvatarUrl });
         }
 
         [HttpGet]
@@ -287,10 +307,10 @@ namespace MotoShop.Controllers
             if (user == null) return RedirectToAction("Login");
 
             var customer = await _unitOfWork.Repository<Customer>().Find(c => c.UserId == user.Id).FirstOrDefaultAsync();
-            if (customer == null) return View(new List<Order>());
+            if (customer == null) return View(new System.Collections.Generic.List<Order>());
 
             var query = _unitOfWork.Repository<Order>().Find(o => o.CustomerId == customer.CustomerId);
-            
+
             if (!string.IsNullOrEmpty(status) && status != "All")
             {
                 query = query.Where(o => o.Status == status);
@@ -353,7 +373,9 @@ namespace MotoShop.Controllers
         {
             await _signInManager.SignOutAsync();
             if (!string.IsNullOrEmpty(returnUrl))
+            {
                 return Redirect(returnUrl);
+            }
 
             return RedirectToAction("Index", "Home");
         }

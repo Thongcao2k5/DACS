@@ -165,7 +165,7 @@
                         <li class="mb-2">
                             <a asp-action="Index" asp-route-categoryId="@cat.Id" 
                                class="text-decoration-none d-flex justify-content-between align-items-center @(ViewBag.CurrentCategoryId == cat.Id ? "text-danger fw-bold" : "text-muted")">
-                                @cat.Name <span class="badge bg-light text-dark rounded-pill">@cat.Count</span>
+                                @cat.Name <span class="badge bg-light text-dark rounded-pill">@(cat.Blogs?.Count ?? 0)</span>
                             </a>
                         </li>
                     }
@@ -182,7 +182,7 @@
                             Tất cả bài viết <i class='bx bx-chevron-right'></i>
                         </a>
                     </li>
-                    @foreach (var cat in ViewBag.Categories as IEnumerable<MotoShop.Data.Models.BlogCategory>)
+                    @foreach (var cat in (ViewBag.Categories as IEnumerable<MotoShop.Data.Models.BlogCategory>) ?? new List<MotoShop.Data.Models.BlogCategory>())
                     {
                         <li class="mb-2">
                             <a href="/Blog?categoryId=@cat.Id" class="blog-sidebar-link d-flex justify-content-between align-items-center @(ViewBag.CurrentCategory == cat.Id ? "active" : "")">

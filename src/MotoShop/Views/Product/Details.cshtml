@@ -85,7 +85,7 @@
                     <div class="vr"></div>
                     <div class="text-muted small">@approvedReviewsTop.Count Đánh giá</div>
                     <div class="vr"></div>
-                    <div class="text-muted small">SKU: <span id="display-sku">@Model.Variants.FirstOrDefault()?.SKU</span></div>
+                    <div class="text-muted small">SKU: <span id="display-sku">@firstVariant?.SKU</span></div>
                 </div>
 
                 <div class="price-section p-4 rounded mb-4" style="background-color: @(hasDiscount ? "#fff5f5" : "#f8f9fa"); border: 1px solid @(hasDiscount ? "#ffe3e3" : "#eee");">
@@ -98,19 +98,19 @@
                         <div class="small text-muted text-uppercase fw-bold mb-1">Giá bán niêm yết:</div>
                     }
                     <div class="d-flex align-items-center gap-3 flex-wrap">
-                        <span id="display-price" class="h1 fw-bold text-danger mb-0" style="letter-spacing: -1px;">@Model.Variants.FirstOrDefault()?.Price.ToString("N0")₫</span>
+                        <span id="display-price" class="h1 fw-bold text-danger mb-0" style="letter-spacing: -1px;">@firstVariant?.Price.ToString("N0")₫</span>
                         
-                        @if (hasDiscount)
+                        @if (hasDiscount && firstVariant?.OriginalPrice != null)
                         {
                             <div class="d-flex flex-column">
-                                <del id="display-original-price" class="text-muted h5 mb-0">@Model.Variants.FirstOrDefault()?.OriginalPrice?.ToString("N0")₫</del>
-                                <span class="badge bg-danger mt-1" style="width: fit-content;">Tiết kiệm: @((Model.Variants.FirstOrDefault().OriginalPrice.Value - Model.Variants.FirstOrDefault().Price).ToString("N0"))₫ (-@Math.Round((1 - (Model.Variants.FirstOrDefault().Price / Model.Variants.FirstOrDefault().OriginalPrice.Value)) * 100)%)</span>
+                                <del id="display-original-price" class="text-muted h5 mb-0">@firstVariant.OriginalPrice.Value.ToString("N0")₫</del>
+                                <span class="badge bg-danger mt-1" style="width: fit-content;">Tiết kiệm: @((firstVariant.OriginalPrice.Value - firstVariant.Price).ToString("N0"))₫ (-@Math.Round((1 - (firstVariant.Price / firstVariant.OriginalPrice.Value)) * 100)%)</span>
                             </div>
                         }
                     </div>
                     <div class="mt-3 d-flex align-items-center gap-2">
-                        <span id="display-stock" class="badge @(Model.Variants.FirstOrDefault()?.StockQuantity > 0 ? "bg-success" : "bg-danger") rounded-pill px-3">
-                            <i class="bi bi-check-circle-fill me-1"></i> @(Model.Variants.FirstOrDefault()?.StockQuantity > 0 ? "Còn hàng - Giao ngay" : "Hết hàng tạm thời")
+                        <span id="display-stock" class="badge @(firstVariant?.StockQuantity > 0 ? "bg-success" : "bg-danger") rounded-pill px-3">
+                            <i class="bi bi-check-circle-fill me-1"></i> @(firstVariant?.StockQuantity > 0 ? "Còn hàng - Giao ngay" : "Hết hàng tạm thời")
                         </span>
                         <span class="text-muted small">| Miễn phí lắp đặt tại cửa hàng</span>
                     </div>
@@ -150,7 +150,7 @@
                     <div class="d-flex align-items-center gap-3">
                         <div class="quantity-input d-flex border rounded">
                             <button class="btn btn-link text-dark text-decoration-none px-3" onclick="updateQty(-1)">-</button>
-                            <input type="number" id="buy-quantity" value="1" min="1" max="@Model.Variants.FirstOrDefault()?.StockQuantity" class="form-control border-0 text-center fw-bold p-0" style="width: 50px;">
+                            <input type="number" id="buy-quantity" value="1" min="1" max="@firstVariant?.StockQuantity" class="form-control border-0 text-center fw-bold p-0" style="width: 50px;">
                             <button class="btn btn-link text-dark text-decoration-none px-3" onclick="updateQty(1)">+</button>
                         </div>
                         <button id="btn-wishlist" class="btn btn-outline-secondary rounded-circle px-2" onclick="toggleWishlist(@Model.ProductId)">
@@ -229,7 +229,7 @@
             <div class="tab-pane fade" id="specifications" role="tabpanel">
                 <table class="table table-striped border mb-0">
                     <tbody id="spec-table-body">
-                        @foreach (var attr in Model.Variants.FirstOrDefault()?.AttributeValues ?? new List<MotoShop.Business.DTOs.VariantAttributeDto>())
+                        @foreach (var attr in firstVariant?.AttributeValues ?? new List<MotoShop.Business.DTOs.VariantAttributeDto>())
                         {
                             <tr>
                                 <th class="w-25 bg-light">@attr.AttributeName</th>

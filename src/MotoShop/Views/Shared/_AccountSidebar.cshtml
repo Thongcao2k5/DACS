@@ -1,19 +1,28 @@
 @inject Microsoft.AspNetCore.Identity.SignInManager<Microsoft.AspNetCore.Identity.IdentityUser> SignInManager
 @inject Microsoft.AspNetCore.Identity.UserManager<Microsoft.AspNetCore.Identity.IdentityUser> UserManager
+@inject MotoShop.Data.Data.MotoShopDbContext DbContext
+@using Microsoft.EntityFrameworkCore
 
 @{
     var currentPath = Context.Request.Path.ToString();
     var user = await UserManager.GetUserAsync(User);
     var email = user?.Email ?? "Khách hàng";
+    
+    // Lấy thông tin Customer để có AvatarUrl và FullName
+    var customer = user != null ? await DbContext.Customers.FirstOrDefaultAsync(c => c.UserId == user.Id) : null;
+    var displayName = customer?.FullName ?? email;
+    var avatarUrl = !string.IsNullOrEmpty(customer?.AvatarUrl) 
+                    ? customer.AvatarUrl 
+                    : $"https://ui-avatars.com/api/?name={displayName}&background=random";
 }
 
 <div class="account-sidebar">
     <div class="d-flex align-items-center gap-3 mb-4 pb-4 border-bottom">
         <div style="width: 50px; height: 50px;">
-            <img src="https://ui-avatars.com/api/?name=@email&background=random" class="rounded-circle w-100 h-100 object-fit-cover" alt="User">
+            <img src="@avatarUrl" class="rounded-circle w-100 h-100 object-fit-cover header-avatar" alt="User">
         </div>
         <div>
-            <h6 class="fw-bold mb-0 text-truncate" style="max-width: 150px;">@email</h6>
+            <h6 class="fw-bold mb-0 text-truncate" style="max-width: 150px;">@displayName</h6>
             <p class="text-muted small mb-0">Thành viên MotoShop</p>
         </div>
     </div>
