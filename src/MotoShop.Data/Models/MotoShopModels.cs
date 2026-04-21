@@ -257,6 +257,39 @@ namespace MotoShop.Data.Models
         public bool IsActive { get; set; } = true;
 
         public virtual ICollection<ServiceBooking> Bookings { get; set; } = new List<ServiceBooking>();
+        public virtual ICollection<ServiceComboItem> ComboItems { get; set; } = new List<ServiceComboItem>();
+    }
+
+    public class ServiceCombo
+    {
+        [Key]
+        public int ComboId { get; set; }
+        [Required, StringLength(200)]
+        public string ComboName { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal TotalPrice { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal DiscountPrice { get; set; } // Giá sau khi giảm
+        public string? Description { get; set; }
+        [StringLength(500)]
+        public string? ImageUrl { get; set; }
+        public bool IsActive { get; set; } = true;
+
+        public virtual ICollection<ServiceComboItem> ComboItems { get; set; } = new List<ServiceComboItem>();
+        public virtual ICollection<ServiceBooking> Bookings { get; set; } = new List<ServiceBooking>();
+    }
+
+    public class ServiceComboItem
+    {
+        [Key]
+        public int Id { get; set; }
+        public int ComboId { get; set; }
+        public int ServiceId { get; set; }
+
+        [ForeignKey("ComboId")]
+        public virtual ServiceCombo? Combo { get; set; }
+        [ForeignKey("ServiceId")]
+        public virtual Service? Service { get; set; }
     }
 
     public class ServiceBooking
@@ -269,6 +302,7 @@ namespace MotoShop.Data.Models
 
         public int? CustomerId { get; set; }
         public int? ServiceId { get; set; }
+        public int? ComboId { get; set; }
         public int? CreatedByStaffId { get; set; }
         public int? AssignedStaffId { get; set; }
         public DateTime BookingDate { get; set; } = DateTime.Now;
@@ -307,6 +341,8 @@ namespace MotoShop.Data.Models
         public virtual Customer? Customer { get; set; }
         [ForeignKey("ServiceId")]
         public virtual Service? Service { get; set; }
+        [ForeignKey("ComboId")]
+        public virtual ServiceCombo? Combo { get; set; }
         [ForeignKey("CreatedByStaffId")]
         public virtual Staff? CreatedByStaff { get; set; }
         [ForeignKey("AssignedStaffId")]

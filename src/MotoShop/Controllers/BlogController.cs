@@ -15,6 +15,35 @@ namespace MotoShop.Controllers
             _context = context;
         }
 
+        public async Task<IActionResult> Index(int? categoryId, int page = 1)
+        {
+            int pageSize = 6;
+            var query = _context.Blogs
+                .Include(b => b.Category)
+                .Where(b => b.IsPublished)
+                .OrderByDescending(b => b.CreatedDate)
+                .AsQueryable();
+
+            if (categoryId.HasValue)
+            {
+                query = query.Where(b => b.CategoryId == categoryId);
+            }
+
+            var totalItems = await query.CountAsync();
+            var blogs = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.Categories = await _context.BlogCategories.ToListAsync();
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)System.Math.Ceiling(totalItems / (double)pageSize);
+            ViewBag.CurrentCategory = categoryId;
+
+            return View(blogs);
+            _context = context;
+        }
+
         public async Task<IActionResult> Index(string? searchTerm, int? categoryId)
         {
             var query = _context.Blogs.Include(b => b.Category)
@@ -54,6 +83,23 @@ namespace MotoShop.Controllers
 
         public async Task<IActionResult> Detail(string slug)
         {
+            if (string.IsNullOrEmpty(slug)) return NotFound();
+
+            var blog = await _context.Blogs
+                .Include(b => b.Category)
+                .FirstOrDefaultAsync(b => b.Slug == slug);
+
+            if (blog == null) return NotFound();
+
+            // Lấy bài viết liên quan
+            ViewBag.RelatedBlogs = await _context.Blogs
+                .Where(b => b.CategoryId == blog.CategoryId && b.Id != blog.Id && b.IsPublished)
+                .Take(3)
+                .ToListAsync();
+
+            ViewBag.Categories = await _context.BlogCategories.ToListAsync();
+
+            return View(blog);
             if (string.IsNullOrEmpty(slug)) return NotFound();
 
             var blog = await _context.Blogs

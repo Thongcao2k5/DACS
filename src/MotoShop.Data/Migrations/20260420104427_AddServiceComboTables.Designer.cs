@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MotoShop.Data.Data;
 
@@ -11,9 +12,11 @@ using MotoShop.Data.Data;
 namespace MotoShop.Data.Migrations
 {
     [DbContext(typeof(MotoShopDbContext))]
-    partial class MotoShopDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260420104427_AddServiceComboTables")]
+    partial class AddServiceComboTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -295,11 +298,8 @@ namespace MotoShop.Data.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Slug")
                         .IsRequired()

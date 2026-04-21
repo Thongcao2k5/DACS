@@ -122,6 +122,11 @@ namespace MotoShop.Controllers
             
             if (result.Success)
             {
+                if (model.PaymentMethod == "VNPay")
+                {
+                    var paymentUrl = Url.Action("CreatePaymentUrl", "Payment", new { orderId = result.OrderId });
+                    return Json(new { success = true, redirectUrl = paymentUrl });
+                }
                 return Json(new { success = true, message = result.Message, orderId = result.OrderId });
             }
 

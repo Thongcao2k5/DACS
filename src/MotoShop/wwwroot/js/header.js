@@ -19,6 +19,43 @@ const UI = {
             document.body.style.overflow = 'hidden';
             setTimeout(() => { if(input) input.focus(); }, 100);
         }
+    },
+
+    // 2. Toast Notification
+    showToast: function(message, type = 'success') {
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'custom-toast';
+        
+        const icon = type === 'success' ? 'bx-check-circle' : 'bx-error-circle';
+        const title = type === 'success' ? 'Thành công' : 'Thông báo';
+
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <i class='bx ${icon}'></i>
+            </div>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <div class="toast-close" onclick="this.parentElement.remove()">
+                <i class='bx bx-x'></i>
+            </div>
+        `;
+
+        container.appendChild(toast);
+
+        // Tự động xóa sau 3.5s
+        setTimeout(() => {
+            toast.classList.add('hide');
+            setTimeout(() => toast.remove(), 400);
+        }, 3500);
     }
 };
 

@@ -1,0 +1,106 @@
+@model IEnumerable<MotoShop.Data.Models.Order>
+@{
+    ViewData["Title"] = "Don hang cua toi";
+    var currentStatus = ViewBag.CurrentStatus as string ?? "All";
+}
+
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/">Trang chu</a></li>
+                <li class="breadcrumb-item"><a href="/Account/Profile">Tai khoan</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Don hang cua toi</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<main class="container py-5">
+    <div class="row g-4">
+        <aside class="col-lg-3">
+            <partial name="_AccountSidebar" />
+        </aside>
+
+        <div class="col-lg-9">
+            <h4 class="fw-bold mb-4 text-uppercase"><i class='bx bx-package me-2'></i>DON HANG CUA TOI</h4>
+
+            <div class="order-filter-tabs mb-4">
+                <a asp-action="Orders" asp-route-status="All" class="order-filter-link @(currentStatus == "All" ? "active" : "")">Tat ca</a>
+                <a asp-action="Orders" asp-route-status="Pending" class="order-filter-link @(currentStatus == "Pending" ? "active" : "")">Cho xu ly</a>
+                <a asp-action="Orders" asp-route-status="Processing" class="order-filter-link @(currentStatus == "Processing" ? "active" : "")">Dang xu ly</a>
+                <a asp-action="Orders" asp-route-status="Shipping" class="order-filter-link @(currentStatus == "Shipping" ? "active" : "")">Dang giao</a>
+                <a asp-action="Orders" asp-route-status="Completed" class="order-filter-link @(currentStatus == "Completed" ? "active" : "")">Da nhan</a>
+                <a asp-action="Orders" asp-route-status="Cancelled" class="order-filter-link @(currentStatus == "Cancelled" ? "active" : "")">Da huy</a>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div id="emptyOrders" class="text-center py-5 shadow-sm rounded-4 bg-white border animate__animated animate__fadeIn">
+                    <div class="py-4">
+                        <i class='bx bx-package text-muted' style="font-size: 5rem;"></i>
+                        <h5 class="fw-bold mt-3">Ban chua co don hang nao</h5>
+                        <p class="text-muted mb-4">Moi don hang ban mua se xuat hien tai day.</p>
+                        <a href="/Product" class="btn btn-danger rounded-pill px-5 fw-bold shadow-sm">MUA SAM NGAY</a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div id="ordersList">
+                    @foreach (var order in Model)
+                    {
+                        <div class="order-item-card shadow-sm border-0 mb-3 animate__animated animate__fadeInUp">
+                            <div class="order-card-header bg-light border-0 d-flex justify-content-between align-items-center p-3 rounded-top-4">
+                                <div>
+                                    <span class="fw-bold me-2">Ma don: #@order.OrderCode</span>
+                                    <span class="text-muted small">| @order.OrderDate.ToString("dd/MM/yyyy")</span>
+                                </div>
+                                @{
+                                    var badgeClass = order.Status switch {
+                                        "Pending" => "bg-warning",
+                                        "Processing" => "bg-info",
+                                        "Shipping" => "bg-primary",
+                                        "Completed" => "bg-success",
+                                        "Cancelled" => "bg-secondary",
+                                        _ => "bg-dark"
+                                    };
+                                }
+                                <span class="badge @badgeClass rounded-pill px-3 py-2 text-uppercase">
+                                    <i class='bx @(order.Status == "Shipping" ? "bx-truck" : "bx-info-circle") me-1'></i> @order.Status
+                                </span>
+                            </div>
+                            <div class="order-card-body p-4 bg-white rounded-bottom-4">
+                                @if (order.OrderItems.Any())
+                                {
+                                    var firstItem = order.OrderItems.First();
+                                    <div class="order-product-preview d-flex align-items-center">
+                                        <img src="@(string.IsNullOrEmpty(firstItem.ProductVariant?.ImageUrl) ? "/assets/img/elements/no-image.png" : firstItem.ProductVariant.ImageUrl)" class="rounded border" alt="Product" style="width: 80px; height: 80px; object-fit: cover;">
+                                        <div class="ms-3">
+                                            <h6 class="fw-bold mb-1">@firstItem.ProductVariant?.Product?.ProductName</h6>
+                                            <p class="text-muted small mb-0">So luong: @firstItem.Quantity | Phan loai: @firstItem.ProductVariant?.VariantName</p>
+                                            @if (order.OrderItems.Count > 1)
+                                            {
+                                                <p class="text-danger x-small mb-0 mt-1">... va @(order.OrderItems.Count - 1) san pham khac</p>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+
+                                <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                                    <div>
+                                        <span class="text-muted small">Tong thanh toan:</span>
+                                        <h5 class="fw-bold text-danger mb-0">@order.TotalAmount.ToString("N0")d</h5>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <a asp-controller="Order" asp-action="Detail" asp-route-id="@(order.OrderCode ?? order.OrderId.ToString())" class="btn btn-danger rounded-pill px-4 btn-sm fw-bold shadow-sm">Xem chi tiet</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</main>

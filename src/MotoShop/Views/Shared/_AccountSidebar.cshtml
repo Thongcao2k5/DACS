@@ -1,0 +1,63 @@
+@inject Microsoft.AspNetCore.Identity.SignInManager<Microsoft.AspNetCore.Identity.IdentityUser> SignInManager
+@inject Microsoft.AspNetCore.Identity.UserManager<Microsoft.AspNetCore.Identity.IdentityUser> UserManager
+
+@{
+    var currentPath = Context.Request.Path.ToString();
+    var user = await UserManager.GetUserAsync(User);
+    var email = user?.Email ?? "Khách hàng";
+}
+
+<div class="account-sidebar">
+    <div class="d-flex align-items-center gap-3 mb-4 pb-4 border-bottom">
+        <div style="width: 50px; height: 50px;">
+            <img src="https://ui-avatars.com/api/?name=@email&background=random" class="rounded-circle w-100 h-100 object-fit-cover" alt="User">
+        </div>
+        <div>
+            <h6 class="fw-bold mb-0 text-truncate" style="max-width: 150px;">@email</h6>
+            <p class="text-muted small mb-0">Thành viên MotoShop</p>
+        </div>
+    </div>
+    <ul class="account-nav">
+        <li class="account-nav-item">
+            <a href="/Account/Profile" class="account-nav-link @(currentPath.Contains("/Account/Profile") ? "active" : "")">
+                <i class='bx bx-user'></i> Thông tin cá nhân
+            </a>
+        </li>
+        <li class="account-nav-item">
+            <a href="/Account/Orders" class="account-nav-link @(currentPath.Contains("/Account/Orders") ? "active" : "")">
+                <i class='bx bx-package'></i> Đơn hàng của tôi
+            </a>
+        </li>
+        <li class="account-nav-item">
+            <a href="/Account/AddressBook" class="account-nav-link @(currentPath.Contains("/Account/AddressBook") ? "active" : "")">
+                <i class='bx bx-map'></i> Địa chỉ giao hàng
+            </a>
+        </li>
+        <li class="account-nav-item">
+            <a href="/Product/Wishlist" class="account-nav-link @(currentPath.Contains("/Product/Wishlist") ? "active" : "")">
+                <i class='bx bx-heart'></i> Sản phẩm yêu thích
+            </a>
+        </li>
+        <li class="account-nav-item">
+            <a href="/Account/ChangePassword" class="account-nav-link @(currentPath.Contains("/Account/ChangePassword") ? "active" : "")">
+                <i class='bx bx-lock-alt'></i> Đổi mật khẩu
+            </a>
+        </li>
+        <li class="account-nav-item mt-3 pt-3 border-top">
+            <form asp-controller="Account" asp-action="Logout" method="post" id="logoutFormSidebar" class="d-none">
+                @Html.AntiForgeryToken()
+            </form>
+            <a href="javascript:void(0)" class="account-nav-link text-danger" onclick="confirmLogoutSidebar()">
+                <i class='bx bx-log-out'></i> Đăng xuất
+            </a>
+        </li>
+    </ul>
+</div>
+
+<script>
+    function confirmLogoutSidebar() {
+        if(confirm('Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?')) {
+            document.getElementById('logoutFormSidebar').submit();
+        }
+    }
+</script>

@@ -1,6 +1,39 @@
 @using Microsoft.AspNetCore.Identity
+@using MotoShop.Data.Interfaces
+@using MotoShop.Data.Models
+@using Microsoft.EntityFrameworkCore
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
+@inject IUnitOfWork UnitOfWork
+
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+
+    string? userDisplayName = null;
+    if (SignInManager.IsSignedIn(User))
+    {
+        var user = await UserManager.GetUserAsync(User);
+        if (user != null)
+        {
+            var customer = await UnitOfWork.Repository<Customer>().Find(c => c.UserId == user.Id).FirstOrDefaultAsync();
+            userDisplayName = customer?.FullName;
+
+            // Nếu chưa có FullName thì mới dùng UserName (Email)
+            if (string.IsNullOrEmpty(userDisplayName))
+            {
+                userDisplayName = user.UserName;
+            }
+
+            // Nếu tên quá dài (ví dụ có họ và tên), lấy từ cuối cùng cho gọn
+            if (!string.IsNullOrEmpty(userDisplayName) && userDisplayName.Contains(" "))
+            {
+                var names = userDisplayName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                userDisplayName = names[^1];
+            }
+        }
+    }
+}
 
 <div class="top-header">
     <div class="container d-flex justify-content-between align-items-center">
@@ -8,7 +41,7 @@
             <span class="me-3"><i class='bx bx-phone'></i> 028 123 4567</span>
             <span><i class='bx bx-envelope'></i> support@motoshop.vn</span>
         </div>
-        <div class="fw-bold text-danger d-none d-md-block">🔥 Miễn phí vận chuyển cho đơn hàng từ 500k</div>
+        <div class="fw-bold text-danger d-none d-md-block">Miễn phí vận chuyển cho đơn hàng từ 500k</div>
     </div>
 </div>
 
@@ -20,7 +53,7 @@
                 <span class="fs-3 fw-bolder text-dark ms-2">MOTO<span class="text-danger">SHOP</span></span>
             </a>
         </div>
-        
+
         <div class="header-search">
             <form class="input-group" asp-area="" asp-controller="Product" asp-action="Index" method="get">
                 <input type="text" name="searchTerm" class="form-control search-input" placeholder="Tìm tên phụ tùng, thương hiệu..." value="@Context.Request.Query["searchTerm"]">
@@ -29,258 +62,126 @@
         </div>
 
         <div class="header-actions">
-            <div class="action-item shrink-search-toggle" onclick="UI.toggleSearch()">
-                <i class='bx bx-search'></i>
-            </div>
-            
             <div class="action-item">
-                <a asp-area="" asp-controller="Account" asp-action="Profile" class="text-dark d-flex align-items-center">
-                    <i class='bx bx-user'></i>
+                <a asp-area="" asp-controller="Account" asp-action="Profile" class="text-dark d-flex align-items-center text-decoration-none user-action-link">
+                    <i class='bx bx-user fs-4'></i>
+                    @if (userDisplayName != null)
+                    {
+                        <span class="ms-1 fw-semibold user-name-text d-none d-md-inline">@userDisplayName</span>
+                    }
                 </a>
                 <div class="dropdown-menu-custom shadow-lg">
-                    <div class="dropdown-header-custom">
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="avatar-circle me-2 bg-light-primary text-primary">
-                                <i class='bx bxs-user-circle fs-3'></i>
-                            </div>
-                            <div>
-                                @if (SignInManager.IsSignedIn(User))
-                                {
-                                    <div class="fw-bold text-dark small text-truncate" style="max-width: 150px;">@User.Identity?.Name</div>
-                                    <div class="text-muted" style="font-size: 0.7rem;">Thành viên</div>
-                                }
-                                else
-                                {
-                                    <div class="fw-bold text-dark small">Khách hàng</div>
-                                    <div class="text-muted" style="font-size: 0.7rem;">Chào mừng bạn!</div>
-                                }
-                            </div>
-                        </div>
-                    </div>
                     <ul class="list-unstyled mb-0">
                         @if (SignInManager.IsSignedIn(User))
                         {
-                            @if (User.IsInRole("Admin"))
-                            {
-                                <li>
-                                    <a asp-area="Admin" asp-controller="Home" asp-action="Index" class="dropdown-item-custom text-primary fw-bold">
-                                        <i class='bx bx-shield-quarter me-2'></i> <span>TRANG QUẢN TRỊ</span>
-                                    </a>
-                                </li>
-                            }
+                            <li><a asp-controller="Account" asp-action="Profile" class="dropdown-item-custom"><i class='bx bx-user me-2'></i> Hồ sơ</a></li>
+                            <li><a asp-controller="Account" asp-action="Orders" class="dropdown-item-custom"><i class='bx bx-package me-2'></i> Đơn hàng</a></li>
                             <li>
-                                <a asp-area="" asp-controller="Account" asp-action="Profile" class="dropdown-item-custom">
-                                    <i class='bx bx-user me-2'></i> <span>Hồ sơ cá nhân</span>
-                                </a>
-                            </li>
-                            <li>
-                                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" id="logoutForm">
-                                    <button type="submit" class="dropdown-item-custom border-0 bg-transparent w-100 text-start">
-                                        <i class='bx bx-log-out-circle me-2'></i> <span>Đăng xuất</span>
-                                    </button>
+                                <form asp-controller="Account" asp-action="Logout" method="post">
+                                    <button type="submit" class="dropdown-item-custom border-0 bg-transparent w-100 text-start text-danger"><i class='bx bx-log-out me-2'></i> Đăng xuất</button>
                                 </form>
                             </li>
                         }
                         else
                         {
-                            <li>
-                                <a asp-area="" asp-controller="Account" asp-action="Login" class="dropdown-item-custom">
-                                    <i class='bx bx-log-in-circle me-2'></i> <span>Đăng nhập</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a asp-area="" asp-controller="Account" asp-action="Register" class="dropdown-item-custom">
-                                    <i class='bx bx-user-plus me-2'></i> <span>Đăng ký thành viên</span>
-                                </a>
-                            </li>
+                            <li><a asp-controller="Account" asp-action="Login" class="dropdown-item-custom"><i class='bx bx-log-in me-2'></i> Đăng nhập</a></li>
+                            <li><a asp-controller="Account" asp-action="Register" class="dropdown-item-custom"><i class='bx bx-user-plus me-2'></i> Đăng ký</a></li>
                         }
-                        <li><hr class="dropdown-divider my-2"></li>
-                        <li>
-                            <a asp-area="" asp-controller="Order" asp-action="Index" class="dropdown-item-custom">
-                                <i class='bx bx-package me-2'></i> <span>Đơn hàng của tôi</span>
-                            </a>
-                        </li>
                     </ul>
                 </div>
             </div>
 
-            <div class="action-item cart-action-item" id="cartActionItem">
-                <a asp-area="" asp-controller="Cart" asp-action="Index" class="text-dark position-relative d-inline-block">
-                    <i class='bx bx-cart'></i>
+            <div class="action-item cart-action-item">
+                <a asp-controller="Cart" asp-action="Index" class="text-dark position-relative">
+                    <i class='bx bx-cart fs-4'></i>
                     <span class="badge rounded-pill bg-danger cart-badge-floating" id="cartBadge">0</span>
                 </a>
-                <div class="cart-success-toast" id="cartSuccessToast" role="status" aria-live="polite" aria-atomic="true">
-                    <i class='bx bxs-check-circle'></i>
-                    <span id="cartSuccessToastMessage">Đã thêm vào giỏ hàng thành công</span>
-                </div>
             </div>
         </div>
     </header>
 </div>
 
-<script>
-    let cartSuccessToastTimer;
-
-    async function updateCartBadge() {
-        try {
-            const response = await fetch('/Cart/GetCartCount');
-            const count = await response.json();
-            const badge = document.getElementById('cartBadge');
-            if (badge) {
-                badge.innerText = count;
-                badge.style.display = count > 0 ? 'block' : 'none';
-            }
-        } catch (error) {
-            console.error('Error updating cart badge:', error);
-        }
-    }
-
-    function showCartSuccessToast(message) {
-        const toast = document.getElementById('cartSuccessToast');
-        const toastMessage = document.getElementById('cartSuccessToastMessage');
-        const cartActionItem = document.getElementById('cartActionItem');
-
-        if (!toast || !toastMessage || !cartActionItem) {
-            return;
-        }
-
-        toastMessage.innerText = message || 'Đã thêm vào giỏ hàng thành công';
-        toast.classList.add('show');
-        cartActionItem.classList.add('cart-highlight');
-
-        window.clearTimeout(cartSuccessToastTimer);
-        cartSuccessToastTimer = window.setTimeout(() => {
-            toast.classList.remove('show');
-            cartActionItem.classList.remove('cart-highlight');
-        }, 2200);
-    }
-
-    document.addEventListener('DOMContentLoaded', updateCartBadge);
-</script>
-
-@{
-    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
-    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
-    var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
-}
-
-<nav class="nav-header d-none d-lg-block">
-    <div class="container">
+<nav class="nav-header d-none d-lg-block sticky-top shadow-sm">
+    <div class="container position-relative">
         <ul class="nav-list">
-            <li><a asp-area="" asp-controller="Home" asp-action="Index" class="nav-link-main @(currentController == "Home" ? "active" : "")">TRANG CHỦ</a></li>
-            <li><a asp-area="" asp-controller="Product" asp-action="Index" class="nav-link-main @(currentController == "Product" && currentAction == "Index" ? "active" : "")">DANH MỤC</a></li>
-            <li><a asp-area="" asp-controller="Service" asp-action="Index" class="nav-link-main @(currentController == "Service" ? "active" : "")">DỊCH VỤ</a></li>
-            <li><a asp-area="" asp-controller="Product" asp-action="Promotion" class="nav-link-main @(currentController == "Product" && currentAction == "Promotion" ? "active" : "")">KHUYẾN MÃI HOT</a></li>
-            <li><a asp-area="" asp-controller="Blog" asp-action="Index" class="nav-link-main @(currentController == "Blog" ? "active" : "")">TIN TỨC</a></li>
-            <li><a asp-area="" asp-controller="Info" asp-action="Contact" class="nav-link-main @(currentController == "Info" ? "active" : "")">LIÊN HỆ</a></li>
+            <li><a asp-controller="Home" asp-action="Index" class="nav-link-main @(currentController == "Home" ? "active" : "")">TRANG CHỦ</a></li>
+            <li class="mega-menu-wrapper position-static">
+                <a href="/Product" class="nav-link-main">DANH MỤC <i class='bx bx-chevron-down ms-1'></i></a>
+                @await Component.InvokeAsync("CategoryMenu")
+            </li>
+            <li><a asp-controller="Service" asp-action="Index" class="nav-link-main">DỊCH VỤ</a></li>
+            <li><a asp-controller="Product" asp-action="Promotion" class="nav-link-main">KHUYẾN MÃI</a></li>
+            <li><a asp-controller="Blog" asp-action="Index" class="nav-link-main @(currentController == "Blog" ? "active" : "")">TIN TỨC</a></li>
+            <li><a asp-controller="Info" asp-action="Contact" class="nav-link-main">LIÊN HỆ</a></li>
         </ul>
     </div>
 </nav>
 
 <style>
-    .cart-badge-floating {
-        position: absolute;
-        top: -5px;
-        right: -10px;
-        font-size: 0.65rem;
-        padding: 0.25em 0.5em;
-        border: 2px solid white;
+    /* CSS cho Header và Mega Menu */
+    .nav-header { background: #fff; border-bottom: 1px solid #eee; z-index: 1000; }
+    .nav-list { display: flex; justify-content: center; list-style: none; margin: 0; padding: 0; }
+    .nav-link-main { 
+        color: #333; font-weight: 700; padding: 15px 25px; display: block; 
+        text-decoration: none; transition: 0.3s; font-size: 0.9rem;
+        text-transform: uppercase;
     }
-    .cart-action-item {
-        position: relative;
-    }
-    .cart-success-toast {
-        position: absolute;
-        top: calc(100% + 12px);
-        right: -14px;
-        min-width: 240px;
-        max-width: 280px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 14px;
-        background: #198754;
-        color: #fff;
-        border-radius: 14px;
-        box-shadow: 0 16px 32px rgba(25, 135, 84, 0.25);
-        font-size: 0.85rem;
-        font-weight: 600;
-        line-height: 1.4;
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(-8px) scale(0.96);
-        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
-        z-index: 1200;
-        pointer-events: none;
-    }
-    .cart-success-toast::before {
-        content: "";
-        position: absolute;
-        top: -6px;
-        right: 24px;
-        width: 12px;
-        height: 12px;
-        background: #198754;
-        transform: rotate(45deg);
-        border-radius: 2px;
-    }
-    .cart-success-toast.show {
-        opacity: 1;
-        visibility: visible;
-        transform: translateY(0) scale(1);
-    }
-    .cart-success-toast i {
-        font-size: 1.15rem;
-        flex-shrink: 0;
-    }
-    .cart-highlight > a {
-        color: #198754 !important;
-    }
-    .main-header { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; }
-    .header-actions { display: flex; align-items: center; gap: 15px; }
-    .action-item { position: relative; cursor: pointer; }
-    .dropdown-menu-custom { 
-        position: absolute; top: 100%; right: 0; min-width: 220px; 
-        background: white; border-radius: 8px; display: none; z-index: 1000;
+    .nav-link-main:hover, .nav-link-main.active { color: #dc3545; }
+
+    .main-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+    .header-search { flex: 0 0 45%; }
+    .search-input { border-radius: 50px 0 0 50px; border: 2px solid #eee; padding-left: 20px; height: 45px; }
+    .search-btn { border-radius: 0 50px 50px 0; background: #333; color: #fff; padding: 0 25px; height: 45px; }
+    
+    .header-actions { display: flex; gap: 20px; }
+    .action-item { position: relative; }
+    .dropdown-menu-custom {
+        position: absolute; top: 100%; right: 0; min-width: 180px;
+        background: #fff; border-radius: 8px; display: none; z-index: 1060;
+        padding: 10px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: 1px solid #f0f0f0;
     }
     .action-item:hover .dropdown-menu-custom { display: block; }
-    .dropdown-item-custom { 
-        display: flex; align-items: center; padding: 10px 15px; 
-        color: #333; text-decoration: none; transition: 0.2s; 
+    .dropdown-item-custom {
+        display: flex; align-items: center; padding: 10px 20px; color: #333;
+        text-decoration: none; font-size: 0.85rem; transition: 0.2s;
     }
     .dropdown-item-custom:hover { background: #f8f9fa; color: #dc3545; }
-    .nav-link-main {
-        color: #333;
-        font-weight: 600;
-        font-size: 1.1rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        transition: 0.2s ease-in-out;
-        text-decoration: none;
-        padding: 10px 15px;
-        display: inline-block;
+
+    .cart-badge-floating {
+        position: absolute; top: -8px; right: -12px; font-size: 0.7rem;
+        padding: 3px 6px;
     }
-    .nav-link-main:hover, .nav-link-main.active {
-        color: #dc3545 !important;
-        background: transparent;
+
+    .user-name-text {
+        font-size: 0.75rem;
+        color: #555;
+        max-width: 80px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1;
     }
-    .nav-list {
-        display: flex;
-        justify-content: center;
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        gap: 10px;
-    }
-    .nav-header {
-        border-bottom: 1px solid #eee;
-        background: #fff;
-    }
-    @@media (max-width: 991.98px) {
-        .cart-success-toast {
-            right: -8px;
-            min-width: 220px;
-            max-width: min(260px, 75vw);
-        }
+
+    .user-action-link:hover .user-name-text {
+        color: #dc3545;
     }
 </style>
+
+<script>
+    // Xử lý lỗi ảnh toàn cục
+    document.addEventListener('error', function (e) {
+        if (e.target.tagName.toLowerCase() === 'img') {
+            e.target.src = 'https://placehold.co/600x400/f8f9fa/dc3545?text=MotoShop+Part';
+        }
+    }, true);
+
+    async function updateCartBadge() {
+        try {
+            const res = await fetch('/Cart/GetCartCount');
+            const count = await res.json();
+            document.getElementById('cartBadge').innerText = count;
+        } catch (e) {}
+    }
+    document.addEventListener('DOMContentLoaded', updateCartBadge);
+</script>

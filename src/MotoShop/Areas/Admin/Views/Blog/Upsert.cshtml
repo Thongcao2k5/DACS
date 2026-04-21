@@ -1,0 +1,184 @@
+@model MotoShop.Data.Models.Blog
+@{
+    ViewData["Title"] = (Model.Id == 0 ? "Thêm bài viết mới" : "Chỉnh sửa bài viết");
+    Layout = "_AdminLayout";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center py-3 mb-4">
+        <h4 class="fw-bold mb-0">
+            <span class="text-muted fw-light">Tin tức /</span> @ViewData["Title"]
+        </h4>
+        <a asp-action="Index" class="btn btn-outline-secondary fw-bold">
+            <i class='bx bx-arrow-back me-1'></i> QUAY LẠI
+        </a>
+    </div>
+
+    <form asp-action="Upsert" method="post" enctype="multipart/form-data" id="blogForm">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="Thumbnail" />
+        <input type="hidden" asp-for="CreatedDate" />
+
+        <div class="row">
+            <!-- Left Side: Content -->
+            <div class="col-lg-8">
+                <div class="card mb-4 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-uppercase small">Tiêu đề bài viết</label>
+                            <input type="text" asp-for="Title" id="blogTitle" class="form-control form-control-lg border-2" 
+                                   placeholder="Nhập tiêu đề hấp dẫn tại đây..." required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-uppercase small">Đường dẫn tĩnh (URL Slug)</label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text bg-light">/blog/detail/</span>
+                                <input type="text" asp-for="Slug" id="blogSlug" class="form-control bg-light" placeholder="tieu-de-bai-viet" readonly>
+                                <button class="btn btn-outline-primary" type="button" id="editSlug"><i class='bx bx-edit'></i></button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-uppercase small">Nội dung chi tiết</label>
+                            <div id="editor-container">
+                                <textarea asp-for="Content" id="editor"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Sidebar -->
+            <div class="col-lg-4">
+                <div class="card mb-4 shadow-sm border-0">
+                    <div class="card-header border-bottom bg-light">
+                        <h5 class="card-title mb-0 fw-bold">CÀI ĐẶT CHUNG</h5>
+                    </div>
+                    <div class="card-body mt-3">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small">DANH MỤC TIN TỨC</label>
+                            <select asp-for="CategoryId" class="form-select border-2" required>
+                                <option value="">-- Chọn danh mục --</option>
+                                @foreach (var cat in ViewBag.Categories as IEnumerable<MotoShop.Data.Models.BlogCategory>)
+                                {
+                                    <option value="@cat.Id">@cat.Name</option>
+                                }
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small">TRẠNG THÁI HIỂN THỊ</label>
+                            <div class="d-flex align-items-center p-3 border rounded-3 bg-light">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" asp-for="IsPublished" style="width: 2.5em; height: 1.25em;">
+                                    <label class="form-check-label ms-2 fw-bold" asp-for="IsPublished">Công khai bài viết</label>
+                                </div>
+                            </div>
+                            <div class="form-text mt-2"><i class='bx bx-info-circle me-1'></i>Bài viết sẽ xuất hiện trên trang chủ khi bật.</div>
+                        </div>
+
+                        <div class="mb-0 pt-3 border-top">
+                            <label class="form-label fw-bold small">ẢNH ĐẠI DIỆN (THUMBNAIL)</label>
+                            <div class="mt-2">
+                                <div class="upload-preview-container position-relative mb-3">
+                                    <img id="imgPreview" src="@(string.IsNullOrEmpty(Model.Thumbnail) ? "/assets/img/elements/placeholder-image.png" : Model.Thumbnail)" 
+                                         class="img-fluid rounded-3 shadow-sm border" style="width: 100%; height: 200px; object-fit: cover;">
+                                    <div class="upload-overlay">
+                                        <i class='bx bx-cloud-upload fs-1 text-white'></i>
+                                    </div>
+                                </div>
+                                <input type="file" name="thumbFile" id="fileUpload" class="form-control" accept="image/*">
+                                <p class="text-muted small mt-2">Kích thước gợi ý: 800x500px. Định dạng JPG, PNG.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer border-top p-4">
+                        <button type="submit" class="btn btn-danger w-100 fw-bold py-3 shadow-sm mb-3">
+                            <i class='bx bx-paper-plane me-2'></i> LƯU & ĐĂNG BÀI
+                        </button>
+                        <button type="button" class="btn btn-light w-100 fw-bold text-muted border" onclick="window.history.back()">
+                            QUAY LẠI
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .ck-editor__editable {
+        min-height: 500px;
+    }
+    .upload-preview-container {
+        cursor: pointer;
+        overflow: hidden;
+    }
+    .upload-overlay {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.4);
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0; transition: 0.3s;
+    }
+    .upload-preview-container:hover .upload-overlay {
+        opacity: 1;
+    }
+    .form-control-lg {
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
+    <script>
+        // Khởi tạo CKEditor với cấu hình cơ bản
+        ClassicEditor
+            .create(document.querySelector('#editor'), {
+                toolbar: [ 'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'insertTable', 'mediaEmbed', 'undo', 'redo' ],
+                placeholder: 'Bắt đầu viết nội dung bài viết của bạn tại đây...'
+            })
+            .catch(error => { console.error(error); });
+
+        // Tự động tạo Slug
+        const titleInput = document.getElementById('blogTitle');
+        const slugInput = document.getElementById('blogSlug');
+        const editSlugBtn = document.getElementById('editSlug');
+
+        titleInput.addEventListener('input', function() {
+            if (slugInput.hasAttribute('readonly')) {
+                generateSlug(this.value);
+            }
+        });
+
+        editSlugBtn.addEventListener('click', function() {
+            slugInput.readOnly = !slugInput.readOnly;
+            if(slugInput.readOnly) {
+                editSlugBtn.innerHTML = "<i class='bx bx-edit'></i>";
+                slugInput.classList.add('bg-light');
+            } else {
+                editSlugBtn.innerHTML = "<i class='bx bx-check'></i>";
+                slugInput.classList.remove('bg-light');
+                slugInput.focus();
+            }
+        });
+
+        function generateSlug(title) {
+            let slug = title.toLowerCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^\w\s-]/g, "")
+                .trim()
+                .replace(/\s+/g, "-")
+                .replace(/-+/g, "-");
+            slugInput.value = slug;
+        }
+
+        // Preview ảnh
+        document.getElementById('fileUpload').onchange = evt => {
+            const [file] = document.getElementById('fileUpload').files;
+            if (file) {
+                document.getElementById('imgPreview').src = URL.createObjectURL(file);
+            }
+        }
+    </script>
+}

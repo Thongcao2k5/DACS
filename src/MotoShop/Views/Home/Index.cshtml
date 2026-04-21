@@ -140,7 +140,7 @@
                                     <span class="current">@product.MinPrice.ToString("N0")đ</span>
                                 </div>
                             </div>
-                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3" onclick="addToCart(@product.DefaultVariantId)">
+                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3" onclick="handleAddToCart(@product.DefaultVariantId)">
                                 <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
                             </button>
                         </div>
@@ -181,7 +181,7 @@
                                     <span class="current">@product.MinPrice.ToString("N0")đ</span>
                                 </div>
                             </div>
-                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3" onclick="addToCart(@product.DefaultVariantId)">
+                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3" onclick="handleAddToCart(@product.DefaultVariantId)">
                                 <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
                             </button>
                         </div>
@@ -267,7 +267,7 @@
                                     <span class="current">@product.MinPrice.ToString("N0")đ</span>
                                 </div>
                             </div>
-                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3" onclick="addToCart(@product.DefaultVariantId)">
+                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3" onclick="handleAddToCart(@product.DefaultVariantId)">
                                 <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
                             </button>
                         </div>
@@ -383,64 +383,5 @@
 </section>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        async function addToCart(variantId) {
-            if (!variantId || variantId === 0) {
-                Swal.fire('Chú ý', 'Sản phẩm này hiện chưa có biến thể để đặt hàng. Vui lòng liên hệ shop!', 'warning');
-                return;
-            }
-
-            try {
-                const response = await fetch('/Cart/AddToCart', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `variantId=${variantId}&quantity=1`
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Hiển thị toast thông báo thành công (giống trang sản phẩm)
-                    if (typeof showCartSuccessToast === "function") {
-                        showCartSuccessToast(data.message);
-                    } else {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Tuyệt vời!',
-                            text: data.message,
-                            showConfirmButton: false,
-                            timer: 1500,
-                            toast: true,
-                            position: 'top-end'
-                        });
-                    }
-                    
-                    // Cập nhật số lượng giỏ hàng trên header
-                    if (typeof updateCartBadge === "function") {
-                        updateCartBadge(); 
-                    }
-                } else {
-                    if (data.message.toLowerCase().includes('đăng nhập')) {
-                         Swal.fire({
-                            title: 'Yêu cầu đăng nhập',
-                            text: data.message,
-                            icon: 'info',
-                            showCancelButton: true,
-                            confirmButtonText: 'Đăng nhập ngay',
-                            cancelButtonText: 'Để sau'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = '/Account/Login';
-                            }
-                        });
-                    } else {
-                        Swal.fire('Thông báo', data.message, 'info');
-                    }
-                }
-            } catch (error) {
-                Swal.fire('Lỗi', 'Không thể kết nối đến máy chủ để thêm vào giỏ hàng.', 'error');
-            }
-        }
-    </script>
+    <script src="~/js/cart-handler.js"></script>
 }

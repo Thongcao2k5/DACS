@@ -128,6 +128,11 @@ app.UseAuthorization();
 app.MapStaticAssets();
 
 app.MapControllerRoute(
+    name: "blog_detail",
+    pattern: "Blog/Detail/{slug}",
+    defaults: new { controller = "Blog", action = "Detail" });
+
+app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
