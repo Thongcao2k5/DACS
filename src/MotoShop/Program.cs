@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
 using MotoShop.Data.Interfaces;
@@ -6,9 +6,9 @@ using MotoShop.Data.Repositories;
 using MotoShop.Business.Mappings;
 using MotoShop.Business.Interfaces;
 using MotoShop.Business.Services;
+using MotoShop.Services;
 using Serilog;
 using Microsoft.AspNetCore.Identity.UI.Services;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,8 +48,10 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 // Register DbContext
 builder.Services.AddDbContext<MotoShopDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 // Register Email Sender
 builder.Services.AddTransient<IEmailSender, EmailSender>();
+
 // Đăng ký MemoryCache (cần thiết cho việc lưu OTP)
 builder.Services.AddMemoryCache();
 
@@ -77,6 +79,8 @@ builder.Services.AddScoped<IMotorbikeModelService, MotorbikeModelService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddHostedService<BookingExpiryService>();
 
 var app = builder.Build();
 

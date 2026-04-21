@@ -22,8 +22,33 @@ namespace MotoShop.Business.Services
 
         public async Task<bool> AddToCartAsync(string userId, int variantId, int quantity)
         {
-            var variant = await _unitOfWork.Repository<ProductVariant>().GetByIdAsync(variantId);
+            var variant = await _unitOfWork.Repository<ProductVariant>()
+                .Find(v => v.ProductVariantId == variantId)
+                .Include(v => v.Product)
+                .FirstOrDefaultAsync();
+
             if (variant == null || variant.StockQuantity < quantity) return false;
+
+            // TÍNH GIÁ KHUYẾN MÃI (NẾU CÓ)
+            decimal finalPrice = variant.Price;
+            var activePromotion = await _unitOfWork.Repository<PromotionProduct>()
+                .Find(pp => pp.ProductId == variant.ProductId && pp.Promotion.IsActive && pp.Promotion.StartDate <= DateTime.Now && pp.Promotion.EndDate >= DateTime.Now)
+                .Include(pp => pp.Promotion)
+                .Select(pp => pp.Promotion)
+                .FirstOrDefaultAsync();
+
+            if (activePromotion != null)
+            {
+                if (activePromotion.DiscountType == "Percentage")
+                {
+                    finalPrice = variant.Price * (1 - (activePromotion.DiscountPercentage / 100));
+                }
+                else if (activePromotion.DiscountType == "FixedAmount")
+                {
+                    finalPrice = variant.Price - activePromotion.DiscountAmount;
+                }
+                if (finalPrice < 0) finalPrice = 0;
+            }
 
             var cart = await _unitOfWork.Repository<MotoShop.Data.Models.Cart>()
                 .Find(c => c.UserId == userId)
@@ -44,6 +69,7 @@ namespace MotoShop.Business.Services
                 int newQty = cartItem.Quantity + quantity;
                 if (variant.StockQuantity < newQty) return false;
                 cartItem.Quantity = newQty;
+                cartItem.Price = finalPrice; // Cập nhật lại giá nếu có khuyến mãi mới
                 _unitOfWork.Repository<CartItem>().Update(cartItem);
             }
             else
@@ -53,7 +79,7 @@ namespace MotoShop.Business.Services
                     CartId = cart.CartId,
                     ProductVariantId = variantId,
                     Quantity = quantity,
-                    Price = variant.Price
+                    Price = finalPrice // Lưu giá khuyến mãi vào giỏ hàng
                 };
                 await _unitOfWork.Repository<CartItem>().AddAsync(cartItem);
             }
@@ -78,7 +104,8 @@ namespace MotoShop.Business.Services
                 ProductName = ci.ProductVariant.Product.ProductName,
                 VariantName = ci.ProductVariant.VariantName,
                 ImageUrl = ci.ProductVariant.ImageUrl ?? "",
-                Price = ci.Price,
+                Price = ci.Price, // Giá đã lưu trong giỏ hàng (có thể là giá khuyến mãi)
+                OriginalPrice = ci.ProductVariant.Price, // Giá niêm yết hiện tại của hệ thống
                 Quantity = ci.Quantity,
                 StockQuantity = ci.ProductVariant.StockQuantity
             }).ToList();
@@ -147,6 +174,7 @@ namespace MotoShop.Business.Services
 
         public async Task SyncCartAsync(string guestId, string userId)
         {
+            // 1. Lấy giỏ hàng khách
             var guestCart = await _unitOfWork.Repository<MotoShop.Data.Models.Cart>()
                 .Find(c => c.UserId == guestId)
                 .Include(c => c.CartItems)
@@ -154,6 +182,7 @@ namespace MotoShop.Business.Services
 
             if (guestCart == null || !guestCart.CartItems.Any()) return;
 
+            // 2. Lấy hoặc tạo giỏ hàng User
             var userCart = await _unitOfWork.Repository<MotoShop.Data.Models.Cart>()
                 .Find(c => c.UserId == userId)
                 .Include(c => c.CartItems)
@@ -163,25 +192,36 @@ namespace MotoShop.Business.Services
             {
                 userCart = new MotoShop.Data.Models.Cart { UserId = userId, CreatedDate = DateTime.Now };
                 await _unitOfWork.Repository<MotoShop.Data.Models.Cart>().AddAsync(userCart);
-                await _unitOfWork.CompleteAsync();
+                await _unitOfWork.CompleteAsync(); // Lưu để lấy CartId
             }
 
-            foreach (var guestItem in guestCart.CartItems.ToList())
+            // 3. Sao chép items từ giỏ hàng khách sang giỏ hàng user
+            foreach (var guestItem in guestCart.CartItems)
             {
                 var userItem = userCart.CartItems.FirstOrDefault(i => i.ProductVariantId == guestItem.ProductVariantId);
                 if (userItem != null)
                 {
+                    // Nếu user đã có sản phẩm này, cộng dồn số lượng
                     userItem.Quantity += guestItem.Quantity;
                     _unitOfWork.Repository<CartItem>().Update(userItem);
                 }
                 else
                 {
-                    guestItem.CartId = userCart.CartId;
-                    await _unitOfWork.Repository<CartItem>().AddAsync(guestItem);
+                    // Nếu chưa có, tạo bản ghi mới hoàn toàn để tránh xung đột tracking
+                    var newItem = new CartItem
+                    {
+                        CartId = userCart.CartId,
+                        ProductVariantId = guestItem.ProductVariantId,
+                        Quantity = guestItem.Quantity,
+                        Price = guestItem.Price
+                    };
+                    await _unitOfWork.Repository<CartItem>().AddAsync(newItem);
                 }
             }
 
+            // 4. Xóa giỏ hàng khách (Items sẽ tự động bị xóa theo Cascade Delete)
             _unitOfWork.Repository<MotoShop.Data.Models.Cart>().Delete(guestCart);
+            
             await _unitOfWork.CompleteAsync();
         }
 

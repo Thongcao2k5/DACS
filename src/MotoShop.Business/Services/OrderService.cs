@@ -85,6 +85,7 @@ namespace MotoShop.Business.Services
                 CustomerId = null, // Có thể gán từ bảng Customer dựa trên userId sau này
                 OrderDate = DateTime.Now,
                 TotalAmount = totalAmount,
+                DiscountAmount = discountAmount,
                 Status = "Pending", // Chờ xử lý
                 PaymentStatus = "Unpaid", // Chưa thanh toán
                 ShippingAddress = $"{checkoutData.FullName} | {checkoutData.Phone} | {checkoutData.Address}, {checkoutData.Ward}, {checkoutData.District}, {checkoutData.Province}",
@@ -170,15 +171,16 @@ namespace MotoShop.Business.Services
             };
         }
 
-        public async Task<bool> CancelOrderAsync(int orderId, string userId)
+        public async Task<bool> CancelOrderAsync(int orderId, string reason)
         {
             var order = await _unitOfWork.Repository<Order>().GetByIdAsync(orderId);
             if (order == null || order.Status != "Pending") return false;
 
             order.Status = "Cancelled";
+            order.Note = $"[Lý do hủy: {reason}] " + (order.Note ?? "");
             _unitOfWork.Repository<Order>().Update(order);
             
-            // Hoàn lại tồn kho
+            // Hoàn lại tồn kho cho các sản phẩm trong đơn hàng
             var items = await _unitOfWork.Repository<OrderItem>().Find(i => i.OrderId == orderId).ToListAsync();
             foreach(var item in items)
             {
@@ -187,6 +189,17 @@ namespace MotoShop.Business.Services
                 {
                     variant.StockQuantity += item.Quantity;
                     _unitOfWork.Repository<ProductVariant>().Update(variant);
+
+                    // Ghi nhận giao dịch hoàn kho
+                    var transaction = new InventoryTransaction
+                    {
+                        ProductVariantId = item.ProductVariantId,
+                        Quantity = item.Quantity,
+                        TransactionType = "Return",
+                        TransactionDate = DateTime.Now,
+                        Note = $"Hoàn kho từ Đơn hàng đã hủy #{order.OrderId}"
+                    };
+                    await _unitOfWork.Repository<InventoryTransaction>().AddAsync(transaction);
                 }
             }
 

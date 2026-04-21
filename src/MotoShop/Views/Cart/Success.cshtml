@@ -88,9 +88,39 @@
                     </ul>
                     <div class="mt-4 pt-4 border-top">
                         <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Tạm tính (Giá niêm yết)</span>
+                            @{
+                                // Tính tổng giá gốc của các sản phẩm (trước khi có bất kỳ khuyến mãi nào)
+                                decimal subtotalOriginal = Model.OrderItems?.Sum(i => (i.ProductVariant?.Price ?? i.Price) * i.Quantity) ?? 0;
+                                // Tính tổng khuyến mãi sản phẩm (Promotion)
+                                decimal promotionSavings = Model.OrderItems?.Sum(i => ((i.ProductVariant?.Price ?? i.Price) - i.Price) * i.Quantity) ?? 0;
+                            }
+                            <span class="fw-bold">@subtotalOriginal.ToString("N0")đ</span>
+                        </div>
+                        
+                        @if (promotionSavings > 0)
+                        {
+                            <div class="d-flex justify-content-between mb-2 text-danger">
+                                <span class="fw-bold"><i class='bx bxs-hot me-1'></i> Khuyến mãi sản phẩm</span>
+                                <span class="fw-bold">-@promotionSavings.ToString("N0")đ</span>
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Phí vận chuyển (@(Model.ShippingMethod?.Name ?? "Tiêu chuẩn"))</span>
                             <span class="fw-bold">@(Model.ShippingMethod?.Cost.ToString("N0") ?? "0")đ</span>
                         </div>
+                        
+                        @if (Model.DiscountAmount > 0)
+                        {
+                            <div class="d-flex justify-content-between mb-2 text-success">
+                                <span class="fw-bold">
+                                    <i class='bx bxs-coupon me-1'></i> Giảm giá Voucher @(Model.Coupon != null ? $"({Model.Coupon.Code})" : "")
+                                </span>
+                                <span class="fw-bold">-@Model.DiscountAmount.ToString("N0")đ</span>
+                            </div>
+                        }
+                        
                         <div class="d-flex justify-content-between mt-2 pt-2 border-top">
                             <span class="fw-bold fs-5">TỔNG CỘNG</span>
                             <span class="fw-bold fs-5 text-danger">@Model.TotalAmount.ToString("N0")đ</span>

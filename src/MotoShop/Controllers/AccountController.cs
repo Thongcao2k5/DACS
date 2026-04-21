@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using System;
+using MotoShop.Business.Interfaces;
+using System.Linq;
 
 namespace MotoShop.Controllers
 {
@@ -14,30 +16,35 @@ namespace MotoShop.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IMemoryCache _cache;
         private readonly IEmailSender _emailSender;
+        private readonly ICartService _cartService;
 
         public AccountController(
             SignInManager<IdentityUser> signInManager, 
             UserManager<IdentityUser> userManager,
             IMemoryCache cache,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            ICartService cartService)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _cache = cache;
             _emailSender = emailSender;
+            _cartService = cartService;
         }
 
         [HttpGet]
-        public IActionResult Login()
+        public IActionResult Login(string returnUrl = null)
         {
             if (_signInManager.IsSignedIn(User)) return RedirectToAction("Index", "Home");
+            ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
@@ -46,6 +53,19 @@ namespace MotoShop.Controllers
                     var result = await _signInManager.PasswordSignInAsync(user.UserName!, model.Password, model.RememberMe, lockoutOnFailure: false);
                     if (result.Succeeded)
                     {
+                        // Hợp nhất giỏ hàng ngay sau khi đăng nhập thành công
+                        if (Request.Cookies.ContainsKey("GuestId"))
+                        {
+                            var guestId = Request.Cookies["GuestId"];
+                            await _cartService.SyncCartAsync(guestId, user.Id);
+                            Response.Cookies.Delete("GuestId");
+                        }
+
+                        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                        {
+                            return Redirect(returnUrl);
+                        }
+
                         if (await _userManager.IsInRoleAsync(user, "Admin"))
                         {
                             return RedirectToAction("Index", "Home", new { area = "Admin" });
@@ -196,5 +216,3 @@ namespace MotoShop.Controllers
         }
     }
 }
-
-    

@@ -1,172 +1,394 @@
+@model MotoShop.Data.Models.Order
 @{
-    ViewData["Title"] = "Theo dõi đơn hàng";
+    ViewData["Title"] = "Chi tiết đơn hàng #" + Model.OrderId;
+    decimal subtotalOriginal = Model.OrderItems?.Sum(i => (i.ProductVariant?.Price ?? i.Price) * i.Quantity) ?? 0;
+    decimal promotionSavings = Model.OrderItems?.Sum(i => ((i.ProductVariant?.Price ?? i.Price) - i.Price) * i.Quantity) ?? 0;
+    
+    // Phân tách địa chỉ để đưa vào form sửa
+    var addressParts = Model.ShippingAddress.Split('|');
+    var currentName = addressParts.Length > 0 ? addressParts[0].Trim() : "";
+    var currentPhone = addressParts.Length > 1 ? addressParts[1].Trim() : "";
+    var currentAddress = addressParts.Length > 2 ? addressParts[2].Trim() : "";
 }
 
-<div class="breadcrumb-wrapper">
+<div class="breadcrumb-wrapper bg-light py-3 mb-4">
     <div class="container">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Theo dõi đơn hàng</li>
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none text-dark">Trang chủ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Chi tiết đơn hàng</li>
             </ol>
         </nav>
     </div>
 </div>
 
 <main class="container mb-5">
-    <div class="text-center mb-5">
-        <h2 class="fw-bold">THEO DÕI ĐƠN HÀNG</h2>
-        <p class="text-muted">Nhập mã đơn hàng và số điện thoại để kiểm tra trạng thái đơn hàng của bạn.</p>
-    </div>
-
     <div class="row justify-content-center">
         <div class="col-lg-10">
-            <!-- 3. ORDER LOOKUP FORM -->
-            <div class="tracking-lookup-box">
-                <form class="row g-3 align-items-end" onsubmit="event.preventDefault(); showOrderDetails();">
-                    <div class="col-md-5">
-                        <label class="form-label-custom">Mã đơn hàng *</label>
-                        <input type="text" class="form-control form-control-custom" placeholder="Ví dụ: MS-102345" required>
-                    </div>
-                    <div class="col-md-5">
-                        <label class="form-label-custom">Số điện thoại *</label>
-                        <input type="tel" class="form-control form-control-custom" placeholder="Nhập số điện thoại đặt hàng" required>
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold" style="height: 50px;">TRA CỨU</button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- 4 & 5 & 6. ORDER DETAILS (Hidden by default, shown after lookup) -->
-            <div id="orderDetailsSection" class="d-none animate__animated animate__fadeIn">
-                <!-- Order Info Header -->
-                <div class="order-info-card">
-                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4 border-bottom pb-3">
-                        <div>
-                            <h5 class="fw-bold mb-1">Mã đơn hàng: #MS-102345</h5>
-                            <p class="text-muted small mb-0">Ngày đặt: 12 Tháng 3, 2026 | Phương thức: COD</p>
-                        </div>
-                        <div class="status-indicator status-shipping">
-                            <i class='bx bx-package'></i> ĐANG GIAO HÀNG
+            <!-- 1. STATUS TIMELINE -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4 p-md-5">
+                    <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
+                        <a href="javascript:history.back()" class="btn btn-link text-dark p-0 text-decoration-none">
+                            <i class='bx bx-chevron-left fs-4'></i> TRỞ LẠI
+                        </a>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="text-muted small">MÃ ĐƠN HÀNG: <strong class="text-dark">#MS-@Model.OrderId.ToString("D6")</strong></span>
+                            <span class="vr"></span>
+                            <span class="text-danger fw-bold text-uppercase">@Model.Status</span>
                         </div>
                     </div>
 
-                    <!-- 5. STATUS TIMELINE -->
-                    <div class="tracking-timeline-wrapper">
-                        <div class="tracking-timeline">
-                            <div class="timeline-progress" style="width: 50%;"></div> <!-- Width depends on status -->
-                            
-                            <div class="timeline-step completed">
-                                <div class="step-icon-circle"><i class='bx bx-check'></i></div>
-                                <div class="step-label">Đã đặt</div>
-                                <div class="small text-muted mt-1" style="font-size: 10px;">12/03 - 08:30</div>
+                    <div class="tracking-timeline-horizontal">
+                        @{
+                            var steps = new[] { "Pending", "Confirmed", "Shipping", "Delivered" };
+                            var currentIdx = Array.IndexOf(steps, Model.Status ?? "Pending");
+                            if (currentIdx == -1) currentIdx = (Model.Status == "Cancelled" ? -1 : 0);
+                        }
+                        
+                        @if (Model.Status == "Cancelled")
+                        {
+                            <div class="alert alert-secondary border-0 rounded-4 p-4 text-center">
+                                <i class='bx bx-error-circle fs-1 mb-2 d-block text-secondary'></i>
+                                <h5 class="fw-bold mb-1">ĐƠN HÀNG ĐÃ HỦY</h5>
+                                <p class="small text-muted mb-0">@Model.Note</p>
                             </div>
-                            <div class="timeline-step completed">
-                                <div class="step-icon-circle"><i class='bx bx-check'></i></div>
-                                <div class="step-label">Xác nhận</div>
-                                <div class="small text-muted mt-1" style="font-size: 10px;">12/03 - 10:15</div>
+                        }
+                        else
+                        {
+                            <div class="timeline-container">
+                                <div class="timeline-line">
+                                    <div class="line-fill" style="width: @(currentIdx * 33.33)%;"></div>
+                                </div>
+                                <div class="timeline-steps">
+                                    <div class="step @(currentIdx >= 0 ? "active" : "")">
+                                        <div class="step-icon"><i class='bx bx-receipt'></i></div>
+                                        <div class="step-text">Đã đặt</div>
+                                    </div>
+                                    <div class="step @(currentIdx >= 1 ? "active" : "")">
+                                        <div class="step-icon"><i class='bx bx-check-shield'></i></div>
+                                        <div class="step-text">Xác nhận</div>
+                                    </div>
+                                    <div class="step @(currentIdx >= 2 ? "active" : "")">
+                                        <div class="step-icon"><i class='bx bx-truck'></i></div>
+                                        <div class="step-text">Đang giao</div>
+                                    </div>
+                                    <div class="step @(currentIdx >= 3 ? "active" : "")">
+                                        <div class="step-icon"><i class='bx bx-star'></i></div>
+                                        <div class="step-text">Đã nhận</div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="timeline-step active">
-                                <div class="step-icon-circle"><i class='bx bx-truck'></i></div>
-                                <div class="step-label">Đang giao</div>
-                                <div class="small text-muted mt-1" style="font-size: 10px;">13/03 - 09:00</div>
-                            </div>
-                            <div class="timeline-step">
-                                <div class="step-icon-circle"><i class='bx bx-map-pin'></i></div>
-                                <div class="step-label">Chờ giao</div>
-                            </div>
-                            <div class="timeline-step">
-                                <div class="step-icon-circle"><i class='bx bx-home-heart'></i></div>
-                                <div class="step-label">Đã nhận</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row g-4 pt-4 border-top">
-                        <div class="col-md-6">
-                            <span class="info-label">Địa chỉ nhận hàng</span>
-                            <p class="info-value mb-0">Nguyễn Văn An - 0901 234 567<br>123 Đường ABC, Quận 1, TP. Hồ Chí Minh</p>
-                        </div>
-                        <div class="col-md-6">
-                            <span class="info-label">Dự kiến giao hàng</span>
-                            <p class="info-value mb-0 text-success">Thứ Hai, 16 Tháng 3, 2026</p>
-                        </div>
+                        }
                     </div>
                 </div>
+            </div>
 
-                <!-- 6. ORDER ITEMS -->
-                <div class="order-info-card">
-                    <h5 class="fw-bold mb-4 border-bottom pb-3">CHI TIẾT SẢN PHẨM</h5>
-                    <ul class="summary-items-list">
-                        <li class="summary-item-product">
-                            <div class="summary-item-img">
-                                <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=100" class="w-100 h-100 object-fit-contain p-1" alt="P">
-                            </div>
-                            <div class="summary-item-info flex-grow-1">
-                                <span class="name">Bộ Nồi Trước Honda SH Chính Hãng</span>
-                                <span class="qty-price">Số lượng: 1 x 1.250.000đ</span>
-                            </div>
-                            <div class="fw-bold">1.250.000đ</div>
-                        </li>
-                        <li class="summary-item-product">
-                            <div class="summary-item-img">
-                                <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=100" class="w-100 h-100 object-fit-contain p-1" alt="P">
-                            </div>
-                            <div class="summary-item-info flex-grow-1">
-                                <span class="name">Nhớt Motul 300V Factory Line 10W40</span>
-                                <span class="qty-price">Số lượng: 2 x 450.000đ</span>
-                            </div>
-                            <div class="fw-bold">900.000đ</div>
-                        </li>
-                    </ul>
-                    <div class="mt-4 pt-4 border-top text-end">
-                        <div class="d-inline-block" style="min-width: 250px;">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span class="text-muted">Tổng tiền sản phẩm:</span>
-                                <span class="fw-bold">2.150.000đ</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span class="text-muted">Phí vận chuyển:</span>
-                                <span class="fw-bold">30.000đ</span>
-                            </div>
-                            <div class="d-flex justify-content-between pt-2 border-top">
-                                <span class="fw-bold fs-5">TỔNG THANH TOÁN:</span>
-                                <span class="fw-bold fs-5 text-danger">2.180.000đ</span>
+            <!-- 2. SHIPPING ADDRESS -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0"><i class='bx bx-map text-danger me-2'></i> ĐỊA CHỈ NHẬN HÀNG</h6>
+                    @if (Model.Status == "Pending")
+                    {
+                        <button type="button" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold shadow-sm" onclick="openCancelModal()">HỦY ĐƠN HÀNG</button>
+                    }
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <p class="fw-bold mb-1" id="displayFullName">@currentName</p>
+                            <p class="text-muted small mb-1" id="displayPhone">@currentPhone</p>
+                            <p class="text-muted small mb-0" id="displayAddress">@currentAddress</p>
+                        </div>
+                        <div class="col-md-4 border-start d-none d-md-block">
+                            <div class="text-center py-2">
+                                <p class="small text-muted mb-2">Phương thức vận chuyển</p>
+                                <h6 class="fw-bold text-primary mb-0">@(Model.ShippingMethod?.Name ?? "Tiêu chuẩn")</h6>
+                                <p class="x-small text-muted mt-1">@Model.ShippingMethod?.Description</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 7. CUSTOMER SUPPORT -->
-            <div class="p-4 bg-light rounded-4 text-center">
-                <h5 class="fw-bold mb-3">BẠN CẦN TRỢ GIÚP?</h5>
-                <p class="text-muted mb-4">Nếu có bất kỳ thắc mắc nào về đơn hàng, vui lòng liên hệ với bộ phận chăm sóc khách hàng của chúng tôi.</p>
-                <div class="d-flex justify-content-center gap-3 flex-wrap">
-                    <a href="tel:0281234567" class="btn btn-outline-dark rounded-pill px-4 fw-bold">
-                        <i class='bx bx-phone-call me-2'></i> 028 123 4567
-                    </a>
-                    <a href="mailto:support@motoshop.vn" class="btn btn-outline-dark rounded-pill px-4 fw-bold">
-                        <i class='bx bx-envelope me-2'></i> support@motoshop.vn
-                    </a>
-                    <button class="btn btn-dark rounded-pill px-4 fw-bold">
-                        <i class='bx bx-chat me-2'></i> CHAT TRỰC TUYẾN
-                    </button>
+            <!-- 3. ORDER ITEMS -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+                <div class="card-body p-0">
+                    <div class="p-4 border-bottom bg-light bg-opacity-10">
+                        <h6 class="fw-bold mb-0"><i class='bx bx-package text-danger me-2'></i> DANH SÁCH SẢN PHẨM</h6>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table mb-0 align-middle">
+                            <tbody>
+                                @foreach (var item in Model.OrderItems!)
+                                {
+                                    <tr>
+                                        <td style="width: 100px; padding-left: 24px;">
+                                            <img src="@(string.IsNullOrEmpty(item.ProductVariant?.ImageUrl) ? "/assets/img/elements/no-image.png" : item.ProductVariant.ImageUrl)" 
+                                                 class="rounded" style="width: 70px; height: 70px; object-fit: cover;" alt="P">
+                                        </td>
+                                        <td class="py-4">
+                                            <h6 class="fw-bold mb-1 small">@(item.ProductVariant?.Product?.ProductName ?? "Sản phẩm")</h6>
+                                            <p class="text-muted x-small mb-0">Phân loại: @(item.ProductVariant?.VariantName)</p>
+                                            <p class="x-small mb-0 text-dark">Số lượng: x@item.Quantity</p>
+                                        </td>
+                                        <td class="text-end py-4" style="padding-right: 24px;">
+                                            @{
+                                                decimal orig = item.ProductVariant?.Price ?? item.Price;
+                                                bool hasP = orig > item.Price;
+                                            }
+                                            @if (hasP) { <span class="text-muted text-decoration-line-through x-small me-2">@orig.ToString("N0")đ</span> }
+                                            <span class="text-danger fw-bold small">@item.Price.ToString("N0")đ</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. TOTAL SUMMARY -->
+            <div class="card border-0 shadow-sm rounded-4 mb-5">
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <div class="col-md-6 p-4 border-bottom border-md-bottom-0">
+                            <h6 class="fw-bold mb-3 small text-muted">GHI CHÚ / LÝ DO</h6>
+                            <div class="p-3 bg-light rounded-3 text-muted small" style="min-height: 100px;">
+                                @(string.IsNullOrEmpty(Model.Note) ? "Không có ghi chú nào." : Model.Note)
+                            </div>
+                        </div>
+                        <div class="col-md-6 border-start-md bg-light bg-opacity-10 p-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Tạm tính:</span>
+                                <span class="small">@subtotalOriginal.ToString("N0")đ</span>
+                            </div>
+                            @if (promotionSavings > 0)
+                            {
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted small">Khuyến mãi sản phẩm:</span>
+                                    <span class="text-danger small">-@promotionSavings.ToString("N0")đ</span>
+                                </div>
+                            }
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Phí vận chuyển:</span>
+                                <span class="small">@(Model.ShippingMethod?.Cost.ToString("N0") ?? "0")đ</span>
+                            </div>
+                            @if (Model.DiscountAmount > 0)
+                            {
+                                <div class="d-flex justify-content-between mb-2 text-success">
+                                    <span class="small">Voucher giảm giá @(Model.Coupon != null ? $"({Model.Coupon.Code})" : ""):</span>
+                                    <span class="fw-bold small">-@Model.DiscountAmount.ToString("N0")đ</span>
+                                </div>
+                            }
+                            <hr class="my-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold">Tổng thanh toán:</span>
+                                <span class="fs-3 fw-bold text-danger">@Model.TotalAmount.ToString("N0")đ</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </main>
 
+<!-- MODAL 1: CHỌN LÝ DO HỦY (SHOPEE STYLE) -->
+<div class="modal fade" id="cancelReasonModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header border-bottom-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold">Lý do hủy đơn hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-warning border-0 small py-2 px-3 mb-4 rounded-3">
+                    <i class='bx bx-info-circle me-1'></i> Vui lòng chọn lý do hủy chính xác nhất.
+                </div>
+                
+                <div class="list-group list-group-flush reason-list">
+                    <label class="list-group-item d-flex align-items-center gap-3 py-3 border-0 rounded-3 mb-2 bg-light bg-opacity-50 pointer">
+                        <input class="form-check-input mt-0" type="radio" name="cancelReason" value="Đổi địa chỉ giao hàng" checked>
+                        <span>Tôi muốn thay đổi địa chỉ nhận hàng</span>
+                    </label>
+                    <label class="list-group-item d-flex align-items-center gap-3 py-3 border-0 rounded-3 mb-2 bg-light bg-opacity-50 pointer">
+                        <input class="form-check-input mt-0" type="radio" name="cancelReason" value="Tìm thấy giá rẻ hơn">
+                        <span>Tôi tìm thấy chỗ khác bán rẻ hơn</span>
+                    </label>
+                    <label class="list-group-item d-flex align-items-center gap-3 py-3 border-0 rounded-3 mb-2 bg-light bg-opacity-50 pointer">
+                        <input class="form-check-input mt-0" type="radio" name="cancelReason" value="Đổi ý, không muốn mua nữa">
+                        <span>Tôi không còn nhu cầu mua sản phẩm này nữa</span>
+                    </label>
+                    <label class="list-group-item d-flex align-items-center gap-3 py-3 border-0 rounded-3 mb-2 bg-light bg-opacity-50 pointer">
+                        <input class="form-check-input mt-0" type="radio" name="cancelReason" value="Thời gian giao hàng quá lâu">
+                        <span>Thời gian giao hàng dự kiến quá lâu</span>
+                    </label>
+                    <label class="list-group-item d-flex align-items-center gap-3 py-3 border-0 rounded-3 mb-2 bg-light bg-opacity-50 pointer">
+                        <input class="form-check-input mt-0" type="radio" name="cancelReason" value="Khác">
+                        <span>Lý do khác</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 p-4">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">ĐÓNG</button>
+                <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" onclick="processCancelReason()">TIẾP TỤC</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 2: CHỈNH SỬA ĐỊA CHỈ (HIỆN KHI CHỌN ĐỔI ĐỊA CHỈ) -->
+<div class="modal fade" id="editAddressModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header border-bottom-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold">Cập nhật thông tin nhận hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="editAddressForm">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Họ và tên người nhận</label>
+                        <input type="text" id="editName" class="form-control rounded-3" value="@currentName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Số điện thoại</label>
+                        <input type="tel" id="editPhone" class="form-control rounded-3" value="@currentPhone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Địa chỉ chi tiết</label>
+                        <textarea id="editAddress" class="form-control rounded-3" rows="3" required>@currentAddress</textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top-0 p-4">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" onclick="backToReason()">QUAY LẠI</button>
+                <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" onclick="submitEditAddress()">CẬP NHẬT & TIẾP TỤC</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function showOrderDetails() {
-            // Giả lập tra cứu và hiện kết quả
-            const section = document.getElementById('orderDetailsSection');
-            section.classList.remove('d-none');
-            // Cuộn xuống phần kết quả
-            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const orderId = @Model.OrderId;
+        const cancelReasonModal = new bootstrap.Modal(document.getElementById('cancelReasonModal'));
+        const editAddressModal = new bootstrap.Modal(document.getElementById('editAddressModal'));
+
+        function openCancelModal() {
+            cancelReasonModal.show();
+        }
+
+        function processCancelReason() {
+            const selectedReason = document.querySelector('input[name="cancelReason"]:checked').value;
+            
+            if (selectedReason === "Đổi địa chỉ giao hàng") {
+                cancelReasonModal.hide();
+                editAddressModal.show();
+            } else {
+                confirmCancel(selectedReason);
+            }
+        }
+
+        function backToReason() {
+            editAddressModal.hide();
+            cancelReasonModal.show();
+        }
+
+        async function submitEditAddress() {
+            const name = document.getElementById('editName').value;
+            const phone = document.getElementById('editPhone').value;
+            const addr = document.getElementById('editAddress').value;
+
+            if (!name || !phone || !addr) {
+                Swal.fire('Lỗi', 'Vui lòng nhập đầy đủ thông tin.', 'error');
+                return;
+            }
+
+            // Gửi AJAX cập nhật địa chỉ
+            try {
+                const response = await fetch('/Order/UpdateShipping', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `id=${orderId}&fullName=${encodeURIComponent(name)}&phone=${phone}&address=${encodeURIComponent(addr)}`
+                });
+                const data = await response.json();
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công',
+                        text: 'Đã cập nhật địa chỉ. Bạn có muốn tiếp tục mua hàng hay vẫn muốn hủy đơn?',
+                        showCancelButton: true,
+                        confirmButtonText: 'Giữ đơn hàng',
+                        cancelButtonText: 'Vẫn muốn hủy',
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#dc3545'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            location.reload(); // Reload để hiện địa chỉ mới
+                        } else {
+                            editAddressModal.hide();
+                            confirmCancel("Đã cập nhật địa chỉ nhưng vẫn muốn hủy");
+                        }
+                    });
+                } else {
+                    Swal.fire('Lỗi', data.message, 'error');
+                }
+            } catch (error) {
+                Swal.fire('Lỗi', 'Không thể kết nối máy chủ.', 'error');
+            }
+        }
+
+        function confirmCancel(reason) {
+            Swal.fire({
+                title: 'Xác nhận hủy đơn?',
+                text: `Bạn đang thực hiện hủy đơn hàng vì lý do: "${reason}". Hành động này không thể hoàn tác.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'ĐỒNG Ý HỦY',
+                cancelButtonText: 'SUY NGHĨ LẠI'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch('/Order/CancelOrder', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: `id=${orderId}&reason=${encodeURIComponent(reason)}`
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            Swal.fire('Đã hủy!', data.message, 'success').then(() => location.reload());
+                        } else {
+                            Swal.fire('Thất bại', data.message, 'error');
+                        }
+                    } catch (error) {
+                        Swal.fire('Lỗi', 'Có lỗi xảy ra khi gửi yêu cầu.', 'error');
+                    }
+                }
+            });
         }
     </script>
 }
+
+<style>
+    .tracking-timeline-horizontal { padding: 20px 0; }
+    .timeline-container { position: relative; width: 100%; margin: 0 auto; }
+    .timeline-line { position: absolute; top: 25px; left: 5%; right: 5%; height: 4px; background: #eee; border-radius: 2px; z-index: 1; }
+    .line-fill { position: absolute; top: 0; left: 0; height: 100%; background: #26aa99; border-radius: 2px; }
+    .timeline-steps { position: relative; display: flex; justify-content: space-between; z-index: 2; }
+    .step { text-align: center; width: 20%; }
+    .step-icon { width: 50px; height: 50px; background: #fff; border: 4px solid #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 20px; color: #ccc; }
+    .step-text { font-size: 12px; color: #888; font-weight: 500; }
+    .step.active .step-icon { border-color: #26aa99; color: #26aa99; box-shadow: 0 0 10px rgba(38, 170, 153, 0.2); }
+    .step.active .step-text { color: #26aa99; font-weight: bold; }
+    
+    .x-small { font-size: 11px; }
+    .pointer { cursor: pointer; }
+    .reason-list label:hover { background-color: #f0f0f0 !important; }
+    .border-start-md { border-left: 1px solid #dee2e6; }
+    @@media (max-width: 767.98px) { .border-start-md { border-left: 0; } }
+</style>

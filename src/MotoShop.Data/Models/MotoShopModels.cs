@@ -102,6 +102,8 @@ namespace MotoShop.Data.Models
         [Column(TypeName = "decimal(18, 2)")]
         public decimal Price { get; set; }
         [Column(TypeName = "decimal(18, 2)")]
+        public decimal? OriginalPrice { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
         public decimal CostPrice { get; set; }
         public int StockQuantity { get; set; } = 0;
         [StringLength(500)]
@@ -117,6 +119,20 @@ namespace MotoShop.Data.Models
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
         public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
         public virtual ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();
+        public virtual ICollection<ProductVariantAttributeValue> VariantAttributeValues { get; set; } = new List<ProductVariantAttributeValue>();
+    }
+
+    public class ProductVariantAttributeValue
+    {
+        [Key]
+        public int Id { get; set; }
+        public int ProductVariantId { get; set; }
+        public int ValueId { get; set; }
+
+        [ForeignKey("ProductVariantId")]
+        public virtual ProductVariant? ProductVariant { get; set; }
+        [ForeignKey("ValueId")]
+        public virtual AttributeValue? AttributeValue { get; set; }
     }
 
     public class ProductImage
@@ -186,6 +202,8 @@ namespace MotoShop.Data.Models
         public DateTime OrderDate { get; set; } = DateTime.Now;
         [Column(TypeName = "decimal(18, 2)")]
         public decimal TotalAmount { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal DiscountAmount { get; set; } = 0;
         [StringLength(50)]
         public string? Status { get; set; }
         [StringLength(500)]
@@ -256,8 +274,34 @@ namespace MotoShop.Data.Models
         public DateTime BookingDate { get; set; } = DateTime.Now;
         public DateTime? ServiceDate { get; set; }
         [StringLength(50)]
-        public string? Status { get; set; } // Pending, Processing, Completed, Cancelled
+        public string? Status { get; set; } // Pending, Confirmed, InProgress, Completed, Cancelled
+        
+        // Thêm các trường thông tin khách hàng và xe trực tiếp
+        [StringLength(200)]
+        public string? CustomerFullName { get; set; }
+        [StringLength(50)]
+        public string? CustomerPhone { get; set; }
+        [StringLength(255)]
+        public string? CustomerEmail { get; set; }
+        [StringLength(200)]
+        public string? VehicleBrand { get; set; }
+        [StringLength(200)]
+        public string? VehicleModel { get; set; }
+        public int? VehicleYear { get; set; }
+        [StringLength(50)]
+        public string? LicensePlate { get; set; }
+
         public string? Notes { get; set; }
+
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal DepositAmount { get; set; } = 0;
+        [StringLength(50)]
+        public string? DepositStatus { get; set; } // Unpaid, Paid
+        [StringLength(500)]
+        public string? TransferProof { get; set; } // Link ảnh chuyển khoản
+        public DateTime? ConfirmedAt { get; set; }
+        public DateTime? ExpireAt { get; set; }
+        public string? CancelReason { get; set; }
 
         [ForeignKey("CustomerId")]
         public virtual Customer? Customer { get; set; }
@@ -540,7 +584,7 @@ namespace MotoShop.Data.Models
         [Required, StringLength(200)]
         public string Name { get; set; }
         [StringLength(255)]
-        public string Slug { get; set; }
+        public string? Slug { get; set; }
 
         public virtual ICollection<Blog> Blogs { get; set; } = new List<Blog>();
     }
@@ -553,13 +597,17 @@ namespace MotoShop.Data.Models
         public string Title { get; set; }
         [StringLength(300)]
         public string Slug { get; set; }
+        [Required]
         public string Content { get; set; }
         [StringLength(500)]
         public string? Thumbnail { get; set; }
-        public int? CategoryId { get; set; }
-        public string? AuthorId { get; set; }
-        public bool IsPublished { get; set; } = false;
+        public int CategoryId { get; set; }
+        
+        // Status: Draft = 0, Published = 1
+        public int Status { get; set; } = 0; 
+        
         public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime? UpdatedDate { get; set; }
 
         [ForeignKey("CategoryId")]
         public virtual BlogCategory? Category { get; set; }

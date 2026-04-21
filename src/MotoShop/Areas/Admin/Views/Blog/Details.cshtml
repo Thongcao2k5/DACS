@@ -1,0 +1,71 @@
+@model MotoShop.Data.Models.Blog
+
+@{
+    ViewData["Title"] = "Chi tiết bài viết";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Blog /</span> Chi tiết bài viết</h4>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="fw-bold">@Model.Title</h2>
+                    <div class="text-muted mb-4">
+                        <span class="me-3"><i class="bx bx-calendar"></i> @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")</span>
+                        <span class="me-3"><i class="bx bx-folder"></i> @Model.Category?.Name</span>
+                        <span><i class="bx bx-link"></i> @Model.Slug</span>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Thumbnail))
+                    {
+                        <img src="@Model.Thumbnail" class="img-fluid rounded mb-4 w-100" style="max-height: 400px; object-fit: cover;">
+                    }
+
+                    <div class="blog-content">
+                        @Html.Raw(Model.Content)
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Thông tin bổ sung</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-3">
+                            <span class="fw-bold">Trạng thái:</span>
+                            @if (Model.Status == 1)
+                            {
+                                <span class="badge bg-label-success">Đã đăng</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-label-warning">Bản nháp</span>
+                            }
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Ngày cập nhật:</span>
+                            @(Model.UpdatedDate.HasValue ? Model.UpdatedDate.Value.ToString("dd/MM/yyyy HH:mm") : "Chưa cập nhật")
+                        </li>
+                    </ul>
+                    <hr>
+                    <div class="d-grid gap-2">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Chỉnh sửa</a>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Quay lại danh sách</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .blog-content img { max-width: 100%; height: auto; border-radius: 8px; }
+    .blog-content { line-height: 1.8; font-size: 1.1rem; }
+</style>

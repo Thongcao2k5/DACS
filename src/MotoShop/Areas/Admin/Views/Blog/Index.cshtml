@@ -1,84 +1,97 @@
 @model IEnumerable<MotoShop.Data.Models.Blog>
+
 @{
-    ViewData["Title"] = "Quản lý Blog";
+    ViewData["Title"] = "Quản lý Bài viết";
     Layout = "_AdminLayout";
 }
 
-<div class="p-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div><h4 class="fw-bold m-0 text-uppercase"><i class='bx bxl-blogger me-2 text-danger'></i>Danh sách bài viết</h4></div>
-        <div class="d-flex gap-2">
-            <a asp-action="Upsert" class="btn btn-ms-red px-4 shadow-sm"><i class='bx bx-plus-circle me-1'></i>Viết bài mới</a>
-            <a asp-action="Categories" class="btn btn-outline-secondary px-3"><i class='bx bx-category me-1'></i>Quản lý danh mục</a>
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Blog /</span> Danh sách bài viết</h4>
+
+    <!-- Filter & Search -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Tìm kiếm tiêu đề</label>
+                    <input type="text" name="searchTerm" class="form-control" placeholder="Nhập tiêu đề..." value="@ViewBag.SearchTerm">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Danh mục</label>
+                    <select name="categoryId" class="form-select" asp-items="ViewBag.Categories">
+                        <option value="">-- Tất cả danh mục --</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Trạng thái</label>
+                    <select name="status" class="form-select">
+                        <option value="">-- Tất cả --</option>
+                        <option value="0" selected="@(ViewBag.Status?.ToString() == "0")">Bản nháp</option>
+                        <option value="1" selected="@(ViewBag.Status?.ToString() == "1")">Đã đăng</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary w-100">Lọc</button>
+                    <a asp-action="Create" class="btn btn-success w-100">Thêm mới</a>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- Filter Bar -->
-    <div class="filter-section shadow-sm border-0 mb-4 bg-white p-3 rounded-3">
-        <form method="get" class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label small text-uppercase fw-bold text-muted mb-1">Tìm kiếm</label>
-                <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control bg-light border-0" placeholder="Tiêu đề bài viết...">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label small text-uppercase fw-bold text-muted mb-1">Danh mục</label>
-                <select name="categoryId" class="form-select bg-light border-0">
-                    <option value="">Tất cả danh mục</option>
-                    @foreach(var cat in ViewBag.Categories as List<MotoShop.Data.Models.BlogCategory>) {
-                        <option value="@cat.Id">@cat.Name</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label small text-uppercase fw-bold text-muted mb-1">Trạng thái</label>
-                <select name="isPublished" class="form-select bg-light border-0">
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="true">Đã đăng</option>
-                    <option value="false">Bản nháp</option>
-                </select>
-            </div>
-            <div class="col-md-2 text-end">
-                <button type="submit" class="btn btn-ms-red w-100 fw-bold">Lọc</button>
-            </div>
-        </form>
-    </div>
-
-    <div class="table-container shadow-sm bg-white rounded-3">
+    <!-- Table -->
+    <div class="card">
         <div class="table-responsive text-nowrap">
-            <table class="table table-hover align-middle m-0">
-                <thead class="bg-light small text-uppercase">
+            <table class="table table-hover">
+                <thead>
                     <tr>
-                        <th style="width: 100px" class="ps-4">Thumbnail</th>
-                        <th>Tiêu đề bài viết</th>
+                        <th>Tiêu đề</th>
+                        <th>Hình ảnh</th>
                         <th>Danh mục</th>
                         <th>Ngày đăng</th>
                         <th>Trạng thái</th>
-                        <th class="text-end px-4">Hành động</th>
+                        <th class="text-center">Thao tác</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach (var item in Model) {
+                <tbody class="table-border-bottom-0">
+                    @foreach (var item in Model)
+                    {
                         <tr>
-                            <td class="ps-4">
-                                <img src="@(string.IsNullOrEmpty(item.Thumbnail) ? "/assets/img/elements/18.jpg" : item.Thumbnail)" class="rounded shadow-sm" style="width: 80px; height: 50px; object-fit: cover;">
+                            <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis;">
+                                <strong>@item.Title</strong>
                             </td>
                             <td>
-                                <div class="fw-bold text-truncate" style="max-width: 350px;">@item.Title</div>
-                                <small class="text-muted">Slug: @item.Slug</small>
+                                @if (!string.IsNullOrEmpty(item.Thumbnail))
+                                {
+                                    <img src="@item.Thumbnail" alt="Thumbnail" class="rounded" style="width: 60px; height: 40px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <span class="badge bg-label-secondary">No Image</span>
+                                }
                             </td>
-                            <td><span class="badge bg-label-secondary">@item.Category?.Name</span></td>
+                            <td><span class="badge bg-label-info">@item.Category?.Name</span></td>
                             <td>@item.CreatedDate.ToString("dd/MM/yyyy")</td>
                             <td>
-                                @if (item.IsPublished) {
+                                @if (item.Status == 1)
+                                {
                                     <span class="badge bg-label-success">Đã đăng</span>
-                                } else {
+                                }
+                                else
+                                {
                                     <span class="badge bg-label-warning">Bản nháp</span>
                                 }
                             </td>
-                            <td class="text-end px-4">
-                                <a href="/blog/@item.Slug" target="_blank" class="btn btn-sm btn-icon btn-outline-info" title="Xem trước"><i class="bx bx-show"></i></a>
-                                <a asp-action="Upsert" asp-route-id="@item.Id" class="btn btn-sm btn-icon btn-outline-primary" title="Sửa"><i class="bx bx-edit-alt"></i></a>
-                                <button type="button" class="btn btn-sm btn-icon btn-outline-danger btn-delete-blog" title="Xóa" data-id="@item.Id"><i class="bx bx-trash"></i></button>
+                            <td class="text-center" style="white-space: nowrap; width: 50px;">
+                                <div class="dropdown">
+                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                        <i class="bx bx-dots-vertical-rounded"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item" asp-action="Details" asp-route-id="@item.Id"><i class="bx bx-show-alt me-1"></i> Xem</a>
+                                        <a class="dropdown-item" asp-action="Edit" asp-route-id="@item.Id"><i class="bx bx-edit-alt me-1"></i> Sửa</a>
+                                        <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="deleteBlog(@item.Id)"><i class="bx bx-trash me-1"></i> Xóa</a>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -89,14 +102,29 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        $(document).on('click', '.btn-delete-blog', function() {
-            const id = $(this).data('id');
-            if(confirm("Xác nhận xóa bài viết này?")) {
-                $.post('/Admin/Blog/Delete', { id: id }, function(res) {
-                    if (res.success) { UI.toast(res.message, 'success'); setTimeout(() => location.reload(), 1000); }
-                });
-            }
-        });
+        function deleteBlog(id) {
+            Swal.fire({
+                title: 'Bạn có chắc chắn muốn xóa?',
+                text: "Hành động này không thể hoàn tác!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Đồng ý xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/Admin/Blog/Delete/' + id, function (res) {
+                        if (res.success) {
+                            Swal.fire('Đã xóa!', res.message, 'success').then(() => location.reload());
+                        } else {
+                            Swal.fire('Lỗi!', res.message, 'error');
+                        }
+                    });
+                }
+            })
+        }
     </script>
 }

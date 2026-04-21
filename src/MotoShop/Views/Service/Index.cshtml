@@ -1,3 +1,4 @@
+@model IEnumerable<MotoShop.Data.Models.Service>
 @{
     ViewData["Title"] = "Dịch vụ bảo dưỡng & Chăm sóc xe";
     Layout = "_Layout";
@@ -34,93 +35,46 @@
 <!-- 3. SERVICE CARD GRID -->
 <section class="container py-5">
     <div class="row g-4" id="service-grid">
-        <!-- Dịch vụ 1: Bảo dưỡng -->
-        <div class="col-md-6 col-lg-4 service-item" data-category="maintenance">
-            <div class="card h-100 service-card">
-                <div class="card-body p-4 text-center">
-                    <div class="service-icon-box bg-orange-light text-orange mb-3">
-                        <i class='bx bx-wrench'></i>
-                    </div>
-                    <span class="service-badge badge bg-warning">Phổ biến</span>
-                    <h5 class="fw-bold mb-3">Bảo dưỡng định kỳ (Full)</h5>
-                    <p class="text-muted small mb-4">Kiểm tra tổng quát 24 hạng mục, vệ sinh nồi, họng xăng và thay nhớt máy.</p>
-                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
-                        <span class="h5 fw-bold text-danger mb-0">350.000đ</span>
-                        <a href="/Booking/Create?id=1" class="btn btn-danger rounded-pill px-4">Đặt lịch</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        @if (Model != null && Model.Any())
+        {
+            foreach (var item in Model)
+            {
+                // Logic xác định category dựa trên tên dịch vụ để filter (tạm thời)
+                string category = "maintenance";
+                if (item.ServiceName.Contains("Lắp đặt")) category = "install";
+                else if (item.ServiceName.Contains("ECU") || item.ServiceName.Contains("Độ")) category = "tuning";
+                else if (item.ServiceName.Contains("Cứu hộ")) category = "rescue";
+                else if (item.ServiceName.Contains("Rửa xe")) category = "washing";
 
-        <!-- Dịch vụ 2: Lắp đặt -->
-        <div class="col-md-6 col-lg-4 service-item" data-category="install">
-            <div class="card h-100 service-card">
-                <div class="card-body p-4 text-center">
-                    <div class="service-icon-box bg-blue-light text-blue mb-3">
-                        <i class='bx bx-cog'></i>
-                    </div>
-                    <span class="service-badge badge bg-info">Mới</span>
-                    <h5 class="fw-bold mb-3">Lắp đặt Phuộc & Phanh</h5>
-                    <p class="text-muted small mb-4">Thay thế phuộc Ohlins, YSS, heo dầu Brembo chuẩn kỹ thuật, không cấn cọ.</p>
-                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
-                        <span class="h5 fw-bold text-danger mb-0">150.000đ</span>
-                        <a href="/Booking/Create?id=2" class="btn btn-danger rounded-pill px-4">Đặt lịch</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Dịch vụ 3: Độ xe -->
-        <div class="col-md-6 col-lg-4 service-item" data-category="tuning">
-            <div class="card h-100 service-card">
-                <div class="card-body p-4 text-center">
-                    <div class="service-icon-box bg-purple-light text-purple mb-3">
-                        <i class='bx bx-bolt-circle'></i>
-                    </div>
-                    <h5 class="fw-bold mb-3">ECU & Xăng Lửa</h5>
-                    <p class="text-muted small mb-4">Dynojet chuyên sâu, tối ưu công suất động cơ, giúp xe bốc và mượt hơn.</p>
-                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
-                        <span class="h5 fw-bold text-danger mb-0">800.000đ</span>
-                        <a href="/Booking/Create?id=3" class="btn btn-danger rounded-pill px-4">Đặt lịch</a>
+                <div class="col-md-6 col-lg-4 service-item" data-category="@category">
+                    <div class="card h-100 service-card">
+                        <div class="card-body p-4 text-center">
+                            <div class="service-icon-box @(category == "maintenance" ? "bg-orange-light text-orange" : 
+                                                          category == "install" ? "bg-blue-light text-blue" :
+                                                          category == "tuning" ? "bg-purple-light text-purple" :
+                                                          category == "rescue" ? "bg-red-light text-danger" : "bg-green-light text-green") mb-3">
+                                <i class='bx @(category == "maintenance" ? "bx-wrench" : 
+                                              category == "install" ? "bx-cog" :
+                                              category == "tuning" ? "bx-bolt-circle" :
+                                              category == "rescue" ? "bx-support" : "bx-water")'></i>
+                            </div>
+                            <h5 class="fw-bold mb-3">@item.ServiceName</h5>
+                            <p class="text-muted small mb-4">@item.Description</p>
+                            <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
+                                <span class="h5 fw-bold text-danger mb-0">@item.Price.ToString("N0")đ</span>
+                                <a href="/Service/Booking?serviceId=@item.ServiceId" class="btn btn-danger rounded-pill px-4">Đặt lịch</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5">
+                <p class="text-muted">Hiện chưa có dịch vụ nào khả dụng.</p>
             </div>
-        </div>
-
-        <!-- Dịch vụ 4: Cứu hộ -->
-        <div class="col-md-6 col-lg-4 service-item" data-category="rescue">
-            <div class="card h-100 service-card">
-                <div class="card-body p-4 text-center">
-                    <div class="service-icon-box bg-red-light text-danger mb-3">
-                        <i class='bx bx-support'></i>
-                    </div>
-                    <span class="service-badge badge bg-danger">24/7</span>
-                    <h5 class="fw-bold mb-3">Cứu hộ tận nơi 24/7</h5>
-                    <p class="text-muted small mb-4">Hỗ trợ sửa chữa lưu động, chở xe về trung tâm khi gặp sự cố trên đường.</p>
-                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
-                        <span class="h5 fw-bold text-danger mb-0">Từ 200k</span>
-                        <a href="/Booking/Create?id=4" class="btn btn-danger rounded-pill px-4">Đặt lịch</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Dịch vụ 5: Rửa xe -->
-        <div class="col-md-6 col-lg-4 service-item" data-category="washing">
-            <div class="card h-100 service-card">
-                <div class="card-body p-4 text-center">
-                    <div class="service-icon-box bg-green-light text-green mb-3">
-                        <i class='bx bx-water'></i>
-                    </div>
-                    <h5 class="fw-bold mb-3">Rửa xe Detail siêu sạch</h5>
-                    <p class="text-muted small mb-4">Rửa xe không chạm, vệ sinh chi tiết máy, dưỡng nhựa nhám và xịt nano bóng.</p>
-                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
-                        <span class="h5 fw-bold text-danger mb-0">120.000đ</span>
-                        <a href="/Booking/Create?id=5" class="btn btn-danger rounded-pill px-4">Đặt lịch</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        }
     </div>
 </section>
 
@@ -185,82 +139,23 @@
         border-radius: 0 0 40px 40px;
         position: relative;
         overflow: hidden;
-        margin-top: -20px; /* Bù trừ cho khoảng cách header nếu có */
+        margin-top: -20px;
     }
 
-    .hero-content {
-        animation: fadeInDown 0.8s ease;
-    }
-
-    .glow-effect {
-        box-shadow: 0 0 15px rgba(220, 53, 69, 0.4);
-    }
+    .hero-content { animation: fadeInDown 0.8s ease; }
+    .glow-effect { box-shadow: 0 0 15px rgba(220, 53, 69, 0.4); }
 
     /* Filter Bar */
-    #service-filter-section {
-        scroll-margin-top: 20px; 
-    }
-    .filter-wrapper {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        z-index: 1000;
-        top: 0; 
-    }
-
-    .btn-pill {
-        border-radius: 50px;
-        padding: 8px 24px;
-        border: 1.5px solid #eee;
-        background: #fff;
-        color: #666;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-
-    .btn-pill:hover {
-        border-color: var(--primary-red);
-        color: var(--primary-red);
-    }
-
-    .btn-pill.active {
-        background: var(--primary-red);
-        border-color: var(--primary-red);
-        color: #fff;
-        box-shadow: 0 8px 15px rgba(220, 53, 69, 0.2);
-    }
+    #service-filter-section { scroll-margin-top: 20px; }
+    .filter-wrapper { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); z-index: 1000; top: 0; }
+    .btn-pill { border-radius: 50px; padding: 8px 24px; border: 1.5px solid #eee; background: #fff; color: #666; font-weight: 500; transition: all 0.3s ease; }
+    .btn-pill:hover { border-color: var(--primary-red); color: var(--primary-red); }
+    .btn-pill.active { background: var(--primary-red); border-color: var(--primary-red); color: #fff; box-shadow: 0 8px 15px rgba(220, 53, 69, 0.2); }
 
     /* Service Cards */
-    .service-card {
-        border: none;
-        border-radius: 20px;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        position: relative;
-    }
-
-    .service-card:hover {
-        transform: translateY(-12px);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-    }
-
-    .service-icon-box {
-        width: 70px;
-        height: 70px;
-        border-radius: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        margin: 0 auto;
-    }
-
-    .service-badge {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        padding: 6px 12px;
-        border-radius: 30px;
-    }
+    .service-card { border: none; border-radius: 20px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: relative; }
+    .service-card:hover { transform: translateY(-12px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+    .service-icon-box { width: 70px; height: 70px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto; }
 
     /* Color Palette */
     .bg-orange-light { background: #fff3e0; } .text-orange { color: var(--orange); }
@@ -269,34 +164,12 @@
     .bg-red-light { background: #ffebee; }
     .bg-green-light { background: #e8f5e9; } .text-green { color: var(--green); }
 
-    .service-item {
-        transition: all 0.4s ease;
-    }
-
-    @@keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+    .service-item { transition: all 0.4s ease; }
+    @@keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // 1. Xử lý cuộn trang cho nút CTA cuối trang (Dùng Anchor giả để chính xác 100%)
-        const ctaButton = document.querySelector('a[href="#booking-anchor"]');
-        if (ctaButton) {
-            ctaButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                const target = document.getElementById('booking-anchor');
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        }
-
-        // 2. Xử lý Filter Services
         const buttons = document.querySelectorAll('#filter-buttons .btn-pill');
         const items = document.querySelectorAll('.service-item');
 
@@ -304,24 +177,17 @@
             btn.addEventListener('click', () => {
                 buttons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-
                 const filter = btn.getAttribute('data-filter');
 
                 items.forEach(item => {
                     const category = item.getAttribute('data-category');
-                    
                     if (filter === 'all' || filter === category) {
                         item.style.display = 'block';
-                        setTimeout(() => {
-                            item.style.opacity = '1';
-                            item.style.transform = 'scale(1)';
-                        }, 10);
+                        setTimeout(() => { item.style.opacity = '1'; item.style.transform = 'scale(1)'; }, 10);
                     } else {
                         item.style.opacity = '0';
                         item.style.transform = 'scale(0.8)';
-                        setTimeout(() => {
-                            item.style.display = 'none';
-                        }, 300);
+                        setTimeout(() => { item.style.display = 'none'; }, 300);
                     }
                 });
             });

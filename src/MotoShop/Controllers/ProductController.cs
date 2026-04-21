@@ -83,6 +83,22 @@ namespace MotoShop.Controllers
         {
             var product = await _productService.GetProductBySlugAsync(slug);
             if (product == null) return NotFound();
+
+            var relatedProducts = await _productService.GetRelatedProductsAsync(
+                product.ProductId, 
+                0, // CategoryId mapping if needed, using 0 for now as placeholder
+                0, // BrandId mapping placeholder
+                8);
+
+            var vouchers = await _productService.GetVouchersForProductAsync(product.ProductId);
+            
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var canReview = !string.IsNullOrEmpty(userId) && await _productService.CanUserReviewProductAsync(userId, product.ProductId);
+
+            ViewBag.RelatedProducts = relatedProducts;
+            ViewBag.Vouchers = vouchers;
+            ViewBag.CanReview = canReview;
+
             return View(product);
         }
 

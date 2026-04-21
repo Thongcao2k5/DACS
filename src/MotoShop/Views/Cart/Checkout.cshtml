@@ -159,7 +159,18 @@
                                 </div>
                                 <div class="summary-item-info flex-grow-1">
                                     <div class="name fw-bold small">@item.ProductName</div>
-                                    <div class="qty-price text-muted x-small">Số lượng: @item.Quantity x @item.Price.ToString("N0")đ</div>
+                                    <div class="qty-price text-muted x-small">
+                                        Số lượng: @item.Quantity x 
+                                        @if (item.PromotionDiscount > 0)
+                                        {
+                                            <span class="text-decoration-line-through me-1">@item.OriginalPrice.ToString("N0")đ</span>
+                                            <span class="text-danger fw-bold">@item.Price.ToString("N0")đ</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@item.Price.ToString("N0")đ</span>
+                                        }
+                                    </div>
                                 </div>
                                 <div class="fw-bold small">@item.Total.ToString("N0")đ</div>
                             </li>
@@ -178,16 +189,31 @@
 
                     <div class="mt-4 pt-2">
                         <div class="summary-item d-flex justify-content-between mb-2">
-                            <span class="text-muted">Tạm tính</span>
-                            <span class="fw-bold" id="subtotal" data-value="@totalAmount">@totalAmount.ToString("N0")đ</span>
+                            <span class="text-muted">Tạm tính (Giá niêm yết)</span>
+                            <span class="fw-bold">@cartItems.Sum(i => i.TotalOriginal).ToString("N0")đ</span>
                         </div>
+                        
+                        @if (cartItems.Sum(i => i.TotalDiscount) > 0)
+                        {
+                            <div class="summary-item d-flex justify-content-between mb-2 text-danger">
+                                <span class="fw-bold"><i class='bx bxs-hot me-1'></i> Khuyến mãi sản phẩm</span>
+                                <span class="fw-bold">-@cartItems.Sum(i => i.TotalDiscount).ToString("N0")đ</span>
+                            </div>
+                        }
+
                         <div class="summary-item d-flex justify-content-between mb-2">
                             <span class="text-muted">Phí vận chuyển</span>
                             <span class="fw-bold" id="shippingFee" data-value="0">0đ</span>
                         </div>
+                        
                         <div class="summary-item d-flex justify-content-between mb-2 d-none" id="discountRow">
-                            <span class="text-muted">Giảm giá</span>
+                            <span class="text-muted">Mã giảm giá (Voucher)</span>
                             <span class="fw-bold text-success" id="discountAmount" data-value="0">-0đ</span>
+                        </div>
+                        
+                        <div class="summary-item d-flex justify-content-between mb-2 d-none">
+                            <!-- Hidden subtotal for JS calculations -->
+                            <span id="subtotal" data-value="@totalAmount.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)"></span>
                         </div>
                         <hr>
                         <div class="summary-total d-flex justify-content-between align-items-center mt-3">

@@ -81,6 +81,7 @@
             <thead class="bg-light text-uppercase small fw-bold">
                 <tr>
                     <th class="ps-4">Khách hàng</th>
+                    <th>Thông tin Xe</th>
                     <th>Dịch vụ</th>
                     <th>Lịch hẹn</th>
                     <th>Nhân viên</th>
@@ -95,10 +96,14 @@
                             <div class="d-flex align-items-center">
                                 <img src="/assets/img/avatars/1.png" class="customer-avatar-admin me-2">
                                 <div>
-                                    <div class="fw-bold text-dark">@item.Customer?.FullName</div>
-                                    <small class="text-muted">@item.Customer?.Phone</small>
+                                    <div class="fw-bold text-dark">@(item.CustomerFullName ?? item.Customer?.FullName ?? "Khách vãng lai")</div>
+                                    <small class="text-muted">@(item.CustomerPhone ?? item.Customer?.Phone ?? "N/A")</small>
                                 </div>
                             </div>
+                        </td>
+                        <td>
+                            <div class="fw-bold">@item.VehicleBrand @item.VehicleModel</div>
+                            <div class="badge bg-label-danger" style="font-size: 10px;">@item.LicensePlate</div>
                         </td>
                         <td><span class="badge bg-label-secondary rounded-pill px-3">@item.Service?.ServiceName</span></td>
                         <td>

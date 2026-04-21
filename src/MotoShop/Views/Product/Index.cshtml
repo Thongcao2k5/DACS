@@ -125,7 +125,14 @@
                                             <div class="product-price mt-auto">
                                                 @if (product.MinPrice > 0)
                                                 {
-                                                    <span class="current text-danger fw-bolder fs-5">@product.MinPrice.ToString("N0")đ</span>
+                                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                        <span class="current text-danger fw-bolder fs-5">@product.MinPrice.ToString("N0")đ</span>
+                                                        @if (product.MinOriginalPrice.HasValue && product.MinOriginalPrice > product.MinPrice)
+                                                        {
+                                                            <del class="text-muted small" style="font-size: 0.8rem;">@product.MinOriginalPrice.Value.ToString("N0")đ</del>
+                                                            <span class="badge bg-danger rounded-pill" style="font-size: 0.65rem;">-@Math.Round((1 - (product.MinPrice / product.MinOriginalPrice.Value)) * 100)%</span>
+                                                        }
+                                                    </div>
                                                 }
                                                 else
                                                 {

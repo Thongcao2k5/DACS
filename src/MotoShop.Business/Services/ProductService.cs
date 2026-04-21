@@ -121,9 +121,50 @@ namespace MotoShop.Business.Services
                 .Include(p => p.Brand)
                 .Include(p => p.Images)
                 .Include(p => p.Variants)
+                    .ThenInclude(v => v.VariantAttributeValues)
+                        .ThenInclude(vav => vav.AttributeValue)
+                            .ThenInclude(av => av.ProductAttribute)
+                .Include(p => p.Reviews)
+                    .ThenInclude(r => r.Customer)
                 .FirstOrDefaultAsync();
 
             return _mapper.Map<ProductDto>(product);
+        }
+
+        public async Task<IEnumerable<ProductDto>> GetRelatedProductsAsync(int productId, int? categoryId, int? brandId, int count)
+        {
+            var query = _productRepository.Find(p => p.ProductId != productId && p.IsActive)
+                .Include(p => p.Images)
+                .Include(p => p.Variants);
+
+            var related = await query
+                .Where(p => p.CategoryId == categoryId || p.BrandId == brandId)
+                .OrderByDescending(p => (p.CategoryId == categoryId ? 2 : 0) + (p.BrandId == brandId ? 1 : 0))
+                .Take(count)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<ProductDto>>(related);
+        }
+
+        public async Task<IEnumerable<Promotion>> GetVouchersForProductAsync(int productId)
+        {
+            return await _uow.Repository<Promotion>().Find(p => p.IsActive 
+                && p.StartDate <= DateTime.Now && p.EndDate >= DateTime.Now
+                && p.PromotionProducts.Any(pp => pp.ProductId == productId))
+                .Take(3)
+                .ToListAsync();
+        }
+
+        public async Task<bool> CanUserReviewProductAsync(string userId, int productId)
+        {
+            if (string.IsNullOrEmpty(userId)) return false;
+
+            // Kiểm tra xem user đã mua bất kỳ biến thể nào của sản phẩm này chưa
+            return await _uow.Repository<OrderItem>().Find(oi => 
+                oi.Order.Customer.UserId == userId && 
+                oi.ProductVariant.ProductId == productId &&
+                oi.Order.Status == "Completed")
+                .AnyAsync();
         }
     }
 }

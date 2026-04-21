@@ -82,7 +82,8 @@ namespace MotoShop.Controllers
         public async Task<IActionResult> Checkout()
         {
             var userId = _userManager.GetUserId(User);
-            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login", "Account");
+            if (string.IsNullOrEmpty(userId)) 
+                return RedirectToAction("Login", "Account", new { returnUrl = Url.Action("Checkout", "Cart") });
 
             // Sync guest cart to user cart on checkout if needed
             if (Request.Cookies.ContainsKey("GuestId"))
@@ -154,24 +155,32 @@ namespace MotoShop.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> CheckCoupon(string code, decimal orderValue)
+        public async Task<IActionResult> CheckCoupon(string code, string orderValue)
         {
             if (string.IsNullOrEmpty(code)) return Json(new { success = false, message = "Vui lòng nhập mã." });
 
-            var coupon = await _unitOfWork.Repository<Coupon>().Find(c => c.Code == code && c.IsActive && (c.ExpiryDate == null || c.ExpiryDate >= System.DateTime.Now)).FirstOrDefaultAsync();
+            // Chuyển đổi orderValue từ string sang decimal dùng InvariantCulture để tránh lỗi dấu phẩy/dấu chấm
+            if (!decimal.TryParse(orderValue, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal val))
+            {
+                return Json(new { success = false, message = "Giá trị đơn hàng không hợp lệ." });
+            }
+
+            var coupon = await _unitOfWork.Repository<Coupon>()
+                .Find(c => c.Code.ToLower() == code.ToLower() && c.IsActive && (c.ExpiryDate == null || c.ExpiryDate >= System.DateTime.Now))
+                .FirstOrDefaultAsync();
             
             if (coupon == null) return Json(new { success = false, message = "Mã giảm giá không hợp lệ hoặc đã hết hạn." });
 
             if (coupon.UsageLimit > 0 && coupon.UsedCount >= coupon.UsageLimit)
                 return Json(new { success = false, message = "Mã giảm giá đã hết số lượt sử dụng." });
 
-            if (coupon.MinOrderValue.HasValue && orderValue < coupon.MinOrderValue.Value)
+            if (coupon.MinOrderValue.HasValue && val < coupon.MinOrderValue.Value)
                 return Json(new { success = false, message = $"Đơn hàng tối thiểu {coupon.MinOrderValue.Value:N0}đ để sử dụng mã này." });
 
             decimal discountAmount = 0;
             if (coupon.DiscountType == "Percentage")
             {
-                discountAmount = orderValue * (coupon.DiscountValue / 100);
+                discountAmount = val * (coupon.DiscountValue / 100);
             }
             else
             {
@@ -189,6 +198,7 @@ namespace MotoShop.Controllers
                     .ThenInclude(oi => oi.ProductVariant)
                         .ThenInclude(pv => pv.Product)
                 .Include(o => o.ShippingMethod)
+                .Include(o => o.Coupon)
                 .FirstOrDefaultAsync();
 
             if (order == null) return NotFound();

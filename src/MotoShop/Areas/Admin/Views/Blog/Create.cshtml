@@ -1,0 +1,101 @@
+@model MotoShop.Data.Models.Blog
+
+@{
+    ViewData["Title"] = "Thêm bài viết mới";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Blog /</span> Thêm bài viết mới</h4>
+
+    <div class="card">
+        <div class="card-body">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label">Tiêu đề bài viết *</label>
+                            <input asp-for="Title" id="Title" class="form-control" placeholder="Nhập tiêu đề..." required>
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Đường dẫn (Slug)</label>
+                            <input asp-for="Slug" id="Slug" class="form-control" placeholder="tu-dong-tao-slug">
+                            <span asp-validation-for="Slug" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nội dung *</label>
+                            <textarea asp-for="Content" id="Editor" class="form-control"></textarea>
+                            <span asp-validation-for="Content" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Danh mục bài viết</label>
+                            <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.CategoryId" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Trạng thái</label>
+                            <select asp-for="Status" class="form-select">
+                                <option value="0">Bản nháp (Draft)</option>
+                                <option value="1">Đăng bài (Published)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ảnh đại diện (Thumbnail)</label>
+                            <input type="file" name="thumbnailFile" class="form-control" onchange="previewImage(this)">
+                            <div class="mt-2 text-center border rounded p-2" style="min-height: 150px;">
+                                <img id="preview" src="/assets/img/elements/1.jpg" class="img-fluid rounded" style="max-height: 200px;">
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">LƯU BÀI VIẾT</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">QUAY LẠI</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.ckeditor.com/4.16.2/standard/ckeditor.js"></script>
+    <script>
+        CKEDITOR.replace('Editor', {
+            height: 400
+        });
+
+        // Tự động tạo slug
+        document.getElementById('Title').addEventListener('input', function() {
+            let title = this.value;
+            let slug = generateSlug(title);
+            document.getElementById('Slug').value = slug;
+        });
+
+        function generateSlug(text) {
+            return text.toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[đĐ]/g, 'd')
+                .replace(/([^a-z0-9\s-]|_)/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .trim();
+        }
+
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+}
