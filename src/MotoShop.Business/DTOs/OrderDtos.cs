@@ -24,5 +24,6 @@ namespace MotoShop.Business.DTOs
         public string Status { get; set; } = string.Empty;
         public string PaymentStatus { get; set; } = string.Empty;
         public string ShippingAddress { get; set; } = string.Empty;
+        public int Amount { get; set; }
     }
 }

@@ -21,7 +21,15 @@ namespace MotoShop.Business.Services
 
         public async Task<(bool Success, string Message, int OrderId)> CreateOrderAsync(string userId, CheckoutDto checkoutData)
         {
-            // 1. Lấy giỏ hàng
+            var customer = await _unitOfWork.Repository<Customer>()
+                .Find(c => c.UserId == userId)
+                .FirstOrDefaultAsync();
+
+            if (customer == null)
+            {
+                return (false, "Khong tim thay thong tin khach hang.", 0);
+            }
+
             var cart = await _unitOfWork.Repository<Cart>()
                 .Find(c => c.UserId == userId)
                 .Include(c => c.CartItems)
@@ -30,36 +38,37 @@ namespace MotoShop.Business.Services
 
             if (cart == null || !cart.CartItems.Any())
             {
-                return (false, "Giỏ hàng rỗng.", 0);
+                return (false, "Gio hang rong.", 0);
             }
 
-            // 2. Kiểm tra tồn kho cho tất cả sản phẩm
             foreach (var item in cart.CartItems)
             {
-                if (item.ProductVariant.StockQuantity < item.Quantity)
+                if (item.ProductVariant == null || item.ProductVariant.StockQuantity < item.Quantity)
                 {
-                    return (false, $"Sản phẩm '{item.ProductVariant.VariantName}' hiện chỉ còn {item.ProductVariant.StockQuantity} sản phẩm trong kho.", 0);
+                    var variantName = item.ProductVariant?.VariantName ?? "San pham";
+                    var stockQuantity = item.ProductVariant?.StockQuantity ?? 0;
+                    return (false, $"San pham '{variantName}' hien chi con {stockQuantity} san pham trong kho.", 0);
                 }
             }
 
-            // 3. Tính tổng tiền
             decimal totalAmount = cart.CartItems.Sum(ci => ci.Price * ci.Quantity);
 
-            // TODO: Cộng thêm phí vận chuyển, trừ đi coupon nếu có ở đây
             if (checkoutData.ShippingMethodId.HasValue)
             {
                 var shipping = await _unitOfWork.Repository<ShippingMethod>().GetByIdAsync(checkoutData.ShippingMethodId.Value);
-                if (shipping != null) totalAmount += shipping.Cost;
+                if (shipping != null)
+                {
+                    totalAmount += shipping.Cost;
+                }
             }
 
-            // 4. Tạo Đơn hàng chính
             var order = new Order
             {
-                CustomerId = null, // Có thể gán từ bảng Customer dựa trên userId sau này
+                CustomerId = customer.CustomerId,
                 OrderDate = DateTime.Now,
                 TotalAmount = totalAmount,
-                Status = "Pending", // Chờ xử lý
-                PaymentStatus = "Unpaid", // Chưa thanh toán
+                Status = "Pending",
+                PaymentStatus = "Unpaid",
                 ShippingAddress = $"{checkoutData.FullName} | {checkoutData.Phone} | {checkoutData.Address}",
                 Note = checkoutData.Note,
                 ShippingMethodId = checkoutData.ShippingMethodId,
@@ -67,9 +76,8 @@ namespace MotoShop.Business.Services
             };
 
             await _unitOfWork.Repository<Order>().AddAsync(order);
-            await _unitOfWork.CompleteAsync(); // Lưu để lấy OrderId (PK)
+            await _unitOfWork.CompleteAsync();
 
-            // 5. Tạo Chi tiết đơn hàng và Trừ tồn kho
             foreach (var item in cart.CartItems)
             {
                 var orderItem = new OrderItem
@@ -81,38 +89,33 @@ namespace MotoShop.Business.Services
                 };
                 await _unitOfWork.Repository<OrderItem>().AddAsync(orderItem);
 
-                // Trừ tồn kho
-                item.ProductVariant.StockQuantity -= item.Quantity;
+                item.ProductVariant!.StockQuantity -= item.Quantity;
                 _unitOfWork.Repository<ProductVariant>().Update(item.ProductVariant);
 
-                // Ghi nhận giao dịch kho (Lịch sử)
                 var transaction = new InventoryTransaction
                 {
                     ProductVariantId = item.ProductVariantId,
-                    Quantity = -item.Quantity, // Số âm là xuất kho
+                    Quantity = -item.Quantity,
                     TransactionType = "Order",
                     TransactionDate = DateTime.Now,
-                    Note = $"Đơn hàng #{order.OrderId}"
+                    Note = $"Don hang #{order.OrderId}"
                 };
                 await _unitOfWork.Repository<InventoryTransaction>().AddAsync(transaction);
             }
 
-            // 6. Xóa giỏ hàng
             _unitOfWork.Repository<Cart>().Delete(cart);
 
-            // Hoàn tất Transaction
             var result = await _unitOfWork.CompleteAsync();
             if (result > 0)
             {
-                return (true, "Đặt hàng thành công!", order.OrderId);
+                return (true, "Dat hang thanh cong!", order.OrderId);
             }
 
-            return (false, "Lỗi khi lưu đơn hàng.", 0);
+            return (false, "Loi khi luu don hang.", 0);
         }
 
         public async Task<List<OrderDto>> GetUserOrdersAsync(string userId)
         {
-            // Tạm thời lấy tất cả đơn hàng, cần liên kết userId -> CustomerId sau này
             var orders = await _unitOfWork.Repository<Order>().GetAllAsync();
             return orders.Select(o => new OrderDto
             {
@@ -150,10 +153,9 @@ namespace MotoShop.Business.Services
 
             order.Status = "Cancelled";
             _unitOfWork.Repository<Order>().Update(order);
-            
-            // Hoàn lại tồn kho
+
             var items = await _unitOfWork.Repository<OrderItem>().Find(i => i.OrderId == orderId).ToListAsync();
-            foreach(var item in items)
+            foreach (var item in items)
             {
                 var variant = await _unitOfWork.Repository<ProductVariant>().GetByIdAsync(item.ProductVariantId);
                 if (variant != null)
@@ -163,6 +165,21 @@ namespace MotoShop.Business.Services
                 }
             }
 
+            return await _unitOfWork.CompleteAsync() > 0;
+        }
+
+        public async Task<bool> UpdatePaymentStatusAsync(int orderId, string status)
+        {
+            var order = await _unitOfWork.Repository<Order>().GetByIdAsync(orderId);
+            if (order == null) return false;
+
+            order.PaymentStatus = status;
+            if (status == "Paid")
+            {
+                order.Status = "Processing";
+            }
+
+            _unitOfWork.Repository<Order>().Update(order);
             return await _unitOfWork.CompleteAsync() > 0;
         }
     }

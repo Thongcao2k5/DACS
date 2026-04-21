@@ -5,111 +5,66 @@
 <div class="breadcrumb-wrapper">
     <div class="container">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
+            <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
                 <li class="breadcrumb-item"><a href="/Account/Profile">Tài khoản</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Địa chỉ giao hàng</li>
+                <li class="breadcrumb-item active" aria-current="page">Sổ địa chỉ</li>
             </ol>
         </nav>
     </div>
 </div>
 
-<main class="container mb-5">
+<main class="container py-5">
     <div class="row g-4">
-        <!-- 2. SIDEBAR MENU (Left) -->
+        <!-- Sidebar -->
         <aside class="col-lg-3">
-            <div class="account-sidebar">
-                <div class="d-flex align-items-center gap-3 mb-4 pb-4 border-bottom">
-                    <div style="width: 50px; height: 50px;">
-                        <img src="https://i.pravatar.cc/150?u=1" class="rounded-circle w-100 h-100 object-fit-cover" alt="User">
-                    </div>
-                    <div>
-                        <h6 class="fw-bold mb-0">Nguyễn Văn An</h6>
-                        <p class="text-muted small mb-0">Thành viên Bạc</p>
-                    </div>
-                </div>
-                <ul class="account-nav">
-                    <li class="account-nav-item"><a href="/Account/Profile" class="account-nav-link"><i class='bx bx-user'></i> Thông tin cá nhân</a></li>
-                    <li class="account-nav-item"><a href="/Order" class="account-nav-link"><i class='bx bx-package'></i> Đơn hàng của tôi</a></li>
-                    <li class="account-nav-item"><a href="/Account/AddressBook" class="account-nav-link active"><i class='bx bx-map'></i> Địa chỉ giao hàng</a></li>
-                    <li class="account-nav-item"><a href="/Product/Wishlist" class="account-nav-link"><i class='bx bx-heart'></i> Sản phẩm yêu thích</a></li>
-                    <li class="account-nav-item"><a href="/Account/ChangePassword" class="account-nav-link"><i class='bx bx-lock-alt'></i> Đổi mật khẩu</a></li>
-                    <li class="account-nav-item mt-3 pt-3 border-top">
-                        <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm" class="d-none"></form>
-                        <a href="javascript:void(0)" class="account-nav-link text-danger" onclick="confirmLogout()"><i class='bx bx-log-out'></i> Đăng xuất</a>
-                    </li>
-                </ul>
-            </div>
+            <partial name="_AccountSidebar" />
         </aside>
 
-        <!-- 3. MAIN CONTENT (Right) -->
+        <!-- Main Content -->
         <div class="col-lg-9">
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-                <h4 class="fw-bold mb-0 text-uppercase">ĐỊA CHỈ GIAO HÀNG</h4>
-                <button class="btn btn-danger rounded-pill fw-bold px-4" data-bs-toggle="modal" data-bs-target="#addressModal">
+                <h4 class="fw-bold mb-0 text-uppercase"><i class='bx bx-map me-2'></i>ĐỊA CHỈ GIAO HÀNG</h4>
+                <button class="btn btn-danger rounded-pill fw-bold px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addressModal">
                     <i class='bx bx-plus-circle me-2'></i> THÊM ĐỊA CHỈ MỚI
                 </button>
             </div>
 
-            <!-- 4. ADDRESS LIST -->
-            <div class="row g-4">
-                <!-- Address Card 1 (Default) -->
-                <div class="col-md-6">
-                    <div class="address-card default">
-                        <div class="address-name">
-                            Nguyễn Văn An 
-                            <span class="address-badge-default">Mặc định</span>
-                        </div>
-                        <div class="address-phone">0901 234 567</div>
-                        <div class="address-detail-text">
-                            123 Đường ABC, Phường 5, Quận 1<br>
-                            Thành phố Hồ Chí Minh
-                        </div>
-                        <div class="address-actions">
-                            <button class="btn-address-action" data-bs-toggle="modal" data-bs-target="#addressModal">Sửa</button>
-                            <button class="btn-address-action delete" onclick="confirmDeleteAddress()">Xóa</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Address Card 2 -->
-                <div class="col-md-6">
-                    <div class="address-card">
-                        <div class="address-name">Trần Minh Thắng</div>
-                        <div class="address-phone">0988 777 666</div>
-                        <div class="address-detail-text">
-                            456 Đường Lê Lợi, Phường Bến Thành, Quận 1<br>
-                            Thành phố Hồ Chí Minh
-                        </div>
-                        <div class="address-actions">
-                            <button class="btn-address-action" data-bs-toggle="modal" data-bs-target="#addressModal">Sửa</button>
-                            <button class="btn-address-action delete" onclick="confirmDeleteAddress()">Xóa</button>
-                            <button class="btn-address-action ms-auto text-primary">Đặt mặc định</button>
-                        </div>
-                    </div>
+            <!-- Loading Placeholder -->
+            <div id="addressLoading">
+                <div class="row g-3">
+                    <div class="col-md-6"><div class="skeleton-loading shadow-sm" style="height: 180px; border-radius: 15px;"></div></div>
+                    <div class="col-md-6"><div class="skeleton-loading shadow-sm" style="height: 180px; border-radius: 15px;"></div></div>
                 </div>
             </div>
 
-            <!-- Empty State (Hidden by default) -->
-            <div id="emptyAddresses" class="d-none text-center py-5">
-                <i class='bx bx-map-pin fs-1 text-muted mb-3'></i>
-                <h5 class="fw-bold">Bạn chưa có địa chỉ giao hàng nào</h5>
-                <p class="text-muted mb-4">Hãy thêm địa chỉ để quá trình đặt hàng nhanh chóng hơn.</p>
-                <button class="btn btn-danger rounded-pill px-5 fw-bold" data-bs-toggle="modal" data-bs-target="#addressModal">THÊM ĐỊA CHỈ</button>
+            <!-- Address List -->
+            <div id="addressList" class="row g-4 d-none">
+                <!-- Dữ liệu nạp từ API -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyAddresses" class="d-none text-center py-5 shadow-sm rounded-4 bg-white border">
+                <div class="py-4">
+                    <img src="/assets/img/illustrations/address-empty.png" alt="Empty" style="width: 150px; opacity: 0.6;" class="mb-3">
+                    <h5 class="fw-bold">Bạn chưa có địa chỉ giao hàng nào</h5>
+                    <p class="text-muted mb-4">Thêm địa chỉ ngay để thanh toán nhanh chóng hơn.</p>
+                    <button class="btn btn-danger rounded-pill px-5 fw-bold" data-bs-toggle="modal" data-bs-target="#addressModal">THÊM ĐỊA CHỈ</button>
+                </div>
             </div>
         </div>
     </div>
 </main>
 
-<!-- 5. ADD / EDIT ADDRESS MODAL -->
+<!-- ADD / EDIT ADDRESS MODAL -->
 <div class="modal fade" id="addressModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold">THÊM ĐỊA CHỈ MỚI</h5>
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold mt-2 ms-2">THÊM ĐỊA CHỈ MỚI</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-4">
                 <form id="addressForm">
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -122,7 +77,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">Tỉnh / Thành phố *</label>
-                            <select class="form-select form-control-custom h-auto py-2" required>
+                            <select class="form-select form-control-custom" required>
                                 <option value="" selected disabled>Chọn Tỉnh/Thành</option>
                                 <option>TP. Hồ Chí Minh</option>
                                 <option>Hà Nội</option>
@@ -131,28 +86,22 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">Quận / Huyện *</label>
-                            <select class="form-select form-control-custom h-auto py-2" required>
+                            <select class="form-select form-control-custom" required>
                                 <option value="" selected disabled>Chọn Quận/Huyện</option>
-                                <option>Quận 1</option>
-                                <option>Quận 3</option>
-                                <option>Quận 5</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">Phường / Xã *</label>
-                            <select class="form-select form-control-custom h-auto py-2" required>
+                            <select class="form-select form-control-custom" required>
                                 <option value="" selected disabled>Chọn Phường/Xã</option>
-                                <option>Phường 1</option>
-                                <option>Phường 5</option>
-                                <option>Phường Bến Nghé</option>
                             </select>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label-custom">Địa chỉ chi tiết *</label>
-                            <textarea class="form-control form-control-custom h-auto" style="height: 80px;" placeholder="Số nhà, tên đường..." required></textarea>
+                            <textarea class="form-control form-control-custom" style="height: 100px;" placeholder="Số nhà, tên đường..." required></textarea>
                         </div>
                         <div class="col-md-12">
-                            <div class="form-check">
+                            <div class="form-check custom-checkbox">
                                 <input class="form-check-input" type="checkbox" id="setDefault">
                                 <label class="form-check-label text-muted" for="setDefault">Đặt làm địa chỉ mặc định</label>
                             </div>
@@ -160,9 +109,9 @@
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-dark rounded-pill px-4 fw-bold" data-bs-dismiss="modal">HỦY BỎ</button>
-                <button type="submit" form="addressForm" class="btn btn-danger rounded-pill px-4 fw-bold">LƯU ĐỊA CHỈ</button>
+            <div class="modal-footer border-0 p-4 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">HỦY BỎ</button>
+                <button type="submit" form="addressForm" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm">LƯU ĐỊA CHỈ</button>
             </div>
         </div>
     </div>
@@ -170,15 +119,44 @@
 
 @section Scripts {
     <script>
-        function confirmDeleteAddress() {
-            if(confirm('Bạn có chắc chắn muốn xóa địa chỉ này?')) {
-                alert('Đã xóa địa chỉ!');
+        $(document).ready(function() {
+            setTimeout(() => {
+                $('#addressLoading').addClass('d-none');
+                loadAddressData();
+            }, 800);
+        });
+
+        function loadAddressData() {
+            const hasData = true; // Giả lập có dữ liệu
+            if(hasData) {
+                $('#addressList').removeClass('d-none').addClass('animate__animated animate__fadeIn');
+                renderAddresses();
+            } else {
+                $('#emptyAddresses').removeClass('d-none');
             }
         }
-        function confirmLogout() {
-            if(confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-                document.getElementById('logoutForm').submit();
-            }
+
+        function renderAddresses() {
+            const html = `
+                <div class="col-md-6 animate__animated animate__zoomIn">
+                    <div class="address-card default shadow-sm">
+                        <div class="address-name">
+                            Nguyễn Văn An 
+                            <span class="address-badge-default">Mặc định</span>
+                        </div>
+                        <div class="address-phone"><i class='bx bx-phone me-1'></i> 0901 234 567</div>
+                        <div class="address-detail-text">
+                            123 Đường ABC, Phường 5, Quận 1<br>
+                            Thành phố Hồ Chí Minh
+                        </div>
+                        <div class="address-actions mt-3 pt-3 border-top">
+                            <button class="btn-address-action" data-bs-toggle="modal" data-bs-target="#addressModal"><i class='bx bx-edit-alt'></i> Sửa</button>
+                            <button class="btn-address-action delete"><i class='bx bx-trash'></i> Xóa</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            $('#addressList').html(html);
         }
     </script>
 }

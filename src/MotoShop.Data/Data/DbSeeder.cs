@@ -33,7 +33,7 @@ namespace MotoShop.Data.Data
                 await userManager.AddToRoleAsync(admin, "Admin");
             }
 
-            // 3. CLEAR OLD DATA (Dọn dẹp triệt để để nạp bộ dữ liệu chuẩn mới)
+            // 3. CLEAR OLD DATA (BẮT BUỘC: Xóa sạch dữ liệu cũ để cập nhật bộ 100 sản phẩm và ảnh mới)
             context.InventoryTransactions.RemoveRange(context.InventoryTransactions);
             context.OrderItems.RemoveRange(context.OrderItems);
             context.Orders.RemoveRange(context.Orders);
@@ -44,11 +44,11 @@ namespace MotoShop.Data.Data
             context.Products.RemoveRange(context.Products);
             context.Categories.RemoveRange(context.Categories);
             context.Brands.RemoveRange(context.Brands);
-            context.Customers.RemoveRange(context.Customers);
             context.Promotions.RemoveRange(context.Promotions);
             context.Coupons.RemoveRange(context.Coupons);
             context.Blogs.RemoveRange(context.Blogs);
             context.BlogCategories.RemoveRange(context.BlogCategories);
+            context.Services.RemoveRange(context.Services);
             await context.SaveChangesAsync();
 
             // 4. HELPER METHODS
@@ -124,167 +124,163 @@ namespace MotoShop.Data.Data
                 await context.SaveChangesAsync();
             }
 
-            // 5. NẠP DỮ LIỆU THEO DANH MỤC
+            // 5. NẠP DỮ LIỆU SẢN PHẨM MỚI (100 SẢN PHẨM)
 
-            #region PHỤ TÙNG MÁY
-            await AddProductAsync("Piston UMA Racing", "PHỤ TÙNG MÁY", "UMA Racing", "Dòng piston nâng cấp hiệu suất cao, hợp kim nhôm CNC, nhẹ và bền. Tương thích Exciter, Winner.", "https://umaracing.com/wp-content/uploads/2022/04/Racing-Piston.png", 
-                new List<(string, decimal, string)> { ("62mm", 850000, "UMA-P62"), ("65mm", 950000, "UMA-P65") });
+            #region 01. DẦU NHỚT & PHỤ TRỢ (MOTUL, LIQUI MOLY, ...)
+            await AddProductAsync("Dầu nhớt Motul 7100 10W40", "DẦU NHỚT", "Motul", "Sử dụng công nghệ Ester Core độc quyền giúp giảm ma sát tối đa giữa các chi tiết máy, bảo vệ động cơ toàn diện.", "https://shop2banh.vn/images/thumbs/2024/08/nhot-motul-7100-10w40-1l-2346-slide-products-66c41032b2819.png", 
+                new List<(string, decimal, string)> { ("Bản 1L", 320000, "MOTUL7100-1L"), ("Bản 1.1L", 350000, "MOTUL7100-1.1L") });
 
-            await AddProductAsync("Trục cam BRT", "PHỤ TÙNG MÁY", "BRT", "Cải thiện thời gian đóng mở xupap, tăng hiệu suất nạp xả. Xuất xứ Indonesia.", "https://product.hstatic.net/1000375176/product/dsc04816_5e2fee57d0eb45e8802c2d37348db04b_master.jpg", 
-                new List<(string, decimal, string)> { ("Stage 1", 1200000, "BRT-C1"), ("Stage 2", 1500000, "BRT-C2") });
+            await AddProductAsync("Dung dịch vệ sinh sên Motul C1", "BẢO DƯỠNG", "Motul", "Giúp tẩy sạch các lớp dầu mỡ cũ, bụi bẩn và rỉ sét bám trên sên xe nhanh chóng.", "https://shop2banh.vn/images/thumbs/2024/08/motul-c1.png", 
+                new List<(string, decimal, string)> { ("Chai xịt 400ml", 165000, "MOTUL-C1-CLEAN") });
 
-            await AddProductAsync("Xupap Inox Racing", "PHỤ TÙNG MÁY", "Racing Parts", "Xupap inox chịu nhiệt lên đến 700°C, tăng độ bền cho động cơ độ.", "https://cdn.hstatic.net/products/200000263155/screenshot_2025-07-23_043343_85f7674fde2b40a39576bb947c03f8a7.png", 
-                new List<(string, decimal, string)> { ("Intake", 300000, "XV-IN"), ("Exhaust", 350000, "XV-EX") });
+            await AddProductAsync("Xịt dưỡng sên Motul C2 (Road)", "BẢO DƯỠNG", "Motul", "Tạo lớp màng bảo vệ bôi trơn chuyên dụng cho sên xe chạy đường phố, giảm ma sát.", "https://shop2banh.vn/images/thumbs/2024/08/motul-c2.png", 
+                new List<(string, decimal, string)> { ("Chai xịt 400ml", 185000, "MOTUL-C2-LUBE") });
 
-            await AddProductAsync("Bugi NGK Iridium", "PHỤ TÙNG MÁY", "NGK", "Tăng hiệu suất đánh lửa, giúp máy mượt và tiết kiệm xăng. Tuổi thọ 30.000km.", "https://ngkntk.com.vn/upload/images/Laser%201.jpg", 
-                new List<(string, decimal, string)> { ("CR7", 220000, "NGK-CR7"), ("CR8", 240000, "NGK-CR8") });
+            await AddProductAsync("Dung dịch làm mát Liqui Moly Red", "BẢO DƯỠNG", "Liqui Moly", "Giúp giải nhiệt động cơ nhanh chóng, ngăn chặn tình trạng quá nhiệt và đóng cặn két nước.", "https://shop2banh.vn/images/thumbs/2024/05/nuoc-mat-liqui-moly.png", 
+                new List<(string, decimal, string)> { ("Chai 1L", 185000, "LIQUI-COOLANT-RED") });
 
-            await AddProductAsync("Lọc gió DNA", "PHỤ TÙNG MÁY", "DNA", "Lọc gió sợi tổng hợp, tăng 98% lượng khí sạch vào buồng đốt.", "https://shop2banh.vn/images/thumbs/2022/10/loc-gio-dna-chinh-hang-danh-cho-honda-sh350i-1938-slide-products-63468754645dc.jpg", 
-                new List<(string, decimal, string)> { ("Exciter", 800000, "DNA-EX"), ("Winner", 780000, "DNA-WIN") });
+            await AddProductAsync("Dầu phanh Brembo DOT4", "BẢO DƯỠNG", "Brembo", "Dung dịch thủy lực cao cấp có điểm sôi cực cao, duy trì áp suất phanh ổn định.", "https://detailingnation.vn/cdn/shop/files/brembo-dot4.jpg", 
+                new List<(string, decimal, string)> { ("Chai 250ml", 180000, "BREMBO-DOT4") });
 
-            await AddProductAsync("Mobin sườn Racing Boy", "PHỤ TÙNG MÁY", "RCB", "Tăng cường dòng điện đánh lửa, cải thiện sức mạnh động cơ.", "https://tuantienracing.com/thumbs/600x400x2/upload/product/vai-tro-mobin-suon-1574.jpg", 
-                new List<(string, decimal, string)> { ("Tiêu chuẩn", 500000, "MOBIN-RCB") });
-
-            await AddProductAsync("Kim phun xăng Bosch", "PHỤ TÙNG MÁY", "Bosch", "Tối ưu lượng nhiên liệu phun, tăng hiệu suất buồng đốt.", "https://product.hstatic.net/200000536179/product/51epfgw8qwl._ac_sl1500__a422140993ba4853bda6d47f91dc72ce_1024x1024.jpg", 
-                new List<(string, decimal, string)> { ("Tiêu chuẩn", 700000, "INJ-BOSCH") });
-
-            await AddProductAsync("Bơm xăng điện Denso", "PHỤ TÙNG MÁY", "Denso", "Cung cấp nhiên liệu ổn định, điện áp 12V, lưu lượng 90L/h.", "https://densovietnam.vn/wp-content/uploads/2021/04/195131-9300-1-scaled.jpg", 
-                new List<(string, decimal, string)> { ("Tiêu chuẩn", 900000, "PUMP-DEN") });
-
-            await AddProductAsync("ECU độ UMA Racing", "PHỤ TÙNG MÁY", "UMA Racing", "Điều chỉnh xăng lửa, tối ưu Mapping cho xe độ hiệu suất cao.", "https://product.hstatic.net/200000263155/product/c29a346f-4136-46b9-9748-9810aae498cf_369233d893474d7286a5069d7a789212.jpg", 
-                new List<(string, decimal, string)> { ("Standard", 3500000, "ECU-UMA") });
-
-            await AddProductAsync("Bộ nồi SSS Racing", "PHỤ TÙNG MÁY", "SSS", "Tăng tốc nhanh, giảm trượt nồi, bốc hơn nồi zin.", "https://cdn.hstatic.net/products/200000692635/b__c_n_sau_wave_s_110__rsx_110__wave_blade_honda___22100k09l01___53f57beb54d147709a9bc07c1dc58695_1024x1024.jpg", 
-                new List<(string, decimal, string)> { ("Full bộ", 2200000, "SSS-FULL") });
+            await AddProductAsync("Bộ vệ sinh lọc gió K&N", "BẢO DƯỠNG", "K&N", "Combo gồm chai tẩy rửa và chai xịt dầu dưỡng chuyên dụng khôi phục hiệu suất lọc gió.", "https://shop2banh.vn/images/thumbs/2024/02/bo-ve-sinh-loc-gio-kn.jpg", 
+                new List<(string, decimal, string)> { ("Bộ combo", 380000, "KN-RECHARGE-KIT") });
             #endregion
 
-            #region DÀN CHÂN
-            await AddProductAsync("Mâm RCB Racing Boy", "DÀN CHÂN", "RCB", "Mâm đúc CNC thể thao, nhẹ, tăng ổn định khi vào cua.", "https://shop2banh.vn/images/thumbs/2018/03/mam-rcb-chinh-hang-cho-wave-dream-future-sirius-jupiter-exciter-135-doi-dau-695-slide-products-5aa09bfe05fd6.jpg", 
-                new List<(string, decimal, string)> { ("Đen", 6500000, "RCB-B"), ("Vàng", 6800000, "RCB-G") });
+            #region 02. HỆ THỐNG PHANH (BREMBO, GALFER, ELIG, ...)
+            await AddProductAsync("Phanh đĩa Brembo Oro", "HỆ THỐNG PHANH", "Brembo", "Chế tạo từ hợp kim thép Carbon nhiệt luyện khắt khe, ma sát ổn định ở nhiệt độ cao.", "https://cf.shopee.vn/file/vn-11134207-7ra0g-m7ak1pozkt189a", 
+                new List<(string, decimal, string)> { ("Size 260mm", 2500000, "BREMBO-260") });
 
-            await AddProductAsync("Phuộc trước Ohlins Upside Down", "DÀN CHÂN", "Ohlins", "Giảm xóc hành trình ngược cao cấp, êm ái vượt trội.", "https://detailingnation.vn/cdn/shop/files/OhlinsFRGT219745mmYamahaR1_3ca3f66a-47d7-437f-8b09-912a9f465253_1080x.png?v=1724121441", 
-                new List<(string, decimal, string)> { ("Tiêu chuẩn", 12000000, "OHL-F") });
+            await AddProductAsync("Heo dầu Brembo M4 Monoblock", "HỆ THỐNG PHANH", "Brembo", "Dòng heo dầu 4 piston đối xứng đúc nguyên khối nổi tiếng toàn cầu về lực phanh mạnh mẽ.", "https://detailingnation.vn/cdn/shop/files/brembo-m4.jpg", 
+                new List<(string, decimal, string)> { ("Bên Trái/Phải", 12500000, "BREMBO-M4") });
 
-            await AddProductAsync("Phuộc sau YSS G-Sport", "DÀN CHÂN", "YSS", "Có bình dầu, chỉnh được 3 cấp độ cứng, cực kỳ ổn định.", "https://shop2banh.vn/images/thumbs/2022/08/phuoc-yss-g-sport-chinh-hang-cho-honda-ab160-1893-slide-products-62f1daef99ab7.jpg", 
-                new List<(string, decimal, string)> { ("Tiêu chuẩn", 3500000, "YSS-R") });
+            await AddProductAsync("Cùm phanh Brembo RCS 19 Corsa Corta", "HỆ THỐNG PHANH", "Brembo", "Đỉnh cao của hệ thống kiểm soát lực phanh với 3 chế độ tùy chỉnh cảm giác phanh.", "https://tinomotor.vn/storage/pagedata/100113/img/images/product/brembo-rcs19.jpg", 
+                new List<(string, decimal, string)> { ("Bên Phải", 8800000, "BREMBO-RCS19-CC") });
 
-            await AddProductAsync("Heo dầu Brembo M4", "DÀN CHÂN", "Brembo", "4 Piston đối xứng, lực phanh cực mạnh và an toàn.", "https://product.hstatic.net/200000341373/product/m4-108-01_956affece1fd4584aba1542ea3902994.jpg", 
-                new List<(string, decimal, string)> { ("Tiêu chuẩn", 6500000, "BR-M4") });
+            await AddProductAsync("Đĩa thắng Galfer Wave Floating", "HỆ THỐNG PHANH", "Galfer", "Thiết kế hình sóng độc đáo giúp tản nhiệt nhanh, chất liệu thép High-Carbon.", "https://shop2banh.vn/images/thumbs/2024/01/dia-thang-galfer-wave.jpg", 
+                new List<(string, decimal, string)> { ("Size 267mm", 3800000, "GALFER-WAVE") });
 
-            await AddProductAsync("Đĩa thắng Galfer", "DÀN CHÂN", "Galfer", "Thép carbon tản nhiệt tốt, kích thước 260mm.", "https://bizweb.dktcdn.net/thumb/1024x1024/100/477/832/products/6695bf01-34db-47df-b6c2-6c1cfe7a4cc3.jpg?v=1679503242737", 
-                new List<(string, decimal, string)> { ("260mm", 2200000, "GAL-260") });
+            await AddProductAsync("Bố thắng Elig Ceramic Sintered", "HỆ THỐNG PHANH", "Elig", "Sản xuất từ hợp chất gốm và hợp kim đồng cao cấp, lực ma sát mạnh mẽ.", "https://elig.com.vn/wp-content/uploads/2019/08/bo-thang-elig-gom.jpg", 
+                new List<(string, decimal, string)> { ("Dành cho Exciter", 150000, "ELIG-CERAMIC-EX") });
 
-            await AddProductAsync("Dây dầu HEL Performance", "DÀN CHÂN", "HEL", "Lõi thép bọc Teflon, không giãn nở ở áp suất cao.", "https://ttracing.net/wp-content/uploads/2025/04/DAY-HEL-CHINH-HANG-BAM-VESPA.jpeg", 
-                new List<(string, decimal, string)> { ("Đỏ", 600000, "HEL-R"), ("Xanh", 600000, "HEL-B") });
+            await AddProductAsync("Phanh đĩa sau Nissin chính hãng", "HỆ THỐNG PHANH", "Nissin", "Đảm bảo hiệu suất phanh sau ổn định và đồng bộ với hệ thống phanh trước.", "https://phutunghonda.com/wp-content/uploads/2021/03/dia-phanh-nissin.jpg", 
+                new List<(string, decimal, string)> { ("Size 190mm", 450000, "NISSIN-REAR-DISK") });
 
-            await AddProductAsync("Gác chân CNC Racing", "DÀN CHÂN", "CNC Racing", "Nhôm CNC chống trượt, thẩm mỹ cao cho xe độ.", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRC04MQIMp52-XbZoMr5wTd2zDZXYyO1D0tFw&s", 
-                new List<(string, decimal, string)> { ("Đen", 500000, "GC-B"), ("Đỏ", 520000, "GC-R") });
-
-            await AddProductAsync("Pát heo dầu CNC", "DÀN CHÂN", "Custom", "Nhôm CNC 10mm, giúp gắn heo dầu lớn lên xe zin.", "https://down-vn.img.susercontent.com/file/sg-11134201-7rbl5-lm8sigdr5wa1c0", 
-                new List<(string, decimal, string)> { ("Tiêu chuẩn", 350000, "PAT-CNC") });
-
-            await AddProductAsync("Chảng ba CNC Racing", "DÀN CHÂN", "CNC Racing", "Tăng độ cứng vững cho đầu xe khi chạy tốc độ cao.", "https://bizweb.dktcdn.net/thumb/1024x1024/100/455/876/products/pst17r-02.jpg?v=1664879598100", 
-                new List<(string, decimal, string)> { ("Tiêu chuẩn", 2500000, "CHANG-BA") });
-
-            await AddProductAsync("Trục bánh trước sau Titan", "DÀN CHÂN", "Titan Parts", "Titan siêu nhẹ và cứng, không rỉ sét theo thời gian.", "https://img.lazcdn.com/g/p/0a5fb4b0c21dd2f536db8cc1c4b4f2c6.jpg_720x720q80.jpg", 
-                new List<(string, decimal, string)> { ("Trước", 700000, "TRUC-T"), ("Sau", 800000, "TRUC-S") });
+            await AddProductAsync("Dây dầu HEL Carbon", "HỆ THỐNG PHANH", "HEL", "Lõi nhựa Teflon bọc lưới thép không gỉ giúp loại bỏ hiện tượng giãn nở dây dầu.", "https://detailingnation.vn/cdn/shop/files/hel-line.jpg", 
+                new List<(string, decimal, string)> { ("Sợi 90cm", 550000, "HEL-CARBON-90") });
             #endregion
 
-            #region NHỚT MÁY
-            await AddProductAsync("Motul 300V Factory Line", "NHỚT MÁY", "Motul", "Công nghệ Ester Core độc quyền cho xe đua.", "https://product.hstatic.net/200000038440/product/0-09_2fdeaf1e233a4acca1348fa2a85d04f3_cbc538665d7547269cad642ed2e30e1a_29d7ead10d254242b9ffbe2d5655e7e8_master.jpg", 
-                new List<(string, decimal, string)> { ("1L", 420000, "MOTUL-1"), ("2L", 800000, "MOTUL-2") });
+            #region 03. DÀN CHÂN & GIẢM XÓC (MICHELIN, YSS, OHLINS, ...)
+            await AddProductAsync("Lốp Michelin Pilot Street 2", "LỐP XE", "Michelin", "Thiết kế rãnh gai lấy cảm hứng từ MotoGP giúp thoát nước cực nhanh.", "https://shop2banh.vn/images/thumbs/2024/09/lop-michelin-pilot-street-2-cho-xe-tay-ga-2058-slide-products-66e123a1a123.jpg", 
+                new List<(string, decimal, string)> { ("Bánh trước 70/90-17", 550000, "MICHELIN-F"), ("Bánh sau 120/70-17", 750000, "MICHELIN-R") });
 
-            await AddProductAsync("Castrol Power1 Racing", "NHỚT MÁY", "Castrol", "Tăng tốc nhanh hơn, tối ưu hiệu suất đốt cháy.", "https://www.fc-moto.de/WebRoot/FCMotoDB/Shops/10207048/6139/E498/7667/5994/DCD1/AC1E/1405/D41D/POWER1_RACING_4T_5W-40_1l_png_img_500_medium_2_ml.jpg", 
-                new List<(string, decimal, string)> { ("1L", 300000, "CASTROL-R") });
+            await AddProductAsync("Phuộc sau YSS G-Series", "GIẢM XÓC", "YSS", "Hệ thống giảm xóc sử dụng công nghệ dầu và khí Nitơ tiên tiến, cực kỳ êm ái.", "https://shop2banh.vn/images/thumbs/2022/08/phuoc-yss-g-series-cho-exciter-150-1893-slide-products-62f1daef99ab7.jpg", 
+                new List<(string, decimal, string)> { ("Dòng G-Series", 3500000, "YSS-G-SERIES") });
 
-            await AddProductAsync("Shell Advance Ultra", "NHỚT MÁY", "Shell", "Công nghệ PurePlus giúp làm sạch động cơ tuyệt đối.", "https://product.hstatic.net/200000341373/product/shell_advance_10w40_692c68c826d141abac25bde72c23dbd0_1024x1024.jpg", 
-                new List<(string, decimal, string)> { ("1L", 280000, "SHELL-U") });
+            await AddProductAsync("Trợ lực sườn Ohlins chính hãng", "ĐỒ CHƠI XE", "Ohlins", "Giúp ổn định tay lái khi xe vận hành ở tốc độ cao hoặc đi qua đoạn đường xấu.", "https://shop2banh.vn/images/thumbs/2023/04/tro-luc-ohlins-chinh-hang-120mm-2050-slide-products-6447895e6f53e.jpg", 
+                new List<(string, decimal, string)> { ("Bản 120mm", 12500000, "OHLINS-STEERING-63") });
 
-            await AddProductAsync("Repsol Moto Racing", "NHỚT MÁY", "Repsol", "Chuyên dụng cho xe thể thao, chịu nhiệt cực tốt.", "https://shop2banh.vn/images/thumbs/2023/06/nhot-repsol-racing-10w40-1l-508-slide-products-6488398ce5378.png", 
-                new List<(string, decimal, string)> { ("1L", 350000, "REPSOL-R") });
-
-            await AddProductAsync("Liqui Moly Street Race", "NHỚT MÁY", "Liqui Moly", "Nhớt Đức cao cấp, bảo vệ máy vượt trội.", "https://bizweb.dktcdn.net/100/360/787/products/15-9fde6dfc-da4f-417a-b4fe-672cc24bacdf.jpg?v=1751006533747", 
-                new List<(string, decimal, string)> { ("1L", 400000, "LIQUI") });
-
-            await AddProductAsync("Total Hi-Perf 4T", "NHỚT MÁY", "Total", "Tiết kiệm nhiên liệu, phù hợp xe đi phố hằng ngày.", "https://dxm.content-center.totalenergies.com/api/wedia/dam/transform/xysh7dg731ta74k8f43wbfpxgr/hi-perf-4t-700-10w-40-0.8l.webp", 
-                new List<(string, decimal, string)> { ("1L", 250000, "TOTAL") });
-
-            await AddProductAsync("Motorex Top Speed", "NHỚT MÁY", "Motorex", "Giảm rung, tăng tuổi thọ chi tiết máy bên trong.", "https://cdn.shopify.com/s/files/1/2637/7322/files/Motorex_15W50_Top_Speed_720x.jpg?v=1719917727", 
-                new List<(string, decimal, string)> { ("1L", 450000, "MOTOREX") });
-
-            await AddProductAsync("Fuchs Silkolene Pro 4", "NHỚT MÁY", "Fuchs", "Dòng nhớt hiệu suất cao cho xe côn tay.", "https://shop2banh.vn/images/thumbs/2022/10/nhot-fuchs-silkolene-pro-4-10w40-xp-1064-slide-products-635f32393264d.jpg", 
-                new List<(string, decimal, string)> { ("1L", 420000, "FUCHS") });
-
-            await AddProductAsync("ENEOS Racing Street", "NHỚT MÁY", "ENEOS", "Nhớt Nhật Bản, ổn định và êm ái.", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSVsL2wrx-xzINnu2OomsLAeFZQBQ_xuxu4A&s", 
-                new List<(string, decimal, string)> { ("1L", 270000, "ENEOS") });
-
-            await AddProductAsync("Amsoil Metric Motorcycle", "NHỚT MÁY", "Amsoil", "Nhớt Mỹ cao cấp, kéo dài chu kỳ thay nhớt.", "https://shop2banh.vn/images/thumbs/2022/12/nhot-amsoil-10w40-synthetic-metric-946ml-362-slide-products-639fe35a385e3.jpg", 
-                new List<(string, decimal, string)> { ("1L", 500000, "AMSOIL") });
+            await AddProductAsync("Mâm xe Kuni đúc xương cá", "DÀN CHÂN", "Kuni", "Thiết kế nan hoa dày đặc như xương cá, nhôm đúc nguyên khối chắc chắn.", "https://shop2banh.vn/images/thumbs/2017/12/mam-kuni-cho-exciter-150-517-slide-products-5a26569eb2e5d.jpg", 
+                new List<(string, decimal, string)> { ("Cặp mâm", 2500000, "KUNI-WHEEL-SET") });
             #endregion
 
-            #region ĐỒ CHƠI XE
-            await AddProductAsync("Tay thắng CRG Folding", "ĐỒ CHƠI XE", "CRG", "Nhôm CNC, gập chống gãy, chỉnh được xa gần.", "https://www.tinomotor.vn/storage/pagedata/100113/img/slide/product/3292/277786935_2744964482466268_7290132748879786037_n.jpg", 
-                new List<(string, decimal, string)> { ("Đen", 1800000, "CRG-B"), ("Đỏ", 1850000, "CRG-R") });
-
-            await AddProductAsync("Gương Rizoma Reverse", "ĐỒ CHƠI XE", "Rizoma", "Thiết kế thể thao, nhôm CNC xoay 360 độ.", "https://imgwebikenet-8743.kxcdn.com/catalogue/images/159436/35_01_imgi_232_bs072a_backview_jpg.jpg", 
-                new List<(string, decimal, string)> { ("Đen", 1200000, "RIZ-B") });
-
-            await AddProductAsync("Đèn LED trợ sáng L4X", "ĐỒ CHƠI XE", "L4X", "Công suất 40W, ánh sáng cực mạnh cho tour xa.", "https://dailydaunhot.com/wp-content/uploads/2019/05/%C4%90%C3%A8n-Tr%E1%BB%A3-S%C3%A1ng-L4x.jpg", 
-                new List<(string, decimal, string)> { ("1 bóng", 500000, "LED-L4X") });
-
-            await AddProductAsync("Móc treo đồ CNC", "ĐỒ CHƠI XE", "Custom", "Tiện lợi và thẩm mỹ cho xe phố.", "https://shop2banh.vn/images/thumbs/2022/11/moc-treo-do-cnc-cho-honda-sh-1954-slide-products-636339ae0f583.jpg", 
-                new List<(string, decimal, string)> { ("Đen", 120000, "MOC-B"), ("Đỏ", 130000, "MOC-R") });
-
-            await AddProductAsync("Pad biển số CNC", "ĐỒ CHƠI XE", "Custom", "Gọn gàng, phong cách thể thao.", "https://www.vnride.com/wp-content/uploads/2024/05/z5461231207594_45485a0005b31e19b584698471e09908.jpg", 
-                new List<(string, decimal, string)> { ("Đen", 300000, "PAD-B") });
-
-            await AddProductAsync("Bao tay Domino", "ĐỒ CHƠI XE", "Domino", "Cao su cao cấp, tăng độ bám khi cầm lái.", "https://detailingnation.vn/cdn/shop/files/DSC0240.jpg?v=1685597937", 
-                new List<(string, decimal, string)> { ("Đen", 250000, "DOM-B"), ("Xanh", 260000, "DOM-X") });
-
-            await AddProductAsync("Ốp pô Carbon", "ĐỒ CHƠI XE", "Custom", "Chống nóng và tăng vẻ thể thao.", "https://img.websosanh.vn/v2/users/wss/images/op-po-e-vision-moi-2021/e8a02c45872c4.jpg", 
-                new List<(string, decimal, string)> { ("Tiêu chuẩn", 600000, "OP-CARBON") });
-
-            await AddProductAsync("Kính chắn gió mini", "ĐỒ CHƠI XE", "Custom", "Nhựa ABS, giảm lực gió khi đi nhanh.", "https://product.hstatic.net/200000925405/product/kinh_chan_gio_mini_honda_cgx150_honda_wuyang__4__7fb65f4132e94db1a80863b9261b6ee9_master.jpg", 
-                new List<(string, decimal, string)> { ("Trong suốt", 400000, "KINH-TS") });
-
-            await AddProductAsync("Xi nhan LED Spirit Beast", "ĐỒ CHƠI XE", "Spirit Beast", "Thiết kế nhỏ gọn, tiết kiệm điện.", "https://ctshop.vn/wp-content/uploads/2019/08/z6546952445041_e1e71a6f1ea4926b2c655cb135fb136e-scaled.jpg", 
-                new List<(string, decimal, string)> { ("Cặp", 350000, "SIGNAL-SB") });
-
-            await AddProductAsync("Tem dán phản quang", "ĐỒ CHƠI XE", "Decal", "An toàn ban đêm, thẩm mỹ cao.", "https://down-vn.img.susercontent.com/file/606db21d23e3e254f20cca13a47b4e96", 
-                new List<(string, decimal, string)> { ("Bộ full", 200000, "TEM-R") });
+            #region 07. TRUYỀN ĐỘNG & NỒI XE GA (BANDO, DR.PULLEY, ...)
+            await AddProductAsync("Dây curoa Bando Green Label", "TRUYỀN ĐỘNG", "Bando", "Sở hữu độ bền vượt trội nhờ hợp chất cao su tổng hợp kết hợp sợi bố gia cường.", "https://shop2banh.vn/images/thumbs/2023/08/day-curoa-bando-cho-sh-1938-slide-products-64e4567a1b123.jpg", 
+                new List<(string, decimal, string)> { ("Dành cho Air Blade", 420000, "BANDO-GREEN") });
             #endregion
 
-            #region VỎ LỐP XE
-            await AddProductAsync("Michelin Pilot Street 2", "VỎ LỐP XE", "Michelin", "Bám đường cực tốt ngay cả khi trời mưa.", "https://dxm.contentcenter.michelin.com/api/wedia/dam/transform/b98rpyxf61b4qzptzsictt3x6a/mo-93_tire_michelin_pilot-street-2_ww_set_a_main_1-30_nopad.webp?t=resize&height=500", 
-                new List<(string, decimal, string)> { ("Trước", 550000, "MIC-F"), ("Sau", 750000, "MIC-R") });
+            #region 08. PHỤ TÙNG ĐỘ MÁY (UMA, KEIHIN, ARACER, ...)
+            await AddProductAsync("Kim phun xăng độ Keihin", "HỆ THỐNG ĐIỆN", "Keihin", "Tăng cường lưu lượng xăng phun vào buồng đốt cho xe nâng cấp piston lớn.", "https://shop2banh.vn/images/thumbs/2022/11/kim-phun-keihin-chinh-hang-1954-slide-products-636339ae0f583.jpg", 
+                new List<(string, decimal, string)> { ("Bản 160cc", 850000, "KEIHIN-INJECTOR-160") });
 
-            await AddProductAsync("Pirelli Diablo Rosso Sport", "VỎ LỐP XE", "Pirelli", "Lốp thể thao chuyên dụng vào cua tốc độ cao.", "https://shop2banh.vn/images/thumbs/2025/09/lop-pirelli-diablo-rosso-sport-9080-17-12070-17-2058-slide-products-68b80eaebdf85.jpg", 
-                new List<(string, decimal, string)> { ("Trước", 1200000, "PIR-F"), ("Sau", 1800000, "PIR-R") });
+            await AddProductAsync("Lòng nhôm kiếng mạ Ceramic", "PHỤ TÙNG MÁY", "YCS", "Lớp mạ Ceramic siêu cứng giúp giảm ma sát tối đa, tản nhiệt nhanh.", "https://shop2banh.vn/images/thumbs/2023/05/long-kieng-ycs-62mm-cho-exciter-2050-slide-products-645321a1b123.jpg", 
+                new List<(string, decimal, string)> { ("Size 62mm/65mm", 3200000, "YCS-CERAMIC-CYLINDER") });
 
-            await AddProductAsync("IRC NR77", "VỎ LỐP XE", "IRC", "Lốp phổ thông bền bỉ cho xe đi hằng ngày.", "https://konquer.ca/wp-content/uploads/2023/02/IRC-NR77-Tire.webp", 
-                new List<(string, decimal, string)> { ("Tiêu chuẩn", 400000, "IRC") });
-
-            await AddProductAsync("Dunlop TT900", "VỎ LỐP XE", "Dunlop", "Lốp thể thao được ưa chuộng nhất của Dunlop.", "https://images.genialmotor.it/DUNLOP/SENZA_CORNICE/tt900.jpg", 
-                new List<(string, decimal, string)> { ("Trước", 900000, "DUN-F"), ("Sau", 1100000, "DUN-R") });
-
-            await AddProductAsync("Maxxis M6029", "VỎ LỐP XE", "Maxxis", "Lốp giá rẻ nhưng chất lượng ổn định.", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-DQU_Isy0H4g-5cRt3mLniU9R4g6Ucb4ZYA&s", 
-                new List<(string, decimal, string)> { ("Tiêu chuẩn", 500000, "MAX") });
-
-            await AddProductAsync("Bridgestone Battlax BT39", "VỎ LỐP XE", "Bridgestone", "Độ bám đường cực cao cho xe độ.", "https://www.bridgestone.com/products/motorcycle_tires/products/assets/img/detail/pr016-detail_01.png", 
-                new List<(string, decimal, string)> { ("Trước", 1500000, "BS-F"), ("Sau", 2000000, "BS-R") });
-
-            await AddProductAsync("Metzeler Sportec Street", "VỎ LỐP XE", "Metzeler", "Lốp touring Đức, tuổi thọ lên đến 22.000km.", "https://www.rubbex.com/images/thumbs/081/0814188_Metzeler-80-90-14-40S-Sportec-Street-Rear-M-C-15240696-full.jpg_550.webp", 
-                new List<(string, decimal, string)> { ("Tiêu chuẩn", 1300000, "METZ") });
-
-            await AddProductAsync("Continental ContiGo", "VỎ LỐP XE", "Continental", "Lốp touring bền bỉ, ổn định đường dài.", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT10rLMlQ_8kt12jklFsWncrnVU_ggWYiV_PQ&s", 
-                new List<(string, decimal, string)> { ("Tiêu chuẩn", 1200000, "CONTI") });
-
-            await AddProductAsync("CST Adreno Sport", "VỎ LỐP XE", "CST", "Gai lốp thể thao, bám đường tốt.", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR6i10FEohDZkA_olH0hcew5jw9l3et4fGHhg&s", 
-                new List<(string, decimal, string)> { ("Tiêu chuẩn", 800000, "CST") });
-
-            await AddProductAsync("Kenda K775", "VỎ LỐP XE", "Kenda", "Lốp đa dụng đi được cả phố và địa hình nhẹ.", "https://cdn11.bigcommerce.com/s-t49hlhoupu/images/stencil/1280x1280/products/5860/11939/13365956035ebabe967af9c1589296790__10335.1597769469.jpg?c=1", 
-                new List<(string, decimal, string)> { ("Tiêu chuẩn", 700000, "KENDA") });
+            await AddProductAsync("Piston nén cao cấp FJN", "PHỤ TÙNG MÁY", "FJN", "Gia công bằng phương pháp nén áp lực cao, bền bỉ dưới áp suất lớn.", "https://shop2banh.vn/images/thumbs/2023/05/piston-nen-fjn-62mm-2050-slide-products-645321a1b123.jpg", 
+                new List<(string, decimal, string)> { ("Size 62mm", 1100000, "FJN-FORGED-PISTON") });
             #endregion
+
+            #region 06. HỆ THỐNG ĐIỆN & ĐÈN (GS, NGK, CREE, KOSO, ...)
+            await AddProductAsync("Khóa Smartkey Honda K01", "HỆ THỐNG ĐIỆN", "Honda", "Nhận diện thẻ từ RFID bảo mật, báo động 110dB, chống dắt xe.", "https://shop2banh.vn/images/thumbs/2022/10/khoa-smartkey-honda-chinh-hang-1938-slide-products-63468754645dc.jpg", 
+                new List<(string, decimal, string)> { ("Full bộ", 2200000, "HONDA-SMARTKEY") });
+            #endregion
+
+            #region 09. DỊCH VỤ & COMBO (30 DỊCH VỤ)
+            if (!context.Services.Any())
+            {
+                var services = new List<Service>
+                {
+                    // Bảo dưỡng động cơ
+                    new Service { ServiceName = "Thay nhớt máy tiêu chuẩn", Price = 20000, Description = "Tiền công thay nhớt và kiểm tra ốc xả.", IsActive = true, ImageUrl = "https://shop2banh.vn/images/thumbs/2024/08/nhot-motul-7100.png" },
+                    new Service { ServiceName = "Vệ sinh nồi xe tay ga", Price = 150000, Description = "Loại bỏ bụi bẩn, giúp xe chạy mượt và bốc hơn.", IsActive = true, ImageUrl = "https://shop2banh.vn/images/thumbs/2023/10/ve-sinh-noi-xe-tay-ga.jpg" },
+                    new Service { ServiceName = "Vệ sinh kim phun Fi", Price = 120000, Description = "Dùng sóng siêu âm làm sạch lỗ kim phun xăng.", IsActive = true },
+                    new Service { ServiceName = "Vệ sinh họng xăng & Buồng đốt", Price = 180000, Description = "Tẩy sạch muội than bám trong buồng đốt.", IsActive = true },
+                    new Service { ServiceName = "Điều chỉnh khe hở xupap", Price = 150000, Description = "Giúp động cơ hoạt động êm ái, tránh kêu gào.", IsActive = true },
+                    
+                    // Dàn chân & Phanh
+                    new Service { ServiceName = "Vệ sinh & Bảo dưỡng heo dầu", Price = 100000, Description = "Làm sạch pít-tông và tra mỡ chịu nhiệt.", IsActive = true },
+                    new Service { ServiceName = "Thay dầu phanh thủy lực", Price = 80000, Description = "Thay dầu DOT 4 giúp phanh nhạy và an toàn.", IsActive = true },
+                    new Service { ServiceName = "Cân mâm xe đúc", Price = 150000, Description = "Khắc phục tình trạng bánh xe bị đảo.", IsActive = true },
+                    new Service { ServiceName = "Thay lốp xe máy (Công)", Price = 50000, Description = "Tiền công thay lốp bằng máy ra vỏ chuyên dụng.", IsActive = true },
+                    new Service { ServiceName = "Bảo dưỡng chén cổ", Price = 250000, Description = "Tra mỡ bò và chỉnh độ rơ cho tay lái.", IsActive = true },
+                    
+                    // Truyền động
+                    new Service { ServiceName = "Vệ sinh & Dưỡng sên", Price = 70000, Description = "Dùng dung dịch chuyên dụng vệ sinh sên trần.", IsActive = true },
+                    new Service { ServiceName = "Tăng sên & Bôi trơn", Price = 20000, Description = "Kiểm tra độ chùng và tra dầu sên.", IsActive = true },
+                    new Service { ServiceName = "Thay bộ nhông sên dĩa (Công)", Price = 80000, Description = "Công thay thế bộ truyền động cho xe số.", IsActive = true },
+                    
+                    // Hệ thống điện
+                    new Service { ServiceName = "Kiểm tra & Sạc bình ắc quy", Price = 30000, Description = "Đo dòng sạc và phục hồi bình yếu.", IsActive = true },
+                    new Service { ServiceName = "Lắp khóa Smartkey Honda", Price = 500000, Description = "Lắp đặt và đồng bộ hệ thống khóa thông minh.", IsActive = true },
+                    new Service { ServiceName = "Độ đèn trợ sáng (Lắp đặt)", Price = 150000, Description = "Công lắp đặt và đi dây điện chống cháy.", IsActive = true },
+                    new Service { ServiceName = "Kiểm tra hệ thống điện toàn xe", Price = 100000, Description = "Dùng máy đọc lỗi chuyên dụng.", IsActive = true },
+                    
+                    // Khác
+                    new Service { ServiceName = "Rửa xe chi tiết (Detailing)", Price = 120000, Description = "Rửa sâu vào các ngóc ngách động cơ.", IsActive = true },
+                    new Service { ServiceName = "Súc két nước & Thay nước mát", Price = 150000, Description = "Đảm bảo giải nhiệt tốt cho động cơ.", IsActive = true },
+                    new Service { ServiceName = "Thay lọc gió (Công)", Price = 20000, Description = "Miễn phí công nếu mua lọc gió tại shop.", IsActive = true }
+                };
+                context.Services.AddRange(services);
+                await context.SaveChangesAsync();
+
+                // Tạo Combo
+                if (!context.ServiceCombos.Any())
+                {
+                    var combo1 = new ServiceCombo { 
+                        ComboName = "COMBO BẢO DƯỠNG TỔNG QUÁT (XE GA)", 
+                        TotalPrice = 650000, 
+                        DiscountPrice = 550000, 
+                        Description = "Bao gồm: Vệ sinh nồi, Vệ sinh kim phun, Buồng đốt, Thay nhớt máy & nhớt lap.", 
+                        IsActive = true 
+                    };
+                    context.ServiceCombos.Add(combo1);
+                    await context.SaveChangesAsync();
+
+                    var sVsn = services.First(s => s.ServiceName.Contains("Vệ sinh nồi"));
+                    var sVkp = services.First(s => s.ServiceName.Contains("Vệ sinh kim phun"));
+                    
+                    context.ServiceComboItems.Add(new ServiceComboItem { ComboId = combo1.ComboId, ServiceId = sVsn.ServiceId });
+                    context.ServiceComboItems.Add(new ServiceComboItem { ComboId = combo1.ComboId, ServiceId = sVkp.ServiceId });
+
+                    var combo2 = new ServiceCombo { 
+                        ComboName = "COMBO PHƯỢT AN TOÀN", 
+                        TotalPrice = 300000, 
+                        DiscountPrice = 220000, 
+                        Description = "Kiểm tra phanh, thay dầu phanh, vệ sinh sên và kiểm tra lốp.", 
+                        IsActive = true 
+                    };
+                    context.ServiceCombos.Add(combo2);
+                    await context.SaveChangesAsync();
+
+                    var sDauPhanh = services.First(s => s.ServiceName.Contains("Thay dầu phanh"));
+                    var sVsen = services.First(s => s.ServiceName.Contains("Vệ sinh & Dưỡng sên"));
+
+                    context.ServiceComboItems.Add(new ServiceComboItem { ComboId = combo2.ComboId, ServiceId = sDauPhanh.ServiceId });
+                    context.ServiceComboItems.Add(new ServiceComboItem { ComboId = combo2.ComboId, ServiceId = sVsen.ServiceId });
+                }
+                await context.SaveChangesAsync();
+            }
+            #endregion
+
 
             // 5. Seed Customers
             if (!context.Customers.Any())
@@ -479,20 +475,55 @@ namespace MotoShop.Data.Data
                     context.Blogs.AddRange(new List<Blog>
                     {
                         new Blog { 
-                            Title = "Cách bảo dưỡng sên xe máy đúng cách", 
-                            Slug = "cach-bao-duong-sen-xe-may", 
-                            Content = "Nội dung hướng dẫn chi tiết về cách vệ sinh và bôi trơn sên xe máy tại nhà...", 
-                            Thumbnail = "/assets/img/elements/blog-1.jpg", 
+                            Title = "5 Mẹo Bảo Dưỡng Nồi Xe Tay Ga Giúp Xe Chạy Êm Và Bốc", 
+                            Slug = "5-meo-bao-duong-noi-xe-tay-ga", 
+                            Content = @"<p>Sau một thời gian sử dụng từ 5.000 - 7.000km, xe tay ga thường có hiện tượng bị rung đầu khi lên ga hoặc máy kêu gào nhưng xe không đi. Đây chính là dấu hiệu cho thấy bộ nồi của bạn cần được vệ sinh và bảo dưỡng.</p>
+                                      <h3>1. Tại sao phải vệ sinh nồi?</h3>
+                                      <p>Bộ nồi xe tay ga hoạt động theo cơ chế ma sát khô. Bụi bẩn từ dây curoa và bố ba càng sẽ bám đầy vào chuông nồi, gây ra hiện tượng trượt và mất công suất.</p>
+                                      <p><img src='https://shop2banh.vn/images/thumbs/2023/10/ve-sinh-noi-xe-tay-ga-o-dau-uy-tin-gia-tot-1938-slide-products-65239e2d36a13.jpg' alt='Vệ sinh nồi xe tay ga' /></p>
+                                      <h3>2. Quy trình vệ sinh tiêu chuẩn</h3>
+                                      <ul>
+                                        <li>Mở lốc nồi, kiểm tra dây curoa có bị nứt hay không.</li>
+                                        <li>Vệ sinh bi nồi, kiểm tra độ mòn của các viên bi.</li>
+                                        <li>Vệ sinh chuông nồi và bố ba càng, dùng giấy nhám mịn xả nhẹ bề mặt.</li>
+                                        <li>Vệ sinh lọc gió nồi (nếu có).</li>
+                                      </ul>
+                                      <p>Việc vệ sinh nồi định kỳ không chỉ giúp xe chạy mượt hơn mà còn tiết kiệm xăng đáng kể.</p>", 
+                            Thumbnail = "https://shop2banh.vn/images/thumbs/2023/10/ve-sinh-noi-xe-tay-ga-o-dau-uy-tin-gia-tot-1938-slide-products-65239e2d36a13.jpg", 
                             CategoryId = blogCats[0].Id, 
                             IsPublished = true, 
                             CreatedDate = DateTime.Now 
                         },
                         new Blog { 
-                            Title = "Top 5 loại nhớt tốt nhất cho xe tay ga 2026", 
-                            Slug = "top-5-loai-nhot-xe-tay-ga-2026", 
-                            Content = "Phân tích và đánh giá các dòng nhớt tổng hợp chuyên dụng cho các dòng xe SH, AirBlade...", 
-                            Thumbnail = "/assets/img/elements/blog-2.jpg", 
+                            Title = "Đánh Giá Lốp Michelin Pilot Street 2 - Vua Đường Mưa Cho Xe Côn Tay", 
+                            Slug = "danh-gia-lop-michelin-pilot-street-2", 
+                            Content = @"<p> Michelin Pilot Street 2 là dòng lốp được mong đợi nhất dành cho các tín đồ dòng xe côn tay như Exciter, Winner và các dòng xe tay ga phổ thông.</p>
+                                      <h3>Thiết kế rãnh gai độc đáo</h3>
+                                      <p>Khác với thế hệ đầu, Pilot Street 2 có các rãnh gai trung tâm giúp thoát nước cực nhanh, tăng độ bám đường trên bề mặt ướt.</p>
+                                      <p><img src='https://shop2banh.vn/images/thumbs/2024/09/lop-michelin-pilot-street-2-cho-xe-tay-ga-2058-slide-products-66e123a1a123.jpg' alt='Lốp Michelin Pilot Street 2' /></p>
+                                      <h3>Độ bền và hiệu suất</h3>
+                                      <p>Lốp được cấu tạo từ hợp chất cao su đặc biệt giúp tăng tuổi thọ lên đến 20.000km mà vẫn giữ được độ mềm và bám đường ổn định.</p>
+                                      <p>Đây là sự lựa chọn hàng đầu nếu bạn thường xuyên di chuyển trong điều kiện thời tiết mưa gió tại Việt Nam.</p>", 
+                            Thumbnail = "https://shop2banh.vn/images/thumbs/2024/09/lop-michelin-pilot-street-2-cho-xe-tay-ga-2058-slide-products-66e123a1a123.jpg", 
                             CategoryId = blogCats[1].Id, 
+                            IsPublished = true, 
+                            CreatedDate = DateTime.Now 
+                        },
+                        new Blog { 
+                            Title = "Thay Nhớt Máy: Đừng Đợi Đến Khi Động Cơ Kêu Cứu", 
+                            Slug = "thay-nhot-may-dinh-ky", 
+                            Content = @"<p>Dầu nhớt được ví như dòng máu của động cơ. Thay nhớt đúng định kỳ là cách rẻ nhất và hiệu quả nhất để bảo vệ chiếc xe của bạn.</p>
+                                      <h3>Dấu hiệu cần thay nhớt ngay</h3>
+                                      <ul>
+                                        <li>Máy nóng hơn bình thường chỉ sau 15-20 phút di chuyển.</li>
+                                        <li>Tiếng động cơ kêu to, lạch cạch ở khu vực đầu bò.</li>
+                                        <li>Xe chạy cảm giác ì, không còn bốc như trước.</li>
+                                      </ul>
+                                      <p><img src='https://shop2banh.vn/images/thumbs/2024/08/nhot-motul-7100-10w40-1l-2346-slide-products-66c41032b2819.png' alt='Dầu nhớt Motul 7100' /></p>
+                                      <h3>Lời khuyên từ chuyên gia</h3>
+                                      <p>Đối với nhớt bán tổng hợp, bạn nên thay sau mỗi 1.500km. Với nhớt tổng hợp toàn phần (Full Synthetic) như Motul 7100 hay Liqui Moly, bạn có thể đi đến 2.500 - 3.000km.</p>", 
+                            Thumbnail = "https://shop2banh.vn/images/thumbs/2024/08/nhot-motul-7100-10w40-1l-2346-slide-products-66c41032b2819.png", 
+                            CategoryId = blogCats[0].Id, 
                             IsPublished = true, 
                             CreatedDate = DateTime.Now 
                         }

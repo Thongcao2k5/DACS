@@ -23,6 +23,8 @@ namespace MotoShop.Data.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Service> Services { get; set; }
+        public DbSet<ServiceCombo> ServiceCombos { get; set; }
+        public DbSet<ServiceComboItem> ServiceComboItems { get; set; }
         public DbSet<ServiceBooking> ServiceBookings { get; set; }
         public DbSet<ProductReview> ProductReviews { get; set; }
         public DbSet<Promotion> Promotions { get; set; }

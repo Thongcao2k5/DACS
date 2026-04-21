@@ -97,6 +97,17 @@
                         Chủ TK: CTY TNHH MOTOSHOP<br>
                         Nội dung: [Họ tên] - [Số điện thoại]
                     </div>
+
+                    <div class="method-card mt-3" onclick="setPayment('VNPay', 'vnpay-detail')">
+                        <input type="radio" asp-for="PaymentMethod" value="VNPay" id="pay3">
+                        <div class="method-info">
+                            <label for="pay3" class="name">Thanh toán qua VNPay</label>
+                            <span class="desc">Thanh toán bằng ví VNPay, thẻ ATM hoặc QR Code</span>
+                        </div>
+                    </div>
+                    <div id="vnpay-detail" class="payment-detail">
+                        Bạn sẽ được chuyển hướng sang cổng thanh toán VNPay để hoàn tất giao dịch.
+                    </div>
                 </div>
             </div>
 
@@ -177,6 +188,11 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    if (data.redirectUrl) {
+                        window.location.href = data.redirectUrl;
+                        return;
+                    }
+
                     Swal.fire({
                         icon: 'success',
                         title: 'Đặt hàng thành công!',
