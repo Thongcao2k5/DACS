@@ -99,30 +99,5 @@
 </main>
 
 @section Scripts {
-    <script>
-        async function handleAddToCart(variantId) {
-            if (!variantId || variantId == 0) {
-                alert("Sản phẩm chưa sẵn sàng.");
-                return;
-            }
-            const formData = new FormData();
-            formData.append('variantId', variantId);
-            formData.append('quantity', 1);
-
-            try {
-                const response = await fetch('/Cart/AddToCart', {
-                    method: 'POST',
-                    body: formData
-                });
-                const result = await response.json();
-                alert(result.message);
-                if (!result.success && result.message.toLowerCase().includes('đăng nhập')) {
-                    window.location.href = '/Account/Login';
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Có lỗi xảy ra khi thêm vào giỏ hàng.');
-            }
-        }
-    </script>
+    <script src="~/js/cart-handler.js"></script>
 }

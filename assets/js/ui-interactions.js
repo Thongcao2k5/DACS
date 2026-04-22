@@ -3,8 +3,8 @@
  */
 
 const UI = {
-    // 1. Toast Notification
-    showToast: function(message, type = 'success') {
+    // 1. Toast Notification - Ecommerce Style
+    showToast: function(message, type = 'success', productInfo = null) {
         let container = document.querySelector('.toast-container') || this._createToastContainer();
         const icons = {
             success: 'bx-check-circle text-success',
@@ -15,17 +15,45 @@ const UI = {
 
         const toast = document.createElement('div');
         toast.className = `custom-toast ${type}`;
-        toast.innerHTML = `
-            <i class="bx ${icons[type]} toast-icon"></i>
-            <div class="toast-message">${message}</div>
+        
+        let toastHtml = `
+            <div class="toast-content">
+                <i class="bx ${icons[type]} toast-icon"></i>
+                <div class="toast-body">
+                    <div class="toast-message">${message}</div>
+                    ${productInfo ? `
+                        <div class="toast-product-mini">
+                            <img src="${productInfo.image}" alt="product" class="mini-img">
+                            <div class="mini-info">
+                                <span class="mini-name">${productInfo.name}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+                <button class="btn-close-toast" onclick="this.parentElement.parentElement.remove()">&times;</button>
+            </div>
+            <div class="toast-footer">
+                <a href="/Cart" class="btn-view-cart">XEM GIỎ HÀNG</a>
+                <div class="toast-progress"></div>
+            </div>
         `;
+        
+        toast.innerHTML = toastHtml;
         container.appendChild(toast);
 
+        // Auto remove
+        const timeout = 5000;
+        const progress = toast.querySelector('.toast-progress');
+        progress.style.transition = `width ${timeout}ms linear`;
+        setTimeout(() => progress.style.width = '0%', 10);
+
         setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(100%)';
-            setTimeout(() => toast.remove(), 300);
-        }, 4000);
+            if (toast.parentElement) {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, timeout);
     },
 
     _createToastContainer: function() {

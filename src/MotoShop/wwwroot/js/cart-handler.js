@@ -35,7 +35,7 @@ const CartApi = {
 /**
  * Xử lý khi nhấn "Thêm vào giỏ"
  */
-async function handleAddToCart(variantId) {
+async function handleAddToCart(variantId, quantity = 1, productInfo = null) {
     if (!variantId || variantId === 0) {
         if (typeof Swal !== 'undefined') {
             Swal.fire('Chú ý', 'Sản phẩm này hiện chưa có biến thể để đặt hàng.', 'warning');
@@ -43,7 +43,7 @@ async function handleAddToCart(variantId) {
         return;
     }
 
-    const result = await CartApi.addToCart(variantId);
+    const result = await CartApi.addToCart(variantId, quantity);
     
     if (result.success) {
         // 1. Cập nhật con số giỏ hàng
@@ -51,7 +51,7 @@ async function handleAddToCart(variantId) {
         
         // 2. Hiển thị thông báo Toast mới
         if (typeof UI !== 'undefined' && typeof UI.showToast === "function") {
-            UI.showToast(result.message || 'Sản phẩm đã được thêm vào giỏ hàng của bạn.');
+            UI.showToast(result.message || 'Đã thêm vào giỏ hàng', 'success', productInfo);
         } else if (typeof Swal !== 'undefined') {
             Swal.fire({
                 icon: 'success',

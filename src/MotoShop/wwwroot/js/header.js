@@ -21,8 +21,8 @@ const UI = {
         }
     },
 
-    // 2. Toast Notification
-    showToast: function(message, type = 'success') {
+    // 2. Toast Notification - Ecommerce Style
+    showToast: function(message, type = 'success', productInfo = null) {
         let container = document.querySelector('.toast-container');
         if (!container) {
             container = document.createElement('div');
@@ -30,32 +30,55 @@ const UI = {
             document.body.appendChild(container);
         }
 
-        const toast = document.createElement('div');
-        toast.className = 'custom-toast';
-        
-        const icon = type === 'success' ? 'bx-check-circle' : 'bx-error-circle';
-        const title = type === 'success' ? 'Thành công' : 'Thông báo';
+        const icons = {
+            success: 'bx-check-circle text-success',
+            error: 'bx-error-circle text-danger',
+            warning: 'bx-error text-warning',
+            info: 'bx-info-circle text-info'
+        };
 
-        toast.innerHTML = `
-            <div class="toast-icon">
-                <i class='bx ${icon}'></i>
-            </div>
+        const toast = document.createElement('div');
+        toast.className = `custom-toast ${type}`;
+        
+        let toastHtml = `
             <div class="toast-content">
-                <div class="toast-title">${title}</div>
-                <div class="toast-message">${message}</div>
+                <i class="bx ${icons[type]} toast-icon"></i>
+                <div class="toast-body">
+                    <div class="toast-message">${message}</div>
+                    ${productInfo ? `
+                        <div class="toast-product-mini">
+                            <img src="${productInfo.image}" alt="product" class="mini-img">
+                            <div class="mini-info">
+                                <span class="mini-name">${productInfo.name}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+                <button class="btn-close-toast" onclick="this.parentElement.parentElement.remove()">&times;</button>
             </div>
-            <div class="toast-close" onclick="this.parentElement.remove()">
-                <i class='bx bx-x'></i>
+            <div class="toast-footer">
+                <a href="/Cart" class="btn-view-cart">XEM GIỎ HÀNG</a>
+                <div class="toast-progress"></div>
             </div>
         `;
-
+        
+        toast.innerHTML = toastHtml;
         container.appendChild(toast);
 
-        // Tự động xóa sau 3.5s
+        // Auto remove
+        const timeout = 5000;
+        const progress = toast.querySelector('.toast-progress');
+        if (progress) {
+            progress.style.transition = `width ${timeout}ms linear`;
+            setTimeout(() => progress.style.width = '0%', 10);
+        }
+
         setTimeout(() => {
-            toast.classList.add('hide');
-            setTimeout(() => toast.remove(), 400);
-        }, 3500);
+            if (toast.parentElement) {
+                toast.classList.add('hide');
+                setTimeout(() => toast.remove(), 400);
+            }
+        }, timeout);
     }
 };
 
