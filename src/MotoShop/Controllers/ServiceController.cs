@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
 using Microsoft.AspNetCore.Authorization;
@@ -13,10 +13,14 @@ namespace MotoShop.Controllers
     public class ServiceController : Controller
     {
         private readonly MotoShopDbContext _context;
+        private readonly IBookingService _bookingService;
+        private readonly IUnitOfWork _uow;
 
-        public ServiceController(MotoShopDbContext context)
+        public ServiceController(MotoShopDbContext context, IBookingService bookingService, IUnitOfWork uow)
         {
             _context = context;
+            _bookingService = bookingService;
+            _uow = uow;
         }
 
         public async Task<IActionResult> Index()
@@ -33,16 +37,6 @@ namespace MotoShop.Controllers
 
             return View();
         }
-        private readonly IBookingService _bookingService;
-        private readonly IUnitOfWork _uow;
-
-        public ServiceController(IBookingService bookingService, IUnitOfWork uow)
-        {
-            _bookingService = bookingService;
-            _uow = uow;
-        }
-
-        
 
         public async Task<IActionResult> Details(int id)
         {
@@ -55,7 +49,6 @@ namespace MotoShop.Controllers
         [HttpGet]
         public async Task<IActionResult> Booking(int? serviceId)
         {
-            // Empty state
             if (!serviceId.HasValue)
             {
                 ViewBag.HasService = false;
@@ -67,17 +60,14 @@ namespace MotoShop.Controllers
 
             ViewBag.HasService = true;
             ViewBag.Service = service;
-            ViewBag.SelectedServiceId = service.ServiceId; // THÊM DÒNG NÀY ĐỂ BIND VÀO FORM
+            ViewBag.SelectedServiceId = service.ServiceId;
             ViewBag.Services = await _uow.Repository<Service>().Find(s => s.IsActive).ToListAsync();
 
-            // Lấy thông tin khách hàng (Bắt buộc vì đã qua [Authorize])
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var customer = await _uow.Repository<Customer>().Find(c => c.UserId == userId).FirstOrDefaultAsync();
             
             if (customer == null)
             {
-                // Nếu User Identity tồn tại nhưng chưa có bản ghi Customer (trường hợp hiếm)
-                // Có thể tạo một Customer mặc định hoặc yêu cầu cập nhật Profile
                 ViewBag.Customer = new Customer { FullName = User.Identity.Name, Email = User.Identity.Name };
             }
             else
@@ -85,17 +75,13 @@ namespace MotoShop.Controllers
                 ViewBag.Customer = customer;
             }
 
-            // Hãng xe (Manufacturer)
             ViewBag.Brands = await _uow.Repository<MotorbikeModel>()
                 .Find(m => m.Manufacturer != null)
                 .Select(m => m.Manufacturer)
                 .Distinct()
                 .ToListAsync();
 
-            // Slots đã đặt hôm nay
             ViewBag.BookedSlots = await _bookingService.GetBookedSlotsAsync(DateTime.Today);
-
-            // Tính trước tiền cọc để hiển thị (30%)
             ViewBag.DepositAmount = Math.Ceiling(service.Price * 0.3m / 1000) * 1000;
 
             var model = new BookingViewModel
@@ -175,7 +161,6 @@ namespace MotoShop.Controllers
                 return Json(new { success = false, message = "Vui lòng tải ảnh chuyển khoản lên." });
             }
 
-            // Lưu ảnh chứng minh cọc
             var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/deposits");
             if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
 
@@ -228,7 +213,7 @@ namespace MotoShop.Controllers
             {
                 var service = await _context.Services.FindAsync(id);
                 if (service == null) return NotFound();
-                return View("ServiceDetail", service);
+                return View("Details", service);
             }
         }
     }

@@ -30,11 +30,62 @@ const MotoApi = {
     validateCoupon: (code) => MotoApi.fetchJson(`/api/HomeApi/validate-coupon?code=${code}`),
     
     async addToCart(variantId, quantity = 1) {
-        // ... giữ nguyên logic cũ ...
+        try {
+            const formData = new FormData();
+            formData.append('variantId', variantId);
+            formData.append('quantity', quantity);
+
+            const response = await fetch(`${API_CONFIG.BASE_URL}/Cart/AddToCart`, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+            return await response.json();
+        } catch (e) {
+            console.error(`[API Error] addToCart:`, e);
+            return { success: false, message: 'Lỗi kết nối máy chủ' };
+        }
     }
 };
 
 const UI = {
+    showToast(message, type = 'success') {
+        let toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            toastContainer.style.zIndex = '9999';
+            document.body.appendChild(toastContainer);
+        }
+
+        const toastId = 'toast-' + Date.now();
+        const icon = type === 'success' ? 'bx-check-circle' : 'bx-info-circle';
+        const color = type === 'success' ? 'text-success' : 'text-danger';
+
+        const toastHtml = `
+            <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <i class='bx ${icon} ${color} fs-4 me-2'></i>
+                    <strong class="me-auto">Thông báo</strong>
+                    <small>Vừa xong</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>`;
+
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+        toast.show();
+
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastElement.remove();
+        });
+    },
+
     renderProductCard(p, badgeClass = 'badge-new', badgeText = 'New') {
         const hasPromotion = p.discountPercent > 0 || p.oldPrice > p.minPrice;
         const currentPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.minPrice);
@@ -84,11 +135,46 @@ const UI = {
     },
 
     updateCartBadge(count) {
-        // ... giữ nguyên ...
+        const badges = document.querySelectorAll('.cart-badge');
+        badges.forEach(badge => {
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'block' : 'none';
+        });
     }
 };
 
-// ... logic addToCart giữ nguyên ...
+/**
+ * XỬ LÝ SỰ KIỆN TOÀN CỤC
+ */
+async function handleAddToCart(variantId) {
+    if (!variantId || variantId === 0) {
+        UI.showToast('Sản phẩm này hiện chưa có biến thể để đặt hàng.', 'error');
+        return;
+    }
+
+    const result = await MotoApi.addToCart(variantId);
+    
+    if (result && result.success) {
+        UI.showToast(result.message || 'Đã thêm vào giỏ hàng thành công!');
+        // Cập nhật số lượng giỏ hàng
+        const cartData = await MotoApi.getCartCount();
+        if (cartData) {
+            UI.updateCartBadge(cartData.count);
+        }
+    } else {
+        UI.showToast(result?.message || 'Có lỗi xảy ra khi thêm vào giỏ hàng!', 'error');
+    }
+}
+
+async function handleBuyNow(variantId) {
+    if (!variantId || variantId === 0) return;
+    const result = await MotoApi.addToCart(variantId);
+    if (result && result.success) {
+        window.location.href = 'cart.html';
+    } else {
+        UI.showToast(result?.message || 'Có lỗi xảy ra!', 'error');
+    }
+}
 
 // KHỞI TẠO TRANG
 document.addEventListener('DOMContentLoaded', async () => {
