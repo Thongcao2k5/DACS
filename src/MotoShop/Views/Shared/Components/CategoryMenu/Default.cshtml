@@ -1,0 +1,143 @@
+@model IEnumerable<MotoShop.Data.Models.Category>
+
+<div class="shopee-rich-mega-menu shadow-lg animate__animated animate__fadeIn">
+    <div class="container py-4">
+        <div class="row row-cols-lg-5 row-cols-md-3 row-cols-2 g-4">
+            @foreach (var parent in Model)
+            {
+                var iconClass = "bx-package"; 
+                var catName = parent.CategoryName.ToUpper();
+                if (catName.Contains("NHỚT")) iconClass = "bx-droplet";
+                else if (catName.Contains("LỐP") || catName.Contains("VỎ")) iconClass = "bx-target-lock";
+                else if (catName.Contains("PHANH") || catName.Contains("THẮNG")) iconClass = "bx-disc";
+                else if (catName.Contains("ĐIỆN") || catName.Contains("ĐÈN")) iconClass = "bx-bolt-circle";
+                else if (catName.Contains("MÁY") || catName.Contains("NỒI")) iconClass = "bx-cog";
+                else if (catName.Contains("DÀN ÁO") || catName.Contains("NHỰA")) iconClass = "bx-shape-square";
+
+                <div class="col">
+                    <div class="category-block">
+                        <a href="/Product?categoryId=@parent.CategoryId" class="category-main-link">
+                            <div class="category-icon-wrapper">
+                                <i class='bx @iconClass'></i>
+                            </div>
+                            <span class="category-name">@parent.CategoryName</span>
+                        </a>
+                        
+                        <div class="category-sub-links">
+                            @if (parent.SubCategories != null && parent.SubCategories.Any())
+                            {
+                                @foreach (var sub in parent.SubCategories.Take(5).OrderBy(s => s.CategoryName))
+                                {
+                                    <a href="/Product?categoryId=@sub.CategoryId" class="sub-link-item">@sub.CategoryName</a>
+                                }
+                                @if(parent.SubCategories.Count > 5)
+                                {
+                                    <a href="/Product?categoryId=@parent.CategoryId" class="sub-link-item text-danger fw-bold">Xem thêm...</a>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Shopee Rich Mega Menu - Full Width Grid */
+    .shopee-rich-mega-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: #fff;
+        z-index: 1100;
+        display: none;
+        border-top: 1px solid #f0f0f0;
+        border-bottom: 4px solid #dc3545;
+        padding-bottom: 20px;
+    }
+
+    .mega-menu-wrapper:hover .shopee-rich-mega-menu {
+        display: block !important;
+    }
+
+    .category-block {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 15px;
+        transition: all 0.3s;
+        border-radius: 12px;
+    }
+
+    .category-block:hover {
+        background-color: #fcfcfc;
+    }
+
+    .category-main-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        text-decoration: none;
+        margin-bottom: 15px;
+    }
+
+    .category-icon-wrapper {
+        width: 60px;
+        height: 60px;
+        background-color: #f8f9fa;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+        color: #333;
+        font-size: 2rem;
+        transition: all 0.3s;
+        border: 1px solid #eee;
+    }
+
+    .category-main-link:hover .category-icon-wrapper {
+        background-color: #dc3545;
+        color: #fff;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(220, 53, 69, 0.2);
+    }
+
+    .category-name {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #222;
+        text-transform: uppercase;
+        display: block;
+    }
+
+    .category-sub-links {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        border-top: 1px dashed #eee;
+        padding-top: 10px;
+    }
+
+    .sub-link-item {
+        font-size: 0.85rem;
+        color: #666;
+        text-decoration: none;
+        transition: 0.2s;
+        padding: 2px 0;
+    }
+
+    .sub-link-item:hover {
+        color: #dc3545;
+        padding-left: 5px;
+    }
+
+    /* Hiệu ứng Animation */
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>

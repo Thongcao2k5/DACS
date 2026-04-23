@@ -49,9 +49,9 @@ async function handleAddToCart(variantId) {
         // 1. Cập nhật con số giỏ hàng
         await CartApi.updateCartBadge();
         
-        // 2. Hiển thị thông báo (Ưu tiên Header Toast để giống trang Danh mục)
-        if (typeof showCartSuccessToast === "function") {
-            showCartSuccessToast(result.message || 'Đã thêm vào giỏ hàng thành công');
+        // 2. Hiển thị thông báo Toast mới
+        if (typeof UI !== 'undefined' && typeof UI.showToast === "function") {
+            UI.showToast(result.message || 'Sản phẩm đã được thêm vào giỏ hàng của bạn.');
         } else if (typeof Swal !== 'undefined') {
             Swal.fire({
                 icon: 'success',
@@ -65,14 +65,16 @@ async function handleAddToCart(variantId) {
         }
     } else {
         // Thông báo lỗi
-        if (typeof Swal !== 'undefined') {
+        if (typeof UI !== 'undefined' && typeof UI.showToast === "function") {
+            UI.showToast(result.message || 'Có lỗi xảy ra khi thêm vào giỏ!', 'info');
+        } else if (typeof Swal !== 'undefined') {
             Swal.fire('Thông báo', result.message || 'Có lỗi xảy ra!', 'info');
         }
         
         if (result.message && result.message.toLowerCase().includes('đăng nhập')) {
             setTimeout(() => {
                 window.location.href = '/Account/Login';
-            }, 1500);
+            }, 2000);
         }
     }
 }

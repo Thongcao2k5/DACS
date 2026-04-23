@@ -1,0 +1,80 @@
+@model MotoShop.Data.Models.ServiceCombo
+
+@{
+    ViewData["Title"] = Model.ComboName;
+}
+
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Service" asp-action="Index">Dịch vụ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.ComboName</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<main class="container mb-5">
+    <div class="row g-5">
+        <!-- LEFT - COMBO IMAGE -->
+        <div class="col-lg-6">
+            <div class="service-gallery">
+                <div class="main-img-wrapper mb-3 position-relative" style="aspect-ratio: 16/9;">
+                    <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800" : Model.ImageUrl)" 
+                         class="w-100 h-100 object-fit-cover rounded-4 shadow-sm" alt="@Model.ComboName">
+                    <div class="discount-badge position-absolute top-0 start-0 m-3 bg-danger text-white px-3 py-1 rounded-pill fw-bold">
+                        TIẾT KIỆM @(((Model.TotalPrice - Model.DiscountPrice) / Model.TotalPrice * 100).ToString("0"))%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT - COMBO INFORMATION -->
+        <div class="col-lg-6">
+            <div class="service-detail-info">
+                <div class="badge bg-danger mb-2">GÓI COMBO TIẾT KIỆM</div>
+                <h1 class="fw-bold mb-3">@Model.ComboName</h1>
+                <div class="mb-4">
+                    <p class="text-muted fs-5">@Model.Description</p>
+                </div>
+                
+                <h5 class="fw-bold mb-3">Dịch vụ bao gồm:</h5>
+                <div class="combo-included-services mb-4">
+                    <ul class="list-group list-group-flush border rounded-4 overflow-hidden">
+                        @foreach (var item in Model.ComboItems)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                <div>
+                                    <i class='bx bx-check-circle text-success me-2 fs-5'></i>
+                                    <span class="fw-medium">@item.Service?.ServiceName</span>
+                                </div>
+                                <span class="text-muted small">@item.Service?.Price.ToString("N0")đ</span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="price-box">
+                        <div class="text-muted text-decoration-line-through fs-5">@Model.TotalPrice.ToString("N0")đ</div>
+                        <div class="text-danger fw-bold display-6">@Model.DiscountPrice.ToString("N0")đ</div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3">
+                    <a href="/Service/Booking?serviceId=@(Model.ComboItems.FirstOrDefault()?.ServiceId)" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold flex-grow-1 py-3 shadow-sm">
+                        ĐẶT LỊCH COMBO NGAY
+                    </a>
+                </div>
+                <p class="small text-muted mt-3 text-center italic">* Giá đã bao gồm ưu đãi combo. Đặt lịch ngay để được phục vụ tốt nhất.</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<style>
+    .discount-badge { box-shadow: 0 4px 10px rgba(220, 53, 69, 0.4); }
+    .combo-included-services .list-group-item:hover { background-color: #f8f9fa; }
+</style>

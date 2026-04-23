@@ -1,5 +1,6 @@
 @model IEnumerable<MotoShop.Data.Models.Blog>
 @{
+    ViewData["Title"] = "Tin tức & Sự kiện MotoShop";
     ViewData["Title"] = "Tin tức & Kiến thức xe máy";
     var categories = ViewBag.Categories;
     var recentPosts = ViewBag.RecentPosts as IEnumerable<MotoShop.Data.Models.Blog>;
@@ -8,14 +9,20 @@
 <div class="breadcrumb-wrapper">
     <div class="container">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Tin tức</li>
             </ol>
         </nav>
     </div>
 </div>
 
+<main class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-uppercase">TIN TỨC & CHIA SẺ KỸ THUẬT</h2>
+        <div class="mx-auto bg-danger mb-3" style="height: 3px; width: 60px;"></div>
+        <p class="text-muted">Cập nhật những thông tin mới nhất về phụ tùng và mẹo bảo dưỡng xe máy chuyên nghiệp.</p>
+    </div>
 <main class="container mb-5">
     <section class="p-0 mb-5">
         <div class="blog-banner" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center; padding: 100px 0; border-radius: 20px; color: white;">
@@ -26,6 +33,48 @@
         </div>
     </section>
 
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <div class="row g-4">
+                @if (Model.Any())
+                {
+                    @foreach (var blog in Model)
+                    {
+                        <div class="col-md-6 col-xl-6">
+                            <article class="blog-card shadow-sm border-0 h-100 overflow-hidden rounded-4 bg-white transition-hover">
+                                <div class="blog-image-wrapper position-relative" style="height: 220px; overflow: hidden;">
+                                    <img src="@(string.IsNullOrEmpty(blog.Thumbnail) ? "/assets/img/elements/placeholder-image.png" : blog.Thumbnail)" 
+                                         class="w-100 h-100 object-fit-cover transition-img" alt="@blog.Title">
+                                    <div class="blog-category-tag position-absolute top-0 start-0 m-3 bg-danger text-white px-3 py-1 rounded-pill small fw-bold">
+                                        @blog.Category?.Name
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <div class="blog-meta mb-2 small text-muted">
+                                        <span><i class='bx bx-calendar me-1'></i> @blog.CreatedDate.ToString("dd/MM/yyyy")</span>
+                                        <span class="ms-3"><i class='bx bx-user me-1'></i> Admin</span>
+                                    </div>
+                                    <h5 class="fw-bold mb-3 h-title">
+                                        <a asp-action="Detail" asp-route-slug="@blog.Slug" class="text-dark text-decoration-none hover-danger">@blog.Title</a>
+                                    </h5>
+                                    <div class="text-muted small mb-4 line-clamp-3" style="min-height: 60px;">
+                                        @Html.Raw(blog.Content.Length > 150 ? blog.Content.Substring(0, 150) + "..." : blog.Content)
+                                    </div>
+                                    <a asp-action="Detail" asp-route-slug="@blog.Slug" class="btn btn-outline-danger rounded-pill px-4 fw-bold btn-sm">XEM CHI TIẾT</a>
+                                </div>
+                            </article>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-5 w-100">
+                        <img src="/assets/img/illustrations/empty-box.png" alt="Empty" style="width: 150px; opacity: 0.5;" class="mb-3">
+                        <h5 class="fw-bold text-muted">Chưa có bài viết nào trong danh mục này.</h5>
+                    </div>
+                }
+            </div>
     <div class="row g-4">
         <!-- LEFT COLUMN: BLOG POSTS -->
         <div class="col-lg-8">
@@ -73,6 +122,27 @@
             }
         </div>
 
+            <!-- Pagination -->
+            @if (ViewBag.TotalPages > 1)
+            {
+                <nav class="mt-5">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                            <a class="page-link rounded-circle mx-1" href="/Blog?page=@(ViewBag.CurrentPage - 1)@(ViewBag.CurrentCategory != null ? $"&categoryId={ViewBag.CurrentCategory}" : "")"><i class='bx bx-chevron-left'></i></a>
+                        </li>
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                <a class="page-link rounded-circle mx-1" href="/Blog?page=@i@(ViewBag.CurrentCategory != null ? $"&categoryId={ViewBag.CurrentCategory}" : "")">@i</a>
+                            </li>
+                        }
+                        <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                            <a class="page-link rounded-circle mx-1" href="/Blog?page=@(ViewBag.CurrentPage + 1)@(ViewBag.CurrentCategory != null ? $"&categoryId={ViewBag.CurrentCategory}" : "")"><i class='bx bx-chevron-right'></i></a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </div>
         <!-- RIGHT COLUMN: SIDEBAR -->
         <aside class="col-lg-4 blog-sidebar">
             <!-- Search Widget -->
@@ -95,13 +165,39 @@
                         <li class="mb-2">
                             <a asp-action="Index" asp-route-categoryId="@cat.Id" 
                                class="text-decoration-none d-flex justify-content-between align-items-center @(ViewBag.CurrentCategoryId == cat.Id ? "text-danger fw-bold" : "text-muted")">
-                                @cat.Name <span class="badge bg-light text-dark rounded-pill">@cat.Count</span>
+                                @cat.Name <span class="badge bg-light text-dark rounded-pill">@(cat.Blogs?.Count ?? 0)</span>
                             </a>
                         </li>
                     }
                 </ul>
             </div>
 
+        <!-- Sidebar -->
+        <aside class="col-lg-3">
+            <div class="blog-sidebar shadow-sm rounded-4 p-4 sticky-top" style="top: 100px; background: #fff;">
+                <h5 class="fw-bold mb-4 border-bottom pb-2 text-uppercase" style="font-size: 0.9rem; letter-spacing: 1px;">Danh mục tin</h5>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <a href="/Blog" class="blog-sidebar-link d-flex justify-content-between align-items-center @(ViewBag.CurrentCategory == null ? "active" : "")">
+                            Tất cả bài viết <i class='bx bx-chevron-right'></i>
+                        </a>
+                    </li>
+                    @foreach (var cat in (ViewBag.Categories as IEnumerable<MotoShop.Data.Models.BlogCategory>) ?? new List<MotoShop.Data.Models.BlogCategory>())
+                    {
+                        <li class="mb-2">
+                            <a href="/Blog?categoryId=@cat.Id" class="blog-sidebar-link d-flex justify-content-between align-items-center @(ViewBag.CurrentCategory == cat.Id ? "active" : "")">
+                                @cat.Name <i class='bx bx-chevron-right'></i>
+                            </a>
+                        </li>
+                    }
+                </ul>
+
+                <div class="mt-5 p-4 rounded-4 text-white" style="background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);">
+                    <h6 class="fw-bold mb-2">Tư vấn kỹ thuật?</h6>
+                    <p class="small mb-3" style="opacity: 0.9;">Liên hệ ngay với chuyên gia MotoShop để được hỗ trợ tốt nhất.</p>
+                    <a href="tel:0281234567" class="btn btn-light rounded-pill w-100 fw-bold shadow-sm">GỌI NGAY</a>
+                </div>
+            </div>
             <!-- Recent Posts Widget -->
             @if (recentPosts != null && recentPosts.Any())
             {
@@ -125,6 +221,46 @@
         </aside>
     </div>
 </main>
+
+<style>
+    .blog-sidebar-link {
+        display: block;
+        padding: 10px 15px;
+        border-radius: 8px;
+        color: #444;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+    }
+    .blog-sidebar-link:hover, .blog-sidebar-link.active {
+        background-color: #fff5f5;
+        color: #dc3545;
+        transform: translateX(5px);
+    }
+    .h-title {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        height: 48px;
+        line-height: 1.4;
+    }
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .transition-hover { transition: all 0.3s ease; }
+    .transition-hover:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important; }
+    .transition-img { transition: transform 0.5s ease; }
+    .blog-card:hover .transition-img { transform: scale(1.1); }
+    .hover-danger:hover { color: #dc3545 !important; }
+    
+    .page-link { color: #333; border: 1px solid #eee; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+    .page-item.active .page-link { background-color: #dc3545; border-color: #dc3545; color: #fff; }
+</style>
 
 <style>
     .hover-danger:hover { color: #dc3545 !important; }

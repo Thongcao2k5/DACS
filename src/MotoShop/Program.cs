@@ -62,9 +62,22 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
     options.Password.RequireLowercase = false;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+    options.Lockout.MaxFailedAccessAttempts = 5;
 })
 .AddEntityFrameworkStores<MotoShopDbContext>()
 .AddDefaultTokenProviders();
+
+// Configure Cookie Settings
+builder.Services.ConfigureApplicationCookie(options => {
+    options.LoginPath = "/Account/Login";
+    options.LogoutPath = "/Account/Logout";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.Cookie.Name = "MotoShop.Auth";
+    options.Cookie.HttpOnly = true;
+    options.ExpireTimeSpan = TimeSpan.FromDays(30); // Lưu đăng nhập trong 30 ngày
+    options.SlidingExpiration = true;
+});
 
 // Register Repositories
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
@@ -92,18 +105,23 @@ using (var scope = app.Services.CreateScope())
     var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-    // THỰC HIỆN HARD RESET: Xóa và tạo mới hoàn toàn Database
-    Log.Information("Performing Hard Reset: Deleting existing database...");
-    await context.Database.EnsureDeletedAsync();
-    Log.Information("Creating fresh database with correct schema...");
-    await context.Database.EnsureCreatedAsync();
-    Log.Information("Database synchronized and created successfully.");
-    
+    // Tự động cập nhật Database schema nếu có thay đổi (Thêm cột AvatarUrl...)
     try 
     {
-        Log.Information("Seeding fresh data...");
+        Log.Information("Applying migrations...");
+        await context.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        Log.Error("Migration Error: {Message}", ex.Message);
+    }
+    
+    // Seed Data if needed
+    try 
+    {
+        Log.Information("Checking and Seeding data...");
         await DbSeeder.SeedAsync(context, userManager, roleManager);
-        Log.Information("Seeding completed successfully.");
+        Log.Information("Seeding process completed.");
     }
     catch (Exception ex)
     {
@@ -126,6 +144,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+
+app.MapControllerRoute(
+    name: "blog_detail",
+    pattern: "Blog/Detail/{slug}",
+    defaults: new { controller = "Blog", action = "Detail" });
 
 app.MapControllerRoute(
     name: "areas",

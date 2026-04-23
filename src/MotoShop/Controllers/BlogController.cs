@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
+using MotoShop.Data.Models;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,12 +17,16 @@ namespace MotoShop.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index(string? searchTerm, int? categoryId)
+        public async Task<IActionResult> Index(string? searchTerm, int? categoryId, int page = 1)
         {
-            var query = _context.Blogs.Include(b => b.Category)
-                .Where(b => b.Status == 1); // Chỉ lấy bài viết đã đăng
+            const int pageSize = 6;
 
-            if (!string.IsNullOrEmpty(searchTerm))
+            var query = _context.Blogs
+                .Include(b => b.Category)
+                .Where(b => b.IsPublished || b.Status == 1)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 query = query.Where(b => b.Title.Contains(searchTerm));
             }
@@ -30,43 +36,49 @@ namespace MotoShop.Controllers
                 query = query.Where(b => b.CategoryId == categoryId.Value);
             }
 
-            var blogs = await query.OrderByDescending(b => b.CreatedDate).ToListAsync();
-            
-            // Lấy danh sách danh mục để hiển thị ở Sidebar
-            ViewBag.Categories = await _context.BlogCategories
-                .Select(c => new { 
-                    c.Id, 
-                    c.Name, 
-                    Count = c.Blogs.Count(b => b.Status == 1) 
-                }).ToListAsync();
+            var totalItems = await query.CountAsync();
+            var blogs = await query
+                .OrderByDescending(b => b.CreatedDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.Categories = await _context.BlogCategories.Include(c => c.Blogs).ToListAsync();
 
             ViewBag.RecentPosts = await _context.Blogs
-                .Where(b => b.Status == 1)
+                .Where(b => b.IsPublished || b.Status == 1)
                 .OrderByDescending(b => b.CreatedDate)
                 .Take(5)
                 .ToListAsync();
 
             ViewBag.SearchTerm = searchTerm;
             ViewBag.CurrentCategoryId = categoryId;
+            ViewBag.CurrentCategory = categoryId;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
 
             return View(blogs);
         }
 
         public async Task<IActionResult> Detail(string slug)
         {
-            if (string.IsNullOrEmpty(slug)) return NotFound();
+            if (string.IsNullOrWhiteSpace(slug)) return NotFound();
 
             var blog = await _context.Blogs
                 .Include(b => b.Category)
-                .FirstOrDefaultAsync(b => b.Slug == slug && b.Status == 1);
+                .FirstOrDefaultAsync(b => b.Slug == slug && (b.IsPublished || b.Status == 1));
 
             if (blog == null) return NotFound();
 
-            // Lấy bài viết liên quan
-            ViewBag.RelatedPosts = await _context.Blogs
-                .Where(b => b.CategoryId == blog.CategoryId && b.Id != blog.Id && b.Status == 1)
+            var relatedBlogs = await _context.Blogs
+                .Where(b => b.CategoryId == blog.CategoryId && b.Id != blog.Id && (b.IsPublished || b.Status == 1))
+                .OrderByDescending(b => b.CreatedDate)
                 .Take(3)
                 .ToListAsync();
+
+            ViewBag.RelatedBlogs = relatedBlogs;
+            ViewBag.RelatedPosts = relatedBlogs;
+            ViewBag.Categories = await _context.BlogCategories.Include(c => c.Blogs).ToListAsync();
 
             return View(blog);
         }

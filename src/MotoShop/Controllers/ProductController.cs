@@ -4,6 +4,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using MotoShop.Data.Models;
+using MotoShop.Data.Interfaces;
 
 namespace MotoShop.Controllers
 {
@@ -11,11 +15,19 @@ namespace MotoShop.Controllers
     {
         private readonly IProductService _productService;
         private readonly ICategoryService _categoryService;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public ProductController(IProductService productService, ICategoryService categoryService)
+        public ProductController(
+            IProductService productService, 
+            ICategoryService categoryService,
+            IUnitOfWork unitOfWork,
+            UserManager<IdentityUser> userManager)
         {
             _productService = productService;
             _categoryService = categoryService;
+            _unitOfWork = unitOfWork;
+            _userManager = userManager;
         }
 
         // Danh sách sản phẩm (Trang cửa hàng chính)
@@ -110,9 +122,38 @@ namespace MotoShop.Controllers
         }
 
         // Danh sách yêu thích
-        public IActionResult Wishlist()
+        public async Task<IActionResult> Wishlist()
         {
-            return View();
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToAction("Login", "Account");
+
+            var customer = await _unitOfWork.Repository<Customer>().Find(c => c.UserId == user.Id).FirstOrDefaultAsync();
+            if (customer == null) return View(new List<WishlistItem>());
+
+            var wishlist = await _unitOfWork.Repository<Wishlist>()
+                .Find(w => w.CustomerId == customer.CustomerId)
+                .Include(w => w.WishlistItems)
+                    .ThenInclude(wi => wi.Product)
+                        .ThenInclude(p => p.Variants)
+                .Include(w => w.WishlistItems)
+                    .ThenInclude(wi => wi.Product)
+                        .ThenInclude(p => p.Brand)
+                .FirstOrDefaultAsync();
+
+            var items = wishlist?.WishlistItems ?? new List<WishlistItem>();
+
+            return View(items);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RemoveFromWishlist(int id)
+        {
+            var item = await _unitOfWork.Repository<WishlistItem>().GetByIdAsync(id);
+            if (item == null) return Json(new { success = false });
+
+            _unitOfWork.Repository<WishlistItem>().Delete(item);
+            await _unitOfWork.CompleteAsync();
+            return Json(new { success = true });
         }
     }
 }

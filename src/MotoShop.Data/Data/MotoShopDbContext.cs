@@ -23,6 +23,8 @@ namespace MotoShop.Data.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Service> Services { get; set; }
+        public DbSet<ServiceCombo> ServiceCombos { get; set; }
+        public DbSet<ServiceComboItem> ServiceComboItems { get; set; }
         public DbSet<ServiceBooking> ServiceBookings { get; set; }
         public DbSet<ProductReview> ProductReviews { get; set; }
         public DbSet<Promotion> Promotions { get; set; }
@@ -48,6 +50,13 @@ namespace MotoShop.Data.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Coupon> Coupons { get; set; }
         public DbSet<ShippingMethod> ShippingMethods { get; set; }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            base.OnConfiguring(optionsBuilder);
+            // Tắt cảnh báo lỗi khi model thay đổi mà chưa migration (đặc biệt trong .NET 9)
+            optionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+        }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
