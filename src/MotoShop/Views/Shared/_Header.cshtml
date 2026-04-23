@@ -3,11 +3,11 @@
 @using Microsoft.EntityFrameworkCore
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
-@inject MotoShopDbContext Context
+@inject MotoShopDbContext _motoDb
 
 @{
     var user = await UserManager.GetUserAsync(User);
-    var customer = user != null ? await Context.Customers.FirstOrDefaultAsync(c => c.UserId == user.Id) : null;
+    var customer = user != null ? await _motoDb.Customers.FirstOrDefaultAsync(c => c.UserId == user.Id) : null;
     var avatarUrl = !string.IsNullOrEmpty(customer?.AvatarUrl) ? customer.AvatarUrl : "/assets/img/avatars/1.png";
 }
 
