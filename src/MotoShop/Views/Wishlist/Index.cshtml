@@ -1,4 +1,4 @@
-@model IEnumerable<MotoShop.Data.Models.WishlistNew>
+@model IEnumerable<MotoShop.Data.Models.WishlistItem>
 @{
     ViewData["Title"] = "Sản phẩm yêu thích";
 }
@@ -32,13 +32,15 @@
         @foreach (var item in Model)
         {
             var product = item.Product;
-            var variant = product.Variants.FirstOrDefault(); // Lấy biến thể đầu tiên để lấy giá
+            if (product == null) continue;
+            var variant = product.Variants.FirstOrDefault();
             
             <div class="col-6 col-md-4 col-lg-3 wishlist-card" data-product-id="@product.ProductId">
                 <div class="card h-100 shadow-sm border-0 product-card">
                     <div class="position-relative overflow-hidden">
-                        <img src="@(product.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? "/assets/img/no-image.jpg")" 
-                             class="card-img-top" alt="@product.ProductName" style="height: 200px; object-fit: cover;">
+                        <img src="@(product.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? "/assets/img/elements/18.jpg")" 
+                             class="card-img-top" alt="@product.ProductName" style="height: 200px; object-fit: cover;"
+                             onerror="this.src='/assets/img/elements/18.jpg'">
                         
                         <button class="btn btn-light btn-sm position-absolute top-0 end-0 m-2 rounded-circle shadow-sm btn-remove" 
                                 onclick="removeWishlistItem(event, @product.ProductId, this.closest('.wishlist-card'))">
@@ -74,10 +76,6 @@
                                     <button class="btn btn-secondary btn-sm w-100 disabled" disabled>Hết hàng</button>
                                 }
                             }
-                            else
-                            {
-                                <div class="text-muted small">Liên hệ giá</div>
-                            }
                         </div>
                     </div>
                 </div>
@@ -100,45 +98,27 @@
 
 @section Scripts {
     <script>
-        // Lấy Anti-forgery Token từ trang
-        function getAntiForgeryToken() {
-            return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
-        }
+        function getAntiForgeryToken() { return document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''; }
 
-        // Xóa 1 sản phẩm khỏi yêu thích
         async function removeWishlistItem(e, productId, cardElement) {
             if (e) e.preventDefault();
-            
             if (!confirm('Bạn muốn bỏ sản phẩm này khỏi danh sách yêu thích?')) return;
 
             const res = await fetch('/Wishlist/Remove', {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': getAntiForgeryToken() 
-                },
+                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getAntiForgeryToken() },
                 body: JSON.stringify({ productId: productId })
             });
-            const data = await res.json();
-            if (data.success) {
-                cardElement.style.opacity = '0';
-                cardElement.style.transform = 'scale(0.8)';
-                cardElement.style.transition = 'all 0.3s ease';
-                setTimeout(() => { 
-                    cardElement.remove(); 
-                    updateCount(); 
-                    if (document.querySelectorAll('.wishlist-card').length === 0) {
-                        location.reload(); // Hiển thị trạng thái trống
-                    }
-                    if (typeof updateWishlistBadge === 'function') updateWishlistBadge();
-                }, 300);
+            if ((await res.json()).success) {
+                cardElement.remove();
+                updateCount();
+                if (document.querySelectorAll('.wishlist-card').length === 0) location.reload();
+                if (typeof updateWishlistBadge === 'function') updateWishlistBadge();
             }
         }
 
-        // Thêm 1 sản phẩm vào giỏ hàng
         async function addToCart(e, productId) {
             if (e) e.preventDefault();
-            
             const btn = e.target.closest('.btn-add-cart');
             const originalHtml = btn.innerHTML;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
@@ -147,90 +127,35 @@
             try {
                 const res = await fetch('/Wishlist/AddToCart', {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': getAntiForgeryToken() 
-                    },
+                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getAntiForgeryToken() },
                     body: JSON.stringify({ productId: productId, quantity: 1 })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    // Cập nhật số lượng giỏ hàng trên header nếu có
                     if (typeof updateCartBadge === 'function') updateCartBadge();
-                    
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Thành công',
-                            text: 'Đã thêm sản phẩm vào giỏ hàng',
-                            timer: 1500,
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false
-                        });
-                    } else {
-                        alert('Đã thêm vào giỏ hàng');
-                    }
-                } else {
-                    alert(data.message || 'Lỗi khi thêm vào giỏ');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Lỗi hệ thống');
-            } finally {
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
-            }
+                    alert('Đã thêm vào giỏ hàng');
+                } else { alert(data.message || 'Lỗi khi thêm vào giỏ'); }
+            } catch (err) { alert('Lỗi hệ thống'); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
         }
 
-        // Xóa toàn bộ danh sách
         async function clearWishlist() {
-            if (!confirm('Bạn muốn xóa tất cả sản phẩm trong danh sách yêu thích?')) return;
-            const res = await fetch('/Wishlist/Clear', {
-                method: 'POST',
-                headers: { 'RequestVerificationToken': getAntiForgeryToken() }
-            });
-            const data = await res.json();
-            if (data.success) {
-                location.reload();
-            }
+            if (!confirm('Xóa tất cả?')) return;
+            const res = await fetch('/Wishlist/Clear', { method: 'POST', headers: { 'RequestVerificationToken': getAntiForgeryToken() } });
+            if ((await res.json()).success) location.reload();
         }
 
-        // Thêm tất cả vào giỏ
         async function addAllToCart(e) {
             if (e) e.preventDefault();
-            
             const btn = e.target.closest('button');
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang thêm...';
             btn.disabled = true;
-
             try {
-                const res = await fetch('/Wishlist/AddAllToCart', {
-                    method: 'POST',
-                    headers: { 'RequestVerificationToken': getAntiForgeryToken() }
-                });
+                const res = await fetch('/Wishlist/AddAllToCart', { method: 'POST', headers: { 'RequestVerificationToken': getAntiForgeryToken() } });
                 const data = await res.json();
                 if (data.success) {
                     if (typeof updateCartBadge === 'function') updateCartBadge();
-                    
-                    let msg = `Đã thêm ${data.added} sản phẩm vào giỏ.`;
-                    if (data.skipped && data.skipped.length > 0) {
-                        msg += ` Bỏ qua ${data.skipped.length} SP hết hàng.`;
-                    }
-                    
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire('Thành công', msg, 'success');
-                    } else {
-                        alert(msg);
-                    }
+                    alert(`Đã thêm ${data.added} sản phẩm vào giỏ.`);
                 }
-            } catch (err) {
-                alert('Lỗi hệ thống');
-            } finally {
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
-            }
+            } catch (err) { alert('Lỗi hệ thống'); } finally { btn.disabled = false; }
         }
 
         function updateCount() {

@@ -21,7 +21,7 @@ namespace MotoShop.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ICartService _cartService;
         private readonly IOrderService _orderService;
-        private readonly MotoShopDbContext _context; // Bổ sung DbContext
+        private readonly MotoShopDbContext _context;
 
         public CartController(
             IUnitOfWork unitOfWork,
@@ -91,17 +91,15 @@ namespace MotoShop.Controllers
             if (string.IsNullOrEmpty(userId)) 
                 return RedirectToAction("Login", "Account", new { returnUrl = Url.Action("Checkout", "Cart") });
 
-            // 1. Lấy thông tin khách hàng
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
             if (customer == null) return RedirectToAction("Profile", "Account");
 
-            // 2. Lấy danh sách địa chỉ lưu sẵn (Truy vấn trực tiếp để chắc chắn)
-            var savedAddresses = await _context.Set<AddressNew>()
+            // Truy vấn đúng bảng AddressesNew
+            var savedAddresses = await _context.AddressesNew
                 .Where(a => a.UserId == customer.CustomerId)
                 .OrderByDescending(a => a.IsDefault)
                 .ToListAsync();
 
-            // 3. Đồng bộ giỏ hàng
             if (Request.Cookies.ContainsKey("MotoShop_GuestId"))
             {
                 var guestId = Request.Cookies["MotoShop_GuestId"];
@@ -120,7 +118,6 @@ namespace MotoShop.Controllers
             ViewBag.SavedAddresses = savedAddresses;
 
             var model = new CheckoutDto();
-            // 4. Tự động điền địa chỉ mặc định
             var defaultAddr = savedAddresses.FirstOrDefault(a => a.IsDefault) ?? savedAddresses.FirstOrDefault();
             if (defaultAddr != null)
             {

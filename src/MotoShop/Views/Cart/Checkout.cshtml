@@ -56,23 +56,21 @@
                         }
                     </div>
 
-                    <!-- 1. ADDRESS SUMMARY DISPLAY -->
                     <div id="addressSummary" class="p-3 border rounded-3 bg-light @(savedAddresses.Any() ? "" : "d-none")">
                         <div class="d-flex align-items-center gap-2 mb-1">
-                            <span class="fw-bold" id="summaryName">@(defaultAddr?.FullName)</span>
+                            <span class="fw-bold" id="summaryName">@(defaultAddr?.FullName ?? "")</span>
                             <span class="text-muted">|</span>
-                            <span class="fw-bold" id="summaryPhone">@(defaultAddr?.Phone)</span>
+                            <span class="fw-bold" id="summaryPhone">@(defaultAddr?.Phone ?? "")</span>
                             @if (defaultAddr?.IsDefault == true)
                             {
                                 <span class="badge bg-danger x-small">Mặc định</span>
                             }
                         </div>
                         <div class="text-muted small" id="summaryAddress">
-                            @(defaultAddr != null ? $"{defaultAddr.Street}, {defaultAddr.Ward}, {defaultAddr.District}, {defaultAddr.Province}" : "")
+                            @(defaultAddr != null ? defaultAddr.Address : "Chưa có địa chỉ")
                         </div>
                     </div>
 
-                    <!-- 2. HIDDEN INPUTS FOR FORM SUBMISSION -->
                     <div id="formInputs" class="@(savedAddresses.Any() ? "d-none" : "") mt-3">
                         <div class="row g-3">
                             <div class="col-md-12">
@@ -118,7 +116,6 @@
                     </div>
                 </div>
 
-                <!-- Shipping & Payment sections remain similar -->
                 <div class="checkout-section">
                     <h5 class="section-subtitle"><i class='bx bx-package'></i> VẬN CHUYỂN</h5>
                     @foreach (var method in shippingMethods)
@@ -135,11 +132,11 @@
 
                 <div class="checkout-section">
                     <h5 class="section-subtitle"><i class='bx bx-credit-card'></i> THANH TOÁN</h5>
-                    <div class="method-card active" onclick="setPayment('COD', 'cod-detail', this)">
+                    <div class="method-card active" onclick="setPayment('COD', this)">
                         <input type="radio" asp-for="PaymentMethod" value="COD" id="pay1" checked>
                         <div class="method-info"><label for="pay1" class="name">Tiền mặt (COD)</label></div>
                     </div>
-                    <div class="method-card mt-2" onclick="setPayment('BankTransfer', 'bank-detail', this)">
+                    <div class="method-card mt-2" onclick="setPayment('BankTransfer', this)">
                         <input type="radio" asp-for="PaymentMethod" value="BankTransfer" id="pay2">
                         <div class="method-info"><label for="pay2" class="name">Chuyển khoản</label></div>
                     </div>
@@ -169,7 +166,6 @@
                     <!-- Subtotal hidden for JS -->
                     <span id="subtotal" class="d-none" data-value="@totalAmount.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)"></span>
                     <span id="shippingFee" class="d-none" data-value="0"></span>
-                    <span id="discountAmount" class="d-none" data-value="0"></span>
 
                     <button type="submit" id="btnPlaceOrder" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold mt-4 py-3">ĐẶT HÀNG NGAY</button>
                 </div>
@@ -182,7 +178,7 @@
 <div class="modal fade" id="addressModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0">
-            <div class="modal-header border-0">
+            <div class="modal-header border-0 pb-0">
                 <h5 class="modal-title fw-bold">Địa chỉ của tôi</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -192,19 +188,19 @@
                     {
                         <div class="saved-addr-option p-3 border rounded-3 mb-3 cursor-pointer @(addr.Id == defaultAddr?.Id ? "active" : "")" 
                              onclick="selectSavedAddress(this)"
-                             data-id="@addr.Id"
                              data-fullname="@addr.FullName"
                              data-phone="@addr.Phone"
                              data-province="@addr.Province"
                              data-district="@addr.District"
                              data-ward="@addr.Ward"
-                             data-street="@addr.Street">
+                             data-street="@addr.Street"
+                             data-address="@addr.Address">
                             <div class="d-flex justify-content-between">
                                 <span class="fw-bold">@addr.FullName</span>
                                 @if (addr.IsDefault) { <span class="text-danger x-small fw-bold">Mặc định</span> }
                             </div>
                             <div class="text-muted small">@addr.Phone</div>
-                            <div class="small">@addr.Street, @addr.Ward, @addr.District, @addr.Province</div>
+                            <div class="small">@addr.Address</div>
                         </div>
                     }
                     <button type="button" class="btn btn-outline-dark w-100 rounded-pill py-2 fw-bold mt-2" onclick="useNewAddress()">
@@ -218,10 +214,7 @@
 
 @section Styles {
     <style>
-        .saved-addr-option { transition: all 0.2s; position: relative; }
-        .saved-addr-option:hover { border-color: #dc3545; background: #fff8f8; }
         .saved-addr-option.active { border-color: #dc3545; background: #fff5f5; border-width: 2px; }
-        .x-small { font-size: 11px; }
         .cursor-pointer { cursor: pointer; }
     </style>
 }
@@ -243,8 +236,14 @@
                     opt.dataset.code = p.code;
                     provinceSelect.add(opt);
                 });
-                if (window.initAddr) fillAddressData(window.initAddr);
-            } catch (e) { console.error(e); }
+                @if (defaultAddr != null) {
+                    <text>
+                    window.pendingDistrict = "@defaultAddr.District"; window.pendingWard = "@defaultAddr.Ward";
+                    const pOpt = [...provinceSelect.options].find(o => o.text === "@defaultAddr.Province");
+                    if (pOpt) { provinceSelect.value = pOpt.value; provinceSelect.onchange(); }
+                    </text>
+                }
+            } catch (e) {}
         }
 
         provinceSelect.onchange = async () => {
@@ -261,7 +260,10 @@
                     districtSelect.add(opt);
                 });
                 districtSelect.disabled = false;
-                if (window.pendingDistrict) { districtSelect.value = window.pendingDistrict; window.pendingDistrict = null; districtSelect.onchange(); }
+                if (window.pendingDistrict) { 
+                    const opt = [...districtSelect.options].find(o => o.text === window.pendingDistrict);
+                    if(opt) { districtSelect.value = opt.value; window.pendingDistrict = null; districtSelect.onchange(); }
+                }
             }
         };
 
@@ -279,94 +281,63 @@
         };
 
         function selectSavedAddress(el) {
-            const data = el.dataset;
-            document.getElementById('summaryName').innerText = data.fullname;
-            document.getElementById('summaryPhone').innerText = data.phone;
-            document.getElementById('summaryAddress').innerText = `${data.street}, ${data.ward}, ${data.district}, ${data.province}`;
+            const d = el.dataset;
+            document.getElementById('summaryName').innerText = d.fullname;
+            document.getElementById('summaryPhone').innerText = d.phone;
+            document.getElementById('summaryAddress').innerText = d.address;
             
-            document.getElementById('inputFullName').value = data.fullname;
-            document.getElementById('inputPhone').value = data.phone;
-            document.getElementById('inputStreet').value = data.street;
+            document.getElementById('inputFullName').value = d.fullname;
+            document.getElementById('inputPhone').value = d.phone;
+            document.getElementById('inputStreet').value = d.street;
             
-            window.pendingDistrict = data.district;
-            window.pendingWard = data.ward;
-            
-            const pOpt = [...provinceSelect.options].find(o => o.text === data.province);
+            window.pendingDistrict = d.district; window.pendingWard = d.ward;
+            const pOpt = [...provinceSelect.options].find(o => o.text === d.province);
             if (pOpt) { provinceSelect.value = pOpt.value; provinceSelect.onchange(); }
 
             document.getElementById('addressSummary').classList.remove('d-none');
             document.getElementById('formInputs').classList.add('d-none');
-            
-            document.querySelectorAll('.saved-addr-option').forEach(o => o.classList.remove('active'));
-            el.classList.add('active');
             addressModal.hide();
         }
 
         function useNewAddress() {
             document.getElementById('addressSummary').classList.add('d-none');
             document.getElementById('formInputs').classList.remove('d-none');
-            document.getElementById('inputFullName').value = '';
-            document.getElementById('inputPhone').value = '';
-            document.getElementById('inputStreet').value = '';
-            provinceSelect.value = '';
-            provinceSelect.onchange();
+            document.getElementById('inputFullName').value = ''; document.getElementById('inputPhone').value = '';
+            document.getElementById('inputStreet').value = ''; provinceSelect.value = ''; provinceSelect.onchange();
             addressModal.hide();
         }
 
         function setShippingMethod(id, cost, el) {
             el.closest('.checkout-section').querySelectorAll('.method-card').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
-            el.querySelector('input').checked = true;
+            el.classList.add('active'); el.querySelector('input').checked = true;
             document.getElementById('shippingFee').dataset.value = cost;
             updateTotal();
         }
 
-        function setPayment(method, detailId, el) {
+        function setPayment(method, el) {
             el.closest('.checkout-section').querySelectorAll('.method-card').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
-            el.querySelector('input').checked = true;
+            el.classList.add('active'); el.querySelector('input').checked = true;
         }
 
         function updateTotal() {
             const sub = parseFloat(document.getElementById('subtotal').dataset.value);
             const ship = parseFloat(document.getElementById('shippingFee').dataset.value || 0);
-            const total = sub + ship;
-            document.getElementById('totalOrder').innerText = total.toLocaleString('vi-VN') + 'đ';
+            document.getElementById('totalOrder').innerText = (sub + ship).toLocaleString('vi-VN') + 'đ';
         }
 
-        window.onload = async () => {
-            await loadProvinces();
-            @if (defaultAddr != null) {
-                <text>
-                window.pendingDistrict = "@defaultAddr.District";
-                window.pendingWard = "@defaultAddr.Ward";
-                const pOpt = [...provinceSelect.options].find(o => o.text === "@defaultAddr.Province");
-                if (pOpt) { provinceSelect.value = pOpt.value; provinceSelect.onchange(); }
-                </text>
-            }
-        };
+        window.onload = loadProvinces;
 
         document.getElementById('checkoutForm').onsubmit = async function(e) {
             e.preventDefault();
-            const btn = document.getElementById('btnPlaceOrder');
-            btn.disabled = true;
-            btn.innerHTML = 'ĐANG XỬ LÝ...';
+            const btn = document.getElementById('btnPlaceOrder'); btn.disabled = true; btn.innerHTML = 'ĐANG XỬ LÝ...';
             try {
                 const res = await fetch('/Cart/Checkout', { method: 'POST', body: new FormData(this) });
                 const data = await res.json();
                 if (data.success) {
                     Swal.fire({ icon: 'success', title: 'Thành công!', text: data.message, timer: 2000, showConfirmButton: false })
                         .then(() => window.location.href = '/Cart/Success/' + data.orderId);
-                } else {
-                    Swal.fire('Lỗi', data.message, 'error');
-                    btn.disabled = false;
-                    btn.innerHTML = 'ĐẶT HÀNG NGAY';
-                }
-            } catch (e) {
-                Swal.fire('Lỗi', 'Lỗi kết nối máy chủ', 'error');
-                btn.disabled = false;
-                btn.innerHTML = 'ĐẶT HÀNG NGAY';
-            }
+                } else { Swal.fire('Lỗi', data.message, 'error'); btn.disabled = false; btn.innerHTML = 'ĐẶT HÀNG NGAY'; }
+            } catch (e) { Swal.fire('Lỗi', 'Lỗi kết nối', 'error'); btn.disabled = false; btn.innerHTML = 'ĐẶT HÀNG NGAY'; }
         };
     </script>
 }

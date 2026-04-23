@@ -10,7 +10,7 @@ namespace MotoShop.Data.Models
         [Key]
         public int CategoryId { get; set; }
         [Required, StringLength(200)]
-        public string CategoryName { get; set; } = string.Empty;
+        public string CategoryName { get; set; }
         [StringLength(255)]
         public string? Slug { get; set; }
         public int? ParentId { get; set; }
@@ -162,7 +162,10 @@ namespace MotoShop.Data.Models
         public string? Phone { get; set; }
         [StringLength(500)]
         public string? Address { get; set; }
+        
+        [NotMapped]
         public string? AvatarUrl { get; set; }
+        
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public bool IsLocked { get; set; } = false;
 
@@ -259,6 +262,39 @@ namespace MotoShop.Data.Models
         public bool IsActive { get; set; } = true;
 
         public virtual ICollection<ServiceBooking> Bookings { get; set; } = new List<ServiceBooking>();
+        public virtual ICollection<ServiceComboItem> ComboItems { get; set; } = new List<ServiceComboItem>();
+    }
+
+    public class ServiceCombo
+    {
+        [Key]
+        public int ComboId { get; set; }
+        [Required, StringLength(200)]
+        public string ComboName { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal TotalPrice { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal DiscountPrice { get; set; } 
+        public string? Description { get; set; }
+        [StringLength(500)]
+        public string? ImageUrl { get; set; }
+        public bool IsActive { get; set; } = true;
+
+        public virtual ICollection<ServiceComboItem> ComboItems { get; set; } = new List<ServiceComboItem>();
+        public virtual ICollection<ServiceBooking> Bookings { get; set; } = new List<ServiceBooking>();
+    }
+
+    public class ServiceComboItem
+    {
+        [Key]
+        public int Id { get; set; }
+        public int ComboId { get; set; }
+        public int ServiceId { get; set; }
+
+        [ForeignKey("ComboId")]
+        public virtual ServiceCombo? Combo { get; set; }
+        [ForeignKey("ServiceId")]
+        public virtual Service? Service { get; set; }
     }
 
     public class ServiceBooking
@@ -271,14 +307,14 @@ namespace MotoShop.Data.Models
 
         public int? CustomerId { get; set; }
         public int? ServiceId { get; set; }
+        public int? ComboId { get; set; }
         public int? CreatedByStaffId { get; set; }
         public int? AssignedStaffId { get; set; }
         public DateTime BookingDate { get; set; } = DateTime.Now;
         public DateTime? ServiceDate { get; set; }
         [StringLength(50)]
-        public string? Status { get; set; } // Pending, Confirmed, InProgress, Completed, Cancelled
+        public string? Status { get; set; } 
         
-        // Thêm các trường thông tin khách hàng và xe trực tiếp
         [StringLength(200)]
         public string? CustomerFullName { get; set; }
         [StringLength(50)]
@@ -298,9 +334,9 @@ namespace MotoShop.Data.Models
         [Column(TypeName = "decimal(18, 2)")]
         public decimal DepositAmount { get; set; } = 0;
         [StringLength(50)]
-        public string? DepositStatus { get; set; } // Unpaid, Paid
+        public string? DepositStatus { get; set; } 
         [StringLength(500)]
-        public string? TransferProof { get; set; } // Link ảnh chuyển khoản
+        public string? TransferProof { get; set; } 
         public DateTime? ConfirmedAt { get; set; }
         public DateTime? ExpireAt { get; set; }
         public string? CancelReason { get; set; }
@@ -309,6 +345,8 @@ namespace MotoShop.Data.Models
         public virtual Customer? Customer { get; set; }
         [ForeignKey("ServiceId")]
         public virtual Service? Service { get; set; }
+        [ForeignKey("ComboId")]
+        public virtual ServiceCombo? Combo { get; set; }
         [ForeignKey("CreatedByStaffId")]
         public virtual Staff? CreatedByStaff { get; set; }
         [ForeignKey("AssignedStaffId")]
@@ -327,7 +365,7 @@ namespace MotoShop.Data.Models
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         
         [StringLength(20)]
-        public string Status { get; set; } = "Pending"; // Pending, Approved, Hidden
+        public string Status { get; set; } = "Pending"; 
 
         [ForeignKey("ProductId")]
         public virtual Product? Product { get; set; }
@@ -346,7 +384,7 @@ namespace MotoShop.Data.Models
         public string? Description { get; set; }
         
         [Required, StringLength(20)]
-        public string DiscountType { get; set; } // "Percentage" hoặc "FixedAmount"
+        public string DiscountType { get; set; } 
         
         [Column(TypeName = "decimal(5, 2)")]
         public decimal DiscountPercentage { get; set; }
@@ -355,8 +393,8 @@ namespace MotoShop.Data.Models
         public decimal DiscountAmount { get; set; }
 
         [Column(TypeName = "decimal(18, 2)")]
-        public decimal? MinOrderValue { get; set; } // Giá trị đơn hàng tối thiểu
-        public int? MinQuantity { get; set; } // Số lượng tối thiểu
+        public decimal? MinOrderValue { get; set; } 
+        public int? MinQuantity { get; set; } 
 
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
@@ -504,7 +542,7 @@ namespace MotoShop.Data.Models
         public int? ProductVariantId { get; set; }
         public int Quantity { get; set; }
         [Required, StringLength(50)]
-        public string TransactionType { get; set; } // "IN", "OUT"
+        public string TransactionType { get; set; } 
         public DateTime TransactionDate { get; set; } = DateTime.Now;
         public string? Note { get; set; }
 
@@ -604,15 +642,13 @@ namespace MotoShop.Data.Models
         [StringLength(500)]
         public string? Thumbnail { get; set; }
         public int CategoryId { get; set; }
-        
-        // Status: Draft = 0, Published = 1
         public int Status { get; set; } = 0; 
-        
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
 
         [ForeignKey("CategoryId")]
         public virtual BlogCategory? Category { get; set; }
+        public bool IsPublished { get; set; }
     }
 
     public class Notification
@@ -636,14 +672,11 @@ namespace MotoShop.Data.Models
         [Column(TypeName = "decimal(18, 2)")]
         public decimal DiscountValue { get; set; }
         [Required, StringLength(20)]
-        public string DiscountType { get; set; } // "Percentage", "FixedAmount"
-        
+        public string DiscountType { get; set; } 
         [Column(TypeName = "decimal(18, 2)")]
-        public decimal? MinOrderValue { get; set; } // Giá trị đơn tối thiểu
-        
-        public int UsageLimit { get; set; } = 0; // 0 = Không giới hạn
+        public decimal? MinOrderValue { get; set; } 
+        public int UsageLimit { get; set; } = 0; 
         public int UsedCount { get; set; } = 0;
-        
         public DateTime ExpiryDate { get; set; }
         public bool IsActive { get; set; } = true;
     }
@@ -662,9 +695,10 @@ namespace MotoShop.Data.Models
         public bool IsActive { get; set; } = true;
     }
 
-    // --- PHẦN MỚI THÊM THEO YÊU CẦU ---
-
-    [Table("Wishlists")]
+    // --- NEW MODELS FOR SMART FEATURES ---
+    // Rename table names to avoid collision with standard tables
+    
+    [Table("Custom_Wishlists")]
     public class WishlistNew
     {
         [Key]
@@ -677,7 +711,7 @@ namespace MotoShop.Data.Models
         public virtual Product? Product { get; set; }
     }
 
-    [Table("Addresses")]
+    [Table("Custom_Addresses")]
     public class AddressNew
     {
         [Key]
@@ -690,5 +724,8 @@ namespace MotoShop.Data.Models
         public string? Ward { get; set; }
         public string? Street { get; set; }
         public bool IsDefault { get; set; } = false;
+        
+        [NotMapped]
+        public string Address => $"{Street}, {Ward}, {District}, {Province}";
     }
 }
