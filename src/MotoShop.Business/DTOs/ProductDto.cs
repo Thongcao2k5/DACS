@@ -10,7 +10,9 @@ namespace MotoShop.Business.DTOs
         public string Slug { get; set; }
         public string Description { get; set; }
         public string CategoryName { get; set; }
+        public int? CategoryId { get; set; }
         public string BrandName { get; set; }
+        public int? BrandId { get; set; }
         public bool IsFeatured { get; set; }
         public decimal MinPrice { get; set; }
         public decimal? MinOriginalPrice { get; set; }
