@@ -63,8 +63,11 @@
                                 {
                                     <div class="discount-badge-large">-@product.DiscountPercent%</div>
                                 }
-                                <div class="product-img-wrapper" onclick="location.href='@Url.Action("Details", "Product", new { slug = product.Slug })'">
-                                    <img src="@primaryImg" alt="@product.ProductName" onerror="this.src='https://via.placeholder.com/400'">
+                                <div class="product-img-wrapper position-relative">
+                                    <img src="@primaryImg" alt="@product.ProductName" onerror="this.src='https://via.placeholder.com/400'" onclick="location.href='@Url.Action("Details", "Product", new { slug = product.Slug })'">
+                                    <button type="button" class="btn-wishlist-abs" onclick="addToWishlist(@product.ProductId)" title="Thêm vào yêu thích">
+                                        <i class='bx bx-heart'></i>
+                                    </button>
                                 </div>
                                 <div class="product-info flex-grow-1">
                                     <h6 class="name text-truncate">@product.ProductName</h6>
@@ -118,8 +121,11 @@
                     <div class="col">
                         <div class="product-card h-100 shadow-sm border-0">
                             <span class="product-badge badge-hot">HOT</span>
-                            <div class="product-img-wrapper" onclick="location.href='@Url.Action("Details", "Product", new { slug = product.Slug })'">
-                                <img src="@primaryImg" alt="@product.ProductName" onerror="this.src='https://via.placeholder.com/400'">
+                            <div class="product-img-wrapper position-relative">
+                                <img src="@primaryImg" alt="@product.ProductName" onerror="this.src='https://via.placeholder.com/400'" onclick="location.href='@Url.Action("Details", "Product", new { slug = product.Slug })'">
+                                <button type="button" class="btn-wishlist-abs" onclick="addToWishlist(@product.ProductId)" title="Thêm vào yêu thích">
+                                    <i class='bx bx-heart'></i>
+                                </button>
                             </div>
                             <div class="product-info flex-grow-1">
                                 <span class="brand text-uppercase small text-muted">@product.BrandName</span>

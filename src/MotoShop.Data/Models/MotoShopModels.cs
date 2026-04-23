@@ -10,7 +10,7 @@ namespace MotoShop.Data.Models
         [Key]
         public int CategoryId { get; set; }
         [Required, StringLength(200)]
-        public string CategoryName { get; set; }
+        public string CategoryName { get; set; } = string.Empty;
         [StringLength(255)]
         public string? Slug { get; set; }
         public int? ParentId { get; set; }
@@ -162,6 +162,7 @@ namespace MotoShop.Data.Models
         public string? Phone { get; set; }
         [StringLength(500)]
         public string? Address { get; set; }
+        public string? AvatarUrl { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public bool IsLocked { get; set; } = false;
 
@@ -169,6 +170,7 @@ namespace MotoShop.Data.Models
         public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
         public virtual ICollection<Wishlist> Wishlists { get; set; } = new List<Wishlist>();
         public virtual ICollection<CustomerAddress> CustomerAddresses { get; set; } = new List<CustomerAddress>();
+        public virtual ICollection<AddressNew> Addresses { get; set; } = new List<AddressNew>();
     }
 
     public class CustomerAddress
@@ -658,5 +660,35 @@ namespace MotoShop.Data.Models
         [StringLength(100)]
         public string? EstimatedDays { get; set; }
         public bool IsActive { get; set; } = true;
+    }
+
+    // --- PHẦN MỚI THÊM THEO YÊU CẦU ---
+
+    [Table("Wishlists")]
+    public class WishlistNew
+    {
+        [Key]
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public int ProductId { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        [ForeignKey("ProductId")]
+        public virtual Product? Product { get; set; }
+    }
+
+    [Table("Addresses")]
+    public class AddressNew
+    {
+        [Key]
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public string? FullName { get; set; }
+        public string? Phone { get; set; }
+        public string? Province { get; set; }
+        public string? District { get; set; }
+        public string? Ward { get; set; }
+        public string? Street { get; set; }
+        public bool IsDefault { get; set; } = false;
     }
 }

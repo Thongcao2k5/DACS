@@ -153,7 +153,7 @@
                             <input type="number" id="buy-quantity" value="1" min="1" max="@Model.Variants.FirstOrDefault()?.StockQuantity" class="form-control border-0 text-center fw-bold p-0" style="width: 50px;">
                             <button class="btn btn-link text-dark text-decoration-none px-3" onclick="updateQty(1)">+</button>
                         </div>
-                        <button id="btn-wishlist" class="btn btn-outline-secondary rounded-circle px-2" onclick="toggleWishlist(@Model.ProductId)">
+                        <button id="btn-wishlist" class="btn btn-outline-secondary rounded-circle px-2" onclick="addToWishlist(@Model.ProductId)">
                             <i class="bi bi-heart h5 mb-0"></i>
                         </button>
                     </div>
@@ -379,6 +379,9 @@
                             <a href="/Product/Details?slug=@item.Slug" class="text-decoration-none text-dark d-block p-2">
                                 <div class="position-relative overflow-hidden rounded mb-2">
                                     <img src="@item.PrimaryImageUrl" class="img-fluid w-100" style="aspect-ratio: 1/1; object-fit: cover;" alt="@item.ProductName">
+                                    <button type="button" class="btn-wishlist-abs" onclick="addToWishlist(@item.ProductId)" title="Thêm vào yêu thích">
+                                        <i class='bx bx-heart'></i>
+                                    </button>
                                 </div>
                                 <div class="px-2">
                                     <div class="text-muted small mb-1">@item.BrandName</div>

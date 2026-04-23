@@ -108,6 +108,9 @@
                                                 <img src="@(string.IsNullOrEmpty(product.PrimaryImageUrl) ? "https://via.placeholder.com/400x400?text=No+Image" : product.PrimaryImageUrl)" 
                                                      alt="@product.ProductName" class="w-100 h-100 object-fit-cover transition-scale" loading="lazy">
                                             </a>
+                                            <button type="button" class="btn-wishlist-abs" onclick="addToWishlist(@product.ProductId)" title="Thêm vào yêu thích">
+                                                <i class='bx bx-heart'></i>
+                                            </button>
                                             @if (product.MinPrice == 0)
                                             {
                                                 <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2 rounded-pill">Liên hệ</span>

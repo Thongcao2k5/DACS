@@ -1,0 +1,242 @@
+@model IEnumerable<MotoShop.Data.Models.WishlistNew>
+@{
+    ViewData["Title"] = "Sản phẩm yêu thích";
+}
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 mb-0">Danh sách yêu thích (<span id="wishlistCount">@Model.Count()</span>)</h2>
+        @if (Model.Any())
+        {
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-danger" onclick="clearWishlist()">
+                    <i class="bi bi-trash"></i> Xóa toàn bộ
+                </button>
+                <button class="btn btn-primary" onclick="addAllToCart(event)">
+                    <i class="bi bi-cart-plus"></i> Thêm tất cả vào giỏ
+                </button>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div id="emptyWishlist" class="text-center py-5">
+            <i class="bi bi-heart display-1 text-muted mb-3"></i>
+            <p class="lead">Bạn chưa có sản phẩm yêu thích nào.</p>
+            <a href="/Product" class="btn btn-primary">Khám phá ngay</a>
+        </div>
+    }
+
+    <div class="row g-4" id="wishlistContainer">
+        @foreach (var item in Model)
+        {
+            var product = item.Product;
+            var variant = product.Variants.FirstOrDefault(); // Lấy biến thể đầu tiên để lấy giá
+            
+            <div class="col-6 col-md-4 col-lg-3 wishlist-card" data-product-id="@product.ProductId">
+                <div class="card h-100 shadow-sm border-0 product-card">
+                    <div class="position-relative overflow-hidden">
+                        <img src="@(product.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? "/assets/img/no-image.jpg")" 
+                             class="card-img-top" alt="@product.ProductName" style="height: 200px; object-fit: cover;">
+                        
+                        <button class="btn btn-light btn-sm position-absolute top-0 end-0 m-2 rounded-circle shadow-sm btn-remove" 
+                                onclick="removeWishlistItem(event, @product.ProductId, this.closest('.wishlist-card'))">
+                            <i class="bi bi-x-lg text-danger"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="card-body p-3 d-flex flex-column">
+                        <small class="text-muted mb-1 d-block">@product.Brand?.BrandName</small>
+                        <h5 class="card-title h6 text-truncate mb-2" title="@product.ProductName">
+                            <a href="/Product/Details?slug=@product.Slug" class="text-decoration-none text-dark">@product.ProductName</a>
+                        </h5>
+                        
+                        <div class="mt-auto">
+                            @if (variant != null)
+                            {
+                                <div class="mb-3">
+                                    <span class="text-primary fw-bold">@variant.Price.ToString("N0") đ</span>
+                                    @if (variant.OriginalPrice > variant.Price)
+                                    {
+                                        <del class="small text-muted ms-2">@variant.OriginalPrice?.ToString("N0") đ</del>
+                                    }
+                                </div>
+                                
+                                @if (variant.StockQuantity > 0)
+                                {
+                                    <button class="btn btn-primary btn-sm w-100 btn-add-cart" onclick="addToCart(event, @product.ProductId)">
+                                        <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-secondary btn-sm w-100 disabled" disabled>Hết hàng</button>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-muted small">Liên hệ giá</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@Html.AntiForgeryToken()
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        .product-card { transition: transform 0.2s; }
+        .product-card:hover { transform: translateY(-5px); }
+        .wishlist-card .btn-remove { opacity: 0.7; transition: opacity 0.2s; }
+        .wishlist-card .btn-remove:hover { opacity: 1; }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Lấy Anti-forgery Token từ trang
+        function getAntiForgeryToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        }
+
+        // Xóa 1 sản phẩm khỏi yêu thích
+        async function removeWishlistItem(e, productId, cardElement) {
+            if (e) e.preventDefault();
+            
+            if (!confirm('Bạn muốn bỏ sản phẩm này khỏi danh sách yêu thích?')) return;
+
+            const res = await fetch('/Wishlist/Remove', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': getAntiForgeryToken() 
+                },
+                body: JSON.stringify({ productId: productId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                cardElement.style.opacity = '0';
+                cardElement.style.transform = 'scale(0.8)';
+                cardElement.style.transition = 'all 0.3s ease';
+                setTimeout(() => { 
+                    cardElement.remove(); 
+                    updateCount(); 
+                    if (document.querySelectorAll('.wishlist-card').length === 0) {
+                        location.reload(); // Hiển thị trạng thái trống
+                    }
+                    if (typeof updateWishlistBadge === 'function') updateWishlistBadge();
+                }, 300);
+            }
+        }
+
+        // Thêm 1 sản phẩm vào giỏ hàng
+        async function addToCart(e, productId) {
+            if (e) e.preventDefault();
+            
+            const btn = e.target.closest('.btn-add-cart');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/Wishlist/AddToCart', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': getAntiForgeryToken() 
+                    },
+                    body: JSON.stringify({ productId: productId, quantity: 1 })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    // Cập nhật số lượng giỏ hàng trên header nếu có
+                    if (typeof updateCartBadge === 'function') updateCartBadge();
+                    
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Thành công',
+                            text: 'Đã thêm sản phẩm vào giỏ hàng',
+                            timer: 1500,
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false
+                        });
+                    } else {
+                        alert('Đã thêm vào giỏ hàng');
+                    }
+                } else {
+                    alert(data.message || 'Lỗi khi thêm vào giỏ');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Lỗi hệ thống');
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        }
+
+        // Xóa toàn bộ danh sách
+        async function clearWishlist() {
+            if (!confirm('Bạn muốn xóa tất cả sản phẩm trong danh sách yêu thích?')) return;
+            const res = await fetch('/Wishlist/Clear', {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': getAntiForgeryToken() }
+            });
+            const data = await res.json();
+            if (data.success) {
+                location.reload();
+            }
+        }
+
+        // Thêm tất cả vào giỏ
+        async function addAllToCart(e) {
+            if (e) e.preventDefault();
+            
+            const btn = e.target.closest('button');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang thêm...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/Wishlist/AddAllToCart', {
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': getAntiForgeryToken() }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (typeof updateCartBadge === 'function') updateCartBadge();
+                    
+                    let msg = `Đã thêm ${data.added} sản phẩm vào giỏ.`;
+                    if (data.skipped && data.skipped.length > 0) {
+                        msg += ` Bỏ qua ${data.skipped.length} SP hết hàng.`;
+                    }
+                    
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Thành công', msg, 'success');
+                    } else {
+                        alert(msg);
+                    }
+                }
+            } catch (err) {
+                alert('Lỗi hệ thống');
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        }
+
+        function updateCount() {
+            const count = document.querySelectorAll('.wishlist-card').length;
+            const countEl = document.getElementById('wishlistCount');
+            if (countEl) countEl.innerText = count;
+        }
+    </script>
+}

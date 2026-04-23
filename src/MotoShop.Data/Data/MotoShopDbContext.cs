@@ -36,8 +36,8 @@ namespace MotoShop.Data.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
         public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
-        public DbSet<Wishlist> Wishlists { get; set; }
-        public DbSet<WishlistItem> WishlistItems { get; set; }
+        public DbSet<WishlistNew> WishlistsNew { get; set; }
+        public DbSet<AddressNew> AddressesNew { get; set; }
         public DbSet<ProductAttribute> ProductAttributes { get; set; }
         public DbSet<AttributeValue> AttributeValues { get; set; }
         public DbSet<StoreSetting> StoreSettings { get; set; }

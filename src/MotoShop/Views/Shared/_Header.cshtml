@@ -104,6 +104,13 @@
                 </div>
             </div>
 
+            <div class="action-item">
+                <a asp-area="" asp-controller="Wishlist" asp-action="Index" class="text-dark position-relative d-inline-block">
+                    <i class='bx bx-heart'></i>
+                    <span class="badge rounded-pill bg-danger cart-badge-floating" id="wishlistBadge" style="display: none;">0</span>
+                </a>
+            </div>
+
             <div class="action-item cart-action-item" id="cartActionItem">
                 <a asp-area="" asp-controller="Cart" asp-action="Index" class="text-dark position-relative d-inline-block">
                     <i class='bx bx-cart'></i>
@@ -135,6 +142,20 @@
         }
     }
 
+    async function updateWishlistBadge() {
+        try {
+            const response = await fetch('/Wishlist/GetCount');
+            const data = await response.json();
+            const badge = document.getElementById('wishlistBadge');
+            if (badge) {
+                badge.innerText = data.count;
+                badge.style.display = data.count > 0 ? 'block' : 'none';
+            }
+        } catch (error) {
+            console.error('Error updating wishlist badge:', error);
+        }
+    }
+
     function showCartSuccessToast(message) {
         const toast = document.getElementById('cartSuccessToast');
         const toastMessage = document.getElementById('cartSuccessToastMessage');
@@ -155,7 +176,10 @@
         }, 2200);
     }
 
-    document.addEventListener('DOMContentLoaded', updateCartBadge);
+    document.addEventListener('DOMContentLoaded', () => {
+        updateCartBadge();
+        updateWishlistBadge();
+    });
 </script>
 
 @{

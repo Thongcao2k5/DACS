@@ -38,4 +38,20 @@ namespace MotoShop.Models.ViewModels
         [Required(ErrorMessage = "Vui lòng nhập mã xác nhận")]
         public string VerificationCode { get; set; } = string.Empty;
     }
+
+    public class ChangePasswordViewModel
+    {
+        [Required(ErrorMessage = "Vui lòng nhập mật khẩu hiện tại")]
+        public string CurrentPassword { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Vui lòng nhập mật khẩu mới")]
+        [MinLength(8, ErrorMessage = "Mật khẩu phải ít nhất 8 ký tự")]
+        [RegularExpression(@"^(?=.*[A-Z])(?=.*\d).{8,}$",
+         ErrorMessage = "Mật khẩu cần có chữ hoa và ít nhất 1 chữ số")]
+        public string NewPassword { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Vui lòng xác nhận mật khẩu")]
+        [Compare("NewPassword", ErrorMessage = "Mật khẩu xác nhận không khớp")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
 }

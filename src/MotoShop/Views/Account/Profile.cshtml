@@ -1,7 +1,9 @@
+@model MotoShop.Data.Models.Customer
 @{
-    ViewData["Title"] = "Hồ sơ của tôi";
+    ViewData["Title"] = "Hồ sơ của tôi - MotoShop";
 }
 
+<!-- 1. BREADCRUMB -->
 <div class="breadcrumb-wrapper">
     <div class="container">
         <nav aria-label="breadcrumb">
@@ -20,11 +22,11 @@
             <div class="account-sidebar">
                 <div class="d-flex align-items-center gap-3 mb-4 pb-4 border-bottom">
                     <div style="width: 50px; height: 50px;">
-                        <img src="https://i.pravatar.cc/150?u=1" class="rounded-circle w-100 h-100 object-fit-cover" alt="User">
+                        <img src="@(Model.AvatarUrl ?? "/assets/img/avatars/default.png")" id="sideAvatar" class="rounded-circle w-100 h-100 object-fit-cover" alt="User">
                     </div>
                     <div>
-                        <h6 class="fw-bold mb-0">Nguyễn Văn An</h6>
-                        <p class="text-muted small mb-0">Thành viên Bạc</p>
+                        <h6 class="fw-bold mb-0">@Model.FullName</h6>
+                        <p class="text-muted small mb-0">Thành viên</p>
                     </div>
                 </div>
                 <ul class="account-nav">
@@ -34,17 +36,17 @@
                         </a>
                     </li>
                     <li class="account-nav-item">
-                        <a href="/Order" class="account-nav-link">
+                        <a href="/Order/Index" class="account-nav-link">
                             <i class='bx bx-package'></i> Đơn hàng của tôi
                         </a>
                     </li>
                     <li class="account-nav-item">
-                        <a href="/Account/AddressBook" class="account-nav-link">
+                        <a href="/Address/Index" class="account-nav-link">
                             <i class='bx bx-map'></i> Địa chỉ giao hàng
                         </a>
                     </li>
                     <li class="account-nav-item">
-                        <a href="/Product/Wishlist" class="account-nav-link">
+                        <a href="/Wishlist/Index" class="account-nav-link">
                             <i class='bx bx-heart'></i> Sản phẩm yêu thích
                         </a>
                     </li>
@@ -54,10 +56,11 @@
                         </a>
                     </li>
                     <li class="account-nav-item mt-3 pt-3 border-top">
-                        <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm" class="d-none"></form>
-                        <a href="javascript:void(0)" class="account-nav-link text-danger" onclick="confirmLogout()">
-                            <i class='bx bx-log-out'></i> Đăng xuất
-                        </a>
+                        <form asp-action="Logout" asp-controller="Account" method="post" id="logoutForm">
+                            <a href="javascript:void(0)" class="account-nav-link text-danger" onclick="document.getElementById('logoutForm').submit()">
+                                <i class='bx bx-log-out'></i> Đăng xuất
+                            </a>
+                        </form>
                     </li>
                 </ul>
             </div>
@@ -71,30 +74,35 @@
                 <div class="row g-4">
                     <div class="col-md-auto">
                         <div class="avatar-wrapper">
-                            <img src="https://i.pravatar.cc/150?u=1" class="avatar-img" id="userAvatar" alt="Avatar">
+                            <img src="@(Model.AvatarUrl ?? "/assets/img/avatars/default.png")" class="avatar-img" id="userAvatar" alt="Avatar">
                             <label for="avatarUpload" class="btn-change-avatar">
                                 <i class='bx bx-camera'></i>
-                                <input type="file" id="avatarUpload" class="d-none" accept="image/*">
+                                <input type="file" id="avatarUpload" class="d-none" accept="image/*" onchange="uploadAvatar(this)">
                             </label>
                         </div>
                     </div>
                     <div class="col-md">
                         <form id="profileForm">
+                            @Html.AntiForgeryToken()
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label-custom">Họ và tên</label>
-                                    <input type="text" class="form-control form-control-custom" value="Nguyễn Văn An">
+                                    <input type="text" name="fullName" class="form-control form-control-custom" value="@Model.FullName" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label-custom">Số điện thoại</label>
-                                    <input type="tel" class="form-control form-control-custom" value="0901 234 567">
+                                    <input type="tel" name="phone" class="form-control form-control-custom" value="@Model.Phone" required>
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label-custom">Địa chỉ Email</label>
-                                    <input type="email" class="form-control form-control-custom" value="an.nguyen@example.com">
+                                    <input type="email" name="email" class="form-control form-control-custom" value="@Model.Email" required>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label-custom">Địa chỉ giao hàng mặc định</label>
+                                    <input type="text" name="address" class="form-control form-control-custom" value="@Model.Address" placeholder="Nhập địa chỉ của bạn">
                                 </div>
                                 <div class="col-md-12 pt-2">
-                                    <button type="button" class="btn btn-danger rounded-pill px-5 fw-bold">LƯU THAY ĐỔI</button>
+                                    <button type="button" class="btn btn-danger rounded-pill px-5 fw-bold" onclick="updateProfile()">LƯU THAY ĐỔI</button>
                                 </div>
                             </div>
                         </form>
@@ -102,18 +110,18 @@
                 </div>
             </div>
 
-            <!-- Order Stats Grid -->
+            <!-- Orders Quick View (Stats) -->
             <div class="order-stats-grid">
-                <a href="/Order" class="stat-box text-decoration-none">
-                    <span class="stat-count">02</span>
+                <a href="/Order/Index?status=DangXuLy" class="stat-box text-decoration-none">
+                    <span class="stat-count">@ViewBag.Pending.ToString("D2")</span>
                     <span class="stat-label">Đang xử lý</span>
                 </a>
-                <a href="/Order" class="stat-box text-decoration-none">
-                    <span class="stat-count">01</span>
+                <a href="/Order/Index?status=DangGiao" class="stat-box text-decoration-none">
+                    <span class="stat-count">@ViewBag.Shipping.ToString("D2")</span>
                     <span class="stat-label">Đang giao</span>
                 </a>
-                <a href="/Order" class="stat-box text-decoration-none">
-                    <span class="stat-count">15</span>
+                <a href="/Order/Index?status=DaHoanThanh" class="stat-box text-decoration-none">
+                    <span class="stat-count">@ViewBag.Completed.ToString("D2")</span>
                     <span class="stat-label">Đã hoàn thành</span>
                 </a>
             </div>
@@ -122,7 +130,7 @@
             <div class="profile-section-card p-0 overflow-hidden">
                 <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
                     <h5 class="fw-bold mb-0">ĐƠN HÀNG GẦN ĐÂY</h5>
-                    <a href="/Order" class="text-danger fw-bold small text-decoration-none">Xem tất cả <i class='bx bx-right-arrow-alt'></i></a>
+                    <a href="/Order/Index" class="text-danger fw-bold small text-decoration-none">Xem tất cả <i class='bx bx-right-arrow-alt'></i></a>
                 </div>
                 <div class="table-responsive">
                     <table class="table-custom">
@@ -136,27 +144,45 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td class="fw-bold">#MS-102345</td>
-                                <td>12/03/2026</td>
-                                <td class="fw-bold text-danger">2.180.000đ</td>
-                                <td><span class="status-badge badge-shipping">Đang giao</span></td>
-                                <td><a href="/Order/Detail/102345" class="btn btn-sm btn-outline-dark rounded-pill px-3">Chi tiết</a></td>
-                            </tr>
-                            <tr>
-                                <td class="fw-bold">#MS-102300</td>
-                                <td>05/03/2026</td>
-                                <td class="fw-bold text-danger">450.000đ</td>
-                                <td><span class="status-badge badge-completed">Đã nhận</span></td>
-                                <td><a href="/Order/Detail/102300" class="btn btn-sm btn-outline-dark rounded-pill px-3">Chi tiết</a></td>
-                            </tr>
-                            <tr>
-                                <td class="fw-bold">#MS-102280</td>
-                                <td>28/02/2026</td>
-                                <td class="fw-bold text-danger">8.900.000đ</td>
-                                <td><span class="status-badge badge-completed">Đã nhận</span></td>
-                                <td><a href="/Order/Detail/102280" class="btn btn-sm btn-outline-dark rounded-pill px-3">Chi tiết</a></td>
-                            </tr>
+                            @if (Model.Orders != null && Model.Orders.Any())
+                            {
+                                foreach (var order in Model.Orders.OrderByDescending(o => o.OrderDate).Take(5))
+                                {
+                                    <tr>
+                                        <td class="fw-bold">#@(order.OrderCode ?? $"MS-{order.OrderId}")</td>
+                                        <td>@order.OrderDate.ToString("dd/MM/yyyy")</td>
+                                        <td class="fw-bold text-danger">@order.TotalAmount.ToString("N0")đ</td>
+                                        <td>
+                                            @{
+                                                var statusClass = order.Status switch
+                                                {
+                                                    "Pending" or "DangXuLy" => "badge-pending",
+                                                    "Shipping" or "DangGiao" => "badge-shipping",
+                                                    "Completed" or "DaHoanThanh" => "badge-completed",
+                                                    "Cancelled" or "DaHuy" => "badge-danger",
+                                                    _ => "badge-dark"
+                                                };
+                                                var statusText = order.Status switch
+                                                {
+                                                    "Pending" or "DangXuLy" => "Đang xử lý",
+                                                    "Shipping" or "DangGiao" => "Đang giao",
+                                                    "Completed" or "DaHoanThanh" => "Đã nhận",
+                                                    "Cancelled" or "DaHuy" => "Đã hủy",
+                                                    _ => order.Status
+                                                };
+                                            }
+                                            <span class="status-badge @statusClass">@statusText</span>
+                                        </td>
+                                        <td><a href="/Order/Detail/@order.OrderId" class="btn btn-sm btn-outline-dark rounded-pill px-3">Chi tiết</a></td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">Bạn chưa có đơn hàng nào.</td>
+                                </tr>
+                            }
                         </tbody>
                     </table>
                 </div>
@@ -167,21 +193,62 @@
 
 @section Scripts {
     <script>
-        // Xử lý upload avatar demo
-        document.getElementById('avatarUpload').addEventListener('change', function(e) {
-            if (e.target.files && e.target.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(ex) {
-                    document.getElementById('userAvatar').src = ex.target.result;
-                }
-                reader.readAsDataURL(e.target.files[0]);
-            }
-        });
+        // Lấy Anti-forgery Token
+        function getAntiForgeryToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        }
 
-        // Xác nhận đăng xuất
-        function confirmLogout() {
-            if(confirm('Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?')) {
-                document.getElementById('logoutForm').submit();
+        // Cập nhật Profile qua AJAX
+        async function updateProfile() {
+            const form = document.getElementById('profileForm');
+            const formData = new FormData(form);
+            
+            try {
+                const res = await fetch('/Account/UpdateProfile', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('Cập nhật hồ sơ thành công!');
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra');
+                }
+            } catch (err) {
+                alert('Lỗi kết nối máy chủ');
+            }
+        }
+
+        // Upload Avatar qua AJAX
+        async function uploadAvatar(input) {
+            if (!input.files || !input.files[0]) return;
+
+            // Preview local
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('userAvatar').src = e.target.result;
+                const sideAvatar = document.getElementById('sideAvatar');
+                if(sideAvatar) sideAvatar.src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+
+            // Server upload
+            const formData = new FormData();
+            formData.append('file', input.files[0]);
+            formData.append('__RequestVerificationToken', getAntiForgeryToken());
+
+            try {
+                const res = await fetch('/Account/UploadAvatar', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    alert('Lỗi khi tải ảnh lên');
+                }
+            } catch (err) {
+                alert('Lỗi kết nối máy chủ khi upload');
             }
         }
     </script>

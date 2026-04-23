@@ -123,11 +123,14 @@
                     <div class="col">
                         <div class="product-card">
                             <span class="product-badge badge-featured">Featured</span>
-                            <div class="product-img-wrapper">
+                            <div class="product-img-wrapper position-relative">
                                 <a asp-controller="Product" asp-action="Details" asp-route-slug="@product.Slug">
                                     <img src="@(string.IsNullOrEmpty(product.PrimaryImageUrl) ? "https://via.placeholder.com/400x400?text=No+Image" : product.PrimaryImageUrl)" 
                                          alt="@product.ProductName" loading="lazy">
                                 </a>
+                                <button type="button" class="btn-wishlist-abs" onclick="addToWishlist(@product.ProductId)" title="Thêm vào yêu thích">
+                                    <i class='bx bx-heart'></i>
+                                </button>
                             </div>
                             <div class="product-info flex-grow-1">
                                 <span class="brand">@product.BrandName</span>
@@ -168,11 +171,14 @@
                     <div class="col">
                         <div class="product-card">
                             <span class="product-badge badge-hot">Best Seller</span>
-                            <div class="product-img-wrapper">
+                            <div class="product-img-wrapper position-relative">
                                 <a asp-controller="Product" asp-action="Details" asp-route-slug="@product.Slug">
                                     <img src="@(string.IsNullOrEmpty(product.PrimaryImageUrl) ? "https://via.placeholder.com/400x400?text=No+Image" : product.PrimaryImageUrl)" 
                                          alt="@product.ProductName" loading="lazy">
                                 </a>
+                                <button type="button" class="btn-wishlist-abs" onclick="addToWishlist(@product.ProductId)" title="Thêm vào yêu thích">
+                                    <i class='bx bx-heart'></i>
+                                </button>
                             </div>
                             <div class="product-info flex-grow-1">
                                 <span class="brand">@product.BrandName</span>
@@ -254,11 +260,14 @@
                     <div class="col">
                         <div class="product-card">
                             <span class="product-badge badge-new">New</span>
-                            <div class="product-img-wrapper">
+                            <div class="product-img-wrapper position-relative">
                                 <a asp-controller="Product" asp-action="Details" asp-route-slug="@product.Slug">
                                     <img src="@(string.IsNullOrEmpty(product.PrimaryImageUrl) ? "https://via.placeholder.com/400x400?text=No+Image" : product.PrimaryImageUrl)" 
                                          alt="@product.ProductName" loading="lazy">
                                 </a>
+                                <button type="button" class="btn-wishlist-abs" onclick="addToWishlist(@product.ProductId)" title="Thêm vào yêu thích">
+                                    <i class='bx bx-heart'></i>
+                                </button>
                             </div>
                             <div class="product-info flex-grow-1">
                                 <span class="brand">@product.BrandName</span>

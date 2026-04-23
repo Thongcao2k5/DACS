@@ -92,7 +92,7 @@
     </div>
 </main>
 
-<!-- MODAL THÊM/SỬA ĐỊA CHỈ HOÀN THIỆN -->
+<!-- MODAL THÊM/SỬA ĐỊA CHỈ -->
 <div class="modal fade" id="addressModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -114,7 +114,6 @@
                             <input type="tel" id="phone" class="form-control form-control-custom" placeholder="Nhập số điện thoại" required>
                         </div>
                         
-                        <!-- CHỌN ĐỊA CHỈ ĐỘNG (HOÀN THIỆN) -->
                         <div class="col-md-4">
                             <label class="form-label-custom small fw-bold">Tỉnh / Thành phố *</label>
                             <select id="province" class="form-select form-control-custom" required>
@@ -160,7 +159,6 @@
         const addrModal = new bootstrap.Modal(document.getElementById('addressModal'));
         const API_BASE = "https://provinces.open-api.vn/api";
 
-        // Khởi tạo dữ liệu tỉnh thành
         async function initProvinces() {
             try {
                 const res = await fetch(`${API_BASE}/p/`);
@@ -173,42 +171,32 @@
             } catch (e) { console.error("Lỗi load tỉnh thành", e); }
         }
 
-        // Sự kiện khi chọn Tỉnh/Thành
         document.getElementById('province').addEventListener('change', async function() {
             const pCode = this.value;
             const districtSelect = document.getElementById('district');
             const wardSelect = document.getElementById('ward');
-            
             districtSelect.disabled = true;
             wardSelect.disabled = true;
             wardSelect.innerHTML = '<option value="" selected disabled>Chọn Phường/Xã</option>';
-
             try {
                 const res = await fetch(`${API_BASE}/p/${pCode}?depth=2`);
                 const data = await res.json();
                 let html = '<option value="" selected disabled>Chọn Quận/Huyện</option>';
-                data.districts.forEach(d => {
-                    html += `<option value="${d.code}" data-name="${d.name}">${d.name}</option>`;
-                });
+                data.districts.forEach(d => { html += `<option value="${d.code}" data-name="${d.name}">${d.name}</option>`; });
                 districtSelect.innerHTML = html;
                 districtSelect.disabled = false;
             } catch (e) { console.error("Lỗi load quận huyện", e); }
         });
 
-        // Sự kiện khi chọn Quận/Huyện
         document.getElementById('district').addEventListener('change', async function() {
             const dCode = this.value;
             const wardSelect = document.getElementById('ward');
-            
             wardSelect.disabled = true;
-
             try {
                 const res = await fetch(`${API_BASE}/d/${dCode}?depth=2`);
                 const data = await res.json();
                 let html = '<option value="" selected disabled>Chọn Phường/Xã</option>';
-                data.wards.forEach(w => {
-                    html += `<option value="${w.code}" data-name="${w.name}">${w.name}</option>`;
-                });
+                data.wards.forEach(w => { html += `<option value="${w.code}" data-name="${w.name}">${w.name}</option>`; });
                 wardSelect.innerHTML = html;
                 wardSelect.disabled = false;
             } catch (e) { console.error("Lỗi load phường xã", e); }
@@ -218,8 +206,6 @@
             document.getElementById('modalTitle').innerText = 'THÊM ĐỊA CHỈ MỚI';
             document.getElementById('addressId').value = '';
             document.getElementById('addressForm').reset();
-            document.getElementById('district').disabled = true;
-            document.getElementById('ward').disabled = true;
             await initProvinces();
             addrModal.show();
         }
@@ -228,7 +214,6 @@
             try {
                 const res = await fetch(`/Address/GetAddress/${id}`);
                 const data = await res.json();
-                
                 document.getElementById('modalTitle').innerText = 'SỬA ĐỊA CHỈ';
                 document.getElementById('addressId').value = data.id;
                 document.getElementById('fullName').value = data.fullName;
@@ -236,32 +221,26 @@
                 document.getElementById('street').value = data.street;
                 document.getElementById('isDefault').checked = data.isDefault;
 
-                // Load lại tỉnh thành và chọn cái cũ
                 await initProvinces();
                 const pSelect = document.getElementById('province');
                 const pOption = [...pSelect.options].find(o => o.text === data.province);
                 if (pOption) {
                     pSelect.value = pOption.value;
                     pSelect.dispatchEvent(new Event('change'));
-                    
-                    // Chờ load quận huyện xong (timeout nhỏ để async fetch kịp trả về)
                     setTimeout(async () => {
                         const dSelect = document.getElementById('district');
                         const dOption = [...dSelect.options].find(o => o.text === data.district);
                         if (dOption) {
                             dSelect.value = dOption.value;
                             dSelect.dispatchEvent(new Event('change'));
-                            
-                            // Chờ load phường xã xong
                             setTimeout(() => {
                                 const wSelect = document.getElementById('ward');
                                 const wOption = [...wSelect.options].find(o => o.text === data.ward);
                                 if (wOption) wSelect.value = wOption.value;
-                            }, 500);
+                            }, 400);
                         }
-                    }, 500);
+                    }, 400);
                 }
-                
                 addrModal.show();
             } catch (err) { showToast('Không thể lấy dữ liệu', 'error'); }
         }
@@ -269,12 +248,9 @@
         async function saveAddress() {
             const id = document.getElementById('addressId').value;
             const url = id ? '/Address/EditAddress' : '/Address/AddAddress';
-            
-            // Lấy Tên (text) thay vì Mã (value) của các select
             const pSelect = document.getElementById('province');
             const dSelect = document.getElementById('district');
             const wSelect = document.getElementById('ward');
-
             const payload = {
                 id: id ? parseInt(id) : null,
                 fullName: document.getElementById('fullName').value,
@@ -285,12 +261,6 @@
                 street: document.getElementById('street').value,
                 isDefault: document.getElementById('isDefault').checked
             };
-
-            if (!payload.fullName || !payload.phone || !payload.province || !payload.district || !payload.ward) {
-                showToast('Vui lòng nhập đầy đủ thông tin *', 'error');
-                return;
-            }
-
             try {
                 const res = await fetch(url, {
                     method: 'POST',
@@ -298,11 +268,8 @@
                     body: JSON.stringify(payload)
                 });
                 const data = await res.json();
-                if (data.success) {
-                    showToast(data.message);
-                    addrModal.hide();
-                    setTimeout(() => location.reload(), 800);
-                } else { showToast(data.message, 'error'); }
+                if (data.success) { showToast(data.message); addrModal.hide(); setTimeout(() => location.reload(), 800); }
+                else { showToast(data.message, 'error'); }
             } catch (err) { showToast('Lỗi máy chủ', 'error'); }
         }
 
@@ -315,10 +282,8 @@
                     body: JSON.stringify({ id })
                 });
                 const data = await res.json();
-                if (data.success) {
-                    showToast(data.message);
-                    document.getElementById(`address-card-${id}`).remove();
-                } else { showToast(data.message, 'error'); }
+                if (data.success) { showToast(data.message); document.getElementById(`address-card-${id}`).remove(); }
+                else { showToast(data.message, 'error'); }
             } catch (err) { showToast('Lỗi máy chủ', 'error'); }
         }
 
@@ -342,4 +307,13 @@
             setTimeout(() => t.remove(), 2500);
         }
     </script>
+
+    <style>
+        .address-card { border: 1px solid #eee; border-radius: 12px; padding: 20px; transition: all 0.2s; height: 100%; }
+        .address-card.default { border-color: #dc3545; background-color: #fff9f9; }
+        .address-badge-default { background: #dc3545; color: #fff; font-size: 10px; padding: 2px 8px; border-radius: 4px; vertical-align: middle; margin-left: 8px; }
+        .address-actions { display: flex; gap: 15px; border-top: 1px solid #f0f0f0; margin-top: 15px; padding-top: 10px; }
+        .btn-address-action { background: none; border: none; color: #007bff; font-weight: 600; font-size: 0.9rem; }
+        .btn-address-action.delete { color: #dc3545; }
+    </style>
 }

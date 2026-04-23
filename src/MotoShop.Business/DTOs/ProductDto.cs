@@ -14,6 +14,8 @@ namespace MotoShop.Business.DTOs
         public bool IsFeatured { get; set; }
         public decimal MinPrice { get; set; }
         public decimal? MinOriginalPrice { get; set; }
+        public decimal? OldPrice { get; set; }
+        public int DiscountPercent { get; set; }
         public string PrimaryImageUrl { get; set; }
         public int DefaultVariantId { get; set; }
         public List<ProductVariantDto> Variants { get; set; } = new List<ProductVariantDto>();
