@@ -92,10 +92,10 @@
                                     <div class="product-card h-100 d-flex flex-column border rounded-4 overflow-hidden shadow-sm hover-shadow transition">
                                         <div class="product-img-wrapper position-relative overflow-hidden" style="aspect-ratio: 1/1;">
                                             <a asp-action="Details" asp-route-slug="@product.Slug" class="d-block h-100">
-                                                <img src="@(string.IsNullOrEmpty(product.PrimaryImageUrl) ? "/assets/img/elements/no-image.png" : product.PrimaryImageUrl)" 
+                                                <img src="@(string.IsNullOrEmpty(product.PrimaryImageUrl) ? "/assets/img/elements/18.jpg" : product.PrimaryImageUrl)" 
                                                      alt="@product.ProductName" 
                                                      class="w-100 h-100 object-fit-cover transition-scale" 
-                                                     onerror="this.src='/assets/img/elements/no-image.png'"
+                                                     onerror="this.src='/assets/img/elements/18.jpg'"
                                                      loading="lazy">
                                             </a>
                                             <button type="button" class="btn-wishlist-abs" onclick="addToWishlist(@product.ProductId)" title="Thêm vào yêu thích">
@@ -131,7 +131,7 @@
                                                     <span class="current text-muted fw-bold">Liên hệ giá</span>
                                                 }
                                             </div>
-                                            <button type="button" onclick="handleAddToCart(@product.DefaultVariantId)" class="btn btn-danger btn-sm rounded-pill fw-bold mt-3">
+                                            <button type="button" onclick="CartApi.addToCart(@product.DefaultVariantId)" class="btn btn-danger btn-sm rounded-pill fw-bold mt-3">
                                                 <i class='bx bx-cart-add fs-5 me-1'></i> THÊM GIỎ
                                             </button>
                                         </div>

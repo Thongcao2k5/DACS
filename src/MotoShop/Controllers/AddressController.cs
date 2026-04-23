@@ -22,13 +22,13 @@ namespace MotoShop.Controllers
             _context = context;
             _userManager = userManager;
             
-            // Đảm bảo bảng Custom_Addresses tồn tại
+            // Đảm bảo bảng AddressesNew tồn tại
             try {
                 _context.Database.ExecuteSqlRaw(@"
-                    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Custom_Addresses')
-                    CREATE TABLE Custom_Addresses (
+                    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AddressesNew')
+                    CREATE TABLE AddressesNew (
                         Id INT IDENTITY PRIMARY KEY,
-                        UserId INT NOT NULL,
+                        CustomerId INT NOT NULL,
                         FullName NVARCHAR(200),
                         Phone NVARCHAR(50),
                         Province NVARCHAR(100),
@@ -54,7 +54,7 @@ namespace MotoShop.Controllers
             if (customerId == 0) return RedirectToAction("Login", "Account");
             
             var addresses = await _context.AddressesNew
-                .Where(a => a.UserId == customerId)
+                .Where(a => a.CustomerId == customerId)
                 .OrderByDescending(a => a.IsDefault)
                 .Select(a => new AddressViewModel
                 {
@@ -76,7 +76,7 @@ namespace MotoShop.Controllers
         public async Task<IActionResult> GetAddress(int id)
         {
             int customerId = await GetCurrentCustomerIdAsync();
-            var addr = await _context.AddressesNew.FirstOrDefaultAsync(a => a.Id == id && a.UserId == customerId);
+            var addr = await _context.AddressesNew.FirstOrDefaultAsync(a => a.Id == id && a.CustomerId == customerId);
             if (addr == null) return NotFound();
             return Json(new {
                 id = addr.Id,
@@ -99,18 +99,18 @@ namespace MotoShop.Controllers
             int customerId = await GetCurrentCustomerIdAsync();
             if (customerId == 0) return Json(new { success = false, message = "Phiên làm việc hết hạn" });
 
-            bool isFirstAddress = !await _context.AddressesNew.AnyAsync(a => a.UserId == customerId);
+            bool isFirstAddress = !await _context.AddressesNew.AnyAsync(a => a.CustomerId == customerId);
             if (isFirstAddress) model.IsDefault = true;
 
             if (model.IsDefault)
             {
-                var defaults = await _context.AddressesNew.Where(a => a.UserId == customerId && a.IsDefault).ToListAsync();
+                var defaults = await _context.AddressesNew.Where(a => a.CustomerId == customerId && a.IsDefault).ToListAsync();
                 foreach (var d in defaults) d.IsDefault = false;
             }
 
             var newAddress = new AddressNew
             {
-                UserId = customerId,
+                CustomerId = customerId,
                 FullName = model.FullName,
                 Phone = model.Phone,
                 Province = model.Province,
@@ -133,13 +133,13 @@ namespace MotoShop.Controllers
             if (!ModelState.IsValid || !model.Id.HasValue) return Json(new { success = false, message = "Dữ liệu không hợp lệ" });
 
             int customerId = await GetCurrentCustomerIdAsync();
-            var addr = await _context.AddressesNew.FirstOrDefaultAsync(a => a.Id == model.Id && a.UserId == customerId);
+            var addr = await _context.AddressesNew.FirstOrDefaultAsync(a => a.Id == model.Id && a.CustomerId == customerId);
             
             if (addr == null) return Json(new { success = false, message = "Không tìm thấy địa chỉ" });
 
             if (model.IsDefault && !addr.IsDefault)
             {
-                var defaults = await _context.AddressesNew.Where(a => a.UserId == customerId && a.IsDefault).ToListAsync();
+                var defaults = await _context.AddressesNew.Where(a => a.CustomerId == customerId && a.IsDefault).ToListAsync();
                 foreach (var d in defaults) d.IsDefault = false;
             }
 
@@ -160,13 +160,13 @@ namespace MotoShop.Controllers
         public async Task<IActionResult> DeleteAddress([FromBody] DeleteRequest req)
         {
             int customerId = await GetCurrentCustomerIdAsync();
-            var addr = await _context.AddressesNew.FirstOrDefaultAsync(a => a.Id == req.Id && a.UserId == customerId);
+            var addr = await _context.AddressesNew.FirstOrDefaultAsync(a => a.Id == req.Id && a.CustomerId == customerId);
 
             if (addr == null) return Json(new { success = false, message = "Không tìm thấy địa chỉ" });
 
             if (addr.IsDefault)
             {
-                bool hasOther = await _context.AddressesNew.AnyAsync(a => a.UserId == customerId && a.Id != req.Id);
+                bool hasOther = await _context.AddressesNew.AnyAsync(a => a.CustomerId == customerId && a.Id != req.Id);
                 if (hasOther) return Json(new { success = false, message = "Không thể xóa địa chỉ mặc định. Hãy đặt địa chỉ khác làm mặc định trước." });
             }
 
@@ -184,11 +184,11 @@ namespace MotoShop.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                var defaults = await _context.AddressesNew.Where(a => a.UserId == customerId && a.IsDefault).ToListAsync();
+                var defaults = await _context.AddressesNew.Where(a => a.CustomerId == customerId && a.IsDefault).ToListAsync();
                 foreach (var d in defaults) d.IsDefault = false;
                 await _context.SaveChangesAsync();
 
-                var addr = await _context.AddressesNew.FirstOrDefaultAsync(a => a.Id == req.Id && a.UserId == customerId);
+                var addr = await _context.AddressesNew.FirstOrDefaultAsync(a => a.Id == req.Id && a.CustomerId == customerId);
                 if (addr != null)
                 {
                     addr.IsDefault = true;

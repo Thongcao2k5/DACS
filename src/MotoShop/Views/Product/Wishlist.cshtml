@@ -1,127 +1,90 @@
-@model IEnumerable<MotoShop.Data.Models.WishlistItem>
+@model IEnumerable<MotoShop.Data.Models.WishlistNew>
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
-@inject MotoShop.Data.Interfaces.IUnitOfWork UnitOfWork
-@using Microsoft.EntityFrameworkCore
+
 @{
     ViewData["Title"] = "Sản phẩm yêu thích";
-    var user = await UserManager.GetUserAsync(User);
-    var currentCustomer = await UnitOfWork.Repository<MotoShop.Data.Models.Customer>().Find(c => c.UserId == user.Id).FirstOrDefaultAsync();
 }
 
-<div class="breadcrumb-wrapper">
-    <div class="container">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Sản phẩm yêu thích</li>
-            </ol>
-        </nav>
-    </div>
-</div>
-
-<main class="container mb-5">
-    <div class="wishlist-header d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold mb-0">SẢN PHẨM YÊU THÍCH <span class="fs-5 text-muted fw-normal">(@Model.Count())</span></h2>
-        </div>
-        <a asp-controller="Product" asp-action="Index" class="btn btn-outline-dark rounded-pill px-4 fw-bold">
-            <i class='bx bx-shopping-bag me-2'></i> TIẾP TỤC MUA SẮM
-        </a>
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 mb-0">Danh sách yêu thích (<span id="wishlistCount">@Model.Count()</span>)</h2>
+        @if (Model.Any())
+        {
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-danger" onclick="clearWishlist()">
+                    <i class='bx bx-trash'></i> Xóa toàn bộ
+                </button>
+            </div>
+        }
     </div>
 
     @if (!Model.Any())
     {
-        <div id="emptyWishlist" class="empty-wishlist-box animate__animated animate__fadeIn py-5 text-center">
-            <div class="empty-wishlist-icon mb-3">
-                <i class='bx bx-heart-circle fs-1 text-muted' style="font-size: 5rem !important;"></i>
-            </div>
-            <h3 class="fw-bold">Danh sách yêu thích đang trống</h3>
-            <p class="text-muted mb-4">Bạn chưa lưu sản phẩm nào vào danh sách yêu thích của mình.</p>
-            <a asp-controller="Product" asp-action="Index" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold">KHÁM PHÁ SẢN PHẨM</a>
+        <div id="emptyWishlist" class="text-center py-5">
+            <i class='bx bx-heart display-1 text-muted mb-3'></i>
+            <p class="lead">Bạn chưa có sản phẩm yêu thích nào.</p>
+            <a href="/Product" class="btn btn-danger rounded-pill px-4 fw-bold">KHÁM PHÁ NGAY</a>
         </div>
     }
-    else
-    {
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="wishlistGrid">
-            @foreach (var item in Model)
-            {
-                var product = item.Product;
-                if (product == null) continue;
-                
-                var minPrice = product.Variants.Any() ? product.Variants.Min(v => v.Price) : 0;
-                var variantId = product.Variants.FirstOrDefault()?.ProductVariantId ?? 0;
-                var imageUrl = product.Variants.FirstOrDefault(v => !string.IsNullOrEmpty(v.ImageUrl))?.ImageUrl 
-                               ?? "/assets/img/elements/no-image.png";
 
-                <div class="col wishlist-item" id="wishlist-item-@item.WishlistItemId">
-                    <div class="product-card h-100 shadow-sm border-0 position-relative">
-                        <button class="btn-remove-wishlist" title="Xóa khỏi yêu thích" onclick="removeItem(@item.WishlistItemId)">
-                            <i class='bx bxs-heart'></i>
+    <div class="row g-4" id="wishlistContainer">
+        @foreach (var item in Model)
+        {
+            var product = item.Product;
+            if (product == null) continue;
+            var variant = product.Variants.FirstOrDefault();
+            var primaryImg = product.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? "/assets/img/elements/18.jpg";
+            
+            <div class="col-6 col-md-4 col-lg-3 wishlist-card" data-product-id="@product.ProductId">
+                <div class="card h-100 shadow-sm border-0 product-card rounded-4 overflow-hidden">
+                    <div class="position-relative overflow-hidden" style="aspect-ratio: 1/1;">
+                        <img src="@primaryImg" 
+                             class="card-img-top w-100 h-100 object-fit-cover transition-scale" alt="@product.ProductName"
+                             onerror="this.src='/assets/img/elements/18.jpg'">
+                        
+                        <button class="btn btn-light btn-sm position-absolute top-0 end-0 m-2 rounded-circle shadow-sm btn-remove" 
+                                onclick="removeWishlistItem(event, @product.ProductId, this.closest('.wishlist-card'))"
+                                title="Xóa khỏi yêu thích">
+                            <i class='bx bx-x text-danger fs-4'></i>
                         </button>
-                        <div class="product-img-wrapper">
-                            <a href="/Product/Details?slug=@product.Slug">
-                                <img src="@imageUrl" alt="@product.ProductName" loading="lazy">
-                            </a>
-                        </div>
-                        <div class="product-info p-3 d-flex flex-column h-100">
-                            <span class="brand text-uppercase small text-muted">@product.Brand?.BrandName</span>
-                            <h6 class="name mb-2">
-                                <a href="/Product/Details?slug=@product.Slug" class="text-decoration-none text-dark fw-bold">@product.ProductName</a>
-                            </h6>
-                            <div class="product-price mt-auto">
-                                <span class="current text-danger fw-bold fs-5">@minPrice.ToString("N0")đ</span>
-                            </div>
-                            <div class="mt-3">
-                                <button onclick="handleAddToCart(@variantId)" class="btn btn-add-cart w-100 rounded-pill fw-bold py-2 btn-sm">
-                                    <i class='bx bx-cart-add fs-5'></i> <span class="ms-1">THÊM VÀO GIỎ</span>
+                    </div>
+                    
+                    <div class="card-body p-3 d-flex flex-column text-center">
+                        <small class="text-muted text-uppercase">@product.Brand?.BrandName</small>
+                        <h5 class="card-title h6 text-truncate mb-2 mt-1" title="@product.ProductName">
+                            <a href="/Product/Details?slug=@product.Slug" class="text-decoration-none text-dark fw-bold">@product.ProductName</a>
+                        </h5>
+                        
+                        <div class="mt-auto">
+                            @if (variant != null)
+                            {
+                                <div class="mb-3">
+                                    <span class="text-danger fw-bold fs-5">@variant.Price.ToString("N0")đ</span>
+                                </div>
+                                <button class="btn btn-danger btn-sm w-100 rounded-pill fw-bold py-2" onclick="addToCart(event, @product.ProductId)">
+                                    <i class='bx bx-cart-add'></i> THÊM GIỎ
                                 </button>
-                            </div>
+                            }
                         </div>
                     </div>
                 </div>
-            }
-        </div>
-
-        <div class="wishlist-bulk-actions mt-5 d-flex gap-3 justify-content-center">
-            <button class="btn btn-outline-danger rounded-pill px-5 fw-bold" onclick="clearAll()">
-                <i class='bx bx-trash me-2 fs-5'></i> XÓA TẤT CẢ
-            </button>
-        </div>
-    }
-</main>
+            </div>
+        }
+    </div>
+</div>
 
 @section Scripts {
-    <script src="~/js/cart-handler.js"></script>
-    <script src="~/js/components.js"></script>
     <script>
-        async function removeItem(id) {
-            if (!confirm('Xóa sản phẩm này khỏi danh sách yêu thích?')) return;
-
-            try {
-                const response = await fetch(`/Product/RemoveFromWishlist/${id}`, {
-                    method: 'POST'
-                });
-                const data = await response.json();
-                if (data.success) {
-                    $(`#wishlist-item-${id}`).fadeOut(300, function() {
-                        $(this).remove();
-                        if ($('#wishlistGrid').children().length === 0) {
-                            location.reload();
-                        }
-                    });
-                    UI.showToast('Đã xóa khỏi danh sách yêu thích', 'info');
-                }
-            } catch (e) {
-                UI.showToast('Có lỗi xảy ra', 'error');
-            }
-        }
-
-        function clearAll() {
-            if (confirm('Bạn có chắc chắn muốn xóa toàn bộ danh sách yêu thích?')) {
-                alert('Tính năng đang được cập nhật');
-            }
+        async function removeWishlistItem(e, productId, cardElement) {
+            if (e) e.preventDefault();
+            const res = await fetch('/Wishlist/Remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || '' },
+                body: JSON.stringify({ productId })
+            });
+            if ((await res.json()).success) cardElement.remove();
         }
     </script>
 }

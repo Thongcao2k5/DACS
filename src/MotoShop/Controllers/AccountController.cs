@@ -67,17 +67,12 @@ namespace MotoShop.Controllers
                         var currentCustomer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == user.Id);
                         if (currentCustomer == null)
                         {
-                            currentCustomer = new Customer { 
-                                UserId = user.Id, 
-                                FullName = user.UserName ?? "Khách hàng",
-                                Email = user.Email,
-                                CreatedDate = DateTime.Now
-                            };
+                            currentCustomer = new Customer { UserId = user.Id, FullName = user.UserName ?? "Khách hàng", Email = user.Email, CreatedDate = DateTime.Now };
                             _context.Customers.Add(currentCustomer);
                             await _context.SaveChangesAsync();
                         }
 
-                        // 1. Sync Cart
+                        // --- 1. ĐỒNG BỘ GIỎ HÀNG (Sync & Clear Guest) ---
                         string? guestCartId = Request.Cookies["MotoShop_GuestId"];
                         if (!string.IsNullOrEmpty(guestCartId))
                         {
@@ -85,24 +80,17 @@ namespace MotoShop.Controllers
                             Response.Cookies.Delete("MotoShop_GuestId");
                         }
 
-                        // 2. Sync Wishlist from Cookie
+                        // --- 2. ĐỒNG BỘ YÊU THÍCH (Sync & Clear Guest) ---
                         var wishlistCookie = Request.Cookies["MotoShop_Wishlist_Items"];
                         if (!string.IsNullOrEmpty(wishlistCookie))
                         {
                             try {
                                 var guestProductIds = JsonSerializer.Deserialize<List<int>>(wishlistCookie);
                                 if (guestProductIds != null && guestProductIds.Any()) {
-                                    var wishlist = await _context.Wishlists.FirstOrDefaultAsync(w => w.CustomerId == currentCustomer.CustomerId);
-                                    if (wishlist == null) {
-                                        wishlist = new Wishlist { CustomerId = currentCustomer.CustomerId, CreatedDate = DateTime.Now };
-                                        _context.Wishlists.Add(wishlist);
-                                        await _context.SaveChangesAsync();
-                                    }
-
                                     foreach (var pId in guestProductIds) {
-                                        var exists = await _context.WishlistItems.AnyAsync(wi => wi.WishlistId == wishlist.WishlistId && wi.ProductId == pId);
+                                        var exists = await _context.WishlistsNew.AnyAsync(w => w.UserId == currentCustomer.CustomerId && w.ProductId == pId);
                                         if (!exists) {
-                                            _context.WishlistItems.Add(new WishlistItem { WishlistId = wishlist.WishlistId, ProductId = pId, CreatedDate = DateTime.Now });
+                                            _context.WishlistsNew.Add(new WishlistNew { UserId = currentCustomer.CustomerId, ProductId = pId, CreatedAt = DateTime.Now });
                                         }
                                     }
                                     await _context.SaveChangesAsync();
@@ -153,55 +141,93 @@ namespace MotoShop.Controllers
         public async Task<IActionResult> Profile()
         {
             var userId = _userManager.GetUserId(User);
-            var customer = await _context.Customers.Include(c => c.Orders).FirstOrDefaultAsync(c => c.UserId == userId);
+            var customer = await _context.Customers
+                .Include(c => c.Orders)
+                .Include(c => c.CustomerAddresses)
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+            
             if (customer == null) return NotFound();
 
-            var model = new ProfileViewModel
-            {
-                FullName = customer.FullName,
-                Email = customer.Email ?? "",
-                PhoneNumber = customer.Phone ?? "",
-                AvatarUrl = customer.AvatarUrl,
-                Address = customer.Address,
-                PendingOrders = customer.Orders.Count(o => o.Status == "DangXuLy" || o.Status == "Pending"),
-                ShippingOrders = customer.Orders.Count(o => o.Status == "DangGiao" || o.Status == "Shipping"),
-                CompletedOrders = customer.Orders.Count(o => o.Status == "DaHoanThanh" || o.Status == "Completed")
-            };
-            return View(model);
+            ViewBag.Pending = customer.Orders.Count(o => o.Status == "DangXuLy" || o.Status == "Pending");
+            ViewBag.Shipping = customer.Orders.Count(o => o.Status == "DangGiao" || o.Status == "Shipping");
+            ViewBag.Completed = customer.Orders.Count(o => o.Status == "DaHoanThanh" || o.Status == "Completed");
+
+            return View(customer);
         }
 
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateProfile(ProfileViewModel model)
+        public async Task<IActionResult> UpdateProfile(string fullName, string phone, string email, string address)
         {
             var userId = _userManager.GetUserId(User);
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
             if (customer != null) {
-                customer.FullName = model.FullName;
-                customer.Phone = model.PhoneNumber;
-                customer.Address = model.Address;
+                customer.FullName = fullName;
+                customer.Phone = phone;
+                customer.Email = email;
+                customer.Address = address;
                 await _context.SaveChangesAsync();
                 return Json(new { success = true });
             }
             return Json(new { success = false });
         }
 
+        [HttpGet]
+        [Authorize]
+        public IActionResult AddressBook() => RedirectToAction("Index", "Address");
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> Wishlist()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToAction("Login");
+
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
+            if (customer == null) return NotFound();
+
+            var wishlistItems = await _context.WishlistsNew
+                .Where(w => w.UserId == customer.CustomerId)
+                .Include(w => w.Product).ThenInclude(p => p!.Brand)
+                .Include(w => w.Product).ThenInclude(p => p!.Variants)
+                .Include(w => w.Product).ThenInclude(p => p!.Images)
+                .OrderByDescending(w => w.CreatedAt)
+                .ToListAsync();
+
+            ViewBag.Customer = customer;
+            return View(wishlistItems);
+        }
+
+        [HttpGet]
+        [Authorize]
+        public IActionResult ChangePassword() => View();
+
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordViewModel model)
         {
-            if (!ModelState.IsValid) return Json(new { success = false });
+            if (!ModelState.IsValid) return Json(new { success = false, message = "Dữ liệu không hợp lệ" });
             var user = await _userManager.GetUserAsync(User);
-            var result = await _userManager.ChangePasswordAsync(user!, model.CurrentPassword, model.NewPassword);
-            return Json(new { success = result.Succeeded });
+            if (user == null) return Json(new { success = false });
+            
+            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+            if (result.Succeeded) {
+                await _signInManager.RefreshSignInAsync(user);
+                return Json(new { success = true, message = "Đổi mật khẩu thành công" });
+            }
+            return Json(new { success = false, message = result.Errors.FirstOrDefault()?.Description });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout(string? returnUrl = null)
         {
+            // --- 3. DỌN DẸP KHI ĐĂNG XUẤT (Clear Guest Data để giỏ hàng trống) ---
+            Response.Cookies.Delete("MotoShop_GuestId");
+            Response.Cookies.Delete("MotoShop_Wishlist_Items");
+            
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
         }

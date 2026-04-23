@@ -1,204 +1,170 @@
-@model IEnumerable<MotoShop.Data.Models.Service>
 @{
-    ViewData["Title"] = "Dịch vụ bảo dưỡng & Sửa chữa xe máy";
-    var services = ViewBag.Services as IEnumerable<MotoShop.Data.Models.Service>;
-    var combos = ViewBag.Combos as IEnumerable<MotoShop.Data.Models.ServiceCombo>;
+    ViewData["Title"] = "Dịch vụ bảo dưỡng & Chăm sóc xe";
+    Layout = "_Layout";
 }
 
-<div class="service-banner text-white py-5 mb-5" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://shop2banh.vn/images/thumbs/2023/12/bao-duong-xe-may-cuoi-nam.jpg'); background-size: cover; background-position: center;">
-    <div class="container py-4 text-center">
-        <h1 class="fw-bold display-4 text-uppercase">Dịch vụ chuyên nghiệp</h1>
-        <p class="lead">Đội ngũ kỹ thuật tay nghề cao - Trang thiết bị hiện đại - Phụ tùng chính hãng</p>
-        <div class="mt-4">
-            <a href="#booking" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold shadow-lg animate__animated animate__pulse animate__infinite">ĐẶT LỊCH NGAY</a>
+<!-- 1. HERO BANNER -->
+<section class="service-hero">
+    <div class="container text-center py-5">
+        <div class="hero-content py-5">
+            <span class="badge bg-danger rounded-pill px-3 py-2 mb-3 glow-effect">DỊCH VỤ CHUYÊN NGHIỆP</span>
+            <h1 class="display-4 fw-bold text-white mb-3">Dịch vụ chăm sóc & bảo dưỡng</h1>
+            <p class="lead text-white-50 mx-auto mb-4" style="max-width: 600px;">
+                Đội ngũ kỹ thuật viên tay nghề cao, trang thiết bị hiện đại, cam kết mang lại trải nghiệm tốt nhất cho xế yêu của bạn.
+            </p>
         </div>
     </div>
-</div>
+</section>
 
-<main class="container mb-5">
-    <!-- SECTION 1: CÁC GÓI COMBO TIẾT KIỆM -->
-    <section class="mb-5">
-        <div class="d-flex align-items-center mb-4">
-            <h3 class="fw-bold text-uppercase mb-0 border-start border-danger border-5 ps-3">Combo Bảo Dưỡng Tiết Kiệm</h3>
-            <span class="badge bg-danger ms-3 rounded-pill px-3 py-2">HOT</span>
+<!-- 2. FILTER BAR -->
+<div id="booking-anchor" style="position: relative; top: -120px; visibility: hidden;"></div>
+<div class="filter-wrapper sticky-top shadow-sm" id="service-filter-section">
+    <div class="container py-3">
+        <div class="d-flex justify-content-center flex-wrap gap-2" id="filter-buttons">
+            <button class="btn btn-pill active" data-filter="all">Tất cả</button>
+            <button class="btn btn-pill" data-filter="maintenance">Bảo dưỡng xe</button>
+            <button class="btn btn-pill" data-filter="install">Lắp đặt phụ tùng</button>
+            <button class="btn btn-pill" data-filter="tuning">Độ xe</button>
+            <button class="btn btn-pill" data-filter="rescue">Cứu hộ</button>
+            <button class="btn btn-pill" data-filter="washing">Rửa xe</button>
         </div>
-        
-        <div class="row g-4">
-            @if (combos != null && combos.Any())
-            {
-                @foreach (var combo in combos)
-                {
-                    <div class="col-lg-6">
-                        <div class="combo-card shadow-sm border-0 rounded-4 overflow-hidden bg-white h-100 d-flex flex-column flex-md-row border">
-                            <div class="combo-img-wrapper position-relative" style="min-width: 220px; height: 240px;">
-                                <img src="@(string.IsNullOrEmpty(combo.ImageUrl) ? "https://shop2banh.vn/images/thumbs/2023/10/ve-sinh-noi-xe-tay-ga.jpg" : combo.ImageUrl)" 
-                                     class="w-100 h-100 object-fit-cover" alt="@combo.ComboName">
-                                <div class="discount-tag">-@(((combo.TotalPrice - combo.DiscountPrice) / combo.TotalPrice * 100).ToString("0"))%</div>
-                            </div>
-                            <div class="p-4 d-flex flex-column justify-content-between">
-                                <div>
-                                    <h5 class="fw-bold text-danger mb-2">@combo.ComboName</h5>
-                                    <p class="small text-muted mb-3">@combo.Description</p>
-                                    <ul class="list-unstyled mb-4">
-                                        @foreach (var item in combo.ComboItems.Take(4))
-                                        {
-                                            <li class="small mb-1 text-dark"><i class='bx bx-check-circle text-success me-2'></i>@item.Service?.ServiceName</li>
-                                        }
-                                    </ul>
-                                </div>
-                                <div class="d-flex align-items-center justify-content-between mt-auto">
-                                    <div>
-                                        <div class="text-muted text-decoration-line-through small">@combo.TotalPrice.ToString("N0")đ</div>
-                                        <div class="fw-bold fs-4 text-danger">@combo.DiscountPrice.ToString("N0")đ</div>
-                                    </div>
-                                    <a href="/Service/Detail/@combo.ComboId?isCombo=true" class="btn btn-dark rounded-pill px-4 fw-bold btn-sm shadow-sm">CHI TIẾT</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                }
-            }
-        </div>
-    </section>
-
-    <!-- SECTION 2: BẢNG GIÁ DỊCH VỤ LẺ -->
-    <section id="pricing" class="mb-5 py-5 bg-light rounded-4 px-4">
-        <div class="text-center mb-5">
-            <h3 class="fw-bold text-uppercase">Bảng Giá Dịch Vụ Lẻ</h3>
-            <p class="text-muted">Minh bạch giá cả - Không phát sinh chi phí ẩn</p>
-        </div>
-
-        <div class="service-filter-bar mb-4 d-flex flex-wrap gap-2 justify-content-center">
-            <button class="btn btn-white border shadow-sm rounded-pill px-4 active filter-btn" data-filter="all">Tất cả</button>
-            <button class="btn btn-white border shadow-sm rounded-pill px-4 filter-btn" data-filter="động cơ">Động cơ</button>
-            <button class="btn btn-white border shadow-sm rounded-pill px-4 filter-btn" data-filter="phanh">Phanh & Dàn chân</button>
-            <button class="btn btn-white border shadow-sm rounded-pill px-4 filter-btn" data-filter="điện">Điện & Đèn</button>
-        </div>
-
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-dark text-white">
-                        <tr>
-                            <th class="ps-4 py-3">Tên dịch vụ</th>
-                            <th class="py-3">Mô tả chi tiết</th>
-                            <th class="py-3 text-center">Giá (Dự kiến)</th>
-                            <th class="pe-4 py-3 text-end">Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody id="serviceTableBody">
-                        @if (services != null)
-                        {
-                            @foreach (var s in services)
-                            {
-                                <tr class="service-row" data-name="@s.ServiceName.ToLower()">
-                                    <td class="ps-4">
-                                        <div class="fw-bold text-dark">@s.ServiceName</div>
-                                    </td>
-                                    <td class="text-muted small">@s.Description</td>
-                                    <td class="text-center">
-                                        <span class="fw-bold text-danger">@s.Price.ToString("N0")đ</span>
-                                    </td>
-                                    <td class="pe-4 text-end">
-                                        <button class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold">Đặt lịch</button>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
     </div>
 </div>
 
 <!-- 3. SERVICE CARD GRID -->
 <section class="container py-5">
     <div class="row g-4" id="service-grid">
-        @if (Model != null && Model.Any())
-        {
-            foreach (var item in Model)
-            {
-                // Logic xác định category dựa trên tên dịch vụ để filter (tạm thời)
-                string category = "maintenance";
-                if (item.ServiceName.Contains("Lắp đặt")) category = "install";
-                else if (item.ServiceName.Contains("ECU") || item.ServiceName.Contains("Độ")) category = "tuning";
-                else if (item.ServiceName.Contains("Cứu hộ")) category = "rescue";
-                else if (item.ServiceName.Contains("Rửa xe")) category = "washing";
-
-                <div class="col-md-6 col-lg-4 service-item" data-category="@category">
-                    <div class="card h-100 service-card">
-                        <div class="card-body p-4 text-center">
-                            <div class="service-icon-box @(category == "maintenance" ? "bg-orange-light text-orange" : 
-                                                          category == "install" ? "bg-blue-light text-blue" :
-                                                          category == "tuning" ? "bg-purple-light text-purple" :
-                                                          category == "rescue" ? "bg-red-light text-danger" : "bg-green-light text-green") mb-3">
-                                <i class='bx @(category == "maintenance" ? "bx-wrench" : 
-                                              category == "install" ? "bx-cog" :
-                                              category == "tuning" ? "bx-bolt-circle" :
-                                              category == "rescue" ? "bx-support" : "bx-water")'></i>
-                            </div>
-                            <h5 class="fw-bold mb-3">@item.ServiceName</h5>
-                            <p class="text-muted small mb-4">@item.Description</p>
-                            <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
-                                <span class="h5 fw-bold text-danger mb-0">@item.Price.ToString("N0")đ</span>
-                                <a href="/Service/Booking?serviceId=@item.ServiceId" class="btn btn-danger rounded-pill px-4">Đặt lịch</a>
-                            </div>
-                        </div>
+        <!-- Dịch vụ 1: Bảo dưỡng -->
+        <div class="col-md-6 col-lg-4 service-item" data-category="maintenance">
+            <div class="card h-100 service-card">
+                <div class="card-body p-4 text-center">
+                    <div class="service-icon-box bg-orange-light text-orange mb-3">
+                        <i class='bx bx-wrench'></i>
+                    </div>
+                    <span class="service-badge badge bg-warning">Phổ biến</span>
+                    <h5 class="fw-bold mb-3">Bảo dưỡng định kỳ (Full)</h5>
+                    <p class="text-muted small mb-4">Kiểm tra tổng quát 24 hạng mục, vệ sinh nồi, họng xăng và thay nhớt máy.</p>
+                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
+                        <span class="h5 fw-bold text-danger mb-0">350.000đ</span>
+                        <a href="/Service/Booking?serviceId=1" class="btn btn-danger rounded-pill px-4">Đặt lịch</a>
                     </div>
                 </div>
-            }
-        }
-        else
-        {
-            <div class="col-12 text-center py-5">
-                <p class="text-muted">Hiện chưa có dịch vụ nào khả dụng.</p>
             </div>
-        }
+        </div>
+
+        <!-- Dịch vụ 2: Lắp đặt -->
+        <div class="col-md-6 col-lg-4 service-item" data-category="install">
+            <div class="card h-100 service-card">
+                <div class="card-body p-4 text-center">
+                    <div class="service-icon-box bg-blue-light text-blue mb-3">
+                        <i class='bx bx-cog'></i>
+                    </div>
+                    <span class="service-badge badge bg-info">Mới</span>
+                    <h5 class="fw-bold mb-3">Lắp đặt Phuộc & Phanh</h5>
+                    <p class="text-muted small mb-4">Thay thế phuộc Ohlins, YSS, heo dầu Brembo chuẩn kỹ thuật, không cấn cọ.</p>
+                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
+                        <span class="h5 fw-bold text-danger mb-0">150.000đ</span>
+                        <a href="/Service/Booking?serviceId=2" class="btn btn-danger rounded-pill px-4">Đặt lịch</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dịch vụ 3: Độ xe -->
+        <div class="col-md-6 col-lg-4 service-item" data-category="tuning">
+            <div class="card h-100 service-card">
+                <div class="card-body p-4 text-center">
+                    <div class="service-icon-box bg-purple-light text-purple mb-3">
+                        <i class='bx bx-bolt-circle'></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">ECU & Xăng Lửa</h5>
+                    <p class="text-muted small mb-4">Dynojet chuyên sâu, tối ưu công suất động cơ, giúp xe bốc và mượt hơn.</p>
+                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
+                        <span class="h5 fw-bold text-danger mb-0">800.000đ</span>
+                        <a href="/Service/Booking?serviceId=3" class="btn btn-danger rounded-pill px-4">Đặt lịch</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dịch vụ 4: Cứu hộ -->
+        <div class="col-md-6 col-lg-4 service-item" data-category="rescue">
+            <div class="card h-100 service-card">
+                <div class="card-body p-4 text-center">
+                    <div class="service-icon-box bg-red-light text-danger mb-3">
+                        <i class='bx bx-support'></i>
+                    </div>
+                    <span class="service-badge badge bg-danger">24/7</span>
+                    <h5 class="fw-bold mb-3">Cứu hộ tận nơi 24/7</h5>
+                    <p class="text-muted small mb-4">Hỗ trợ sửa chữa lưu động, chở xe về trung tâm khi gặp sự cố trên đường.</p>
+                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
+                        <span class="h5 fw-bold text-danger mb-0">Từ 200k</span>
+                        <a href="/Service/Booking?serviceId=4" class="btn btn-danger rounded-pill px-4">Đặt lịch</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dịch vụ 5: Rửa xe -->
+        <div class="col-md-6 col-lg-4 service-item" data-category="washing">
+            <div class="card h-100 service-card">
+                <div class="card-body p-4 text-center">
+                    <div class="service-icon-box bg-green-light text-green mb-3">
+                        <i class='bx bx-water'></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Rửa xe Detail siêu sạch</h5>
+                    <p class="text-muted small mb-4">Rửa xe không chạm, vệ sinh chi tiết máy, dưỡng nhựa nhám và xịt nano bóng.</p>
+                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
+                        <span class="h5 fw-bold text-danger mb-0">120.000đ</span>
+                        <a href="/Service/Booking?serviceId=5" class="btn btn-danger rounded-pill px-4">Đặt lịch</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 
-    <!-- SECTION 3: QUY TRÌNH & CAM KẾT -->
-    <div class="row g-4 text-center mt-4">
-        <div class="col-md-4">
-            <div class="p-4 bg-white shadow-sm rounded-4 border h-100">
-                <i class='bx bx-time-five fs-1 text-danger mb-3'></i>
-                <h5 class="fw-bold">Tiết kiệm thời gian</h5>
-                <p class="text-muted small mb-0">Đặt lịch trước qua Website, tới là làm ngay không cần chờ đợi.</p>
+<!-- 4. CTA + WHY SECTION -->
+<section class="bg-light py-5 mt-4">
+    <div class="container text-center">
+        <h2 class="fw-bold mb-5">Tại sao nên chọn MotoShop?</h2>
+        <div class="row g-4 mb-5">
+            <div class="col-md-3">
+                <div class="p-3">
+                    <i class='bx bx-medal fs-1 text-danger mb-3'></i>
+                    <h6 class="fw-bold">Kỹ thuật viên chuyên nghiệp</h6>
+                    <p class="text-muted small">Trên 10 năm kinh nghiệm trong ngành xe máy.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3">
+                    <i class='bx bx-check-shield fs-1 text-danger mb-3'></i>
+                    <h6 class="fw-bold">Linh kiện chính hãng</h6>
+                    <p class="text-muted small">100% linh kiện thay thế là hàng chính hãng cao cấp.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3">
+                    <i class='bx bx-show fs-1 text-danger mb-3'></i>
+                    <h6 class="fw-bold">Giá minh bạch</h6>
+                    <p class="text-muted small">Báo giá rõ ràng trước khi thực hiện, không phát sinh.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3">
+                    <i class='bx bx-timer fs-1 text-danger mb-3'></i>
+                    <h6 class="fw-bold">Hỗ trợ nhanh</h6>
+                    <p class="text-muted small">Tiết kiệm thời gian cho khách hàng bận rộn.</p>
+                </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="p-4 bg-white shadow-sm rounded-4 border h-100">
-                <i class='bx bx-certification fs-1 text-danger mb-3'></i>
-                <h5 class="fw-bold">Phụ tùng chính hãng</h5>
-                <p class="text-muted small mb-0">Cam kết 100% linh kiện thay thế là hàng chính hãng từ các thương hiệu lớn.</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="p-4 bg-white shadow-sm rounded-4 border h-100">
-                <i class='bx bx-shield-quarter fs-1 text-danger mb-3'></i>
-                <h5 class="fw-bold">Bảo hành dài hạn</h5>
-                <p class="text-muted small mb-0">Mọi dịch vụ sửa chữa đều được bảo hành từ 3-6 tháng tại hệ thống MotoShop.</p>
-            </div>
-        </div>
+        <a href="#booking-anchor" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold py-3 shadow">
+            ĐẶT LỊCH NGAY <i class='bx bx-right-arrow-alt ms-2'></i>
+        </a>
     </div>
-</main>
+</section>
 
 <style>
-    .discount-tag {
-        position: absolute; top: 15px; left: 15px; background: #dc3545; color: #fff;
-        padding: 5px 12px; border-radius: 50px; font-weight: 800; font-size: 0.85rem;
-        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
-    }
-    .combo-card { transition: all 0.3s ease; }
-    .combo-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important; }
-    
-    .filter-btn.active { background-color: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important; }
-    .btn-white { background: #fff; color: #333; }
-    
-    .service-row { cursor: pointer; transition: 0.2s; }
-    .service-row:hover { background-color: #fff5f5 !important; }
     html {
         scroll-behavior: smooth;
     }
@@ -222,20 +188,79 @@
         margin-top: -20px;
     }
 
-    .hero-content { animation: fadeInDown 0.8s ease; }
-    .glow-effect { box-shadow: 0 0 15px rgba(220, 53, 69, 0.4); }
+    .hero-content {
+        animation: fadeInDown 0.8s ease;
+    }
+
+    .glow-effect {
+        box-shadow: 0 0 15px rgba(220, 53, 69, 0.4);
+    }
 
     /* Filter Bar */
-    #service-filter-section { scroll-margin-top: 20px; }
-    .filter-wrapper { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); z-index: 1000; top: 0; }
-    .btn-pill { border-radius: 50px; padding: 8px 24px; border: 1.5px solid #eee; background: #fff; color: #666; font-weight: 500; transition: all 0.3s ease; }
-    .btn-pill:hover { border-color: var(--primary-red); color: var(--primary-red); }
-    .btn-pill.active { background: var(--primary-red); border-color: var(--primary-red); color: #fff; box-shadow: 0 8px 15px rgba(220, 53, 69, 0.2); }
+    #service-filter-section {
+        scroll-margin-top: 20px;
+    }
+    .filter-wrapper {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        z-index: 1000;
+        top: 0;
+    }
+
+    .btn-pill {
+        border-radius: 50px;
+        padding: 8px 24px;
+        border: 1.5px solid #eee;
+        background: #fff;
+        color: #666;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .btn-pill:hover {
+        border-color: var(--primary-red);
+        color: var(--primary-red);
+    }
+
+    .btn-pill.active {
+        background: var(--primary-red);
+        border-color: var(--primary-red);
+        color: #fff;
+        box-shadow: 0 8px 15px rgba(220, 53, 69, 0.2);
+    }
 
     /* Service Cards */
-    .service-card { border: none; border-radius: 20px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: relative; }
-    .service-card:hover { transform: translateY(-12px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-    .service-icon-box { width: 70px; height: 70px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto; }
+    .service-card {
+        border: none;
+        border-radius: 20px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        position: relative;
+    }
+
+    .service-card:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+
+    .service-icon-box {
+        width: 70px;
+        height: 70px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto;
+    }
+
+    .service-badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 6px 12px;
+        border-radius: 30px;
+    }
 
     /* Color Palette */
     .bg-orange-light { background: #fff3e0; } .text-orange { color: var(--orange); }
@@ -244,38 +269,59 @@
     .bg-red-light { background: #ffebee; }
     .bg-green-light { background: #e8f5e9; } .text-green { color: var(--green); }
 
-    .service-item { transition: all 0.4s ease; }
-    @@keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+    .service-item {
+        transition: all 0.4s ease;
+    }
+
+    @@keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 </style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const filterBtns = document.querySelectorAll('.filter-btn');
-        const rows = document.querySelectorAll('.service-row');
+        // 1. Xử lý cuộn trang cho nút CTA cuối trang (Dùng Anchor giả để chính xác 100%)
+        const ctaButton = document.querySelector('a[href="#booking-anchor"]');
+        if (ctaButton) {
+            ctaButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.getElementById('booking-anchor');
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        }
+
+        // 2. Xử lý Filter Services
         const buttons = document.querySelectorAll('#filter-buttons .btn-pill');
         const items = document.querySelectorAll('.service-item');
 
-        filterBtns.forEach(btn => {
+        buttons.forEach(btn => {
             btn.addEventListener('click', () => {
-                // Active class
-                filterBtns.forEach(b => b.classList.remove('active'));
+                buttons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
+
                 const filter = btn.getAttribute('data-filter');
-                rows.forEach(row => {
-                    const name = row.getAttribute('data-name');
-                    if (filter === 'all' || name.includes(filter)) {
-                        row.style.display = '';
 
                 items.forEach(item => {
                     const category = item.getAttribute('data-category');
+
                     if (filter === 'all' || filter === category) {
                         item.style.display = 'block';
-                        setTimeout(() => { item.style.opacity = '1'; item.style.transform = 'scale(1)'; }, 10);
+                        setTimeout(() => {
+                            item.style.opacity = '1';
+                            item.style.transform = 'scale(1)';
+                        }, 10);
                     } else {
-                        row.style.display = 'none';
                         item.style.opacity = '0';
                         item.style.transform = 'scale(0.8)';
-                        setTimeout(() => { item.style.display = 'none'; }, 300);
+                        setTimeout(() => {
+                            item.style.display = 'none';
+                        }, 300);
                     }
                 });
             });

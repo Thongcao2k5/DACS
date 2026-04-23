@@ -75,7 +75,7 @@
                                 {
                                     var firstItem = order.OrderItems.First();
                                     <div class="order-product-preview d-flex align-items-center">
-                                        <img src="@(string.IsNullOrEmpty(firstItem.ProductVariant?.ImageUrl) ? "/assets/img/elements/no-image.png" : firstItem.ProductVariant.ImageUrl)" class="rounded border" alt="Product" style="width: 80px; height: 80px; object-fit: cover;">
+                                        <img src="@(string.IsNullOrEmpty(firstItem.ProductVariant?.ImageUrl) ? "/assets/img/elements/18.jpg" : firstItem.ProductVariant.ImageUrl)" class="rounded border" alt="Product" style="width: 80px; height: 80px; object-fit: cover;">
                                         <div class="ms-3">
                                             <h6 class="fw-bold mb-1">@firstItem.ProductVariant?.Product?.ProductName</h6>
                                             <p class="text-muted small mb-0">So luong: @firstItem.Quantity | Phan loai: @firstItem.ProductVariant?.VariantName</p>

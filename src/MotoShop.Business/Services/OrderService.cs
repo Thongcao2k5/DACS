@@ -1,6 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using MotoShop.Business.DTOs;
 using MotoShop.Business.Interfaces;
+using MotoShop.Data.Data;
 using MotoShop.Data.Interfaces;
 using MotoShop.Data.Models;
 using System;
@@ -13,10 +14,12 @@ namespace MotoShop.Business.Services
     public class OrderService : IOrderService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly MotoShopDbContext _context;
 
-        public OrderService(IUnitOfWork unitOfWork)
+        public OrderService(IUnitOfWork unitOfWork, MotoShopDbContext context)
         {
             _unitOfWork = unitOfWork;
+            _context = context;
         }
 
         public async Task<(bool Success, string Message, int OrderId)> CreateOrderAsync(string userId, CheckoutDto checkoutData)
@@ -27,7 +30,46 @@ namespace MotoShop.Business.Services
 
             if (customer == null)
             {
-                return (false, "Khong tim thay thong tin khach hang.", 0);
+                return (false, "Không tìm thấy thông tin khách hàng.", 0);
+            }
+
+            // --- XỬ LÝ ĐỊA CHỈ GIAO HÀNG ---
+            // Nếu người dùng chọn địa chỉ cũ (có AddressId), ta dùng nó.
+            // Nếu người dùng nhập địa chỉ mới (AddressId = null), ta lưu vào database.
+            if (!checkoutData.AddressId.HasValue)
+            {
+                // Kiểm tra xem địa chỉ này đã tồn tại chưa để tránh trùng lặp
+                var existingAddr = await _context.AddressesNew
+                    .FirstOrDefaultAsync(a => a.CustomerId == customer.CustomerId &&
+                                              a.Province == checkoutData.Province &&
+                                              a.District == checkoutData.District &&
+                                              a.Ward == checkoutData.Ward &&
+                                              a.Street == checkoutData.Address);
+
+                if (existingAddr == null)
+                {
+                    // Kiểm tra xem đây có phải địa chỉ đầu tiên không
+                    bool isFirstAddress = !await _context.AddressesNew.AnyAsync(a => a.CustomerId == customer.CustomerId);
+                    
+                    var newAddr = new AddressNew
+                    {
+                        CustomerId = customer.CustomerId,
+                        FullName = checkoutData.FullName,
+                        Phone = checkoutData.Phone,
+                        Province = checkoutData.Province,
+                        District = checkoutData.District,
+                        Ward = checkoutData.Ward,
+                        Street = checkoutData.Address,
+                        IsDefault = isFirstAddress // Tự động đặt làm mặc định nếu là địa chỉ đầu tiên
+                    };
+                    _context.AddressesNew.Add(newAddr);
+                    await _context.SaveChangesAsync();
+                    checkoutData.AddressId = newAddr.Id;
+                }
+                else
+                {
+                    checkoutData.AddressId = existingAddr.Id;
+                }
             }
 
             var cart = await _unitOfWork.Repository<Cart>()
@@ -38,16 +80,16 @@ namespace MotoShop.Business.Services
 
             if (cart == null || !cart.CartItems.Any())
             {
-                return (false, "Gio hang rong.", 0);
+                return (false, "Giỏ hàng trống.", 0);
             }
 
             foreach (var item in cart.CartItems)
             {
                 if (item.ProductVariant == null || item.ProductVariant.StockQuantity < item.Quantity)
                 {
-                    var variantName = item.ProductVariant?.VariantName ?? "San pham";
+                    var variantName = item.ProductVariant?.VariantName ?? "Sản phẩm";
                     var stockQuantity = item.ProductVariant?.StockQuantity ?? 0;
-                    return (false, $"San pham '{variantName}' hien chi con {stockQuantity} san pham trong kho.", 0);
+                    return (false, $"Sản phẩm '{variantName}' hiện chỉ còn {stockQuantity} sản phẩm trong kho.", 0);
                 }
             }
 
@@ -127,7 +169,7 @@ namespace MotoShop.Business.Services
                     Quantity = -item.Quantity,
                     TransactionType = "Order",
                     TransactionDate = DateTime.Now,
-                    Note = $"Don hang #{order.OrderId}"
+                    Note = $"Đơn hàng #{order.OrderId}"
                 };
                 await _unitOfWork.Repository<InventoryTransaction>().AddAsync(transaction);
             }
@@ -137,10 +179,10 @@ namespace MotoShop.Business.Services
             var result = await _unitOfWork.CompleteAsync();
             if (result > 0)
             {
-                return (true, "Dat hang thanh cong!", order.OrderId);
+                return (true, "Đặt hàng thành công!", order.OrderId);
             }
 
-            return (false, "Loi khi luu don hang.", 0);
+            return (false, "Lỗi khi lưu đơn hàng.", 0);
         }
 
         public async Task<List<OrderDto>> GetUserOrdersAsync(string userId)
@@ -194,14 +236,14 @@ namespace MotoShop.Business.Services
                     variant.StockQuantity += item.Quantity;
                     _unitOfWork.Repository<ProductVariant>().Update(variant);
 
-                    // Ghi nháº­n giao dá»‹ch hoÃ n kho
+                    // Ghi nhận giao dịch hoàn kho
                     var transaction = new InventoryTransaction
                     {
                         ProductVariantId = item.ProductVariantId,
                         Quantity = item.Quantity,
                         TransactionType = "Return",
                         TransactionDate = DateTime.Now,
-                        Note = $"HoÃ n kho tá»« ÄÆ¡n hÃ ng Ä‘Ã£ há»§y #{order.OrderId}"
+                        Note = $"Hoàn kho từ Đơn hàng đã hủy #{order.OrderId}"
                     };
                     await _unitOfWork.Repository<InventoryTransaction>().AddAsync(transaction);
                 }

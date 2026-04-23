@@ -109,33 +109,11 @@
                     if (typeof updateWishlistBadge === 'function') {
                         updateWishlistBadge();
                     }
-                    
-                    // Tìm tất cả các nút wishlist có productId này và đổi màu
-                    document.querySelectorAll(`button[onclick="addToWishlist(${productId})"]`).forEach(btn => {
-                        btn.classList.add('active');
-                        btn.querySelector('i').classList.replace('bx-heart', 'bxs-heart');
-                    });
                 } else {
-                    if (response.status === 401 || (data.message && data.message.includes('đăng nhập'))) {
-                        Swal.fire({
-                            title: 'Yêu cầu đăng nhập',
-                            text: 'Vui lòng đăng nhập để sử dụng tính năng này!',
-                            icon: 'info',
-                            showCancelButton: true,
-                            confirmButtonText: 'Đăng nhập ngay',
-                            cancelButtonText: 'Để sau'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = '/Account/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
-                            }
-                        });
-                    } else {
-                        Swal.fire('Thông báo', data.message, 'info');
-                    }
+                    Swal.fire('Thông báo', data.message, 'info');
                 }
             } catch (error) {
                 console.error('Lỗi Wishlist:', error);
-                Swal.fire('Lỗi', 'Không thể kết nối đến máy chủ.', 'error');
             }
         }
     </script>

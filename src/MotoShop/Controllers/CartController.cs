@@ -94,9 +94,9 @@ namespace MotoShop.Controllers
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
             if (customer == null) return RedirectToAction("Profile", "Account");
 
-            // Truy vấn đúng bảng AddressesNew
+            // Truy vấn đúng bảng AddressesNew (Sử dụng CustomerId thay vì UserId)
             var savedAddresses = await _context.AddressesNew
-                .Where(a => a.UserId == customer.CustomerId)
+                .Where(a => a.CustomerId == customer.CustomerId)
                 .OrderByDescending(a => a.IsDefault)
                 .ToListAsync();
 
@@ -187,7 +187,7 @@ namespace MotoShop.Controllers
             }
 
             var coupon = await _unitOfWork.Repository<Coupon>()
-                .Find(c => c.Code.ToLower() == code.ToLower() && c.IsActive && (c.ExpiryDate == null || c.ExpiryDate >= DateTime.Now))
+                .Find(c => c.Code.ToLower() == code.ToLower() && c.IsActive && (c.ExpiryDate >= DateTime.Now))
                 .FirstOrDefaultAsync();
             
             if (coupon == null) return Json(new { success = false, message = "Mã giảm giá không hợp lệ." });

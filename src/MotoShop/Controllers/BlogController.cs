@@ -43,11 +43,19 @@ namespace MotoShop.Controllers
                 .Take(pageSize)
                 .ToListAsync();
 
-            ViewBag.Categories = await _context.BlogCategories.Include(c => c.Blogs).ToListAsync();
+            // Tối ưu hóa lấy danh mục: chỉ lấy tên và ID, đếm số bài viết riêng
+            ViewBag.Categories = await _context.BlogCategories
+                .Select(c => new { 
+                    c.Id, 
+                    c.Name, 
+                    BlogCount = c.Blogs.Count(b => b.IsPublished || b.Status == 1) 
+                })
+                .ToListAsync();
 
             ViewBag.RecentPosts = await _context.Blogs
                 .Where(b => b.IsPublished || b.Status == 1)
                 .OrderByDescending(b => b.CreatedDate)
+                .Select(b => new { b.Title, b.Slug, b.CreatedDate, b.Thumbnail })
                 .Take(5)
                 .ToListAsync();
 
@@ -78,7 +86,13 @@ namespace MotoShop.Controllers
 
             ViewBag.RelatedBlogs = relatedBlogs;
             ViewBag.RelatedPosts = relatedBlogs;
-            ViewBag.Categories = await _context.BlogCategories.Include(c => c.Blogs).ToListAsync();
+            ViewBag.Categories = await _context.BlogCategories
+                .Select(c => new { 
+                    c.Id, 
+                    c.Name, 
+                    BlogCount = c.Blogs.Count(b => b.IsPublished || b.Status == 1) 
+                })
+                .ToListAsync();
 
             return View(blog);
         }

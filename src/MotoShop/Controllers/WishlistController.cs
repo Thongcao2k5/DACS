@@ -31,7 +31,6 @@ namespace MotoShop.Controllers
             _cartService = cartService;
         }
 
-        // --- GUEST COOKIE HELPERS ---
         private List<int> GetGuestWishlistItems()
         {
             var cookie = Request.Cookies[WISHLIST_COOKIE];
@@ -47,43 +46,9 @@ namespace MotoShop.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            var userId = _userManager.GetUserId(User);
-            if (userId != null)
-            {
-                var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
-                if (customer != null)
-                {
-                    var wishlist = await _context.Wishlists
-                        .Where(w => w.CustomerId == customer.CustomerId)
-                        .Include(w => w.WishlistItems)
-                            .ThenInclude(wi => wi.Product).ThenInclude(p => p.Brand)
-                        .Include(w => w.WishlistItems)
-                            .ThenInclude(wi => wi.Product).ThenInclude(p => p.Variants)
-                        .Include(w => w.WishlistItems)
-                            .ThenInclude(wi => wi.Product).ThenInclude(p => p.Images)
-                        .FirstOrDefaultAsync();
-
-                    return View(wishlist?.WishlistItems.OrderByDescending(wi => wi.CreatedDate).ToList() ?? new List<WishlistItem>());
-                }
-            }
-
-            // GUEST VIEW
-            var guestIds = GetGuestWishlistItems();
-            var guestItems = await _context.Products
-                .Where(p => guestIds.Contains(p.ProductId))
-                .Include(p => p.Brand)
-                .Include(p => p.Variants)
-                .Include(p => p.Images)
-                .Select(p => new WishlistItem { 
-                    ProductId = p.ProductId, 
-                    Product = p, 
-                    CreatedDate = DateTime.Now 
-                })
-                .ToListAsync();
-
-            return View(guestItems);
+            return RedirectToAction("Wishlist", "Account");
         }
 
         [HttpGet]
@@ -95,7 +60,7 @@ namespace MotoShop.Controllers
                 var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
                 if (customer != null)
                 {
-                    var count = await _context.WishlistItems.CountAsync(wi => wi.Wishlist.CustomerId == customer.CustomerId);
+                    var count = await _context.WishlistsNew.CountAsync(wi => wi.UserId == customer.CustomerId);
                     return Json(new { count });
                 }
             }
@@ -111,16 +76,9 @@ namespace MotoShop.Controllers
                 var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
                 if (customer != null)
                 {
-                    var wishlist = await _context.Wishlists.FirstOrDefaultAsync(w => w.CustomerId == customer.CustomerId);
-                    if (wishlist == null) {
-                        wishlist = new Wishlist { CustomerId = customer.CustomerId, CreatedDate = DateTime.Now };
-                        _context.Wishlists.Add(wishlist);
-                        await _context.SaveChangesAsync();
-                    }
-
-                    var exists = await _context.WishlistItems.AnyAsync(wi => wi.WishlistId == wishlist.WishlistId && wi.ProductId == productId);
+                    var exists = await _context.WishlistsNew.AnyAsync(wi => wi.UserId == customer.CustomerId && wi.ProductId == productId);
                     if (!exists) {
-                        _context.WishlistItems.Add(new WishlistItem { WishlistId = wishlist.WishlistId, ProductId = productId, CreatedDate = DateTime.Now });
+                        _context.WishlistsNew.Add(new WishlistNew { UserId = customer.CustomerId, ProductId = productId, CreatedAt = DateTime.Now });
                         await _context.SaveChangesAsync();
                     }
                     return Json(new { success = true, message = "Đã thêm vào yêu thích" });
@@ -140,14 +98,16 @@ namespace MotoShop.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Remove([FromBody] WishlistRequest req)
         {
+            if (req == null) return Json(new { success = false });
+            
             var userId = _userManager.GetUserId(User);
             if (userId != null)
             {
                 var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
                 if (customer != null)
                 {
-                    var item = await _context.WishlistItems.FirstOrDefaultAsync(wi => wi.Wishlist.CustomerId == customer.CustomerId && wi.ProductId == req.ProductId);
-                    if (item != null) { _context.WishlistItems.Remove(item); await _context.SaveChangesAsync(); }
+                    var item = await _context.WishlistsNew.FirstOrDefaultAsync(wi => wi.UserId == customer.CustomerId && wi.ProductId == req.ProductId);
+                    if (item != null) { _context.WishlistsNew.Remove(item); await _context.SaveChangesAsync(); }
                     return Json(new { success = true });
                 }
             }
@@ -169,8 +129,8 @@ namespace MotoShop.Controllers
                 var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
                 if (customer != null)
                 {
-                    var items = _context.WishlistItems.Where(wi => wi.Wishlist.CustomerId == customer.CustomerId);
-                    _context.WishlistItems.RemoveRange(items);
+                    var items = _context.WishlistsNew.Where(wi => wi.UserId == customer.CustomerId);
+                    _context.WishlistsNew.RemoveRange(items);
                     await _context.SaveChangesAsync();
                 }
             }
@@ -182,6 +142,8 @@ namespace MotoShop.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddToCart([FromBody] WishlistRequest req)
         {
+            if (req == null) return Json(new { success = false });
+
             var variant = await _context.ProductVariants.FirstOrDefaultAsync(v => v.ProductId == req.ProductId && v.StockQuantity > 0);
             if (variant == null) return Json(new { success = false, message = "Hết hàng" });
             
@@ -201,7 +163,7 @@ namespace MotoShop.Controllers
             if (identityId != null) {
                 var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == identityId);
                 if (customer != null) {
-                    items = await _context.WishlistItems.Where(wi => wi.Wishlist.CustomerId == customer.CustomerId).Select(wi => wi.ProductId ?? 0).ToListAsync();
+                    items = await _context.WishlistsNew.Where(wi => wi.UserId == customer.CustomerId).Select(wi => wi.ProductId).ToListAsync();
                 }
             } else {
                 items = GetGuestWishlistItems();

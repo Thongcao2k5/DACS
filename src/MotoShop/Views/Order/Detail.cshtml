@@ -16,7 +16,7 @@
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
                 <li class="breadcrumb-item"><a asp-controller="Account" asp-action="Profile">Tài khoản</a></li>
-                <li class="breadcrumb-item"><a asp-controller="Account" asp-action="Orders">Đơn hàng của tôi</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Order" asp-action="Index">Đơn hàng của tôi</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Chi tiết đơn hàng</li>
             </ol>
         </nav>
@@ -39,9 +39,9 @@
                 </div>
                 <ul class="account-nav">
                     <li class="account-nav-item"><a asp-controller="Account" asp-action="Profile" class="account-nav-link"><i class='bx bx-user'></i> Thông tin cá nhân</a></li>
-                    <li class="account-nav-item"><a asp-controller="Account" asp-action="Orders" class="account-nav-link active"><i class='bx bx-package'></i> Đơn hàng của tôi</a></li>
+                    <li class="account-nav-item"><a asp-controller="Order" asp-action="Index" class="account-nav-link active"><i class='bx bx-package'></i> Đơn hàng của tôi</a></li>
                     <li class="account-nav-item"><a asp-controller="Account" asp-action="AddressBook" class="account-nav-link"><i class='bx bx-map'></i> Địa chỉ giao hàng</a></li>
-                    <li class="account-nav-item"><a asp-controller="Product" asp-action="Wishlist" class="account-nav-link"><i class='bx bx-heart'></i> Sản phẩm yêu thích</a></li>
+                    <li class="account-nav-item"><a asp-controller="Account" asp-action="Wishlist" class="account-nav-link"><i class='bx bx-heart'></i> Sản phẩm yêu thích</a></li>
                     <li class="account-nav-item"><a asp-controller="Account" asp-action="ChangePassword" class="account-nav-link"><i class='bx bx-lock-alt'></i> Đổi mật khẩu</a></li>
                 </ul>
             </div>
@@ -110,7 +110,7 @@
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center gap-3">
-                                            <img src="@(string.IsNullOrEmpty(item.ProductVariant?.ImageUrl) ? "/assets/img/elements/no-image.png" : item.ProductVariant.ImageUrl)" class="rounded-3 border" style="width: 50px; height: 50px; object-fit: cover;" alt="P">
+                                            <img src="@(string.IsNullOrEmpty(item.ProductVariant?.ImageUrl) ? "/assets/img/elements/18.jpg" : item.ProductVariant.ImageUrl)" class="rounded-3 border" style="width: 50px; height: 50px; object-fit: cover;" alt="P">
                                             <div>
                                                 <a href="/Product/Details?slug=@item.ProductVariant?.Product?.Slug" class="text-dark fw-bold text-decoration-none small d-block">@item.ProductVariant?.Product?.ProductName</a>
                                                 <span class="text-muted" style="font-size: 11px;">Phân loại: @item.ProductVariant?.VariantName</span>

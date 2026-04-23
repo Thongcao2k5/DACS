@@ -102,17 +102,12 @@ namespace MotoShop.Business.Services
 
         public async Task<IEnumerable<ProductDto>> GetPromotionProductsAsync(int count)
         {
-            // Trong thực tế, bạn sẽ join với bảng Promotion. 
-            // Ở đây tôi lấy các sản phẩm nổi bật (Featured) để làm dữ liệu cho trang Khuyến mãi.
-            var products = await _productRepository.Find(p => p.IsActive && p.IsFeatured)
-                .Include(p => p.Category)
-                .Include(p => p.Brand)
-                .Include(p => p.Images)
-                .Include(p => p.Variants)
+            // Tối ưu hóa truy vấn bằng ProjectTo để chỉ lấy dữ liệu cần thiết
+            return await _productRepository.Find(p => p.IsActive && p.IsFeatured)
+                .OrderByDescending(p => p.CreatedDate)
                 .Take(count)
+                .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
-
-            return _mapper.Map<IEnumerable<ProductDto>>(products);
         }
 
         public async Task<IEnumerable<ProductDto>> GetRandomProductsAsync(int count)

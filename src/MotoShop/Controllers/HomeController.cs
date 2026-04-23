@@ -31,13 +31,13 @@ public class HomeController : Controller
             .Take(5)
             .ToList();
 
-        // Lấy sản phẩm mới nhất (thực sự mới)
+        // Lấy sản phẩm mới nhất
         var newProducts = await _productService.GetPagedProductsAsync(null, null, null, "newest", 1, 4);
 
         var model = new HomeViewModel
         {
             FeaturedProducts = await _productService.GetRandomProductsAsync(8),
-            BestSellingProducts = await _productService.GetRandomProductsAsync(4), 
+            BestSellingProducts = await _productService.GetRandomProductsAsync(4),
             NewProducts = newProducts,
             TopCategories = topCategories
         };

@@ -23,18 +23,8 @@ namespace MotoShop.Controllers
             _uow = uow;
         }
 
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            var services = await _context.Services.Where(s => s.IsActive).ToListAsync();
-            var combos = await _context.ServiceCombos
-                .Include(c => c.ComboItems)
-                .ThenInclude(ci => ci.Service)
-                .Where(c => c.IsActive)
-                .ToListAsync();
-
-            ViewBag.Services = services;
-            ViewBag.Combos = combos;
-
             return View();
         }
 
@@ -194,27 +184,6 @@ namespace MotoShop.Controllers
                 return customerId;
             }
             return null;
-        }
-
-        public async Task<IActionResult> Detail(int? id, bool isCombo = false)
-        {
-            if (id == null) return NotFound();
-
-            if (isCombo)
-            {
-                var combo = await _context.ServiceCombos
-                    .Include(c => c.ComboItems)
-                    .ThenInclude(ci => ci.Service)
-                    .FirstOrDefaultAsync(c => c.ComboId == id);
-                if (combo == null) return NotFound();
-                return View("ComboDetail", combo);
-            }
-            else
-            {
-                var service = await _context.Services.FindAsync(id);
-                if (service == null) return NotFound();
-                return View("Details", service);
-            }
         }
     }
 }

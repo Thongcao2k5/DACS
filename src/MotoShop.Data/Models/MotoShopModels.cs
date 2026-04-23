@@ -10,7 +10,7 @@ namespace MotoShop.Data.Models
         [Key]
         public int CategoryId { get; set; }
         [Required, StringLength(200)]
-        public string CategoryName { get; set; }
+        public string CategoryName { get; set; } = string.Empty;
         [StringLength(255)]
         public string? Slug { get; set; }
         public int? ParentId { get; set; }
@@ -29,7 +29,7 @@ namespace MotoShop.Data.Models
         [Key]
         public int BrandId { get; set; }
         [Required, StringLength(255)]
-        public string BrandName { get; set; }
+        public string BrandName { get; set; } = string.Empty;
         [StringLength(500)]
         public string? LogoUrl { get; set; }
         public string? Description { get; set; }
@@ -42,7 +42,7 @@ namespace MotoShop.Data.Models
         [Key]
         public int ModelId { get; set; }
         [Required, StringLength(200)]
-        public string ModelName { get; set; }
+        public string ModelName { get; set; } = string.Empty;
         [StringLength(200)]
         public string? Manufacturer { get; set; }
         public int? ParentId { get; set; }
@@ -60,7 +60,7 @@ namespace MotoShop.Data.Models
         public int? CategoryId { get; set; }
         public int? BrandId { get; set; }
         [Required, StringLength(300)]
-        public string ProductName { get; set; }
+        public string ProductName { get; set; } = string.Empty;
         [StringLength(255)]
         public string? Slug { get; set; }
         public string? Description { get; set; }
@@ -83,7 +83,7 @@ namespace MotoShop.Data.Models
         [Key]
         public int UnitId { get; set; }
         [Required, StringLength(50)]
-        public string UnitName { get; set; }
+        public string UnitName { get; set; } = string.Empty;
         [StringLength(20)]
         public string? Symbol { get; set; }
     }
@@ -98,7 +98,7 @@ namespace MotoShop.Data.Models
         [StringLength(100)]
         public string? SKU { get; set; }
         [Required, StringLength(255)]
-        public string VariantName { get; set; }
+        public string VariantName { get; set; } = string.Empty;
         [Column(TypeName = "decimal(18, 2)")]
         public decimal Price { get; set; }
         [Column(TypeName = "decimal(18, 2)")]
@@ -141,7 +141,7 @@ namespace MotoShop.Data.Models
         public int ImageId { get; set; }
         public int? ProductId { get; set; }
         [Required, StringLength(500)]
-        public string ImageUrl { get; set; }
+        public string ImageUrl { get; set; } = string.Empty;
         public bool IsPrimary { get; set; } = false;
         public int DisplayOrder { get; set; } = 0;
 
@@ -155,7 +155,7 @@ namespace MotoShop.Data.Models
         public int CustomerId { get; set; }
         public string? UserId { get; set; }
         [Required, StringLength(200)]
-        public string FullName { get; set; }
+        public string FullName { get; set; } = string.Empty;
         [StringLength(255)]
         public string? Email { get; set; }
         [StringLength(50)]
@@ -182,11 +182,11 @@ namespace MotoShop.Data.Models
         public int Id { get; set; }
         public int CustomerId { get; set; }
         [Required, StringLength(200)]
-        public string FullName { get; set; }
-        [StringLength(50)]
-        public string Phone { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        [Required, StringLength(50)]
+        public string Phone { get; set; } = string.Empty;
         [Required, StringLength(500)]
-        public string Address { get; set; }
+        public string Address { get; set; } = string.Empty;
         public bool IsDefault { get; set; } = false;
 
         [ForeignKey("CustomerId")]
@@ -253,7 +253,7 @@ namespace MotoShop.Data.Models
         [Key]
         public int ServiceId { get; set; }
         [Required, StringLength(200)]
-        public string ServiceName { get; set; }
+        public string ServiceName { get; set; } = string.Empty;
         [Column(TypeName = "decimal(18, 2)")]
         public decimal Price { get; set; }
         public string? Description { get; set; }
@@ -270,7 +270,7 @@ namespace MotoShop.Data.Models
         [Key]
         public int ComboId { get; set; }
         [Required, StringLength(200)]
-        public string ComboName { get; set; }
+        public string ComboName { get; set; } = string.Empty;
         [Column(TypeName = "decimal(18, 2)")]
         public decimal TotalPrice { get; set; }
         [Column(TypeName = "decimal(18, 2)")]
@@ -361,7 +361,7 @@ namespace MotoShop.Data.Models
         public int? ProductVariantId { get; set; }
         public int? CustomerId { get; set; }
         public int Rating { get; set; }
-        public string? Comment { get; set; }
+        public string? Comment { get; set; } = string.Empty;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         
         [StringLength(20)]
@@ -380,11 +380,11 @@ namespace MotoShop.Data.Models
         [Key]
         public int PromotionId { get; set; }
         [Required, StringLength(255)]
-        public string PromotionName { get; set; }
+        public string PromotionName { get; set; } = string.Empty;
         public string? Description { get; set; }
         
         [Required, StringLength(20)]
-        public string DiscountType { get; set; } 
+        public string DiscountType { get; set; } = string.Empty;
         
         [Column(TypeName = "decimal(5, 2)")]
         public decimal DiscountPercentage { get; set; }
@@ -396,8 +396,8 @@ namespace MotoShop.Data.Models
         public decimal? MinOrderValue { get; set; } 
         public int? MinQuantity { get; set; } 
 
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public DateTime StartDate { get; set; } = DateTime.Now;
+        public DateTime EndDate { get; set; } = DateTime.Now.AddDays(7);
         public bool IsActive { get; set; } = true;
 
         public virtual ICollection<PromotionProduct> PromotionProducts { get; set; } = new List<PromotionProduct>();
@@ -424,7 +424,7 @@ namespace MotoShop.Data.Models
         [Key]
         public int StoreId { get; set; }
         [Required, StringLength(200)]
-        public string StoreName { get; set; }
+        public string StoreName { get; set; } = string.Empty;
         [StringLength(500)]
         public string? Address { get; set; }
         [StringLength(50)]
@@ -441,7 +441,7 @@ namespace MotoShop.Data.Models
         public string? UserId { get; set; }
         public int? StoreId { get; set; }
         [Required, StringLength(50)]
-        public string StaffCode { get; set; }
+        public string StaffCode { get; set; } = string.Empty;
         [StringLength(100)]
         public string? Position { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
@@ -489,7 +489,7 @@ namespace MotoShop.Data.Models
         [ForeignKey("CustomerId")]
         public virtual Customer? Customer { get; set; }
         public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
-        public string UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
     }
 
     public class CartItem
@@ -542,7 +542,7 @@ namespace MotoShop.Data.Models
         public int? ProductVariantId { get; set; }
         public int Quantity { get; set; }
         [Required, StringLength(50)]
-        public string TransactionType { get; set; } 
+        public string TransactionType { get; set; } = string.Empty;
         public DateTime TransactionDate { get; set; } = DateTime.Now;
         public string? Note { get; set; }
 
@@ -581,7 +581,7 @@ namespace MotoShop.Data.Models
         [Key]
         public int AttributeId { get; set; }
         [Required, StringLength(200)]
-        public string AttributeName { get; set; }
+        public string AttributeName { get; set; } = string.Empty;
 
         public virtual ICollection<AttributeValue> AttributeValues { get; set; } = new List<AttributeValue>();
     }
@@ -603,7 +603,7 @@ namespace MotoShop.Data.Models
         [Key]
         public int SettingID { get; set; }
         [Required, StringLength(255)]
-        public string StoreName { get; set; }
+        public string StoreName { get; set; } = string.Empty;
         [StringLength(500)]
         public string? LogoUrl { get; set; }
         [StringLength(50)]
@@ -622,7 +622,7 @@ namespace MotoShop.Data.Models
         [Key]
         public int Id { get; set; }
         [Required, StringLength(200)]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         [StringLength(255)]
         public string? Slug { get; set; }
 
@@ -634,11 +634,11 @@ namespace MotoShop.Data.Models
         [Key]
         public int Id { get; set; }
         [Required, StringLength(300)]
-        public string Title { get; set; }
-        [StringLength(300)]
-        public string Slug { get; set; }
+        public string Title { get; set; } = string.Empty;
+        [Required, StringLength(300)]
+        public string Slug { get; set; } = string.Empty;
         [Required]
-        public string Content { get; set; }
+        public string Content { get; set; } = string.Empty;
         [StringLength(500)]
         public string? Thumbnail { get; set; }
         public int CategoryId { get; set; }
@@ -655,10 +655,12 @@ namespace MotoShop.Data.Models
     {
         [Key]
         public int Id { get; set; }
-        public string UserId { get; set; }
+        [Required]
+        public string UserId { get; set; } = string.Empty;
         [Required, StringLength(255)]
-        public string Title { get; set; }
-        public string Message { get; set; }
+        public string Title { get; set; } = string.Empty;
+        [Required]
+        public string Message { get; set; } = string.Empty;
         public bool IsRead { get; set; } = false;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
     }
@@ -668,16 +670,16 @@ namespace MotoShop.Data.Models
         [Key]
         public int Id { get; set; }
         [Required, StringLength(50)]
-        public string Code { get; set; }
+        public string Code { get; set; } = string.Empty;
         [Column(TypeName = "decimal(18, 2)")]
         public decimal DiscountValue { get; set; }
         [Required, StringLength(20)]
-        public string DiscountType { get; set; } 
+        public string DiscountType { get; set; } = string.Empty;
         [Column(TypeName = "decimal(18, 2)")]
         public decimal? MinOrderValue { get; set; } 
         public int UsageLimit { get; set; } = 0; 
         public int UsedCount { get; set; } = 0;
-        public DateTime ExpiryDate { get; set; }
+        public DateTime ExpiryDate { get; set; } = DateTime.Now.AddMonths(1);
         public bool IsActive { get; set; } = true;
     }
 
@@ -686,7 +688,7 @@ namespace MotoShop.Data.Models
         [Key]
         public int Id { get; set; }
         [Required, StringLength(100)]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         [Column(TypeName = "decimal(18, 2)")]
         public decimal Cost { get; set; }
@@ -696,9 +698,8 @@ namespace MotoShop.Data.Models
     }
 
     // --- NEW MODELS FOR SMART FEATURES ---
-    // Rename table names to avoid collision with standard tables
     
-    [Table("Custom_Wishlists")]
+    [Table("WishlistsNew")]
     public class WishlistNew
     {
         [Key]
@@ -711,12 +712,12 @@ namespace MotoShop.Data.Models
         public virtual Product? Product { get; set; }
     }
 
-    [Table("Custom_Addresses")]
+    [Table("AddressesNew")]
     public class AddressNew
     {
         [Key]
         public int Id { get; set; }
-        public int UserId { get; set; }
+        public int CustomerId { get; set; }
         public string? FullName { get; set; }
         public string? Phone { get; set; }
         public string? Province { get; set; }

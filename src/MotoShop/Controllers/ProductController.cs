@@ -120,40 +120,5 @@ namespace MotoShop.Controllers
             var promotionProducts = await _productService.GetPromotionProductsAsync(12);
             return View(promotionProducts);
         }
-
-        // Danh sách yêu thích
-        public async Task<IActionResult> Wishlist()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToAction("Login", "Account");
-
-            var customer = await _unitOfWork.Repository<Customer>().Find(c => c.UserId == user.Id).FirstOrDefaultAsync();
-            if (customer == null) return View(new List<WishlistItem>());
-
-            var wishlist = await _unitOfWork.Repository<Wishlist>()
-                .Find(w => w.CustomerId == customer.CustomerId)
-                .Include(w => w.WishlistItems)
-                    .ThenInclude(wi => wi.Product)
-                        .ThenInclude(p => p.Variants)
-                .Include(w => w.WishlistItems)
-                    .ThenInclude(wi => wi.Product)
-                        .ThenInclude(p => p.Brand)
-                .FirstOrDefaultAsync();
-
-            var items = wishlist?.WishlistItems ?? new List<WishlistItem>();
-
-            return View(items);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> RemoveFromWishlist(int id)
-        {
-            var item = await _unitOfWork.Repository<WishlistItem>().GetByIdAsync(id);
-            if (item == null) return Json(new { success = false });
-
-            _unitOfWork.Repository<WishlistItem>().Delete(item);
-            await _unitOfWork.CompleteAsync();
-            return Json(new { success = true });
-        }
     }
 }
