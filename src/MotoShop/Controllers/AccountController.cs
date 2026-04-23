@@ -221,6 +221,41 @@ namespace MotoShop.Controllers
         }
 
         [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadAvatar(IFormFile file)
+        {
+            if (file == null || file.Length == 0) return Json(new { success = false, message = "Không có tệp được chọn" });
+
+            var userId = _userManager.GetUserId(User);
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
+            if (customer == null) return Json(new { success = false });
+
+            try
+            {
+                var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "avatars");
+                if (!Directory.Exists(uploads)) Directory.CreateDirectory(uploads);
+
+                var fileName = $"avatar_{customer.CustomerId}_{DateTime.Now.Ticks}{Path.GetExtension(file.FileName)}";
+                var filePath = Path.Combine(uploads, fileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(fileStream);
+                }
+
+                customer.AvatarUrl = $"/uploads/avatars/{fileName}";
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, avatarUrl = customer.AvatarUrl });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout(string? returnUrl = null)
         {

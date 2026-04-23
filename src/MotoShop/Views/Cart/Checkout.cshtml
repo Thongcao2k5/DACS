@@ -160,8 +160,28 @@
                             </li>
                         }
                     </ul>
-                    <div class="summary-total d-flex justify-content-between align-items-center">
-                        <span class="fw-bold">TỔNG CỘNG</span>
+                    <div class="summary-total d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold">Tạm tính</span>
+                        <span class="fw-bold">@totalAmount.ToString("N0")đ</span>
+                    </div>
+
+                    <!-- Voucher Section -->
+                    <div class="voucher-section mb-4 p-3 bg-light rounded-3">
+                        <label class="form-label small fw-bold text-uppercase mb-2"><i class='bx bxs-coupon text-danger'></i> Mã giảm giá</label>
+                        <div class="input-group">
+                            <input type="text" id="couponInput" asp-for="CouponCode" class="form-control form-control-custom border-end-0" placeholder="Nhập mã...">
+                            <button type="button" id="btnApplyCoupon" class="btn btn-outline-danger px-3 fw-bold">ÁP DỤNG</button>
+                        </div>
+                        <div id="couponMessage" class="small mt-2" style="display:none;"></div>
+                        
+                        <div id="discountRow" class="justify-content-between align-items-center mt-3 text-success fw-bold" style="display:none;">
+                            <span>Giảm giá:</span>
+                            <span id="discountAmount">-0đ</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-total d-flex justify-content-between align-items-center pt-3 border-top">
+                        <span class="fw-bold fs-5">TỔNG CỘNG</span>
                         <span class="price fs-4 fw-bolder text-danger" id="totalOrder">@totalAmount.ToString("N0")đ</span>
                     </div>
                     <!-- Subtotal hidden for JS -->
@@ -326,8 +346,51 @@
         function updateTotal() {
             const sub = parseFloat(document.getElementById('subtotal').dataset.value);
             const ship = parseFloat(document.getElementById('shippingFee').dataset.value || 0);
-            document.getElementById('totalOrder').innerText = (sub + ship).toLocaleString('vi-VN') + 'đ';
+            const discount = window.currentDiscountAmount || 0;
+            const total = Math.max(0, sub + ship - discount);
+            document.getElementById('totalOrder').innerText = total.toLocaleString('vi-VN') + 'đ';
         }
+
+        // Voucher Logic
+        document.getElementById('btnApplyCoupon').onclick = async function() {
+            const code = document.getElementById('couponInput').value.trim();
+            const orderValue = document.getElementById('subtotal').dataset.value;
+            const msgEl = document.getElementById('couponMessage');
+            const discRow = document.getElementById('discountRow');
+            const discAmtEl = document.getElementById('discountAmount');
+            
+            if (!code) return;
+
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+            try {
+                const res = await fetch(`/Cart/CheckCoupon?code=${code}&orderValue=${orderValue}`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    window.currentDiscountAmount = data.discountAmount;
+                    discAmtEl.innerText = '-' + data.discountAmount.toLocaleString('vi-VN') + 'đ';
+                    discRow.style.display = 'flex';
+                    msgEl.innerText = data.message;
+                    msgEl.className = 'small mt-2 text-success';
+                    msgEl.style.display = 'block';
+                    updateTotal();
+                } else {
+                    window.currentDiscountAmount = 0;
+                    discRow.style.display = 'none';
+                    msgEl.innerText = data.message;
+                    msgEl.className = 'small mt-2 text-danger';
+                    msgEl.style.display = 'block';
+                    updateTotal();
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                this.disabled = false;
+                this.innerHTML = 'ÁP DỤNG';
+            }
+        };
 
         window.onload = loadProvinces;
 
