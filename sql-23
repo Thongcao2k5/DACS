@@ -1,0 +1,1470 @@
+﻿USE [MotorcycleShopDB]
+GO
+/****** Object:  Table [dbo].[AspNetRoleClaims]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[AspNetRoleClaims](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[RoleId] [nvarchar](128) NOT NULL,
+	[ClaimType] [nvarchar](max) NULL,
+	[ClaimValue] [nvarchar](max) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[AspNetRoles]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[AspNetRoles](
+	[Id] [nvarchar](128) NOT NULL,
+	[Name] [nvarchar](256) NULL,
+	[NormalizedName] [nvarchar](256) NULL,
+	[ConcurrencyStamp] [nvarchar](max) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[AspNetUserClaims]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[AspNetUserClaims](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[UserId] [nvarchar](128) NOT NULL,
+	[ClaimType] [nvarchar](max) NULL,
+	[ClaimValue] [nvarchar](max) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[AspNetUserLogins]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[AspNetUserLogins](
+	[LoginProvider] [nvarchar](128) NOT NULL,
+	[ProviderKey] [nvarchar](128) NOT NULL,
+	[ProviderDisplayName] [nvarchar](max) NULL,
+	[UserId] [nvarchar](128) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[LoginProvider] ASC,
+	[ProviderKey] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[AspNetUserRoles]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[AspNetUserRoles](
+	[UserId] [nvarchar](128) NOT NULL,
+	[RoleId] [nvarchar](128) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[UserId] ASC,
+	[RoleId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[AspNetUsers]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[AspNetUsers](
+	[Id] [nvarchar](128) NOT NULL,
+	[UserName] [nvarchar](256) NULL,
+	[NormalizedUserName] [nvarchar](256) NULL,
+	[Email] [nvarchar](256) NULL,
+	[NormalizedEmail] [nvarchar](256) NULL,
+	[EmailConfirmed] [bit] NOT NULL,
+	[PasswordHash] [nvarchar](max) NULL,
+	[SecurityStamp] [nvarchar](max) NULL,
+	[ConcurrencyStamp] [nvarchar](max) NULL,
+	[PhoneNumber] [nvarchar](50) NULL,
+	[PhoneNumberConfirmed] [bit] NOT NULL,
+	[TwoFactorEnabled] [bit] NOT NULL,
+	[LockoutEnd] [datetimeoffset](7) NULL,
+	[LockoutEnabled] [bit] NOT NULL,
+	[AccessFailedCount] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[AspNetUserTokens]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[AspNetUserTokens](
+	[UserId] [nvarchar](128) NOT NULL,
+	[LoginProvider] [nvarchar](128) NOT NULL,
+	[Name] [nvarchar](128) NOT NULL,
+	[Value] [nvarchar](max) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[UserId] ASC,
+	[LoginProvider] ASC,
+	[Name] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[AttributeValues]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[AttributeValues](
+	[ValueId] [int] IDENTITY(1,1) NOT NULL,
+	[AttributeId] [int] NULL,
+	[Value] [nvarchar](200) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ValueId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Banners]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Banners](
+	[BannerId] [int] IDENTITY(1,1) NOT NULL,
+	[Title] [nvarchar](255) NULL,
+	[ImageUrl] [nvarchar](500) NULL,
+	[LinkUrl] [nvarchar](500) NULL,
+	[Position] [nvarchar](100) NULL,
+	[IsActive] [bit] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[BannerId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Brands]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Brands](
+	[BrandId] [int] IDENTITY(1,1) NOT NULL,
+	[BrandName] [nvarchar](255) NULL,
+	[LogoUrl] [nvarchar](500) NULL,
+	[Description] [nvarchar](max) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[BrandId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[CartItems]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[CartItems](
+	[CartItemId] [int] IDENTITY(1,1) NOT NULL,
+	[CartId] [int] NOT NULL,
+	[ProductVariantId] [int] NOT NULL,
+	[Quantity] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[CartItemId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Carts]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Carts](
+	[CartId] [int] IDENTITY(1,1) NOT NULL,
+	[CustomerId] [int] NULL,
+	[CreatedDate] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[CartId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Categories]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Categories](
+	[CategoryId] [int] IDENTITY(1,1) NOT NULL,
+	[CategoryName] [nvarchar](200) NULL,
+	[Slug] [nvarchar](255) NULL,
+	[ParentId] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[CategoryId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Customers]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Customers](
+	[CustomerId] [int] IDENTITY(1,1) NOT NULL,
+	[UserId] [nvarchar](128) NULL,
+	[FullName] [nvarchar](200) NULL,
+	[Phone] [nvarchar](50) NULL,
+	[Address] [nvarchar](500) NULL,
+	[CreatedDate] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[CustomerId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[UserId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[OrderItems]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[OrderItems](
+	[OrderItemId] [int] IDENTITY(1,1) NOT NULL,
+	[OrderId] [int] NULL,
+	[ProductVariantId] [int] NULL,
+	[Quantity] [int] NULL,
+	[Price] [decimal](18, 2) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[OrderItemId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Orders]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Orders](
+	[OrderId] [int] IDENTITY(1,1) NOT NULL,
+	[OrderCode]  AS ('DH'+right('000000'+CONVERT([nvarchar],[OrderId]),(6))) PERSISTED,
+	[CustomerId] [int] NULL,
+	[StoreId] [int] NULL,
+	[CreatedByStaffId] [int] NULL,
+	[OrderDate] [datetime] NULL,
+	[TotalAmount] [decimal](18, 2) NULL,
+	[Status] [nvarchar](50) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[OrderId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[OrderStatusHistory]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[OrderStatusHistory](
+	[HistoryId] [int] IDENTITY(1,1) NOT NULL,
+	[OrderId] [int] NULL,
+	[Status] [nvarchar](100) NULL,
+	[ChangedDate] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[HistoryId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Payments]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Payments](
+	[PaymentId] [int] IDENTITY(1,1) NOT NULL,
+	[OrderId] [int] NULL,
+	[PaymentMethod] [nvarchar](100) NULL,
+	[PaymentStatus] [nvarchar](100) NULL,
+	[PaidDate] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[PaymentId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ProductAttributes]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ProductAttributes](
+	[AttributeId] [int] IDENTITY(1,1) NOT NULL,
+	[AttributeName] [nvarchar](200) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[AttributeId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ProductImages]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ProductImages](
+	[ImageId] [int] IDENTITY(1,1) NOT NULL,
+	[ProductId] [int] NULL,
+	[ImageUrl] [nvarchar](500) NULL,
+	[IsPrimary] [bit] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ImageId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ProductPromotions]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ProductPromotions](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[ProductId] [int] NULL,
+	[PromotionId] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ProductReviews]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ProductReviews](
+	[ReviewId] [int] IDENTITY(1,1) NOT NULL,
+	[ProductId] [int] NULL,
+	[ProductVariantId] [int] NULL,
+	[CustomerId] [int] NULL,
+	[Rating] [int] NULL,
+	[Comment] [nvarchar](max) NULL,
+	[CreatedDate] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ReviewId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Products]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Products](
+	[ProductId] [int] IDENTITY(1,1) NOT NULL,
+	[CategoryId] [int] NULL,
+	[BrandId] [int] NULL,
+	[ProductName] [nvarchar](300) NULL,
+	[Slug] [nvarchar](255) NULL,
+	[Description] [nvarchar](max) NULL,
+	[IsFeatured] [bit] NULL,
+	[IsActive] [bit] NULL,
+	[CreatedDate] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ProductId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ProductVariants]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ProductVariants](
+	[ProductVariantId] [int] IDENTITY(1,1) NOT NULL,
+	[ProductId] [int] NULL,
+	[BaseUnitId] [int] NULL,
+	[SKU] [nvarchar](100) NULL,
+	[VariantName] [nvarchar](255) NULL,
+	[Price] [decimal](18, 2) NULL,
+	[CostPrice] [decimal](18, 2) NULL,
+	[ImageUrl] [nvarchar](500) NULL,
+	[CreatedDate] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ProductVariantId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Promotions]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Promotions](
+	[PromotionId] [int] IDENTITY(1,1) NOT NULL,
+	[Name] [nvarchar](255) NULL,
+	[Description] [nvarchar](max) NULL,
+	[DiscountPercentage] [decimal](5, 2) NULL,
+	[DiscountAmount] [decimal](18, 2) NULL,
+	[StartDate] [datetime] NULL,
+	[EndDate] [datetime] NULL,
+	[IsActive] [bit] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[PromotionId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ServiceBookings]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ServiceBookings](
+	[BookingId] [int] IDENTITY(1,1) NOT NULL,
+	[CustomerId] [int] NULL,
+	[ServiceId] [int] NULL,
+	[CreatedByStaffId] [int] NULL,
+	[AssignedStaffId] [int] NULL,
+	[BookingDate] [datetime] NULL,
+	[ServiceDate] [datetime] NULL,
+	[Status] [nvarchar](50) NULL,
+	[Notes] [nvarchar](max) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[BookingId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Services]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Services](
+	[ServiceId] [int] IDENTITY(1,1) NOT NULL,
+	[ServiceName] [nvarchar](200) NULL,
+	[Price] [decimal](18, 2) NULL,
+	[Description] [nvarchar](max) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ServiceId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Sliders]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Sliders](
+	[SliderId] [int] IDENTITY(1,1) NOT NULL,
+	[Title] [nvarchar](255) NULL,
+	[ImageUrl] [nvarchar](500) NULL,
+	[LinkUrl] [nvarchar](500) NULL,
+	[Position] [int] NULL,
+	[IsActive] [bit] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[SliderId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Staff]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Staff](
+	[StaffId] [int] IDENTITY(1,1) NOT NULL,
+	[UserId] [nvarchar](128) NULL,
+	[StoreId] [int] NULL,
+	[StaffCode] [nvarchar](50) NULL,
+	[Position] [nvarchar](100) NULL,
+	[CreatedDate] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[StaffId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[StaffCode] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[StockMovements]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[StockMovements](
+	[MovementId] [int] IDENTITY(1,1) NOT NULL,
+	[ProductVariantId] [int] NULL,
+	[ChangeQty] [int] NULL,
+	[Reason] [nvarchar](200) NULL,
+	[CreatedDate] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[MovementId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Stores]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Stores](
+	[StoreId] [int] IDENTITY(1,1) NOT NULL,
+	[StoreName] [nvarchar](200) NULL,
+	[Address] [nvarchar](500) NULL,
+	[Phone] [nvarchar](50) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[StoreId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[StoreSettings]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[StoreSettings](
+	[SettingID] [int] IDENTITY(1,1) NOT NULL,
+	[StoreName] [nvarchar](255) NOT NULL,
+	[LogoUrl] [nvarchar](500) NULL,
+	[Phone] [nvarchar](50) NULL,
+	[Email] [nvarchar](100) NULL,
+	[Address] [nvarchar](max) NULL,
+	[Facebook] [nvarchar](255) NULL,
+	[Zalo] [nvarchar](255) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[SettingID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Units]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Units](
+	[UnitId] [int] IDENTITY(1,1) NOT NULL,
+	[UnitName] [nvarchar](50) NULL,
+	[Symbol] [nvarchar](20) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[UnitId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[VariantAttributeValues]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[VariantAttributeValues](
+	[ProductVariantId] [int] NOT NULL,
+	[AttributeValueId] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ProductVariantId] ASC,
+	[AttributeValueId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[VariantUnits]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[VariantUnits](
+	[ConversionId] [int] IDENTITY(1,1) NOT NULL,
+	[ProductVariantId] [int] NULL,
+	[UnitId] [int] NULL,
+	[QuantityInBase] [decimal](18, 4) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ConversionId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[WishlistItems]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[WishlistItems](
+	[WishlistItemId] [int] IDENTITY(1,1) NOT NULL,
+	[WishlistId] [int] NULL,
+	[ProductVariantId] [int] NULL,
+	[CreatedDate] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[WishlistItemId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Wishlists]    Script Date: 13/03/2026 14:22:48 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Wishlists](
+	[WishlistId] [int] IDENTITY(1,1) NOT NULL,
+	[CustomerId] [int] NULL,
+	[CreatedDate] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[WishlistId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[Banners] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[CartItems] ADD  DEFAULT ((1)) FOR [Quantity]
+GO
+ALTER TABLE [dbo].[Carts] ADD  DEFAULT (getdate()) FOR [CreatedDate]
+GO
+ALTER TABLE [dbo].[Customers] ADD  DEFAULT (getdate()) FOR [CreatedDate]
+GO
+ALTER TABLE [dbo].[Orders] ADD  DEFAULT (getdate()) FOR [OrderDate]
+GO
+ALTER TABLE [dbo].[OrderStatusHistory] ADD  DEFAULT (getdate()) FOR [ChangedDate]
+GO
+ALTER TABLE [dbo].[ProductImages] ADD  DEFAULT ((0)) FOR [IsPrimary]
+GO
+ALTER TABLE [dbo].[ProductReviews] ADD  DEFAULT (getdate()) FOR [CreatedDate]
+GO
+ALTER TABLE [dbo].[Products] ADD  DEFAULT ((0)) FOR [IsFeatured]
+GO
+ALTER TABLE [dbo].[Products] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[Products] ADD  DEFAULT (getdate()) FOR [CreatedDate]
+GO
+ALTER TABLE [dbo].[ProductVariants] ADD  DEFAULT (getdate()) FOR [CreatedDate]
+GO
+ALTER TABLE [dbo].[Promotions] ADD  DEFAULT ((0)) FOR [DiscountPercentage]
+GO
+ALTER TABLE [dbo].[Promotions] ADD  DEFAULT ((0)) FOR [DiscountAmount]
+GO
+ALTER TABLE [dbo].[Promotions] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[ServiceBookings] ADD  DEFAULT (getdate()) FOR [BookingDate]
+GO
+ALTER TABLE [dbo].[Sliders] ADD  DEFAULT ((0)) FOR [Position]
+GO
+ALTER TABLE [dbo].[Sliders] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[Staff] ADD  DEFAULT (getdate()) FOR [CreatedDate]
+GO
+ALTER TABLE [dbo].[StockMovements] ADD  DEFAULT (getdate()) FOR [CreatedDate]
+GO
+ALTER TABLE [dbo].[WishlistItems] ADD  DEFAULT (getdate()) FOR [CreatedDate]
+GO
+ALTER TABLE [dbo].[Wishlists] ADD  DEFAULT (getdate()) FOR [CreatedDate]
+GO
+ALTER TABLE [dbo].[AspNetRoleClaims]  WITH CHECK ADD FOREIGN KEY([RoleId])
+REFERENCES [dbo].[AspNetRoles] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[AspNetRoleClaims]  WITH CHECK ADD  CONSTRAINT [FK_AspNetRoleClaims_Roles] FOREIGN KEY([RoleId])
+REFERENCES [dbo].[AspNetRoles] ([Id])
+GO
+ALTER TABLE [dbo].[AspNetRoleClaims] CHECK CONSTRAINT [FK_AspNetRoleClaims_Roles]
+GO
+ALTER TABLE [dbo].[AspNetUserClaims]  WITH CHECK ADD FOREIGN KEY([UserId])
+REFERENCES [dbo].[AspNetUsers] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[AspNetUserClaims]  WITH CHECK ADD  CONSTRAINT [FK_AspNetUserClaims_Users] FOREIGN KEY([UserId])
+REFERENCES [dbo].[AspNetUsers] ([Id])
+GO
+ALTER TABLE [dbo].[AspNetUserClaims] CHECK CONSTRAINT [FK_AspNetUserClaims_Users]
+GO
+ALTER TABLE [dbo].[AspNetUserLogins]  WITH CHECK ADD FOREIGN KEY([UserId])
+REFERENCES [dbo].[AspNetUsers] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[AspNetUserLogins]  WITH CHECK ADD  CONSTRAINT [FK_AspNetUserLogins_Users] FOREIGN KEY([UserId])
+REFERENCES [dbo].[AspNetUsers] ([Id])
+GO
+ALTER TABLE [dbo].[AspNetUserLogins] CHECK CONSTRAINT [FK_AspNetUserLogins_Users]
+GO
+ALTER TABLE [dbo].[AspNetUserRoles]  WITH CHECK ADD FOREIGN KEY([RoleId])
+REFERENCES [dbo].[AspNetRoles] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[AspNetUserRoles]  WITH CHECK ADD FOREIGN KEY([UserId])
+REFERENCES [dbo].[AspNetUsers] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[AspNetUserRoles]  WITH CHECK ADD  CONSTRAINT [FK_AspNetUserRoles_Roles] FOREIGN KEY([RoleId])
+REFERENCES [dbo].[AspNetRoles] ([Id])
+GO
+ALTER TABLE [dbo].[AspNetUserRoles] CHECK CONSTRAINT [FK_AspNetUserRoles_Roles]
+GO
+ALTER TABLE [dbo].[AspNetUserRoles]  WITH CHECK ADD  CONSTRAINT [FK_AspNetUserRoles_Users] FOREIGN KEY([UserId])
+REFERENCES [dbo].[AspNetUsers] ([Id])
+GO
+ALTER TABLE [dbo].[AspNetUserRoles] CHECK CONSTRAINT [FK_AspNetUserRoles_Users]
+GO
+ALTER TABLE [dbo].[AspNetUserTokens]  WITH CHECK ADD FOREIGN KEY([UserId])
+REFERENCES [dbo].[AspNetUsers] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[AspNetUserTokens]  WITH CHECK ADD  CONSTRAINT [FK_AspNetUserTokens_Users] FOREIGN KEY([UserId])
+REFERENCES [dbo].[AspNetUsers] ([Id])
+GO
+ALTER TABLE [dbo].[AspNetUserTokens] CHECK CONSTRAINT [FK_AspNetUserTokens_Users]
+GO
+ALTER TABLE [dbo].[AttributeValues]  WITH CHECK ADD FOREIGN KEY([AttributeId])
+REFERENCES [dbo].[ProductAttributes] ([AttributeId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[CartItems]  WITH CHECK ADD  CONSTRAINT [FK_CartItems_Carts] FOREIGN KEY([CartId])
+REFERENCES [dbo].[Carts] ([CartId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[CartItems] CHECK CONSTRAINT [FK_CartItems_Carts]
+GO
+ALTER TABLE [dbo].[CartItems]  WITH CHECK ADD  CONSTRAINT [FK_CartItems_ProductVariants] FOREIGN KEY([ProductVariantId])
+REFERENCES [dbo].[ProductVariants] ([ProductVariantId])
+GO
+ALTER TABLE [dbo].[CartItems] CHECK CONSTRAINT [FK_CartItems_ProductVariants]
+GO
+ALTER TABLE [dbo].[Carts]  WITH CHECK ADD  CONSTRAINT [FK_Carts_Customers] FOREIGN KEY([CustomerId])
+REFERENCES [dbo].[Customers] ([CustomerId])
+GO
+ALTER TABLE [dbo].[Carts] CHECK CONSTRAINT [FK_Carts_Customers]
+GO
+ALTER TABLE [dbo].[Categories]  WITH CHECK ADD FOREIGN KEY([ParentId])
+REFERENCES [dbo].[Categories] ([CategoryId])
+GO
+ALTER TABLE [dbo].[Customers]  WITH CHECK ADD FOREIGN KEY([UserId])
+REFERENCES [dbo].[AspNetUsers] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[Customers]  WITH CHECK ADD  CONSTRAINT [FK_Customers_Users] FOREIGN KEY([UserId])
+REFERENCES [dbo].[AspNetUsers] ([Id])
+GO
+ALTER TABLE [dbo].[Customers] CHECK CONSTRAINT [FK_Customers_Users]
+GO
+ALTER TABLE [dbo].[OrderItems]  WITH CHECK ADD  CONSTRAINT [FK_OrderItems_Order] FOREIGN KEY([OrderId])
+REFERENCES [dbo].[Orders] ([OrderId])
+GO
+ALTER TABLE [dbo].[OrderItems] CHECK CONSTRAINT [FK_OrderItems_Order]
+GO
+ALTER TABLE [dbo].[OrderItems]  WITH CHECK ADD  CONSTRAINT [FK_OrderItems_ProductVariants] FOREIGN KEY([ProductVariantId])
+REFERENCES [dbo].[ProductVariants] ([ProductVariantId])
+GO
+ALTER TABLE [dbo].[OrderItems] CHECK CONSTRAINT [FK_OrderItems_ProductVariants]
+GO
+ALTER TABLE [dbo].[Orders]  WITH CHECK ADD FOREIGN KEY([CreatedByStaffId])
+REFERENCES [dbo].[Staff] ([StaffId])
+GO
+ALTER TABLE [dbo].[Orders]  WITH CHECK ADD FOREIGN KEY([CustomerId])
+REFERENCES [dbo].[Customers] ([CustomerId])
+GO
+ALTER TABLE [dbo].[Orders]  WITH CHECK ADD FOREIGN KEY([StoreId])
+REFERENCES [dbo].[Stores] ([StoreId])
+GO
+ALTER TABLE [dbo].[OrderStatusHistory]  WITH CHECK ADD FOREIGN KEY([OrderId])
+REFERENCES [dbo].[Orders] ([OrderId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[Payments]  WITH CHECK ADD FOREIGN KEY([OrderId])
+REFERENCES [dbo].[Orders] ([OrderId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[ProductImages]  WITH CHECK ADD FOREIGN KEY([ProductId])
+REFERENCES [dbo].[Products] ([ProductId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[ProductPromotions]  WITH CHECK ADD FOREIGN KEY([ProductId])
+REFERENCES [dbo].[Products] ([ProductId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[ProductPromotions]  WITH CHECK ADD FOREIGN KEY([PromotionId])
+REFERENCES [dbo].[Promotions] ([PromotionId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[ProductReviews]  WITH CHECK ADD FOREIGN KEY([CustomerId])
+REFERENCES [dbo].[Customers] ([CustomerId])
+GO
+ALTER TABLE [dbo].[ProductReviews]  WITH CHECK ADD  CONSTRAINT [FK_ProductReviews_Customer] FOREIGN KEY([CustomerId])
+REFERENCES [dbo].[Customers] ([CustomerId])
+GO
+ALTER TABLE [dbo].[ProductReviews] CHECK CONSTRAINT [FK_ProductReviews_Customer]
+GO
+ALTER TABLE [dbo].[ProductReviews]  WITH CHECK ADD  CONSTRAINT [FK_ProductReviews_ProductVariants] FOREIGN KEY([ProductVariantId])
+REFERENCES [dbo].[ProductVariants] ([ProductVariantId])
+GO
+ALTER TABLE [dbo].[ProductReviews] CHECK CONSTRAINT [FK_ProductReviews_ProductVariants]
+GO
+ALTER TABLE [dbo].[Products]  WITH CHECK ADD FOREIGN KEY([BrandId])
+REFERENCES [dbo].[Brands] ([BrandId])
+ON DELETE SET NULL
+GO
+ALTER TABLE [dbo].[Products]  WITH CHECK ADD FOREIGN KEY([CategoryId])
+REFERENCES [dbo].[Categories] ([CategoryId])
+ON DELETE SET NULL
+GO
+ALTER TABLE [dbo].[ProductVariants]  WITH CHECK ADD FOREIGN KEY([BaseUnitId])
+REFERENCES [dbo].[Units] ([UnitId])
+ON DELETE SET NULL
+GO
+ALTER TABLE [dbo].[ProductVariants]  WITH CHECK ADD FOREIGN KEY([ProductId])
+REFERENCES [dbo].[Products] ([ProductId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[ServiceBookings]  WITH CHECK ADD FOREIGN KEY([AssignedStaffId])
+REFERENCES [dbo].[Staff] ([StaffId])
+GO
+ALTER TABLE [dbo].[ServiceBookings]  WITH CHECK ADD FOREIGN KEY([CreatedByStaffId])
+REFERENCES [dbo].[Staff] ([StaffId])
+GO
+ALTER TABLE [dbo].[ServiceBookings]  WITH CHECK ADD FOREIGN KEY([CustomerId])
+REFERENCES [dbo].[Customers] ([CustomerId])
+GO
+ALTER TABLE [dbo].[ServiceBookings]  WITH CHECK ADD FOREIGN KEY([ServiceId])
+REFERENCES [dbo].[Services] ([ServiceId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[Staff]  WITH CHECK ADD  CONSTRAINT [FK_Staff_Store] FOREIGN KEY([StoreId])
+REFERENCES [dbo].[Stores] ([StoreId])
+GO
+ALTER TABLE [dbo].[Staff] CHECK CONSTRAINT [FK_Staff_Store]
+GO
+ALTER TABLE [dbo].[Staff]  WITH CHECK ADD  CONSTRAINT [FK_Staff_User] FOREIGN KEY([UserId])
+REFERENCES [dbo].[AspNetUsers] ([Id])
+GO
+ALTER TABLE [dbo].[Staff] CHECK CONSTRAINT [FK_Staff_User]
+GO
+ALTER TABLE [dbo].[StockMovements]  WITH CHECK ADD FOREIGN KEY([ProductVariantId])
+REFERENCES [dbo].[ProductVariants] ([ProductVariantId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[VariantAttributeValues]  WITH CHECK ADD FOREIGN KEY([AttributeValueId])
+REFERENCES [dbo].[AttributeValues] ([ValueId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[VariantAttributeValues]  WITH CHECK ADD FOREIGN KEY([ProductVariantId])
+REFERENCES [dbo].[ProductVariants] ([ProductVariantId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[VariantUnits]  WITH CHECK ADD FOREIGN KEY([ProductVariantId])
+REFERENCES [dbo].[ProductVariants] ([ProductVariantId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[VariantUnits]  WITH CHECK ADD FOREIGN KEY([UnitId])
+REFERENCES [dbo].[Units] ([UnitId])
+GO
+ALTER TABLE [dbo].[WishlistItems]  WITH CHECK ADD FOREIGN KEY([WishlistId])
+REFERENCES [dbo].[Wishlists] ([WishlistId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[WishlistItems]  WITH CHECK ADD  CONSTRAINT [FK_WishlistItems_ProductVariants] FOREIGN KEY([ProductVariantId])
+REFERENCES [dbo].[ProductVariants] ([ProductVariantId])
+GO
+ALTER TABLE [dbo].[WishlistItems] CHECK CONSTRAINT [FK_WishlistItems_ProductVariants]
+GO
+ALTER TABLE [dbo].[WishlistItems]  WITH CHECK ADD  CONSTRAINT [FK_WishlistItems_Wishlist] FOREIGN KEY([WishlistId])
+REFERENCES [dbo].[Wishlists] ([WishlistId])
+GO
+ALTER TABLE [dbo].[WishlistItems] CHECK CONSTRAINT [FK_WishlistItems_Wishlist]
+GO
+ALTER TABLE [dbo].[Wishlists]  WITH CHECK ADD FOREIGN KEY([CustomerId])
+REFERENCES [dbo].[Customers] ([CustomerId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[ProductReviews]  WITH CHECK ADD CHECK  (([Rating]>=(1) AND [Rating]<=(5)))
+GO
+USE [MotorcycleShopDB]
+GO
+
+-- 1. AspNetRoles
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetRoles] WHERE [Id] = 'r1')
+    INSERT INTO [dbo].[AspNetRoles] ([Id], [Name], [NormalizedName]) VALUES ('r1', 'Admin', 'ADMIN');
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetRoles] WHERE [Id] = 'r2')
+    INSERT INTO [dbo].[AspNetRoles] ([Id], [Name], [NormalizedName]) VALUES ('r2', 'Staff', 'STAFF');
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetRoles] WHERE [Id] = 'r3')
+    INSERT INTO [dbo].[AspNetRoles] ([Id], [Name], [NormalizedName]) VALUES ('r3', 'Customer', 'CUSTOMER');
+
+-- 2. AspNetUsers
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetUsers] WHERE [Id] = 'u1')
+    INSERT INTO [dbo].[AspNetUsers] ([Id], [UserName], [Email], [EmailConfirmed], [PhoneNumberConfirmed], [TwoFactorEnabled], [LockoutEnabled], [AccessFailedCount]) VALUES ('u1', 'admin', 'admin@motoshop.vn', 1, 0, 0, 1, 0);
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetUsers] WHERE [Id] = 'u2')
+    INSERT INTO [dbo].[AspNetUsers] ([Id], [UserName], [Email], [EmailConfirmed], [PhoneNumberConfirmed], [TwoFactorEnabled], [LockoutEnabled], [AccessFailedCount]) VALUES ('u2', 'staff', 'staff@motoshop.vn', 1, 0, 0, 1, 0);
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetUsers] WHERE [Id] = 'u3')
+    INSERT INTO [dbo].[AspNetUsers] ([Id], [UserName], [Email], [EmailConfirmed], [PhoneNumberConfirmed], [TwoFactorEnabled], [LockoutEnabled], [AccessFailedCount]) VALUES ('u3', 'customer', 'customer@gmail.com', 1, 0, 0, 1, 0);
+
+-- 3. AspNetUserRoles
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetUserRoles] WHERE [UserId] = 'u1' AND [RoleId] = 'r1') INSERT INTO [dbo].[AspNetUserRoles] ([UserId], [RoleId]) VALUES ('u1', 'r1');
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetUserRoles] WHERE [UserId] = 'u2' AND [RoleId] = 'r2') INSERT INTO [dbo].[AspNetUserRoles] ([UserId], [RoleId]) VALUES ('u2', 'r2');
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetUserRoles] WHERE [UserId] = 'u3' AND [RoleId] = 'r3') INSERT INTO [dbo].[AspNetUserRoles] ([UserId], [RoleId]) VALUES ('u3', 'r3');
+
+-- 4. Stores
+SET IDENTITY_INSERT [dbo].[Stores] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Stores] WHERE [StoreId] = 1)
+    INSERT INTO [dbo].[Stores] ([StoreId], [StoreName], [Address], [Phone]) VALUES (1, N'MotoShop Quáº­n 1', N'123 LĂ½ Tá»± Trá»ng, Q1, TP.HCM', '028 1111 2222');
+IF NOT EXISTS (SELECT * FROM [dbo].[Stores] WHERE [StoreId] = 2)
+    INSERT INTO [dbo].[Stores] ([StoreId], [StoreName], [Address], [Phone]) VALUES (2, N'MotoShop Quáº­n 7', N'456 Nguyá»…n Thá»‹ Tháº­p, Q7, TP.HCM', '028 3333 4444');
+SET IDENTITY_INSERT [dbo].[Stores] OFF;
+
+-- 5. Staffs
+SET IDENTITY_INSERT [dbo].[Staffs] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Staffs] WHERE [StaffId] = 1)
+    INSERT INTO [dbo].[Staffs] ([StaffId], [UserId], [StoreId], [StaffCode], [Position]) VALUES (1, 'u2', 1, 'STF001', N'Ká»¹ thuáº­t viĂªn trÆ°á»Ÿng');
+SET IDENTITY_INSERT [dbo].[Staffs] OFF;
+
+-- 6. Customers
+SET IDENTITY_INSERT [dbo].[Customers] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Customers] WHERE [CustomerId] = 1)
+    INSERT INTO [dbo].[Customers] ([CustomerId], [UserId], [FullName], [Phone], [Address]) VALUES (1, 'u3', N'Nguyá»…n VÄƒn An', '0901234567', N'789 Phan XĂ­ch Long, PhĂº Nhuáº­n');
+SET IDENTITY_INSERT [dbo].[Customers] OFF;
+
+-- 7. Brands
+SET IDENTITY_INSERT [dbo].[Brands] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Brands] WHERE [BrandId] = 1) INSERT INTO [dbo].[Brands] ([BrandId], [BrandName], [LogoUrl]) VALUES (1, 'Honda', 'honda.svg');
+IF NOT EXISTS (SELECT * FROM [dbo].[Brands] WHERE [BrandId] = 2) INSERT INTO [dbo].[Brands] ([BrandId], [BrandName], [LogoUrl]) VALUES (2, 'Yamaha', 'yamaha.svg');
+IF NOT EXISTS (SELECT * FROM [dbo].[Brands] WHERE [BrandId] = 3) INSERT INTO [dbo].[Brands] ([BrandId], [BrandName], [LogoUrl]) VALUES (3, 'Motul', 'motul.svg');
+IF NOT EXISTS (SELECT * FROM [dbo].[Brands] WHERE [BrandId] = 4) INSERT INTO [dbo].[Brands] ([BrandId], [BrandName], [LogoUrl]) VALUES (4, 'Michelin', 'michelin.svg');
+IF NOT EXISTS (SELECT * FROM [dbo].[Brands] WHERE [BrandId] = 5) INSERT INTO [dbo].[Brands] ([BrandId], [BrandName], [LogoUrl]) VALUES (5, 'GS', 'gs.svg');
+SET IDENTITY_INSERT [dbo].[Brands] OFF;
+
+-- 8. Categories
+SET IDENTITY_INSERT [dbo].[Categories] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Categories] WHERE [CategoryId] = 1) INSERT INTO [dbo].[Categories] ([CategoryId], [CategoryName], [Slug]) VALUES (1, N'Dáº§u nhá»›t', 'dau-nhot');
+IF NOT EXISTS (SELECT * FROM [dbo].[Categories] WHERE [CategoryId] = 2) INSERT INTO [dbo].[Categories] ([CategoryId], [CategoryName], [Slug]) VALUES (2, N'Lá»‘p xe mĂ¡y', 'lop-xe-may');
+IF NOT EXISTS (SELECT * FROM [dbo].[Categories] WHERE [CategoryId] = 3) INSERT INTO [dbo].[Categories] ([CategoryId], [CategoryName], [Slug]) VALUES (3, N'áº®c quy', 'ac-quy');
+IF NOT EXISTS (SELECT * FROM [dbo].[Categories] WHERE [CategoryId] = 4) INSERT INTO [dbo].[Categories] ([CategoryId], [CategoryName], [Slug]) VALUES (4, N'Há»‡ thá»‘ng phanh', 'phanh');
+IF NOT EXISTS (SELECT * FROM [dbo].[Categories] WHERE [CategoryId] = 5) INSERT INTO [dbo].[Categories] ([CategoryId], [CategoryName], [Slug]) VALUES (5, N'NhĂ´ng sĂªn dÄ©a', 'nhong-sen-dia');
+SET IDENTITY_INSERT [dbo].[Categories] OFF;
+
+-- 9. Units
+SET IDENTITY_INSERT [dbo].[Units] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Units] WHERE [UnitId] = 1) INSERT INTO [dbo].[Units] ([UnitId], [UnitName], [Symbol]) VALUES (1, N'Lon', 'L');
+IF NOT EXISTS (SELECT * FROM [dbo].[Units] WHERE [UnitId] = 2) INSERT INTO [dbo].[Units] ([UnitId], [UnitName], [Symbol]) VALUES (2, N'CĂ¡i', 'C');
+IF NOT EXISTS (SELECT * FROM [dbo].[Units] WHERE [UnitId] = 3) INSERT INTO [dbo].[Units] ([UnitId], [UnitName], [Symbol]) VALUES (3, N'Bá»™', 'B');
+SET IDENTITY_INSERT [dbo].[Units] OFF;
+
+-- 10. Products
+SET IDENTITY_INSERT [dbo].[Products] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Products] WHERE [ProductId] = 1) INSERT INTO [dbo].[Products] ([ProductId], [CategoryId], [BrandId], [ProductName], [Slug], [Description], [IsFeatured], [IsActive]) VALUES (1, 1, 3, N'Motul 300V 10W40', 'motul-300v-10w40', N'Nhá»›t tá»•ng há»£p cao cáº¥p.', 1, 1);
+IF NOT EXISTS (SELECT * FROM [dbo].[Products] WHERE [ProductId] = 2) INSERT INTO [dbo].[Products] ([ProductId], [CategoryId], [BrandId], [ProductName], [Slug], [Description], [IsFeatured], [IsActive]) VALUES (2, 2, 4, N'Michelin Pilot Street 2', 'michelin-pilot-street-2', N'Lá»‘p bĂ¡m Ä‘Æ°á»ng cá»±c tá»‘t.', 1, 1);
+IF NOT EXISTS (SELECT * FROM [dbo].[Products] WHERE [ProductId] = 3) INSERT INTO [dbo].[Products] ([ProductId], [CategoryId], [BrandId], [ProductName], [Slug], [Description], [IsFeatured], [IsActive]) VALUES (3, 3, 5, N'áº®c quy GS GTZ6V', 'gs-gtz6v', N'BĂ¬nh khĂ´ cho xe ga.', 0, 1);
+IF NOT EXISTS (SELECT * FROM [dbo].[Products] WHERE [ProductId] = 4) INSERT INTO [dbo].[Products] ([ProductId], [CategoryId], [BrandId], [ProductName], [Slug], [Description], [IsFeatured], [IsActive]) VALUES (4, 4, 1, N'MĂ¡ phanh Honda Winner', 'ma-phanh-honda', N'HĂ ng chĂ­nh hĂ£ng Honda.', 0, 1);
+IF NOT EXISTS (SELECT * FROM [dbo].[Products] WHERE [ProductId] = 5) INSERT INTO [dbo].[Products] ([ProductId], [CategoryId], [BrandId], [ProductName], [Slug], [Description], [IsFeatured], [IsActive]) VALUES (5, 5, 2, N'NhĂ´ng sĂªn dÄ©a Yamaha Exciter', 'nsd-exciter', N'Bá»™ truyá»n Ä‘á»™ng chĂ­nh hĂ£ng.', 0, 1);
+IF NOT EXISTS (SELECT * FROM [dbo].[Products] WHERE [ProductId] = 6) INSERT INTO [dbo].[Products] ([ProductId], [CategoryId], [BrandId], [ProductName], [Slug], [Description], [IsFeatured], [IsActive]) VALUES (6, 1, 3, N'Motul 7100 10W50', 'motul-7100-10w50', N'Nhá»›t Ä‘á» 100% tá»•ng há»£p.', 1, 1);
+SET IDENTITY_INSERT [dbo].[Products] OFF;
+
+-- 11. ProductVariants
+SET IDENTITY_INSERT [dbo].[ProductVariants] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[ProductVariants] WHERE [ProductVariantId] = 1) INSERT INTO [dbo].[ProductVariants] ([ProductVariantId], [ProductId], [BaseUnitId], [SKU], [VariantName], [Price], [StockQuantity]) VALUES (1, 1, 1, 'MOT300V-1L', N'1 LĂ­t', 450000, 100);
+IF NOT EXISTS (SELECT * FROM [dbo].[ProductVariants] WHERE [ProductVariantId] = 2) INSERT INTO [dbo].[ProductVariants] ([ProductVariantId], [ProductId], [BaseUnitId], [SKU], [VariantName], [Price], [StockQuantity]) VALUES (2, 2, 2, 'MIC-70-90-17', N'70/90-17', 550000, 50);
+IF NOT EXISTS (SELECT * FROM [dbo].[ProductVariants] WHERE [ProductVariantId] = 3) INSERT INTO [dbo].[ProductVariants] ([ProductVariantId], [ProductId], [BaseUnitId], [SKU], [VariantName], [Price], [StockQuantity]) VALUES (3, 2, 2, 'MIC-80-90-17', N'80/90-17', 650000, 40);
+IF NOT EXISTS (SELECT * FROM [dbo].[ProductVariants] WHERE [ProductVariantId] = 4) INSERT INTO [dbo].[ProductVariants] ([ProductVariantId], [ProductId], [BaseUnitId], [SKU], [VariantName], [Price], [StockQuantity]) VALUES (4, 3, 2, 'GS-GTZ6V', N'TiĂªu chuáº©n', 380000, 30);
+IF NOT EXISTS (SELECT * FROM [dbo].[ProductVariants] WHERE [ProductVariantId] = 5) INSERT INTO [dbo].[ProductVariants] ([ProductVariantId], [ProductId], [BaseUnitId], [SKU], [VariantName], [Price], [StockQuantity]) VALUES (5, 6, 1, 'MOT7100-1L', N'1 LĂ­t', 320000, 150);
+SET IDENTITY_INSERT [dbo].[ProductVariants] OFF;
+
+-- 12. ProductImages
+SET IDENTITY_INSERT [dbo].[ProductImages] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[ProductImages] WHERE [ImageId] = 1) INSERT INTO [dbo].[ProductImages] ([ImageId], [ProductId], [ImageUrl], [IsPrimary]) VALUES (1, 1, 'https://nhotchinhhang.vn/images/2024/08/20240814_8189527a7b4a2799f6661cb2a7c137c8_1723619923.jpg', 1);
+IF NOT EXISTS (SELECT * FROM [dbo].[ProductImages] WHERE [ImageId] = 2) INSERT INTO [dbo].[ProductImages] ([ImageId], [ProductId], [ImageUrl], [IsPrimary]) VALUES (2, 2, 'https://cf.shopee.vn/file/vn-11134207-7ra0g-ma4aqo52ong852', 1);
+IF NOT EXISTS (SELECT * FROM [dbo].[ProductImages] WHERE [ImageId] = 3) INSERT INTO [dbo].[ProductImages] ([ImageId], [ProductId], [ImageUrl], [IsPrimary]) VALUES (3, 3, 'https://cf.shopee.vn/file/sg-11134201-7rdvv-lzzy638h94kic7', 1);
+IF NOT EXISTS (SELECT * FROM [dbo].[ProductImages] WHERE [ImageId] = 4) INSERT INTO [dbo].[ProductImages] ([ImageId], [ProductId], [ImageUrl], [IsPrimary]) VALUES (4, 4, 'https://cf.shopee.vn/file/vn-11134207-7r98o-lzlek80h6rf1d1', 1);
+IF NOT EXISTS (SELECT * FROM [dbo].[ProductImages] WHERE [ImageId] = 5) INSERT INTO [dbo].[ProductImages] ([ImageId], [ProductId], [ImageUrl], [IsPrimary]) VALUES (5, 5, 'https://cf.shopee.vn/file/sg-11134201-22110-nv34i5b53cjvb4', 1);
+IF NOT EXISTS (SELECT * FROM [dbo].[ProductImages] WHERE [ImageId] = 6) INSERT INTO [dbo].[ProductImages] ([ImageId], [ProductId], [ImageUrl], [IsPrimary]) VALUES (6, 6, 'https://nhotchinhhang.vn/images/2024/08/20240814_8189527a7b4a2799f6661cb2a7c137c8_1723619923.jpg', 1);
+SET IDENTITY_INSERT [dbo].[ProductImages] OFF;
+
+-- 13. Sliders
+SET IDENTITY_INSERT [dbo].[Sliders] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Sliders] WHERE [SliderId] = 1) INSERT INTO [dbo].[Sliders] ([SliderId], [Title], [ImageUrl], [LinkUrl], [IsActive]) VALUES (1, N'Báº£o dÆ°á»¡ng chuyĂªn nghiá»‡p', 'https://static.shop2banh.vn/images/banner/2024/08/20240814_8189527a7b4a2799f6661cb2a7c137c8_1723619923.jpg', 'service.html', 1);
+IF NOT EXISTS (SELECT * FROM [dbo].[Sliders] WHERE [SliderId] = 2) INSERT INTO [dbo].[Sliders] ([SliderId], [Title], [ImageUrl], [LinkUrl], [IsActive]) VALUES (2, N'Æ¯u Ä‘Ă£i thĂ¡ng 4', 'https://static.shop2banh.vn/images/banner/2024/08/20240814_8189527a7b4a2799f6661cb2a7c137c8_1723619923.jpg', 'promotion.html', 1);
+SET IDENTITY_INSERT [dbo].[Sliders] OFF;
+
+-- 14. Banners
+SET IDENTITY_INSERT [dbo].[Banners] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Banners] WHERE [BannerId] = 1) INSERT INTO [dbo].[Banners] ([BannerId], [Title], [ImageUrl], [Position], [IsActive]) VALUES (1, N'Sale 50%', 'https://static.shop2banh.vn/images/banner/2024/08/20240814_8189527a7b4a2799f6661cb2a7c137c8_1723619923.jpg', 'Top', 1);
+SET IDENTITY_INSERT [dbo].[Banners] OFF;
+
+-- 15. BlogCategories
+SET IDENTITY_INSERT [dbo].[BlogCategories] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[BlogCategories] WHERE [Id] = 1) INSERT INTO [dbo].[BlogCategories] ([Id], [Name], [Slug]) VALUES (1, N'Kinh nghiá»‡m báº£o dÆ°á»¡ng', 'kinh-nghiem-bao-duong');
+IF NOT EXISTS (SELECT * FROM [dbo].[BlogCategories] WHERE [Id] = 2) INSERT INTO [dbo].[BlogCategories] ([Id], [Name], [Slug]) VALUES (2, N'Tin tá»©c xe mĂ¡y', 'tin-tuc-xe-may');
+SET IDENTITY_INSERT [dbo].[BlogCategories] OFF;
+
+-- 16. Blogs
+SET IDENTITY_INSERT [dbo].[Blogs] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Blogs] WHERE [Id] = 1) INSERT INTO [dbo].[Blogs] ([Id], [Title], [Slug], [Content], [Thumbnail], [CategoryId], [Status]) VALUES (1, N'Khi nĂ o cáº§n thay nhá»›t xe mĂ¡y?', 'khi-nao-thay-nhot', N'NĂªn thay nhá»›t Ä‘á»‹nh ká»³ má»—i 1500km - 2000km...', 'https://nhotchinhhang.vn/images/2024/08/20240814_8189527a7b4a2799f6661cb2a7c137c8_1723619923.jpg', 1, 'Published');
+IF NOT EXISTS (SELECT * FROM [dbo].[Blogs] WHERE [Id] = 2) INSERT INTO [dbo].[Blogs] ([Id], [Title], [Slug], [Content], [Thumbnail], [CategoryId], [Status]) VALUES (2, N'Honda ra máº¯t dĂ²ng xe má»›i', 'honda-moi', N'Máº«u xe má»›i tiáº¿t kiá»‡m nhiĂªn liá»‡u vÆ°á»£t trá»™i...', 'https://nhotchinhhang.vn/images/2024/08/20240814_8189527a7b4a2799f6661cb2a7c137c8_1723619923.jpg', 2, 'Published');
+SET IDENTITY_INSERT [dbo].[Blogs] OFF;
+
+-- 17. Services
+SET IDENTITY_INSERT [dbo].[Services] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Services] WHERE [ServiceId] = 1) INSERT INTO [dbo].[Services] ([ServiceId], [ServiceName], [Price], [Description]) VALUES (1, N'Vá»‡ sinh kim phun Fi', 150000, N'LĂ m sáº¡ch kim phun báº±ng sĂ³ng siĂªu Ă¢m.');
+IF NOT EXISTS (SELECT * FROM [dbo].[Services] WHERE [ServiceId] = 2) INSERT INTO [dbo].[Services] ([ServiceId], [ServiceName], [Price], [Description]) VALUES (2, N'Báº£o dÆ°á»¡ng toĂ n diá»‡n', 350000, N'Kiá»ƒm tra vĂ  vá»‡ sinh 15 háº¡ng má»¥c.');
+SET IDENTITY_INSERT [dbo].[Services] OFF;
+
+-- 18. ProductReviews
+SET IDENTITY_INSERT [dbo].[ProductReviews] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[ProductReviews] WHERE [ReviewId] = 1) INSERT INTO [dbo].[ProductReviews] ([ReviewId], [ProductId], [ProductVariantId], [CustomerId], [Rating], [Comment], [Status]) VALUES (1, 1, 1, 1, 5, N'Nhá»›t ráº¥t tá»‘t!', 'Approved');
+IF NOT EXISTS (SELECT * FROM [dbo].[ProductReviews] WHERE [ReviewId] = 2) INSERT INTO [dbo].[ProductReviews] ([ReviewId], [ProductId], [ProductVariantId], [CustomerId], [Rating], [Comment], [Status]) VALUES (2, 2, 2, 1, 4, N'Lá»‘p bĂ¡m Ä‘Æ°á»ng tá»‘t nhÆ°ng hÆ¡i cá»©ng.', 'Approved');
+SET IDENTITY_INSERT [dbo].[ProductReviews] OFF;
+
+-- 19. Promotions
+SET IDENTITY_INSERT [dbo].[Promotions] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Promotions] WHERE [PromotionId] = 1) INSERT INTO [dbo].[Promotions] ([PromotionId], [PromotionName], [DiscountPercentage], [DiscountType], [StartDate], [EndDate], [IsActive]) VALUES (1, N'HĂ¨ rá»±c rá»¡', 10, 'Percentage', '2026-04-01', '2026-08-31', 1);
+SET IDENTITY_INSERT [dbo].[Promotions] OFF;
+
+-- 20. Coupons
+SET IDENTITY_INSERT [dbo].[Coupons] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Coupons] WHERE [Id] = 1) INSERT INTO [dbo].[Coupons] ([Id], [Code], [DiscountValue], [DiscountType], [ExpiryDate], [IsActive]) VALUES (1, 'HELLO2026', 50000, 'Amount', '2026-12-31', 1);
+SET IDENTITY_INSERT [dbo].[Coupons] OFF;
+
+-- 21. ShippingMethods
+SET IDENTITY_INSERT [dbo].[ShippingMethods] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[ShippingMethods] WHERE [Id] = 1) INSERT INTO [dbo].[ShippingMethods] ([Id], [Name], [Cost], [EstimatedDays]) VALUES (1, N'Giao hĂ ng nhanh', 30000, 2);
+IF NOT EXISTS (SELECT * FROM [dbo].[ShippingMethods] WHERE [Id] = 2) INSERT INTO [dbo].[ShippingMethods] ([Id], [Name], [Cost], [EstimatedDays]) VALUES (2, N'Há»a tá»‘c (2h)', 60000, 1);
+SET IDENTITY_INSERT [dbo].[ShippingMethods] OFF;
+
+GO
+USE [MotorcycleShopDB]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- 1. AspNetRoles
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetRoles] WHERE [Id] = 'r1')
+    INSERT INTO [dbo].[AspNetRoles] ([Id], [Name], [NormalizedName]) VALUES ('r1', 'Admin', 'ADMIN');
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetRoles] WHERE [Id] = 'r2')
+    INSERT INTO [dbo].[AspNetRoles] ([Id], [Name], [NormalizedName]) VALUES ('r2', 'Staff', 'STAFF');
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetRoles] WHERE [Id] = 'r3')
+    INSERT INTO [dbo].[AspNetRoles] ([Id], [Name], [NormalizedName]) VALUES ('r3', 'Customer', 'CUSTOMER');
+
+-- 2. AspNetUsers
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetUsers] WHERE [Id] = 'u1')
+    INSERT INTO [dbo].[AspNetUsers] ([Id], [UserName], [Email], [EmailConfirmed], [PhoneNumberConfirmed], [TwoFactorEnabled], [LockoutEnabled], [AccessFailedCount]) VALUES ('u1', 'admin', 'admin@motoshop.vn', 1, 0, 0, 1, 0);
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetUsers] WHERE [Id] = 'u2')
+    INSERT INTO [dbo].[AspNetUsers] ([Id], [UserName], [Email], [EmailConfirmed], [PhoneNumberConfirmed], [TwoFactorEnabled], [LockoutEnabled], [AccessFailedCount]) VALUES ('u2', 'thang_staff', 'thang.staff@motoshop.vn', 1, 0, 0, 1, 0);
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetUsers] WHERE [Id] = 'u3')
+    INSERT INTO [dbo].[AspNetUsers] ([Id], [UserName], [Email], [EmailConfirmed], [PhoneNumberConfirmed], [TwoFactorEnabled], [LockoutEnabled], [AccessFailedCount]) VALUES ('u3', 'an_customer', 'an.customer@gmail.com', 1, 0, 0, 1, 0);
+
+-- 3. AspNetUserRoles
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetUserRoles] WHERE [UserId] = 'u1' AND [RoleId] = 'r1')
+    INSERT INTO [dbo].[AspNetUserRoles] ([UserId], [RoleId]) VALUES ('u1', 'r1');
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetUserRoles] WHERE [UserId] = 'u2' AND [RoleId] = 'r2')
+    INSERT INTO [dbo].[AspNetUserRoles] ([UserId], [RoleId]) VALUES ('u2', 'r2');
+IF NOT EXISTS (SELECT * FROM [dbo].[AspNetUserRoles] WHERE [UserId] = 'u3' AND [RoleId] = 'r3')
+    INSERT INTO [dbo].[AspNetUserRoles] ([UserId], [RoleId]) VALUES ('u3', 'r3');
+
+-- 4. Stores
+SET IDENTITY_INSERT [dbo].[Stores] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Stores] WHERE [StoreId] IN (1, 2))
+BEGIN
+    INSERT INTO [dbo].[Stores] ([StoreId], [StoreName], [Address], [Phone]) VALUES 
+    (1, N'MotoShop Quáº­n 1', N'123 LĂ½ Tá»± Trá»ng, Q1, TP.HCM', '028 1111 2222'),
+    (2, N'MotoShop Quáº­n 7', N'456 Nguyá»…n Thá»‹ Tháº­p, Q7, TP.HCM', '028 3333 4444');
+END
+SET IDENTITY_INSERT [dbo].[Stores] OFF;
+
+-- 5. Staffs (ÄĂ£ sá»­a tá»« Staff thĂ nh Staffs)
+SET IDENTITY_INSERT [dbo].[Staffs] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Staffs] WHERE [StaffId] = 1)
+    INSERT INTO [dbo].[Staffs] ([StaffId], [UserId], [StoreId], [StaffCode], [Position]) VALUES (1, 'u2', 1, 'STF001', N'Ká»¹ thuáº­t viĂªn trÆ°á»Ÿng');
+SET IDENTITY_INSERT [dbo].[Staffs] OFF;
+
+-- 6. Customers
+SET IDENTITY_INSERT [dbo].[Customers] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Customers] WHERE [CustomerId] = 1)
+    INSERT INTO [dbo].[Customers] ([CustomerId], [UserId], [FullName], [Phone], [Address]) VALUES (1, 'u3', N'Nguyá»…n VÄƒn An', '0901234567', N'789 Phan XĂ­ch Long, PhĂº Nhuáº­n');
+SET IDENTITY_INSERT [dbo].[Customers] OFF;
+
+-- 7. Brands
+SET IDENTITY_INSERT [dbo].[Brands] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Brands] WHERE [BrandId] IN (1, 2, 3, 4))
+BEGIN
+    INSERT INTO [dbo].[Brands] ([BrandId], [BrandName], [LogoUrl]) VALUES 
+    (1, 'Honda', 'honda.svg'),
+    (2, 'Yamaha', 'yamaha.svg'),
+    (3, 'Motul', 'motul.svg'),
+    (4, 'NGK', 'ngk.svg');
+END
+SET IDENTITY_INSERT [dbo].[Brands] OFF;
+
+-- 8. Categories
+SET IDENTITY_INSERT [dbo].[Categories] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Categories] WHERE [CategoryId] IN (1, 2, 3))
+BEGIN
+    INSERT INTO [dbo].[Categories] ([CategoryId], [CategoryName], [Slug], [ParentId]) VALUES 
+    (1, N'Dáº§u nhá»›t', 'dau-nhot', NULL),
+    (2, N'Há»‡ thá»‘ng truyá»n Ä‘á»™ng', 'truyen-dong', NULL),
+    (3, N'Bá»™ ná»“i xe ga', 'bo-noi-xe-ga', 2);
+END
+SET IDENTITY_INSERT [dbo].[Categories] OFF;
+
+-- 9. Units
+SET IDENTITY_INSERT [dbo].[Units] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Units] WHERE [UnitId] IN (1, 2, 3))
+BEGIN
+    INSERT INTO [dbo].[Units] ([UnitId], [UnitName], [Symbol]) VALUES 
+    (1, N'Lon', 'L'),
+    (2, N'CĂ¡i', 'C'),
+    (3, N'Bá»™', 'B');
+END
+SET IDENTITY_INSERT [dbo].[Units] OFF;
+
+-- 10. ProductAttributes
+SET IDENTITY_INSERT [dbo].[ProductAttributes] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[ProductAttributes] WHERE [AttributeId] IN (1, 2))
+BEGIN
+    INSERT INTO [dbo].[ProductAttributes] ([AttributeId], [AttributeName]) VALUES 
+    (1, N'Dung tĂ­ch'),
+    (2, N'MĂ u sáº¯c');
+END
+SET IDENTITY_INSERT [dbo].[ProductAttributes] OFF;
+
+-- 11. AttributeValues
+SET IDENTITY_INSERT [dbo].[AttributeValues] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[AttributeValues] WHERE [ValueId] IN (1, 2))
+BEGIN
+    INSERT INTO [dbo].[AttributeValues] ([ValueId], [AttributeId], [Value]) VALUES 
+    (1, 1, N'1 LĂ­t'),
+    (2, 2, N'Äen CNC');
+END
+SET IDENTITY_INSERT [dbo].[AttributeValues] OFF;
+
+-- 12. Products
+SET IDENTITY_INSERT [dbo].[Products] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Products] WHERE [ProductId] = 1)
+    INSERT INTO [dbo].[Products] ([ProductId], [CategoryId], [BrandId], [ProductName], [Slug], [Description], [IsFeatured]) VALUES (1, 1, 3, N'Dáº§u nhá»›t Motul 300V', 'motul-300v', N'Dáº§u nhá»›t cao cáº¥p cho xe phĂ¢n khá»‘i lá»›n.', 1);
+SET IDENTITY_INSERT [dbo].[Products] OFF;
+
+-- 13. ProductVariants
+SET IDENTITY_INSERT [dbo].[ProductVariants] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[ProductVariants] WHERE [ProductVariantId] = 101)
+    INSERT INTO [dbo].[ProductVariants] ([ProductVariantId], [ProductId], [BaseUnitId], [SKU], [VariantName], [Price]) VALUES (101, 1, 1, 'MOT300V10W40', N'Motul 300V 10W40 1L', 450000);
+SET IDENTITY_INSERT [dbo].[ProductVariants] OFF;
+
+-- 14. ProductImages
+SET IDENTITY_INSERT [dbo].[ProductImages] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[ProductImages] WHERE [ImageId] = 1)
+    INSERT INTO [dbo].[ProductImages] ([ImageId], [ProductId], [ImageUrl], [IsPrimary]) VALUES (1, 1, 'motul-300v.jpg', 1);
+SET IDENTITY_INSERT [dbo].[ProductImages] OFF;
+
+-- 15. Promotions (ÄĂ£ sá»­a Name thĂ nh PromotionName)
+SET IDENTITY_INSERT [dbo].[Promotions] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Promotions] WHERE [PromotionId] = 1)
+    INSERT INTO [dbo].[Promotions] ([PromotionId], [PromotionName], [DiscountPercentage], [StartDate], [EndDate]) VALUES (1, N'Flash Sale ThĂ¡ng 3', 10, '2026-03-01', '2026-03-31');
+SET IDENTITY_INSERT [dbo].[Promotions] OFF;
+
+-- 16. PromotionProducts (ÄĂ£ sá»­a tá»« ProductPromotions thĂ nh PromotionProducts)
+IF NOT EXISTS (SELECT * FROM [dbo].[PromotionProducts] WHERE [ProductId] = 1 AND [PromotionId] = 1)
+    INSERT INTO [dbo].[PromotionProducts] ([ProductId], [PromotionId]) VALUES (1, 1);
+
+-- 17. Orders
+SET IDENTITY_INSERT [dbo].[Orders] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Orders] WHERE [OrderId] = 1)
+    INSERT INTO [dbo].[Orders] ([OrderId], [CustomerId], [StoreId], [OrderDate], [TotalAmount], [Status]) VALUES (1, 1, 1, '2026-03-12 10:00:00', 405000, N'ÄĂ£ hoĂ n thĂ nh');
+SET IDENTITY_INSERT [dbo].[Orders] OFF;
+
+-- 18. OrderItems
+SET IDENTITY_INSERT [dbo].[OrderItems] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[OrderItems] WHERE [OrderItemId] = 1)
+    INSERT INTO [dbo].[OrderItems] ([OrderItemId], [OrderId], [ProductVariantId], [Quantity], [Price]) VALUES (1, 1, 101, 1, 405000);
+SET IDENTITY_INSERT [dbo].[OrderItems] OFF;
+
+-- 19. OrderStatusHistories (ÄĂ£ sá»­a tá»« OrderStatusHistory thĂ nh OrderStatusHistories)
+SET IDENTITY_INSERT [dbo].[OrderStatusHistories] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[OrderStatusHistories] WHERE [HistoryId] IN (1, 2))
+BEGIN
+    INSERT INTO [dbo].[OrderStatusHistories] ([HistoryId], [OrderId], [Status], [ChangedDate]) VALUES 
+    (1, 1, N'Chá» xĂ¡c nháº­n', '2026-03-12 10:00:00'),
+    (2, 1, N'ÄĂ£ giao hĂ ng', '2026-03-12 15:00:00');
+END
+SET IDENTITY_INSERT [dbo].[OrderStatusHistories] OFF;
+
+-- 20. Payments
+SET IDENTITY_INSERT [dbo].[Payments] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Payments] WHERE [PaymentId] = 1)
+    INSERT INTO [dbo].[Payments] ([PaymentId], [OrderId], [PaymentMethod], [PaymentStatus], [PaidDate]) VALUES (1, 1, N'Chuyá»ƒn khoáº£n', N'ÄĂ£ thanh toĂ¡n', '2026-03-12 10:05:00');
+SET IDENTITY_INSERT [dbo].[Payments] OFF;
+
+-- 21. Services
+SET IDENTITY_INSERT [dbo].[Services] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Services] WHERE [ServiceId] = 1)
+    INSERT INTO [dbo].[Services] ([ServiceId], [ServiceName], [Price], [Description]) VALUES (1, N'Vá»‡ sinh kim phun Fi', 150000, N'LĂ m sáº¡ch kim phun báº±ng sĂ³ng siĂªu Ă¢m.');
+SET IDENTITY_INSERT [dbo].[Services] OFF;
+
+-- 22. ServiceBookings
+SET IDENTITY_INSERT [dbo].[ServiceBookings] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[ServiceBookings] WHERE [BookingId] = 1)
+    INSERT INTO [dbo].[ServiceBookings] ([BookingId], [CustomerId], [ServiceId], [AssignedStaffId], [BookingDate], [ServiceDate], [Status]) VALUES (1, 1, 1, 1, '2026-03-14 08:00:00', '2026-03-16 09:00:00', N'ÄĂ£ xĂ¡c nháº­n');
+SET IDENTITY_INSERT [dbo].[ServiceBookings] OFF;
+
+-- 23. ProductReviews
+SET IDENTITY_INSERT [dbo].[ProductReviews] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[ProductReviews] WHERE [ReviewId] = 1)
+    INSERT INTO [dbo].[ProductReviews] ([ReviewId], [ProductId], [CustomerId], [Rating], [Comment]) VALUES (1, 1, 1, 5, N'Nhá»›t cháº¡y ráº¥t Ăªm mĂ¡y!');
+SET IDENTITY_INSERT [dbo].[ProductReviews] OFF;
+
+-- 24. InventoryTransactions (ÄĂ£ sá»­a tá»« StockMovements thĂ nh InventoryTransactions)
+SET IDENTITY_INSERT [dbo].[InventoryTransactions] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[InventoryTransactions] WHERE [TransactionId] = 1)
+    -- Giáº£ sá»­ báº£ng nĂ y cĂ³ cáº¥u trĂºc tÆ°Æ¡ng tá»± (TransactionId, ProductVariantId, Quantity, Reason, CreatedDate)
+    INSERT INTO [dbo].[InventoryTransactions] ([TransactionId], [ProductVariantId], [Quantity], [TransactionType], [Note], [CreatedDate]) 
+    VALUES (1, 101, -1, N'Xuáº¥t kho', N'BĂ¡n hĂ ng Ä‘Æ¡n #1', '2026-03-12 10:00:00');
+SET IDENTITY_INSERT [dbo].[InventoryTransactions] OFF;
+
+-- 25. Sliders
+SET IDENTITY_INSERT [dbo].[Sliders] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Sliders] WHERE [SliderId] = 1)
+    INSERT INTO [dbo].[Sliders] ([SliderId], [Title], [ImageUrl], [LinkUrl]) VALUES (1, N'Báº£o dÆ°á»¡ng chuyĂªn nghiá»‡p', 'slider1.jpg', 'service.html');
+SET IDENTITY_INSERT [dbo].[Sliders] OFF;
+
+-- 26. Banners
+SET IDENTITY_INSERT [dbo].[Banners] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Banners] WHERE [BannerId] = 1)
+    INSERT INTO [dbo].[Banners] ([BannerId], [Title], [ImageUrl], [Position]) VALUES (1, N'Giáº£m giĂ¡ 50%', 'banner1.jpg', 'Top');
+SET IDENTITY_INSERT [dbo].[Banners] OFF;
+
+-- 27. Wishlists
+SET IDENTITY_INSERT [dbo].[Wishlists] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[Wishlists] WHERE [WishlistId] = 1)
+    INSERT INTO [dbo].[Wishlists] ([WishlistId], [CustomerId]) VALUES (1, 1);
+SET IDENTITY_INSERT [dbo].[Wishlists] OFF;
+
+-- 28. WishlistItems (ÄĂ£ sá»­a ProductVariantId thĂ nh ProductId)
+SET IDENTITY_INSERT [dbo].[WishlistItems] ON;
+IF NOT EXISTS (SELECT * FROM [dbo].[WishlistItems] WHERE [WishlistItemId] = 1)
+    INSERT INTO [dbo].[WishlistItems] ([WishlistItemId], [WishlistId], [ProductId]) VALUES (1, 1, 1);
+SET IDENTITY_INSERT [dbo].[WishlistItems] OFF;
+GO
+USE [MotorcycleShopDB];
+GO
+
+SET NOCOUNT ON;
+
+DECLARE @BrandId INT, @CategoryId INT, @ProductId INT;
+DECLARE @Now DATETIME2 = GETDATE();
+
+-----------------------------------------------------------------------------------------
+-- 1. Dáº§u nhá»›t Motul 7100 10W40
+-----------------------------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM Brands WHERE BrandName = N'Motul') INSERT INTO Brands (BrandName) VALUES (N'Motul');
+SELECT @BrandId = BrandId FROM Brands WHERE BrandName = N'Motul';
+IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Dáº§u nhá»›t') INSERT INTO Categories (CategoryName, Slug) VALUES (N'Dáº§u nhá»›t', 'dau-nhot');
+SELECT @CategoryId = CategoryId FROM Categories WHERE CategoryName = N'Dáº§u nhá»›t';
+
+INSERT INTO Products (ProductName, Slug, Description, BrandId, CategoryId, IsFeatured, IsActive, CreatedDate, IsDeleted)
+VALUES (N'Dáº§u nhá»›t Motul 7100 10W40', 'dau-nhot-motul-7100-10w40', N'Dáº§u nhá»›t Motul 7100 10W40 lĂ  dĂ²ng dáº§u nhá»›t tá»•ng há»£p cao cáº¥p Ä‘Æ°á»£c sáº£n xuáº¥t theo cĂ´ng nghá»‡ Ester tiĂªn tiáº¿n...', @BrandId, @CategoryId, 1, 1, @Now, 0);
+SET @ProductId = SCOPE_IDENTITY();
+
+INSERT INTO ProductVariants (ProductId, VariantName, SKU, Price, OriginalPrice, CostPrice, StockQuantity, CreatedDate)
+VALUES (@ProductId, N'1L', 'MOTUL7100-1L', 320000, 350000, 250000, 70, @Now),
+       (@ProductId, N'1.5L', 'MOTUL7100-15L', 450000, 490000, 350000, 50, @Now);
+
+INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary, DisplayOrder)
+VALUES (@ProductId, 'https://nhotchinhhang.vn/images/2024/08/20240814_8189527a7b4a2799f6661cb2a7c137c8_1723619923.jpg', 1, 1);
+
+-----------------------------------------------------------------------------------------
+-- 2. Lá»‘p Michelin Pilot Street 2
+-----------------------------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM Brands WHERE BrandName = N'Michelin') INSERT INTO Brands (BrandName) VALUES (N'Michelin');
+SELECT @BrandId = BrandId FROM Brands WHERE BrandName = N'Michelin';
+IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Lá»‘p xe mĂ¡y') INSERT INTO Categories (CategoryName, Slug) VALUES (N'Lá»‘p xe mĂ¡y', 'lop-xe-may');
+SELECT @CategoryId = CategoryId FROM Categories WHERE CategoryName = N'Lá»‘p xe mĂ¡y';
+
+INSERT INTO Products (ProductName, Slug, Description, BrandId, CategoryId, IsFeatured, IsActive, CreatedDate, IsDeleted)
+VALUES (N'Lá»‘p Michelin Pilot Street 2', 'lop-michelin-pilot-street-2', N'Lá»‘p Michelin Pilot Street 2 Ä‘Æ°á»£c thiáº¿t káº¿ vá»›i cĂ´ng nghá»‡ tiĂªn tiáº¿n giĂºp tÄƒng Ä‘á»™ bĂ¡m Ä‘Æ°á»ng vÆ°á»£t trá»™i...', @BrandId, @CategoryId, 1, 1, @Now, 0);
+SET @ProductId = SCOPE_IDENTITY();
+
+INSERT INTO ProductVariants (ProductId, VariantName, SKU, Price, OriginalPrice, CostPrice, StockQuantity, CreatedDate)
+VALUES (@ProductId, N'TrÆ°á»›c 70/90-17', 'MICHELIN-FRONT', 550000, 600000, 420000, 45, @Now),
+       (@ProductId, N'Sau 120/70-17', 'MICHELIN-REAR', 750000, 800000, 580000, 45, @Now);
+
+INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary, DisplayOrder)
+VALUES (@ProductId, 'https://cf.shopee.vn/file/vn-11134207-7ra0g-ma4aqo52ong852', 1, 1);
+
+-----------------------------------------------------------------------------------------
+-- 3. áº®c quy GS GTZ6V
+-----------------------------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM Brands WHERE BrandName = N'GS') INSERT INTO Brands (BrandName) VALUES (N'GS');
+SELECT @BrandId = BrandId FROM Brands WHERE BrandName = N'GS';
+IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'áº®c quy') INSERT INTO Categories (CategoryName, Slug) VALUES (N'áº®c quy', 'ac-quy');
+SELECT @CategoryId = CategoryId FROM Categories WHERE CategoryName = N'áº®c quy';
+
+INSERT INTO Products (ProductName, Slug, Description, BrandId, CategoryId, IsFeatured, IsActive, CreatedDate, IsDeleted)
+VALUES (N'áº®c quy GS GTZ6V', 'ac-quy-gs-gtz6v', N'áº®c quy GS GTZ6V lĂ  dĂ²ng áº¯c quy khĂ´ cháº¥t lÆ°á»£ng cao...', @BrandId, @CategoryId, 0, 1, @Now, 0);
+SET @ProductId = SCOPE_IDENTITY();
+
+INSERT INTO ProductVariants (ProductId, VariantName, SKU, Price, OriginalPrice, CostPrice, StockQuantity, CreatedDate)
+VALUES (@ProductId, N'TiĂªu chuáº©n', 'GS-GTZ6V', 450000, 480000, 350000, 60, @Now);
+
+INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary, DisplayOrder)
+VALUES (@ProductId, 'https://cf.shopee.vn/file/sg-11134201-7rdvv-lzzy638h94kic7', 1, 1);
+
+-----------------------------------------------------------------------------------------
+-- 4. Bugi NGK Iridium
+-----------------------------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM Brands WHERE BrandName = N'NGK') INSERT INTO Brands (BrandName) VALUES (N'NGK');
+SELECT @BrandId = BrandId FROM Brands WHERE BrandName = N'NGK';
+IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Bugi') INSERT INTO Categories (CategoryName, Slug) VALUES (N'Bugi', 'bugi');
+SELECT @CategoryId = CategoryId FROM Categories WHERE CategoryName = N'Bugi';
+
+INSERT INTO Products (ProductName, Slug, Description, BrandId, CategoryId, IsFeatured, IsActive, CreatedDate, IsDeleted)
+VALUES (N'Bugi NGK Iridium', 'bugi-ngk-iridium', N'Bugi NGK Iridium lĂ  sáº£n pháº©m cao cáº¥p giĂºp cáº£i thiá»‡n hiá»‡u suáº¥t Ä‘Ă¡nh lá»­a...', @BrandId, @CategoryId, 0, 1, @Now, 0);
+SET @ProductId = SCOPE_IDENTITY();
+
+INSERT INTO ProductVariants (ProductId, VariantName, SKU, Price, OriginalPrice, CostPrice, StockQuantity, CreatedDate)
+VALUES (@ProductId, N'CR8EIX', 'NGK-CR8', 180000, 200000, 120000, 80, @Now),
+       (@ProductId, N'CPR7EAIX', 'NGK-CPR7', 160000, 180000, 110000, 70, @Now);
+
+INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary, DisplayOrder)
+VALUES (@ProductId, 'https://cf.shopee.vn/file/vn-11134207-7r98o-lzlek80h6rf1d1', 1, 1);
+
+-----------------------------------------------------------------------------------------
+-- 5. Phanh Ä‘Ä©a Brembo
+-----------------------------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM Brands WHERE BrandName = N'Brembo') INSERT INTO Brands (BrandName) VALUES (N'Brembo');
+SELECT @BrandId = BrandId FROM Brands WHERE BrandName = N'Brembo';
+IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Há»‡ thá»‘ng phanh') INSERT INTO Categories (CategoryName, Slug) VALUES (N'Há»‡ thá»‘ng phanh', 'he-thong-phanh');
+SELECT @CategoryId = CategoryId FROM Categories WHERE CategoryName = N'Há»‡ thá»‘ng phanh';
+
+INSERT INTO Products (ProductName, Slug, Description, BrandId, CategoryId, IsFeatured, IsActive, CreatedDate, IsDeleted)
+VALUES (N'Phanh Ä‘Ä©a Brembo', 'phanh-dia-brembo', N'Phanh Ä‘Ä©a Brembo lĂ  sáº£n pháº©m cao cáº¥p mang láº¡i hiá»‡u suáº¥t phanh vÆ°á»£t trá»™i...', @BrandId, @CategoryId, 1, 1, @Now, 0);
+SET @ProductId = SCOPE_IDENTITY();
+
+INSERT INTO ProductVariants (ProductId, VariantName, SKU, Price, OriginalPrice, CostPrice, StockQuantity, CreatedDate)
+VALUES (@ProductId, N'260mm', 'BREMBO-260', 2500000, 2800000, 2000000, 20, @Now),
+       (@ProductId, N'300mm', 'BREMBO-300', 3200000, 3500000, 2600000, 20, @Now);
+
+INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary, DisplayOrder)
+VALUES (@ProductId, 'https://cf.shopee.vn/file/vn-11134207-7ra0g-m7ak1pozkt189a', 1, 1);
+
+-----------------------------------------------------------------------------------------
+-- 6. GÆ°Æ¡ng chiáº¿u háº­u Rizoma
+-----------------------------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM Brands WHERE BrandName = N'Rizoma') INSERT INTO Brands (BrandName) VALUES (N'Rizoma');
+SELECT @BrandId = BrandId FROM Brands WHERE BrandName = N'Rizoma';
+IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'GÆ°Æ¡ng') INSERT INTO Categories (CategoryName, Slug) VALUES (N'GÆ°Æ¡ng', 'guong');
+SELECT @CategoryId = CategoryId FROM Categories WHERE CategoryName = N'GÆ°Æ¡ng';
+
+INSERT INTO Products (ProductName, Slug, Description, BrandId, CategoryId, IsFeatured, IsActive, CreatedDate, IsDeleted)
+VALUES (N'GÆ°Æ¡ng chiáº¿u háº­u Rizoma', 'guong-rizoma', N'GÆ°Æ¡ng chiáº¿u háº­u Rizoma lĂ  dĂ²ng phá»¥ kiá»‡n cao cáº¥p nhĂ´m CNC...', @BrandId, @CategoryId, 0, 1, @Now, 0);
+SET @ProductId = SCOPE_IDENTITY();
+
+INSERT INTO ProductVariants (ProductId, VariantName, SKU, Price, OriginalPrice, CostPrice, StockQuantity, CreatedDate)
+VALUES (@ProductId, N'Äen', 'RIZOMA-BLACK', 1200000, 1350000, 900000, 40, @Now),
+       (@ProductId, N'Báº¡c', 'RIZOMA-SILVER', 1250000, 1400000, 950000, 40, @Now);
+
+INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary, DisplayOrder)
+VALUES (@ProductId, 'https://cf.shopee.vn/file/sg-11134201-7reno-m2ojl0r6c7ax1a', 1, 1);
+
+-----------------------------------------------------------------------------------------
+-- 7. Lá»c giĂ³ K&N
+-----------------------------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM Brands WHERE BrandName = N'K&N') INSERT INTO Brands (BrandName) VALUES (N'K&N');
+SELECT @BrandId = BrandId FROM Brands WHERE BrandName = N'K&N';
+IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Lá»c giĂ³') INSERT INTO Categories (CategoryName, Slug) VALUES (N'Lá»c giĂ³', 'loc-gio');
+SELECT @CategoryId = CategoryId FROM Categories WHERE CategoryName = N'Lá»c giĂ³';
+
+INSERT INTO Products (ProductName, Slug, Description, BrandId, CategoryId, IsFeatured, IsActive, CreatedDate, IsDeleted)
+VALUES (N'Lá»c giĂ³ K&N', 'loc-gio-kn', N'Lá»c giĂ³ K&N giĂºp tÄƒng lÆ°u lÆ°á»£ng khĂ´ng khĂ­ vĂ o buá»“ng Ä‘á»‘t...', @BrandId, @CategoryId, 0, 1, @Now, 0);
+SET @ProductId = SCOPE_IDENTITY();
+
+INSERT INTO ProductVariants (ProductId, VariantName, SKU, Price, OriginalPrice, CostPrice, StockQuantity, CreatedDate)
+VALUES (@ProductId, N'Cho Exciter 155', 'KN-EX155', 900000, 950000, 700000, 35, @Now),
+       (@ProductId, N'Cho Winner X', 'KN-WINNER', 880000, 930000, 680000, 35, @Now);
+
+INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary, DisplayOrder)
+VALUES (@ProductId, 'https://cf.shopee.vn/file/sg-11134201-7rdwl-mbxeh3b9qhp611', 1, 1);
+
+-----------------------------------------------------------------------------------------
+-- 8. SĂªn DID 428
+-----------------------------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM Brands WHERE BrandName = N'DID') INSERT INTO Brands (BrandName) VALUES (N'DID');
+SELECT @BrandId = BrandId FROM Brands WHERE BrandName = N'DID';
+IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'SĂªn (xĂ­ch)') INSERT INTO Categories (CategoryName, Slug) VALUES (N'SĂªn (xĂ­ch)', 'sen-xich');
+SELECT @CategoryId = CategoryId FROM Categories WHERE CategoryName = N'SĂªn (xĂ­ch)';
+
+INSERT INTO Products (ProductName, Slug, Description, BrandId, CategoryId, IsFeatured, IsActive, CreatedDate, IsDeleted)
+VALUES (N'SĂªn DID 428', 'sen-did-428', N'SĂªn DID 428 lĂ  sáº£n pháº©m ná»•i tiáº¿ng vá»›i Ä‘á»™ bá»n cao vĂ  kháº£ nÄƒng chá»‹u lá»±c...', @BrandId, @CategoryId, 0, 1, @Now, 0);
+SET @ProductId = SCOPE_IDENTITY();
+
+INSERT INTO ProductVariants (ProductId, VariantName, SKU, Price, OriginalPrice, CostPrice, StockQuantity, CreatedDate)
+VALUES (@ProductId, N'TiĂªu chuáº©n', 'DID-428', 350000, 400000, 250000, 50, @Now),
+       (@ProductId, N'Gold', 'DID-428-GOLD', 550000, 600000, 400000, 50, @Now);
+
+INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary, DisplayOrder)
+VALUES (@ProductId, 'https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcRzXgshMHYCXpqqWm4atxJMCWJvDSZrGef87Oo56MiOK_GkrlxThuFPRtHh2lfKhvMK-ahPzPP1It952Xyw_GN2FAAtsrO8ZUH080Eg5Wz5iZs7D6BR1-dqIrgbkZPrF-T43_Jr8Q', 1, 1);
+
+-----------------------------------------------------------------------------------------
+-- 9. NhĂ´ng sĂªn dÄ©a Recto
+-----------------------------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM Brands WHERE BrandName = N'Recto') INSERT INTO Brands (BrandName) VALUES (N'Recto');
+SELECT @BrandId = BrandId FROM Brands WHERE BrandName = N'Recto';
+IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Bá»™ nhĂ´ng sĂªn dÄ©a') INSERT INTO Categories (CategoryName, Slug) VALUES (N'Bá»™ nhĂ´ng sĂªn dÄ©a', 'bo-nhong-sen-dia');
+SELECT @CategoryId = CategoryId FROM Categories WHERE CategoryName = N'Bá»™ nhĂ´ng sĂªn dÄ©a';
+
+INSERT INTO Products (ProductName, Slug, Description, BrandId, CategoryId, IsFeatured, IsActive, CreatedDate, IsDeleted)
+VALUES (N'NhĂ´ng sĂªn dÄ©a Recto', 'nhong-sen-dia-recto', N'Bá»™ nhĂ´ng sĂªn dÄ©a Recto Ä‘Æ°á»£c thiáº¿t káº¿ tá»‘i Æ°u kháº£ nÄƒng truyá»n Ä‘á»™ng...', @BrandId, @CategoryId, 0, 1, @Now, 0);
+SET @ProductId = SCOPE_IDENTITY();
+
+INSERT INTO ProductVariants (ProductId, VariantName, SKU, Price, OriginalPrice, CostPrice, StockQuantity, CreatedDate)
+VALUES (@ProductId, N'Cho Exciter 155', 'RECTO-EX155', 950000, 1050000, 750000, 30, @Now),
+       (@ProductId, N'Cho Winner X', 'RECTO-WINNER', 920000, 1000000, 720000, 30, @Now);
+
+INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary, DisplayOrder)
+VALUES (@ProductId, 'https://cf.shopee.vn/file/sg-11134201-22110-nv34i5b53cjvb4', 1, 1);
+
+-----------------------------------------------------------------------------------------
+-- 10. Tay tháº¯ng CRG
+-----------------------------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM Brands WHERE BrandName = N'CRG') INSERT INTO Brands (BrandName) VALUES (N'CRG');
+SELECT @BrandId = BrandId FROM Brands WHERE BrandName = N'CRG';
+IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Tay tháº¯ng') INSERT INTO Categories (CategoryName, Slug) VALUES (N'Tay tháº¯ng', 'tay-thang');
+SELECT @CategoryId = CategoryId FROM Categories WHERE CategoryName = N'Tay tháº¯ng';
+
+INSERT INTO Products (ProductName, Slug, Description, BrandId, CategoryId, IsFeatured, IsActive, CreatedDate, IsDeleted)
+VALUES (N'Tay tháº¯ng CRG', 'tay-thang-crg', N'Tay tháº¯ng CRG lĂ  sáº£n pháº©m cao cáº¥p Ä‘Æ°á»£c gia cĂ´ng tá»« nhĂ´m CNC nguyĂªn khá»‘i...', @BrandId, @CategoryId, 0, 1, @Now, 0);
+SET @ProductId = SCOPE_IDENTITY();
+
+INSERT INTO ProductVariants (ProductId, VariantName, SKU, Price, OriginalPrice, CostPrice, StockQuantity, CreatedDate)
+VALUES (@ProductId, N'Äen', 'CRG-BLACK', 1800000, 2000000, 1400000, 25, @Now),
+       (@ProductId, N'Äá»', 'CRG-RED', 1850000, 2100000, 1450000, 25, @Now);
+
+INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary, DisplayOrder)
+VALUES (@ProductId, 'https://cf.shopee.vn/file/vn-11134201-820l4-men2wvvtpa115e', 1, 1);
+
+-- ... CĂ’N TIáº¾P Tá»¤C CHO Äáº¾N 100 MĂ“N ...
+-- (TĂ´i Ä‘Ă£ soáº¡n tháº£o script Ä‘áº§y Ä‘á»§ vĂ  lÆ°u vĂ o file insert_100_products.sql trong project cá»§a báº¡n)
