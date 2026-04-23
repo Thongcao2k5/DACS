@@ -156,24 +156,28 @@ namespace MotoShop.Business.Services
             return _mapper.Map<IEnumerable<ProductDto>>(related);
         }
 
-        public async Task<IEnumerable<Promotion>> GetVouchersForProductAsync(int productId)
+        public async Task<IEnumerable<CouponDto>> GetVouchersForProductAsync(int productId)
         {
-            return await _uow.Repository<Promotion>().Find(p => p.IsActive 
-                && p.StartDate <= DateTime.Now && p.EndDate >= DateTime.Now
-                && p.PromotionProducts.Any(pp => pp.ProductId == productId))
+            // Lấy các mã giảm giá còn hạn và còn lượt dùng
+            var coupons = await _uow.Repository<Coupon>().Find(c => c.IsActive 
+                && c.ExpiryDate >= DateTime.Now 
+                && (c.UsageLimit == 0 || c.UsedCount < c.UsageLimit))
+                .OrderByDescending(c => c.DiscountValue)
                 .Take(3)
                 .ToListAsync();
+
+            return _mapper.Map<IEnumerable<CouponDto>>(coupons);
         }
 
         public async Task<bool> CanUserReviewProductAsync(string userId, int productId)
         {
             if (string.IsNullOrEmpty(userId)) return false;
 
-            // Kiểm tra xem user đã mua bất kỳ biến thể nào của sản phẩm này chưa
+            // Kiểm tra cả hai trạng thái "Completed" và "DaHoanThanh" cho chắc chắn
             return await _uow.Repository<OrderItem>().Find(oi => 
                 oi.Order.Customer.UserId == userId && 
                 oi.ProductVariant.ProductId == productId &&
-                oi.Order.Status == "Completed")
+                (oi.Order.Status == "Completed" || oi.Order.Status == "DaHoanThanh"))
                 .AnyAsync();
         }
     }

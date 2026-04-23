@@ -102,6 +102,10 @@
                                 <th>Đơn giá</th>
                                 <th>Số lượng</th>
                                 <th class="text-end">Thành tiền</th>
+                                @if (Model.Status == "Completed" || Model.Status == "DaHoanThanh")
+                                {
+                                    <th class="text-center">Hành động</th>
+                                }
                             </tr>
                         </thead>
                         <tbody>
@@ -120,6 +124,15 @@
                                     <td>@item.Price.ToString("N0")đ</td>
                                     <td>@item.Quantity.ToString("D2")</td>
                                     <td class="text-end fw-bold">@((item.Price * item.Quantity).ToString("N0"))đ</td>
+                                    @if (Model.Status == "Completed" || Model.Status == "DaHoanThanh")
+                                    {
+                                        <td class="text-center">
+                                            <button onclick="openReviewModal(@item.ProductVariant?.ProductId, @item.ProductVariantId, '@item.ProductVariant?.Product?.ProductName', '@item.ProductVariant?.VariantName')" 
+                                                    class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                                                Đánh giá
+                                            </button>
+                                        </td>
+                                    }
                                 </tr>
                             }
                         </tbody>
@@ -195,9 +208,115 @@
     </div>
 </main>
 
+<!-- REVIEW MODAL -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Đánh giá sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="reviewForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="productId" id="reviewProductId">
+                    <input type="hidden" name="variantId" id="reviewVariantId">
+                    
+                    <div class="mb-3 text-center">
+                        <p class="mb-1 fw-bold" id="reviewProductName"></p>
+                        <p class="text-muted small" id="reviewVariantName"></p>
+                    </div>
+
+                    <div class="mb-4 text-center">
+                        <label class="form-label d-block fw-bold mb-2">Chất lượng sản phẩm</label>
+                        <div class="star-rating fs-2 text-warning">
+                            <i class='bx bx-star rating-star' data-rating="1"></i>
+                            <i class='bx bx-star rating-star' data-rating="2"></i>
+                            <i class='bx bx-star rating-star' data-rating="3"></i>
+                            <i class='bx bx-star rating-star' data-rating="4"></i>
+                            <i class='bx bx-star rating-star' data-rating="5"></i>
+                        </div>
+                        <input type="hidden" name="rating" id="reviewRating" value="5">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Bình luận của bạn</label>
+                        <textarea name="comment" class="form-control rounded-3" rows="4" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-danger w-100 rounded-pill py-2 fw-bold">GỬI ĐÁNH GIÁ</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .rating-star { cursor: pointer; transition: 0.1s; }
+        .rating-star:hover { transform: scale(1.1); }
+        .bxs-star { color: #ffc107; }
+    </style>
+}
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        const reviewModal = new bootstrap.Modal(document.getElementById('reviewModal'));
+        
+        function openReviewModal(pId, vId, pName, vName) {
+            document.getElementById('reviewProductId').value = pId;
+            document.getElementById('reviewVariantId').value = vId;
+            document.getElementById('reviewProductName').innerText = pName;
+            document.getElementById('reviewVariantName').innerText = 'Phân loại: ' + vName;
+            reviewModal.show();
+        }
+
+        // Star Rating Logic
+        document.querySelectorAll('.rating-star').forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.dataset.rating;
+                document.getElementById('reviewRating').value = rating;
+                updateStars(rating);
+            });
+        });
+
+        function updateStars(rating) {
+            document.querySelectorAll('.rating-star').forEach(star => {
+                if (star.dataset.rating <= rating) {
+                    star.classList.replace('bx-star', 'bxs-star');
+                } else {
+                    star.classList.replace('bxs-star', 'bx-star');
+                }
+            });
+        }
+
+        document.getElementById('reviewForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true; btn.innerText = 'ĐANG GỬI...';
+
+            try {
+                const response = await fetch('/Review/SubmitReview', {
+                    method: 'POST',
+                    body: new FormData(this)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    Swal.fire('Thành công', data.message, 'success').then(() => {
+                        reviewModal.hide();
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Lỗi', data.message, 'error');
+                    btn.disabled = false; btn.innerText = 'GỬI ĐÁNH GIÁ';
+                }
+            } catch (e) {
+                Swal.fire('Lỗi', 'Không thể kết nối đến máy chủ.', 'error');
+                btn.disabled = false; btn.innerText = 'GỬI ĐÁNH GIÁ';
+            }
+        };
+
         async function cancelOrder(orderId) {
             const result = await Swal.fire({
                 title: 'Hủy đơn hàng?',

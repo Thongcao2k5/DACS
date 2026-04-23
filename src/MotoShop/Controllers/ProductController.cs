@@ -98,13 +98,13 @@ namespace MotoShop.Controllers
 
             var relatedProducts = await _productService.GetRelatedProductsAsync(
                 product.ProductId, 
-                0, // CategoryId mapping if needed, using 0 for now as placeholder
-                0, // BrandId mapping placeholder
+                product.CategoryId ?? 0, 
+                product.BrandId ?? 0, 
                 8);
 
             var vouchers = await _productService.GetVouchersForProductAsync(product.ProductId);
             
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userId = _userManager.GetUserId(User);
             var canReview = !string.IsNullOrEmpty(userId) && await _productService.CanUserReviewProductAsync(userId, product.ProductId);
 
             ViewBag.RelatedProducts = relatedProducts;

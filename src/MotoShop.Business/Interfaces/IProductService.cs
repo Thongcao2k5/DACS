@@ -24,7 +24,7 @@ namespace MotoShop.Business.Interfaces
         Task<IEnumerable<ProductDto>> GetPromotionProductsAsync(int count);
         Task<ProductDto> GetProductBySlugAsync(string slug);
         Task<IEnumerable<ProductDto>> GetRelatedProductsAsync(int productId, int? categoryId, int? brandId, int count);
-        Task<IEnumerable<Promotion>> GetVouchersForProductAsync(int productId);
+        Task<IEnumerable<CouponDto>> GetVouchersForProductAsync(int productId);
         Task<bool> CanUserReviewProductAsync(string userId, int productId);
     }
 }

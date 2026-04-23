@@ -68,6 +68,52 @@ namespace MotoShop.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> Toggle([FromBody] WishlistRequest req)
+        {
+            if (req == null) return Json(new { success = false });
+            int productId = req.ProductId;
+
+            var userId = _userManager.GetUserId(User);
+            if (userId != null)
+            {
+                var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
+                if (customer != null)
+                {
+                    var item = await _context.WishlistsNew.FirstOrDefaultAsync(wi => wi.UserId == customer.CustomerId && wi.ProductId == productId);
+                    bool added = false;
+                    if (item == null)
+                    {
+                        _context.WishlistsNew.Add(new WishlistNew { UserId = customer.CustomerId, ProductId = productId, CreatedAt = DateTime.Now });
+                        added = true;
+                    }
+                    else
+                    {
+                        _context.WishlistsNew.Remove(item);
+                        added = false;
+                    }
+                    await _context.SaveChangesAsync();
+                    return Json(new { success = true, added = added, message = added ? "Đã thêm vào yêu thích" : "Đã xóa khỏi yêu thích" });
+                }
+            }
+
+            // GUEST TOGGLE
+            var guestItems = GetGuestWishlistItems();
+            bool guestAdded = false;
+            if (guestItems.Contains(productId))
+            {
+                guestItems.Remove(productId);
+                guestAdded = false;
+            }
+            else
+            {
+                guestItems.Add(productId);
+                guestAdded = true;
+            }
+            SaveGuestWishlistItems(guestItems);
+            return Json(new { success = true, added = guestAdded, message = guestAdded ? "Đã thêm vào yêu thích" : "Đã xóa khỏi yêu thích" });
+        }
+
+        [HttpPost]
         public async Task<IActionResult> Add([FromBody] int productId)
         {
             var userId = _userManager.GetUserId(User);

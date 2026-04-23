@@ -65,7 +65,7 @@
                     </button>
                 </div>
 
-                <div class="price-section mb-4 p-3 bg-light rounded-3">
+                <div class="price-section mb-4 p-3 bg-light rounded-4 position-relative">
                     <div class="d-flex align-items-center gap-3">
                         <span id="display-price" class="text-danger display-5 fw-bold">@Model.MinPrice.ToString("N0")₫</span>
                         @if (Model.MinOriginalPrice.HasValue && Model.MinOriginalPrice > Model.MinPrice)
@@ -74,7 +74,24 @@
                             <span class="badge bg-danger rounded-pill">-@Math.Round((1 - (Model.MinPrice / Model.MinOriginalPrice.Value)) * 100)%</span>
                         }
                     </div>
+                    <div id="stock-warning" class="mt-2 text-danger small fw-bold" style="display:none;"><i class='bx bx-error-circle'></i> Chỉ còn <span id="stock-count">0</span> sản phẩm</div>
                 </div>
+
+                <!-- Vouchers Section -->
+                @if (ViewBag.Vouchers != null && ((IEnumerable<MotoShop.Business.DTOs.CouponDto>)ViewBag.Vouchers).Any())
+                {
+                    <div class="vouchers-box mb-4 p-3 border border-danger border-opacity-25 rounded-4 bg-white">
+                        <label class="form-label small fw-bold text-danger text-uppercase mb-2"><i class='bx bxs-coupon'></i> Voucher từ shop</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var v in (IEnumerable<MotoShop.Business.DTOs.CouponDto>)ViewBag.Vouchers)
+                            {
+                                <div class="voucher-tag px-3 py-1 border border-danger rounded-3 text-danger small bg-danger bg-opacity-10" title="Đơn tối thiểu @v.MinOrderValue?.ToString("N0")₫">
+                                    Mã: <strong>@v.Code</strong> - Giảm @(v.DiscountType == "Percentage" ? v.DiscountValue + "%" : v.DiscountValue.ToString("N0") + "₫")
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
 
                 <!-- Variant Options -->
                 <div class="variant-selection mb-4">
@@ -127,6 +144,15 @@
                     </div>
                 </div>
 
+                <div class="share-links mt-4">
+                    <span class="small fw-bold text-muted text-uppercase me-3">Chia sẻ:</span>
+                    <div class="d-inline-flex gap-2">
+                        <a href="https://www.facebook.com/sharer/sharer.php?u=@(Context.Request.Scheme + "://" + Context.Request.Host + Context.Request.Path)" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle"><i class='bx bxl-facebook'></i></a>
+                        <a href="https://zalo.me/share?url=@(Context.Request.Scheme + "://" + Context.Request.Host + Context.Request.Path)" target="_blank" class="btn btn-sm btn-outline-info rounded-circle"><i class='bx bxl-zalo'></i></a>
+                        <button onclick="copyToClipboard()" class="btn btn-sm btn-outline-secondary rounded-circle"><i class='bx bx-link'></i></button>
+                    </div>
+                </div>
+
                 <div class="trust-badges mt-5 pt-4 border-top">
                     <div class="row row-cols-3 text-center g-2">
                         <div class="col">
@@ -169,7 +195,68 @@
                 </table>
             </div>
             <div class="tab-pane fade" id="reviews">
-                <p class="text-muted text-center py-5">Sản phẩm này chưa có đánh giá nào.</p>
+                <div class="row">
+                    <div class="col-lg-5 border-end">
+                        <div class="review-stats-summary text-center py-4">
+                            <h2 class="display-3 fw-bold text-dark mb-0">@(Model.Reviews.Any() ? Math.Round(Model.Reviews.Average(r => r.Rating), 1).ToString() : "0")</h2>
+                            <div class="text-warning mb-2">
+                                @{ var avg = Model.Reviews.Any() ? Model.Reviews.Average(r => r) : 0; }
+                                @for(int i=1; i<=5; i++) {
+                                    <i class="bi bi-star@(i <= avg ? "-fill" : (i - 0.5 <= avg ? "-half" : ""))"></i>
+                                }
+                            </div>
+                            <p class="text-muted">(@Model.Reviews.Count đánh giá)</p>
+                        </div>
+                        
+                        @if (ViewBag.CanReview == true)
+                        {
+                            <div class="review-form-container p-4 bg-light rounded-4 mt-3">
+                                <h6 class="fw-bold mb-3">ĐÁNH GIÁ CỦA BẠN</h6>
+                                <form id="productReviewForm">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productId" value="@Model.ProductId">
+                                    <div class="star-rating-input mb-3 fs-3 text-warning">
+                                        <i class='bx bx-star star-item' data-value="1"></i>
+                                        <i class='bx bx-star star-item' data-value="2"></i>
+                                        <i class='bx bx-star star-item' data-value="3"></i>
+                                        <i class='bx bx-star star-item' data-value="4"></i>
+                                        <i class='bx bx-star star-item' data-value="5"></i>
+                                        <input type="hidden" name="rating" id="selectedRating" value="5">
+                                    </div>
+                                    <textarea name="comment" class="form-control rounded-3 mb-3" rows="3" placeholder="Sản phẩm dùng tốt không bạn?"></textarea>
+                                    <button type="submit" class="btn btn-danger w-100 rounded-pill fw-bold">GỬI ĐÁNH GIÁ</button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                    <div class="col-lg-7">
+                        <div class="reviews-list p-lg-4">
+                            @if (Model.Reviews != null && Model.Reviews.Any())
+                            {
+                                foreach (var review in Model.Reviews.OrderByDescending(r => r.CreatedDate))
+                                {
+                                    <div class="review-item-box pb-4 mb-4 border-bottom">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <div class="fw-bold">@review.CustomerName</div>
+                                            <div class="small text-muted">@review.CreatedDate.ToString("dd/MM/yyyy")</div>
+                                        </div>
+                                        <div class="text-warning small mb-2">
+                                            @for(int i=1; i<=5; i++) { <i class="bi bi-star@(i <= review.Rating ? "-fill" : "")"></i> }
+                                        </div>
+                                        <p class="mb-0 text-secondary">@review.Comment</p>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-center py-5">
+                                    <i class='bx bx-message-dots fs-1 text-muted opacity-25'></i>
+                                    <p class="text-muted mt-2">Chưa có đánh giá nào cho sản phẩm này.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -209,6 +296,65 @@
         const variants = @Html.Raw(Json.Serialize(Model.Variants));
         let selectedAttributes = {};
         let currentVariant = variants[0];
+
+        // 1. Copy Link
+        function copyToClipboard() {
+            navigator.clipboard.writeText(window.location.href);
+            Swal.fire({ title: 'Đã sao chép!', text: 'Liên kết sản phẩm đã được lưu vào bộ nhớ tạm.', icon: 'success', timer: 1500, showConfirmButton: false });
+        }
+
+        // 2. Star Rating Input
+        document.querySelectorAll('.star-item').forEach(star => {
+            star.addEventListener('click', function() {
+                const val = this.dataset.value;
+                document.getElementById('selectedRating').value = val;
+                document.querySelectorAll('.star-item').forEach(s => {
+                    s.classList.toggle('bxs-star', s.dataset.value <= val);
+                    s.classList.toggle('bx-star', s.dataset.value > val);
+                });
+            });
+        });
+
+        // 3. Submit Review
+        const reviewForm = document.getElementById('productReviewForm');
+        if(reviewForm) {
+            reviewForm.onsubmit = async function(e) {
+                e.preventDefault();
+                const btn = this.querySelector('button');
+                btn.disabled = true;
+                try {
+                    const response = await fetch('/Review/SubmitReview', { method: 'POST', body: new FormData(this) });
+                    const result = await response.json();
+                    if(result.success) {
+                        Swal.fire('Thành công', result.message, 'success').then(() => location.reload());
+                    } else {
+                        Swal.fire('Lỗi', result.message, 'error');
+                        btn.disabled = false;
+                    }
+                } catch(e) { btn.disabled = false; }
+            };
+        }
+
+        // 4. Wishlist Toggle
+        async function addToWishlist(productId) {
+            try {
+                const response = await fetch('/Wishlist/Toggle', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productId: productId }) 
+                });
+                const result = await response.json();
+                if(result.success) {
+                    const btn = document.getElementById('btn-wishlist');
+                    btn.classList.toggle('btn-danger', result.added);
+                    btn.classList.toggle('btn-outline-secondary', !result.added);
+                    Swal.fire({ title: 'Wishlist', text: result.message, icon: 'success', timer: 1500, showConfirmButton: false });
+                    if (typeof updateWishlistBadge === "function") updateWishlistBadge();
+                } else {
+                    location.href = '/Account/Login?returnUrl=' + encodeURIComponent(location.pathname + location.search);
+                }
+            } catch(e) {}
+        }
 
         function switchImage(url, element) {
             document.getElementById('main-product-image').src = url;
