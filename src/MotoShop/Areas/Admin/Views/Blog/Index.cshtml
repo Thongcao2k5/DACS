@@ -18,7 +18,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Danh mục</label>
-                    <select name="categoryId" class="form-select" asp-items="ViewBag.Categories">
+                    <select name="categoryId" class="form-select" asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name"))">
                         <option value="">-- Tất cả danh mục --</option>
                     </select>
                 </div>

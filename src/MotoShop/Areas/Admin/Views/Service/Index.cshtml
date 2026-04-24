@@ -44,23 +44,15 @@
             </div>
         </div>
         <div class="col-lg-2 col-md-3">
+            <select name="categoryId" class="form-select bg-light border-0" asp-items="@(new SelectList(ViewBag.Categories, "CategoryId", "CategoryName"))">
+                <option value="">Tất cả danh mục</option>
+            </select>
+        </div>
+        <div class="col-lg-2 col-md-3">
             <select name="status" class="form-select bg-light border-0">
                 <option value="">Trạng thái</option>
                 <option value="Active" selected="@(ViewBag.Status == "Active")">Đang cung cấp</option>
                 <option value="Inactive" selected="@(ViewBag.Status == "Inactive")">Tạm ngừng</option>
-            </select>
-        </div>
-        <div class="col-lg-2 col-md-3">
-            <select class="form-select bg-light border-0">
-                <option value="">Phân loại</option>
-                <option>Bảo dưỡng</option>
-                <option>Sửa chữa</option>
-            </select>
-        </div>
-        <div class="col-lg-2 col-md-6">
-            <select class="form-select bg-light border-0">
-                <option>Mới nhất</option>
-                <option>Giá giảm dần</option>
             </select>
         </div>
         <div class="col-lg-2 col-md-6">
@@ -78,8 +70,9 @@
                 <tr>
                     <th class="ps-4" style="width: 80px">Ảnh</th>
                     <th>Tên dịch vụ</th>
+                    <th>Danh mục</th>
                     <th>Giá tiền</th>
-                    <th>Mô tả</th>
+                    <th>Thời gian / BH</th>
                     <th>Trạng thái</th>
                     <th class="text-end pe-4">Thao tác</th>
                 </tr>
@@ -93,8 +86,12 @@
                         <td>
                             <span class="service-name-admin">@item.ServiceName</span>
                         </td>
+                        <td><span class="badge bg-label-info">@(item.ServiceCategory?.CategoryName ?? "Chưa phân loại")</span></td>
                         <td><span class="fw-bold text-danger">@item.Price.ToString("N0")đ</span></td>
-                        <td><div class="small text-muted text-truncate" style="max-width: 250px;">@item.Description</div></td>
+                        <td>
+                            <div class="small fw-bold text-dark">@item.Duration phút</div>
+                            <div class="small text-muted">BH: @item.WarrantyDays ngày</div>
+                        </td>
                         <td>
                             @if (item.IsActive) {
                                 <span class="badge bg-label-success rounded-pill px-3">Hoạt động</span>
@@ -119,7 +116,7 @@
 
 <!-- Modal Thêm/Sửa (Y hệt Product Modal Style) -->
 <div class="modal fade" id="serviceModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <form id="serviceForm" enctype="multipart/form-data">
                 <input type="hidden" name="ServiceId" id="sId">
@@ -128,28 +125,52 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="text-center mb-4">
-                        <img id="imgPreview" src="/assets/img/elements/18.jpg" class="rounded-4 shadow-sm mb-3" style="width: 120px; height: 120px; object-fit: cover; border: 1px solid #eee;">
-                        <div>
-                            <label for="imageFile" class="btn btn-sm btn-outline-primary rounded-pill px-3">Chọn ảnh đại diện</label>
-                            <input type="file" id="imageFile" name="imageFile" class="d-none" onchange="previewImage(this)">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center mb-4">
+                                <img id="imgPreview" src="/assets/img/elements/18.jpg" class="rounded-4 shadow-sm mb-3 w-100" style="aspect-ratio: 1/1; object-fit: cover; border: 1px solid #eee;">
+                                <div>
+                                    <label for="imageFile" class="btn btn-sm btn-outline-primary rounded-pill px-3">Chọn ảnh đại diện</label>
+                                    <input type="file" id="imageFile" name="imageFile" class="d-none" onchange="previewImage(this)">
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small text-muted">Tên dịch vụ *</label>
-                        <input type="text" name="ServiceName" id="sName" class="form-control custom-input" placeholder="Nhập tên dịch vụ" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small text-muted">Giá dự kiến (đ) *</label>
-                        <input type="number" name="Price" id="sPrice" class="form-control custom-input" placeholder="0" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small text-muted">Mô tả ngắn</label>
-                        <textarea name="Description" id="sDesc" class="form-control custom-input" rows="3" placeholder="Nhập mô tả chi tiết..."></textarea>
-                    </div>
-                    <div class="form-check form-switch mt-3">
-                        <input class="form-check-input" type="checkbox" name="IsActive" id="sActive" value="true" checked>
-                        <label class="form-check-label fw-bold">Đang kinh doanh</label>
+                        <div class="col-md-8">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label fw-bold small text-muted text-uppercase">Tên dịch vụ *</label>
+                                    <input type="text" name="ServiceName" id="sName" class="form-control custom-input" placeholder="Nhập tên dịch vụ" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-muted text-uppercase">Danh mục dịch vụ *</label>
+                                    <select name="CategoryId" id="sCategory" class="form-select custom-input" required asp-items="@(new SelectList(ViewBag.Categories, "CategoryId", "CategoryName"))">
+                                        <option value="">-- Chọn danh mục --</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-muted text-uppercase">Giá dự kiến (VNĐ) *</label>
+                                    <input type="number" name="Price" id="sPrice" class="form-control custom-input" placeholder="0" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-muted text-uppercase">Thời gian thực hiện (Phút)</label>
+                                    <input type="number" name="Duration" id="sDuration" class="form-control custom-input" value="30">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-muted text-uppercase">Bảo hành (Ngày)</label>
+                                    <input type="number" name="WarrantyDays" id="sWarranty" class="form-control custom-input" value="30">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 mt-3">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Mô tả chi tiết</label>
+                            <textarea name="Description" id="sDesc" class="form-control custom-input" rows="3" placeholder="Nhập mô tả chi tiết..."></textarea>
+                        </div>
+                        <div class="col-12 mt-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="IsActive" id="sActive" value="true" checked>
+                                <label class="form-check-label fw-bold">Trạng thái: Đang kinh doanh</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
@@ -170,6 +191,7 @@
             $('#sId').val(0);
             $('#imgPreview').attr('src', '/assets/img/elements/18.jpg');
             $('#modalTitle').text('Thêm dịch vụ mới');
+            $('#sActive').prop('checked', true);
             sModal.show();
         }
 
@@ -178,7 +200,10 @@
             if (!data) return;
             $('#sId').val(data.ServiceId || data.serviceId);
             $('#sName').val(data.ServiceName || data.serviceName);
+            $('#sCategory').val(data.CategoryId || data.categoryId);
             $('#sPrice').val(data.Price || data.price);
+            $('#sDuration').val(data.Duration || data.duration);
+            $('#sWarranty').val(data.WarrantyDays || data.warrantyDays);
             $('#sDesc').val(data.Description || data.description);
             $('#sActive').prop('checked', data.IsActive || data.isActive);
             if (data.ImageUrl || data.imageUrl) $('#imgPreview').attr('src', data.ImageUrl || data.imageUrl);

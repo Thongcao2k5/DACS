@@ -75,34 +75,35 @@
             </div>
             <div class="col-lg-7">
                 <div class="contact-form-wrapper">
-                    <form id="contactForm" onsubmit="handleContactSubmit(event)">
+                    <form id="contactForm" method="post">
+                        @Html.AntiForgeryToken()
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label-custom">Họ và tên *</label>
-                                <input type="text" class="form-control form-control-custom" placeholder="Nhập tên của bạn" required>
+                                <input type="text" name="fullName" class="form-control form-control-custom" placeholder="Nhập tên của bạn" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label-custom">Email *</label>
-                                <input type="email" class="form-control form-control-custom" placeholder="email@example.com" required>
+                                <input type="email" name="email" class="form-control form-control-custom" placeholder="email@example.com" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label-custom">Số điện thoại</label>
-                                <input type="tel" class="form-control form-control-custom" placeholder="Nhập SĐT (không bắt buộc)">
+                                <input type="tel" name="phone" class="form-control form-control-custom" placeholder="Nhập SĐT (không bắt buộc)">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label-custom">Tiêu đề</label>
-                                <input type="text" class="form-control form-control-custom" placeholder="Bạn cần hỗ trợ về...">
+                                <input type="text" name="subject" class="form-control form-control-custom" placeholder="Bạn cần hỗ trợ về...">
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label-custom">Nội dung tin nhắn *</label>
-                                <textarea class="form-control form-control-custom h-auto" style="height: 120px; padding-top: 15px;" placeholder="Viết nội dung tin nhắn của bạn tại đây..." required></textarea>
+                                <textarea name="message" class="form-control form-control-custom h-auto" style="height: 120px; padding-top: 15px;" placeholder="Viết nội dung tin nhắn của bạn tại đây..." required></textarea>
                             </div>
                             <div class="col-md-12 pt-2">
-                                <button type="submit" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold w-100">GỬI TIN NHẮN</button>
+                                <button type="submit" id="btnSubmitContact" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold w-100">GỬI TIN NHẮN</button>
                             </div>
                         </div>
                         <div id="contactSuccess" class="alert alert-success d-none mt-3 small py-2 text-center">
-                            <i class='bx bx-check-circle me-1'></i> Tin nhắn của bạn đã được gửi thành công.
+                            <i class='bx bx-check-circle me-1'></i> <span id="contactMsg">Tin nhắn của bạn đã được gửi thành công.</span>
                         </div>
                     </form>
                 </div>
@@ -111,30 +112,58 @@
     </section>
 
     <!-- 5. GOOGLE MAP -->
-    <section class="p-0">
-        <div class="map-container">
-            <!-- Placeholder for Google Map Embed -->
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.669726937899!2d106.6648812758382!3d10.759917059496412!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f1b7c3ed289%3A0xf042663641743c74!2zMTIzIMSQxrDhu51uZyBBQkMsIFF14bqtbiAxLCBUUC4gSOG7kyBDaMOtIE1pbmg!5e0!3m2!1svi!2s!4v1710400000000!5m2!1svi!2s" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    <section class="p-0 position-relative">
+        <div class="map-container" style="height: 500px;">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.669726937899!2d106.6648812758382!3d10.759917059496412!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f1b7c3ed289%3A0xf042663641743c74!2zMTIzIMSQxrDhu51uZyBBQkMsIFF14bqtbiAxLCBUUC4gSOG7kyBDaMOtIE1pbmg!5e0!3m2!1svi!2s!4v1710400000000!5m2!1svi!2s" 
+                    width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        <!-- Chỉ đường Floating Button -->
+        <div class="position-absolute bottom-0 start-50 translate-middle-x mb-4 shadow-lg" style="z-index: 10;">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=10.759917,106.667456" target="_blank" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold border-white border-2">
+                <i class='bx bx-directions me-2 fs-4'></i> CHỈ ĐƯỜNG TRÊN GOOGLE MAPS
+            </a>
         </div>
     </section>
 </main>
 
 @section Scripts {
     <script>
-        function handleContactSubmit(e) {
+        document.getElementById('contactForm').onsubmit = async function(e) {
             e.preventDefault();
+            const btn = document.getElementById('btnSubmitContact');
             const successMsg = document.getElementById('contactSuccess');
-            const btn = e.target.querySelector('button');
+            const msgText = document.getElementById('contactMsg');
             
             btn.disabled = true;
             btn.innerText = 'ĐANG GỬI...';
+
+            const formData = new FormData(this);
             
-            setTimeout(() => {
-                successMsg.classList.remove('d-none');
-                btn.innerText = 'GỬI TIN NHẮN';
+            try {
+                const response = await fetch('/Info/Contact', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    successMsg.classList.remove('d-none', 'alert-danger');
+                    successMsg.classList.add('alert-success');
+                    msgText.innerText = result.message;
+                    this.reset();
+                } else {
+                    successMsg.classList.remove('d-none', 'alert-success');
+                    successMsg.classList.add('alert-danger');
+                    msgText.innerText = result.message;
+                }
+            } catch (err) {
+                successMsg.classList.remove('d-none', 'alert-success');
+                successMsg.classList.add('alert-danger');
+                msgText.innerText = "Có lỗi xảy ra kết nối. Vui lòng thử lại.";
+            } finally {
                 btn.disabled = false;
-                e.target.reset();
-            }, 1500);
-        }
+                btn.innerText = 'GỬI TIN NHẮN';
+            }
+        };
     </script>
 }

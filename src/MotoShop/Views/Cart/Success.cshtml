@@ -20,7 +20,7 @@
                     <div class="info-grid">
                         <div>
                             <span class="info-label">Mã đơn hàng</span>
-                            <span class="info-value">#MS-@Model.OrderId.ToString("D6")</span>
+                            <span class="info-value">#@(Model.OrderCode ?? Model.OrderId.ToString("D6"))</span>
                         </div>
                         <div>
                             <span class="info-label">Ngày đặt hàng</span>

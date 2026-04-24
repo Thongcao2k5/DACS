@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Hosting;
 namespace MotoShop.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(Roles = "Admin")]
     public class ServiceController : Controller
     {
         private readonly MotoShopDbContext _context;
@@ -22,12 +24,15 @@ namespace MotoShop.Areas.Admin.Controllers
             _env = env;
         }
 
-        public async Task<IActionResult> Index(string? searchTerm, string? status, int page = 1, int pageSize = 10)
+        public async Task<IActionResult> Index(string? searchTerm, int? categoryId, string? status, int page = 1, int pageSize = 10)
         {
             var query = _context.Services.AsNoTracking().AsQueryable();
 
             if (!string.IsNullOrEmpty(searchTerm))
                 query = query.Where(s => s.ServiceName.Contains(searchTerm));
+
+            if (categoryId.HasValue)
+                query = query.Where(s => s.CategoryId == categoryId.Value);
 
             if (!string.IsNullOrEmpty(status))
             {
@@ -42,11 +47,9 @@ namespace MotoShop.Areas.Admin.Controllers
                 .Take(pageSize)
                 .ToListAsync();
 
+            ViewBag.Categories = await _context.ServiceCategories.ToListAsync();
             ViewBag.SearchTerm = searchTerm;
-            ViewBag.Status = status;
             ViewBag.CurrentPage = page;
-            ViewBag.PageSize = pageSize;
-            ViewBag.TotalItems = totalItems;
             ViewBag.TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
 
             return View(services);
@@ -60,19 +63,9 @@ namespace MotoShop.Areas.Admin.Controllers
             {
                 if (imageFile != null)
                 {
-                    string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads/services");
-                    if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-                    
-                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await imageFile.CopyToAsync(fileStream);
-                    }
-                    service.ImageUrl = "/uploads/services/" + uniqueFileName;
+                    service.ImageUrl = await UploadFile(imageFile, "services");
                 }
                 
-                // Tự động tạo Slug nếu chưa có
                 if (string.IsNullOrEmpty(service.Slug)) 
                     service.Slug = service.ServiceName.ToLower().Replace(" ", "-");
 
@@ -85,26 +78,33 @@ namespace MotoShop.Areas.Admin.Controllers
 
                 existing.ServiceName = service.ServiceName;
                 existing.Price = service.Price;
+                existing.Duration = service.Duration;
+                existing.WarrantyDays = service.WarrantyDays;
+                existing.CategoryId = service.CategoryId;
                 existing.Description = service.Description;
                 existing.IsActive = IsActive;
 
                 if (imageFile != null)
                 {
-                    string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads/services");
-                    if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-                    
-                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await imageFile.CopyToAsync(fileStream);
-                    }
-                    existing.ImageUrl = "/uploads/services/" + uniqueFileName;
+                    existing.ImageUrl = await UploadFile(imageFile, "services");
                 }
             }
 
             await _context.SaveChangesAsync();
             return Json(new { success = true, message = "Lưu dịch vụ thành công" });
+        }
+
+        private async Task<string> UploadFile(IFormFile file, string folder)
+        {
+            string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads/" + folder);
+            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+            string uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
+            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(fileStream);
+            }
+            return "/uploads/" + folder + "/" + uniqueFileName;
         }
 
         [HttpPost]

@@ -91,17 +91,21 @@ using (var scope = app.Services.CreateScope())
     {
         Log.Information("Updating Database Schema...");
         
-        // GIAI ĐOẠN 1: TẠO BẢNG VÀ CỘT
+        // GIAI ĐOẠN 1: TẠO BẢNG VÀ CỘT (Sử dụng lệnh riêng biệt để đảm bảo tuần tự)
         await context.Database.ExecuteSqlRawAsync(@"
             IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ServiceCategories')
-            CREATE TABLE ServiceCategories (
-                CategoryId INT IDENTITY PRIMARY KEY,
-                CategoryName NVARCHAR(100) NOT NULL,
-                Slug NVARCHAR(255),
-                Icon NVARCHAR(50),
-                IsActive BIT DEFAULT 1
-            );
+            BEGIN
+                CREATE TABLE ServiceCategories (
+                    CategoryId INT IDENTITY PRIMARY KEY,
+                    CategoryName NVARCHAR(100) NOT NULL,
+                    Slug NVARCHAR(255),
+                    Icon NVARCHAR(50),
+                    IsActive BIT DEFAULT 1
+                );
+            END
+        ");
 
+        await context.Database.ExecuteSqlRawAsync(@"
             IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Services') AND name = 'CategoryId')
                 ALTER TABLE Services ADD CategoryId INT NULL;
             IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Services') AND name = 'Slug')
@@ -137,9 +141,6 @@ using (var scope = app.Services.CreateScope())
             IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Blogs') AND name = 'IsPublished')
                 ALTER TABLE Blogs ADD IsPublished BIT DEFAULT 0;
             
-            -- Đảm bảo không có giá trị NULL cho cột IsPublished (Sửa lỗi SqlNullValueException)
-            UPDATE Blogs SET IsPublished = 0 WHERE IsPublished IS NULL;
-
             IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Blogs') AND name = 'MetaTitle')
                 ALTER TABLE Blogs ADD MetaTitle NVARCHAR(255) NULL;
             IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Blogs') AND name = 'MetaDescription')
@@ -147,9 +148,6 @@ using (var scope = app.Services.CreateScope())
 
             IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Banners') AND name = 'DisplayOrder')
                 ALTER TABLE Banners ADD DisplayOrder INT DEFAULT 0;
-            
-            -- Đảm bảo không có giá trị NULL cho cột DisplayOrder (Sửa lỗi SqlNullValueException)
-            UPDATE Banners SET DisplayOrder = 0 WHERE DisplayOrder IS NULL;
 
             IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ServiceBookings') AND name = 'DepositAmount')
                 ALTER TABLE ServiceBookings ADD DepositAmount DECIMAL(18,2) DEFAULT 0, DepositStatus NVARCHAR(50) DEFAULT 'Unpaid', TransferProof NVARCHAR(500) NULL, ConfirmedAt DATETIME NULL, ExpireAt DATETIME NULL, CancelReason NVARCHAR(500) NULL;
@@ -158,10 +156,16 @@ using (var scope = app.Services.CreateScope())
                 CREATE TABLE OrderStatusHistory (HistoryId INT IDENTITY PRIMARY KEY, OrderId INT NOT NULL, Status NVARCHAR(100) NOT NULL, ChangedDate DATETIME DEFAULT GETDATE(), Note NVARCHAR(MAX) NULL);
         ");
 
+        // Đồng bộ dữ liệu Blogs và Banners
+        await context.Database.ExecuteSqlRawAsync(@"
+            UPDATE Blogs SET IsPublished = 0 WHERE IsPublished IS NULL;
+            UPDATE Banners SET DisplayOrder = 0 WHERE DisplayOrder IS NULL;
+        ");
+
         // GIAI ĐOẠN 2: SEED DATA
         Log.Information("Seeding Data...");
         await context.Database.ExecuteSqlRawAsync(@"
-            IF NOT EXISTS (SELECT * FROM ServiceCategories)
+            IF EXISTS (SELECT * FROM sys.tables WHERE name = 'ServiceCategories') AND NOT EXISTS (SELECT * FROM ServiceCategories)
             BEGIN
                 INSERT INTO ServiceCategories (CategoryName, Slug, Icon) VALUES 
                 (N'Bảo dưỡng', 'bao-duong', 'bx-wrench'),
@@ -169,34 +173,44 @@ using (var scope = app.Services.CreateScope())
                 (N'Độ xe', 'do-xe', 'bx-tachometer'),
                 (N'Cứu hộ', 'cuu-ho', 'bx-unite'),
                 (N'Rửa xe', 'rua-xe', 'bx-water');
+            END
+        ");
 
+        await context.Database.ExecuteSqlRawAsync(@"
+            IF EXISTS (SELECT * FROM sys.tables WHERE name = 'Services')
+            BEGIN
                 DECLARE @catBaoDuong INT = (SELECT CategoryId FROM ServiceCategories WHERE Slug = 'bao-duong');
                 DECLARE @catPhuTung INT = (SELECT CategoryId FROM ServiceCategories WHERE Slug = 'phu-tung');
                 DECLARE @catDoXe INT = (SELECT CategoryId FROM ServiceCategories WHERE Slug = 'do-xe');
                 DECLARE @catCuuHo INT = (SELECT CategoryId FROM ServiceCategories WHERE Slug = 'cuu-ho');
                 DECLARE @catRuaXe INT = (SELECT CategoryId FROM ServiceCategories WHERE Slug = 'rua-xe');
 
-                DELETE FROM Services;
-                INSERT INTO Services (ServiceName, Price, Duration, Slug, CategoryId, Description, WarrantyDays, TotalBookings, IsActive) VALUES
-                (N'Thay nhớt động cơ', 120000, 30, 'thay-nhot-dong-co', @catBaoDuong, N'Thay nhớt động cơ giúp xe vận hành mượt mà hơn.', 30, 120, 1),
-                (N'Bảo dưỡng định kỳ', 350000, 90, 'bao-duong-dinh-ky', @catBaoDuong, N'Bao gồm kiểm tra phanh, nhớt, lọc gió, bugi và hệ thống điện.', 45, 85, 1),
-                (N'Kiểm tra phanh', 180000, 45, 'kiem-tra-phanh', @catBaoDuong, N'Kiểm tra bố thắng, dầu phanh và hiệu suất phanh.', 30, 50, 1),
-                (N'Thay lốp xe', 450000, 60, 'thay-lop-xe', @catPhuTung, N'Thay lốp mới và cân chỉnh áp suất tiêu chuẩn.', 60, 65, 1),
-                (N'Thay bugi', 200000, 30, 'thay-bugi', @catPhuTung, N'Giúp xe đề nổ tốt hơn và tiết kiệm nhiên liệu.', 30, 40, 1),
-                (N'Lắp đèn LED', 500000, 60, 'lap-den-led', @catPhuTung, N'Tăng độ sáng và tính thẩm mỹ cho xe.', 90, 32, 1),
-                (N'Độ pô xe', 1200000, 180, 'do-po-xe', @catDoXe, N'Tăng hiệu suất động cơ và âm thanh mạnh mẽ.', 90, 22, 1),
-                (N'Sơn tem xe', 900000, 240, 'son-tem-xe', @catDoXe, N'Tùy chỉnh phong cách xe theo sở thích.', 60, 18, 1),
-                (N'Cứu hộ xe chết máy', 250000, 60, 'cuu-ho-xe-chet-may', @catCuuHo, N'Hỗ trợ xe chết máy tại chỗ trong nội thành.', 7, 55, 1),
-                (N'Cứu hộ thủng lốp', 200000, 45, 'cuu-ho-thung-lop', @catCuuHo, N'Hỗ trợ khẩn cấp khi xe bị thủng lốp.', 7, 38, 1),
-                (N'Rửa xe cơ bản', 50000, 20, 'rua-xe-co-ban', @catRuaXe, N'Làm sạch thân xe và bánh xe.', 0, 150, 1),
-                (N'Rửa xe cao cấp', 150000, 45, 'rua-xe-cao-cap', @catRuaXe, N'Bao gồm đánh bóng và vệ sinh chuyên sâu.', 0, 95, 1);
-            END
+                IF @catBaoDuong IS NOT NULL AND NOT EXISTS (SELECT * FROM Services WHERE CategoryId IS NOT NULL)
+                BEGIN
+                    DELETE FROM Services;
+                    INSERT INTO Services (ServiceName, Price, Duration, Slug, CategoryId, Description, WarrantyDays, TotalBookings, IsActive) VALUES
+                    (N'Thay nhớt động cơ', 120000, 30, 'thay-nhot-dong-co', @catBaoDuong, N'Thay nhớt động cơ giúp xe vận hành mượt mà hơn.', 30, 120, 1),
+                    (N'Bảo dưỡng định kỳ', 350000, 90, 'bao-duong-dinh-ky', @catBaoDuong, N'Bao gồm kiểm tra phanh, nhớt, lọc gió, bugi và hệ thống điện.', 45, 85, 1),
+                    (N'Kiểm tra phanh', 180000, 45, 'kiem-tra-phanh', @catBaoDuong, N'Kiểm tra bố thắng, dầu phanh và hiệu suất phanh.', 30, 50, 1),
+                    (N'Thay lốp xe', 450000, 60, 'thay-lop-xe', @catPhuTung, N'Thay lốp mới và cân chỉnh áp suất tiêu chuẩn.', 60, 65, 1),
+                    (N'Thay bugi', 200000, 30, 'thay-bugi', @catPhuTung, N'Giúp xe đề nổ tốt hơn và tiết kiệm nhiên liệu.', 30, 40, 1),
+                    (N'Lắp đèn LED', 500000, 60, 'lap-den-led', @catPhuTung, N'Tăng độ sáng và tính thẩm mỹ cho xe.', 90, 32, 1),
+                    (N'Độ pô xe', 1200000, 180, 'do-po-xe', @catDoXe, N'Tăng hiệu suất động cơ và âm thanh mạnh mẽ.', 90, 22, 1),
+                    (N'Sơn tem xe', 900000, 240, 'son-tem-xe', @catDoXe, N'Tùy chỉnh phong cách xe theo sở thích.', 60, 18, 1),
+                    (N'Cứu hộ xe chết máy', 250000, 60, 'cuu-ho-xe-chet-may', @catCuuHo, N'Hỗ trợ xe chết máy tại chỗ trong nội thành.', 7, 55, 1),
+                    (N'Cứu hộ thủng lốp', 200000, 45, 'cuu-ho-thung-lop', @catCuuHo, N'Hỗ trợ khẩn cấp khi xe bị thủng lốp.', 7, 38, 1),
+                    (N'Rửa xe cơ bản', 50000, 20, 'rua-xe-co-ban', @catRuaXe, N'Làm sạch thân xe và bánh xe.', 0, 150, 1),
+                    (N'Rửa xe cao cấp', 150000, 45, 'rua-xe-cao-cap', @catRuaXe, N'Bao gồm đánh bóng và vệ sinh chuyên sâu.', 0, 95, 1);
+                END
 
-            UPDATE Services SET Duration = 30 WHERE Duration IS NULL;
-            UPDATE Services SET IsActive = 1 WHERE IsActive IS NULL;
-            UPDATE Services SET TotalBookings = 0 WHERE TotalBookings IS NULL;
-            UPDATE Services SET WarrantyDays = 30 WHERE WarrantyDays IS NULL;
-            UPDATE ServiceCategories SET IsActive = 1 WHERE IsActive IS NULL;
+                UPDATE Services SET Duration = 30 WHERE Duration IS NULL;
+                UPDATE Services SET IsActive = 1 WHERE IsActive IS NULL;
+                UPDATE Services SET TotalBookings = 0 WHERE TotalBookings IS NULL;
+                UPDATE Services SET WarrantyDays = 30 WHERE WarrantyDays IS NULL;
+            END
+            
+            IF EXISTS (SELECT * FROM sys.tables WHERE name = 'ServiceCategories')
+                UPDATE ServiceCategories SET IsActive = 1 WHERE IsActive IS NULL;
         ");
 
         if (!context.Categories.Any()) {

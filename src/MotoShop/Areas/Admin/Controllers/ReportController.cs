@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace MotoShop.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = "Admin,Staff")]
+    [Authorize(Roles = "Admin")]
     public class ReportController : Controller
     {
         private readonly MotoShopDbContext _context;

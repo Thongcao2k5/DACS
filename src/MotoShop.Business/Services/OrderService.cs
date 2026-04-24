@@ -181,7 +181,16 @@ namespace MotoShop.Business.Services
             order.Status = "Cancelled";
             _unitOfWork.Repository<Order>().Update(order);
 
-            
+            // Hoàn lại lượt dùng Voucher nếu có
+            if (order.CouponId.HasValue)
+            {
+                var coupon = await _context.Coupons.FindAsync(order.CouponId.Value);
+                if (coupon != null && coupon.UsedCount > 0)
+                {
+                    coupon.UsedCount--;
+                }
+            }
+
             // Hoàn lại tồn kho cho các sản phẩm trong đơn hàng
             var items = await _unitOfWork.Repository<OrderItem>().Find(i => i.OrderId == orderId).ToListAsync();
             foreach (var item in items)

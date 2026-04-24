@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,7 @@ using System.Text;
 namespace MotoShop.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(Roles = "Admin")]
     public class BlogController : Controller
     {
         private readonly MotoShopDbContext _context;
@@ -20,100 +22,70 @@ namespace MotoShop.Areas.Admin.Controllers
             _hostEnvironment = hostEnvironment;
         }
 
-        public async Task<IActionResult> Index(string searchTerm, int? categoryId, int? status)
+        public async Task<IActionResult> Index(string? searchTerm, int? categoryId, bool? isPublished)
         {
             var query = _context.Blogs.Include(b => b.Category).AsQueryable();
             if (!string.IsNullOrEmpty(searchTerm)) query = query.Where(b => b.Title.Contains(searchTerm));
             if (categoryId.HasValue) query = query.Where(b => b.CategoryId == categoryId.Value);
-            if (status.HasValue) query = query.Where(b => b.Status == status.Value);
+            if (isPublished.HasValue) query = query.Where(b => b.IsPublished == isPublished.Value);
 
             var blogs = await query.OrderByDescending(b => b.CreatedDate).ToListAsync();
-            ViewBag.Categories = new SelectList(_context.BlogCategories, "Id", "Name", categoryId);
+            ViewBag.Categories = await _context.BlogCategories.ToListAsync();
             ViewBag.SearchTerm = searchTerm;
-            ViewBag.Status = status;
             return View(blogs);
         }
 
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Upsert(int? id)
         {
-            if (id == null) return NotFound();
-            var blog = await _context.Blogs.Include(b => b.Category).FirstOrDefaultAsync(m => m.Id == id);
+            Blog blog = new Blog();
+            ViewBag.Categories = await _context.BlogCategories.ToListAsync();
+
+            if (id == null || id == 0) return View(blog);
+
+            blog = await _context.Blogs.FindAsync(id);
             if (blog == null) return NotFound();
             return View(blog);
         }
 
+        // Action bổ trợ để tương thích với các link cũ
         public IActionResult Create()
         {
-            ViewBag.CategoryId = new SelectList(_context.BlogCategories, "Id", "Name");
-            return View();
+            return RedirectToAction(nameof(Upsert));
+        }
+
+        public IActionResult Edit(int id)
+        {
+            return RedirectToAction(nameof(Upsert), new { id = id });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Blog blog, IFormFile? thumbnailFile)
+        public async Task<IActionResult> Upsert(Blog blog, IFormFile? thumbFile)
         {
             if (ModelState.IsValid)
             {
                 if (string.IsNullOrEmpty(blog.Slug)) blog.Slug = GenerateSlug(blog.Title);
-                if (thumbnailFile != null) blog.Thumbnail = await SaveImage(thumbnailFile);
-                
-                blog.CreatedDate = DateTime.Now;
-                _context.Add(blog);
+
+                if (thumbFile != null)
+                {
+                    if (!string.IsNullOrEmpty(blog.Thumbnail)) DeleteImage(blog.Thumbnail);
+                    blog.Thumbnail = await SaveImage(thumbFile);
+                }
+
+                if (blog.Id == 0)
+                {
+                    blog.CreatedDate = DateTime.Now;
+                    _context.Add(blog);
+                }
+                else
+                {
+                    _context.Update(blog);
+                }
+
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewBag.CategoryId = new SelectList(_context.BlogCategories, "Id", "Name", blog.CategoryId);
-            return View(blog);
-        }
-
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null) return NotFound();
-            var blog = await _context.Blogs.FindAsync(id);
-            if (blog == null) return NotFound();
-            ViewBag.CategoryId = new SelectList(_context.BlogCategories, "Id", "Name", blog.CategoryId);
-            return View(blog);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Blog blog, IFormFile? thumbnailFile)
-        {
-            if (id != blog.Id) return NotFound();
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    var existingBlog = await _context.Blogs.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id);
-                    if (existingBlog == null) return NotFound();
-
-                    blog.CreatedDate = existingBlog.CreatedDate;
-                    blog.UpdatedDate = DateTime.Now;
-
-                    if (string.IsNullOrEmpty(blog.Slug)) blog.Slug = GenerateSlug(blog.Title);
-
-                    if (thumbnailFile != null)
-                    {
-                        if (!string.IsNullOrEmpty(existingBlog.Thumbnail)) DeleteImage(existingBlog.Thumbnail);
-                        blog.Thumbnail = await SaveImage(thumbnailFile);
-                    }
-                    else
-                    {
-                        blog.Thumbnail = existingBlog.Thumbnail;
-                    }
-
-                    _context.Update(blog);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!_context.Blogs.Any(e => e.Id == blog.Id)) return NotFound();
-                    else throw;
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewBag.CategoryId = new SelectList(_context.BlogCategories, "Id", "Name", blog.CategoryId);
+            ViewBag.Categories = await _context.BlogCategories.ToListAsync();
             return View(blog);
         }
 

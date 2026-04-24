@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 namespace MotoShop.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(Roles = "Admin")]
     [Route("Admin/[controller]/[action]")]
     [Route("Admin/Banner")]
     public class SliderBannerController : Controller
