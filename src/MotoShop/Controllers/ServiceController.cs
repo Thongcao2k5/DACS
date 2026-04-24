@@ -7,6 +7,7 @@ using MotoShop.Business.Interfaces;
 using MotoShop.Data.Interfaces;
 using MotoShop.Data.Models;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 
 namespace MotoShop.Controllers
 {
@@ -15,24 +16,166 @@ namespace MotoShop.Controllers
         private readonly MotoShopDbContext _context;
         private readonly IBookingService _bookingService;
         private readonly IUnitOfWork _uow;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public ServiceController(MotoShopDbContext context, IBookingService bookingService, IUnitOfWork uow)
+        public ServiceController(MotoShopDbContext context, IBookingService bookingService, IUnitOfWork uow, UserManager<IdentityUser> userManager)
         {
             _context = context;
             _bookingService = bookingService;
             _uow = uow;
+            _userManager = userManager;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(int? categoryId)
         {
-            return View();
+            // 1. Lấy danh sách danh mục để hiển thị bộ lọc (Sidebar)
+            var categories = await _context.ServiceCategories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+            ViewBag.ServiceCategories = categories;
+
+            // 2. Lấy danh sách dịch vụ thực tế
+            var query = _context.Services
+                .Include(s => s.ServiceCategory)
+                .Where(s => s.IsActive);
+
+            // Lọc theo danh mục nếu có chọn
+            if (categoryId.HasValue)
+            {
+                query = query.Where(s => s.CategoryId == categoryId.Value);
+                ViewBag.CurrentCategoryId = categoryId.Value;
+            }
+
+            var services = await query
+                .OrderByDescending(s => s.TotalBookings)
+                .ToListAsync();
+
+            return View(services);
         }
 
-        public async Task<IActionResult> Details(int id)
+        public async Task<IActionResult> Details(string slug)
         {
-            var service = await _uow.Repository<Service>().GetByIdAsync(id);
+            if (string.IsNullOrEmpty(slug)) return RedirectToAction("Index");
+
+            // Thử tìm theo Slug trước, nếu không thấy và slug là số thì tìm theo ID
+            var service = await _context.Services
+                .Include(s => s.ServiceCategory)
+                .Include(s => s.Reviews.Where(r => r.IsApproved))
+                    .ThenInclude(r => r.Customer)
+                .FirstOrDefaultAsync(s => s.Slug == slug && s.IsActive);
+
+            if (service == null && int.TryParse(slug, out int id))
+            {
+                service = await _context.Services
+                    .Include(s => s.ServiceCategory)
+                    .Include(s => s.Reviews.Where(r => r.IsApproved))
+                        .ThenInclude(r => r.Customer)
+                    .FirstOrDefaultAsync(s => s.ServiceId == id && s.IsActive);
+            }
+
             if (service == null) return NotFound();
+
+            // Dịch vụ liên quan (cùng danh mục)
+            ViewBag.RelatedServices = await _context.Services
+                .Where(s => s.IsActive && s.ServiceId != service.ServiceId && s.CategoryId == service.CategoryId)
+                .Take(3)
+                .ToListAsync();
+
+            // Slots còn lại hôm nay (Ví dụ 16 slots mỗi ngày)
+            var bookedToday = await _context.ServiceBookings
+                .CountAsync(b => b.ServiceId == service.ServiceId && b.ServiceDate.HasValue && b.ServiceDate.Value.Date == DateTime.Today && b.Status != "Cancelled");
+            ViewBag.RemainingSlots = Math.Max(0, 16 - bookedToday);
+
+            // Cọc trước 30%
+            ViewBag.DepositAmount = Math.Ceiling(service.Price * 0.3m / 1000) * 1000;
+
+            // Thông tin cửa hàng từ settings
+            var settings = await _context.StoreSettings.FirstOrDefaultAsync();
+            ViewBag.StorePhone = settings?.Phone ?? "0123.456.789";
+            ViewBag.StoreAddress = settings?.Address ?? "Địa chỉ MotoShop";
+
+            // Kiểm tra quyền đánh giá (đã hoàn thành dịch vụ này)
+            var userId = _userManager.GetUserId(User);
+            bool canReview = false;
+            bool hasReviewed = false;
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
+                if (customer != null)
+                {
+                    canReview = await _context.ServiceBookings.AnyAsync(b => b.CustomerId == customer.CustomerId && b.ServiceId == service.ServiceId && b.Status == "Completed");
+                    hasReviewed = await _context.ServiceReviews.AnyAsync(r => r.CustomerId == customer.CustomerId && r.ServiceId == service.ServiceId);
+                }
+            }
+
+            ViewBag.CanReview = canReview;
+            ViewBag.HasReviewed = hasReviewed;
+
+            // Tính toán Rating
+            ViewBag.AvgRating = service.Reviews.Any() ? Math.Round(service.Reviews.Average(r => r.Rating), 1) : 0;
+            ViewBag.RatingBreakdown = Enumerable.Range(1, 5).Reverse()
+                .Select(star => new {
+                    Star = star,
+                    Count = service.Reviews.Count(r => r.Rating == star),
+                    Percent = service.Reviews.Any() ? (int)(service.Reviews.Count(r => r.Rating == star) * 100.0 / service.Reviews.Count) : 0
+                }).ToList();
+
             return View(service);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> LoadMoreReviews(int serviceId, int page = 1)
+        {
+            int pageSize = 5;
+            var reviews = await _context.ServiceReviews
+                .Include(r => r.Customer)
+                .Where(r => r.ServiceId == serviceId && r.IsApproved)
+                .OrderByDescending(r => r.CreatedDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(r => new {
+                    r.ReviewId,
+                    customerName = r.Customer != null ? r.Customer.FullName : "Ẩn danh",
+                    r.Rating,
+                    r.Comment,
+                    createdDate = r.CreatedDate.ToString("dd/MM/yyyy")
+                })
+                .ToListAsync();
+
+            return Json(reviews);
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateServiceReview(int serviceId, int rating, string comment)
+        {
+            if (rating < 1 || rating > 5) return Json(new { success = false, message = "Vui lòng chọn số sao." });
+            if (string.IsNullOrEmpty(comment) || comment.Length < 10) return Json(new { success = false, message = "Nội dung tối thiểu 10 ký tự." });
+
+            var userId = _userManager.GetUserId(User);
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
+            if (customer == null) return Json(new { success = false, message = "Không tìm thấy thông tin khách hàng." });
+
+            var existed = await _context.ServiceReviews.AnyAsync(r => r.CustomerId == customer.CustomerId && r.ServiceId == serviceId);
+            if (existed) return Json(new { success = false, message = "Bạn đã đánh giá dịch vụ này rồi." });
+
+            var review = new ServiceReview
+            {
+                ServiceId = serviceId,
+                CustomerId = customer.CustomerId,
+                Rating = rating,
+                Comment = comment,
+                IsApproved = false,
+                CreatedDate = DateTime.Now
+            };
+
+            _context.ServiceReviews.Add(review);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Cảm ơn bạn! Đánh giá của bạn đang chờ quản trị viên duyệt." });
         }
 
         [Authorize]
@@ -93,11 +236,14 @@ namespace MotoShop.Controllers
         {
             if (!ModelState.IsValid)
             {
+                var errors = string.Join("<br/>", ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage));
+
                 return Json(new
                 {
                     success = false,
-                    message = "Vui lòng điền đầy đủ thông tin bắt buộc.",
-                    errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)
+                    message = "Vui lòng kiểm tra lại thông tin:<br/>" + errors
                 });
             }
 

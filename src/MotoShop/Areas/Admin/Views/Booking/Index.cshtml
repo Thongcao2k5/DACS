@@ -105,7 +105,18 @@
                             <div class="fw-bold">@item.VehicleBrand @item.VehicleModel</div>
                             <div class="badge bg-label-danger" style="font-size: 10px;">@item.LicensePlate</div>
                         </td>
-                        <td><span class="badge bg-label-secondary rounded-pill px-3">@item.Service?.ServiceName</span></td>
+                        <td>
+                            <div class="small fw-bold">@item.Service?.ServiceName</div>
+                            <div class="text-danger small fw-500">Cọc: @item.DepositAmount.ToString("N0")đ</div>
+                            @{
+                                var (dClass, dText) = item.DepositStatus switch {
+                                    "Paid" => ("success", "Đã cọc"),
+                                    "Rejected" => ("danger", "Từ chối"),
+                                    _ => ("warning", "Chưa cọc")
+                                };
+                            }
+                            <span class="badge bg-@dClass" style="font-size: 9px;">@dText</span>
+                        </td>
                         <td>
                             <div class="booking-time-admin">@(item.ServiceDate?.ToString("HH:mm") ?? "--:--")</div>
                             <small class="text-muted">@(item.ServiceDate?.ToString("dd/MM/yyyy") ?? "Chưa đặt")</small>
@@ -117,6 +128,7 @@
                                     "Processing" => ("processing", "Đang thực hiện"),
                                     "Completed" => ("completed", "Hoàn thành"),
                                     "Cancelled" => ("cancelled", "Đã hủy"),
+                                    "Confirmed" => ("success", "Đã xác nhận"),
                                     _ => ("pending", "Chờ xác nhận")
                                 };
                             }
@@ -124,6 +136,10 @@
                         </td>
                         <td class="text-end pe-4">
                             <div class="d-flex justify-content-end gap-1">
+                                @if (item.Status == "Pending" && !string.IsNullOrEmpty(item.TransferProof))
+                                {
+                                    <button class="btn btn-sm btn-icon btn-success rounded-circle" title="Duyệt cọc" onclick="openApproveModal(@item.BookingId, '@item.TransferProof', '@item.DepositAmount.ToString("N0")')"><i class="bx bx-check-shield"></i></button>
+                                }
                                 <button class="btn btn-sm btn-icon btn-outline-info rounded-circle" title="Phân công" onclick="openAssignModal(@item.BookingId)"><i class="bx bx-user-plus"></i></button>
                                 <button class="btn btn-sm btn-icon btn-outline-primary rounded-circle" title="Trạng thái" onclick="openStatusModal(@item.BookingId, '@item.Status')"><i class="bx bx-sync"></i></button>
                             </div>
@@ -132,6 +148,40 @@
                 }
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- Modal Duyệt cọc -->
+<div class="modal fade" id="approveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 p-4 pb-0">
+                <h5 class="modal-title fw-bold text-uppercase fs-6">Xác nhận tiền cọc</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <p class="text-muted small mb-3">Vui lòng kiểm tra kỹ ảnh chuyển khoản và số tiền nhận được.</p>
+                <div class="mb-4">
+                    <img id="proofImg" src="" class="img-fluid rounded-3 border shadow-sm" style="max-height: 300px;">
+                </div>
+                <div class="h5 fw-bold text-danger mb-4">Số tiền: <span id="approveAmount">0</span>đ</div>
+                
+                <div class="row g-2">
+                    <div class="col-6">
+                        <button type="button" class="btn btn-success rounded-pill w-100 fw-bold" onclick="approveDeposit()">XÁC NHẬN NHẬN</button>
+                    </div>
+                    <div class="col-6">
+                        <button type="button" class="btn btn-outline-danger rounded-pill w-100 fw-bold" onclick="openRejectInput()">TỪ CHỐI</button>
+                    </div>
+                </div>
+
+                <!-- Input lý do từ chối (ẩn mặc định) -->
+                <div id="rejectSection" class="mt-3 d-none">
+                    <textarea id="rejectReason" class="form-control custom-input mb-2" rows="2" placeholder="Lý do từ chối (Gửi khách)..."></textarea>
+                    <button type="button" class="btn btn-danger btn-sm rounded-pill px-4" onclick="rejectDeposit()">Gửi từ chối</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -204,9 +254,43 @@
     <script>
         const aModal = new bootstrap.Modal(document.getElementById('assignModal'));
         const sModal = new bootstrap.Modal(document.getElementById('statusModal'));
+        const pModal = new bootstrap.Modal(document.getElementById('approveModal'));
+
+        let currentBookingId = 0;
 
         function openAssignModal(id) { $('#assignBookingId').val(id); aModal.show(); }
         function openStatusModal(id, current) { $('#statusBookingId').val(id); $('#statusSelect').val(current); sModal.show(); }
+        
+        function openApproveModal(id, proof, amount) {
+            currentBookingId = id;
+            $('#proofImg').attr('src', proof);
+            $('#approveAmount').text(amount);
+            $('#rejectSection').addClass('d-none');
+            $('#rejectReason').val('');
+            pModal.show();
+        }
+
+        function openRejectInput() {
+            $('#rejectSection').removeClass('d-none');
+        }
+
+        function approveDeposit() {
+            $.post('/Admin/Booking/ApproveDeposit', { bookingId: currentBookingId }, function(res) {
+                if (res.success) { 
+                    Swal.fire('Thành công', res.message, 'success').then(() => location.reload());
+                }
+            });
+        }
+
+        function rejectDeposit() {
+            const reason = $('#rejectReason').val();
+            if (!reason) { alert('Vui lòng nhập lý do từ chối'); return; }
+            $.post('/Admin/Booking/RejectDeposit', { bookingId: currentBookingId, reason: reason }, function(res) {
+                if (res.success) { 
+                    Swal.fire('Đã từ chối', res.message, 'info').then(() => location.reload());
+                }
+            });
+        }
 
         $('#assignForm').on('submit', function(e) {
             e.preventDefault();

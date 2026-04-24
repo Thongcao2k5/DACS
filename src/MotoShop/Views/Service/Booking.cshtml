@@ -1,105 +1,76 @@
 @using MotoShop.Data.Models
 @using System.Globalization
+@model MotoShop.Business.DTOs.BookingViewModel
 @{
     ViewData["Title"] = "Đặt lịch dịch vụ";
     var selectedServiceId = ViewBag.SelectedServiceId as int?;
     var selectedService = ViewBag.Service as Service;
     var customer = ViewBag.Customer as Customer;
-    var brands = ViewBag.Brands as List<string>;
-    var bookedSlots = ViewBag.BookedSlots as List<string> ?? new List<string>();
 }
 
-<!-- HERO SECTION -->
-<div class="booking-hero py-5 mb-5" style="background-color: #111; color: #fff;">
-    <div class="container text-center">
-        <div class="d-inline-flex align-items-center justify-content-center bg-danger rounded-circle mb-3" style="width: 60px; height: 60px;">
-            <i class='bx bx-calendar-check fs-2'></i>
-        </div>
-        <h1 class="fw-bold mb-2">Đặt lịch dịch vụ</h1>
-        <p class="text-white-50 mb-4">Chọn thời gian phù hợp — kỹ thuật viên sẽ liên hệ xác nhận trong 30 phút</p>
-        
-        <!-- Progress Bar -->
-        <div class="booking-steps d-flex justify-content-center align-items-center gap-2 gap-md-4">
-            <div class="step active d-flex align-items-center gap-2">
-                <span class="step-num rounded-circle d-flex align-items-center justify-content-center bg-success text-white" style="width: 24px; height: 24px; font-size: 12px;"><i class='bx bx-check'></i></span>
-                <span class="step-label small fw-500">Chọn dịch vụ</span>
-            </div>
-            <div class="step-line bg-white-50" style="width: 40px; height: 1px;"></div>
-            <div class="step active d-flex align-items-center gap-2">
-                <span class="step-num rounded-circle d-flex align-items-center justify-content-center bg-danger text-white" style="width: 24px; height: 24px; font-size: 12px; border: 2px solid #E24B4A;">●</span>
-                <span class="step-label small fw-bold">Thông tin & Lịch hẹn</span>
-            </div>
-            <div class="step-line bg-white-50" style="width: 40px; height: 1px;"></div>
-            <div class="step d-flex align-items-center gap-2 opacity-50">
-                <span class="step-num rounded-circle d-flex align-items-center justify-content-center bg-transparent text-white" style="width: 24px; height: 24px; font-size: 12px; border: 1px solid #fff;">○</span>
-                <span class="step-label small fw-500">Xác nhận</span>
-            </div>
-        </div>
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="/Service">Dịch vụ</a></li>
+                <li class="breadcrumb-item active">Đặt lịch hẹn</li>
+            </ol>
+        </nav>
     </div>
 </div>
 
-<main class="container mb-5">
-    @if (selectedService == null)
+<main class="container py-5">
+    @if (ViewBag.HasService == false)
     {
         <div class="text-center py-5">
-            <i class='bx bx-error-circle fs-1 text-danger mb-3'></i>
-            <h4 class="fw-bold">Không tìm thấy dịch vụ</h4>
-            <p class="text-muted">Vui lòng quay lại trang danh sách dịch vụ để chọn lại.</p>
-            <a asp-action="Index" class="btn btn-danger rounded-pill px-5">Quay lại trang dịch vụ</a>
+            <i class='bx bx-calendar-x mb-3' style="font-size: 64px; color: #ddd;"></i>
+            <h4 class="fw-bold">Bạn chưa chọn dịch vụ</h4>
+            <p class="text-muted mb-4">Vui lòng chọn một dịch vụ để tiến hành đặt lịch hẹn.</p>
+            <a href="/Service" class="btn btn-danger rounded-pill px-5">XEM DANH SÁCH DỊCH VỤ</a>
         </div>
     }
     else
     {
-        <form id="bookingForm" method="post" asp-action="Booking">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="ServiceId" value="@selectedServiceId" />
-            
-            <div class="row g-4">
-                <!-- LEFT COLUMN: FORMS -->
-                <div class="col-lg-8">
+        <div class="row g-4">
+            <!-- 1. LEFT: BOOKING FORM -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4 p-4">
+                    <h5 class="fw-bold mb-4">THÔNG TIN ĐẶT LỊCH</h5>
                     
-                    <!-- SELECTED SERVICE INFO -->
-                    <div class="alert alert-danger bg-white border-danger rounded-4 p-4 mb-4 d-flex align-items-center gap-4">
-                        <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; flex-shrink: 0;">
-                            <i class='bx bx-wrench fs-2'></i>
-                        </div>
-                        <div>
-                            <h5 class="fw-bold mb-1">Dịch vụ đã chọn: @selectedService.ServiceName</h5>
-                            <p class="text-muted mb-0 small">@selectedService.Description</p>
-                        </div>
-                    </div>
-
-                    <!-- SECTION 1: THÔNG TIN LIÊN HỆ -->
-                    <div class="booking-section p-4 bg-white rounded-4 shadow-sm mb-4 border">
-                        <h5 class="fw-bold mb-4 d-flex align-items-center"><i class='bx bx-user text-danger me-2'></i> Thông tin liên hệ</h5>
+                    <form id="bookingForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="ServiceId" value="@selectedServiceId">
                         
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label-custom">Họ và tên *</label>
-                                <input type="text" name="FullName" class="form-control form-control-custom @(customer != null ? "bg-light" : "")" value="@customer?.FullName" @(customer != null ? "readonly" : "") required placeholder="Nhập họ tên">
+                        <!-- SECTION: CONTACT -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Họ và tên <span class="text-danger">*</span></label>
+                                <input type="text" asp-for="FullName" class="form-control rounded-3" placeholder="Nhập họ tên của bạn" required>
+                                <span asp-validation-for="FullName" class="text-danger x-small"></span>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label-custom">Số điện thoại *</label>
-                                <input type="tel" name="Phone" class="form-control form-control-custom @(customer != null ? "bg-light" : "")" value="@customer?.Phone" @(customer != null ? "readonly" : "") required pattern="[0-9]{10}" placeholder="Nhập số điện thoại">
+                                <label class="form-label small fw-bold">Số điện thoại <span class="text-danger">*</span></label>
+                                <input type="tel" asp-for="Phone" class="form-control rounded-3" placeholder="Ví dụ: 0912345678" 
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="11" required>
+                                <span asp-validation-for="Phone" class="text-danger x-small"></span>
                             </div>
-                            <div class="col-md-12">
-                                <label class="form-label-custom">Địa chỉ Email</label>
-                                <input type="email" name="Email" class="form-control form-control-custom @(customer != null ? "bg-light" : "")" value="@customer?.Email" @(customer != null ? "readonly" : "") placeholder="Nhập email (không bắt buộc)">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Email</label>
+                                <input type="email" asp-for="Email" class="form-control rounded-3" placeholder="Địa chỉ email nhận thông báo">
                             </div>
                         </div>
-                    </div>
 
-                    <!-- SECTION 2: THÔNG TIN XE -->
-                    <div class="booking-section p-4 bg-white rounded-4 shadow-sm mb-4 border">
-                        <h5 class="fw-bold mb-4 d-flex align-items-center"><i class='bx bx-cycling text-danger me-2'></i> Thông tin xe</h5>
-                        <div class="row g-3">
+                        <!-- SECTION: VEHICLE -->
+                        <h6 class="fw-bold mb-3 border-top pt-4">THÔNG TIN XE</h6>
+                        <div class="row g-3 mb-4">
                             <div class="col-md-6">
-                                <label class="form-label-custom">Hãng xe *</label>
-                                <select name="VehicleBrand" id="brandSel" class="form-select form-control-custom" required onchange="loadModels(this.value)">
-                                    <option value="" selected disabled>-- Chọn hãng xe --</option>
-                                    @if (brands != null)
+                                <label class="form-label small fw-bold">Hãng xe <span class="text-danger">*</span></label>
+                                <select asp-for="VehicleBrand" class="form-select rounded-3" id="brandSel" onchange="loadModels(this.value)" required>
+                                    <option value="">-- Chọn hãng xe --</option>
+                                    @if (ViewBag.Brands != null)
                                     {
-                                        foreach (var brand in brands)
+                                        foreach (var brand in ViewBag.Brands)
                                         {
                                             <option value="@brand">@brand</option>
                                         }
@@ -107,131 +78,171 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label-custom">Dòng xe *</label>
-                                <select name="VehicleModel" id="modelSel" class="form-select form-control-custom" required disabled onchange="checkFormReady()">
-                                    <option value="">-- Chọn dòng xe --</option>
+                                <label class="form-label small fw-bold">Dòng xe <span class="text-danger">*</span></label>
+                                <select asp-for="VehicleModel" class="form-select rounded-3" id="modelSel" disabled required>
+                                    <option value="">-- Chọn hãng trước --</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label-custom">Năm sản xuất</label>
-                                <select name="VehicleYear" class="form-select form-control-custom">
-                                    @for (int year = DateTime.Now.Year; year >= 2015; year--)
-                                    {
-                                        <option value="@year">@year</option>
-                                    }
-                                    <option value="2014">Trước 2015</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label-custom">Biển số xe</label>
-                                <input type="text" name="LicensePlate" class="form-control form-control-custom" placeholder="Ví dụ: 59A1-12345">
+                            <div class="col-md-12">
+                                <label class="form-label small fw-bold">Biển số xe (Nếu có)</label>
+                                <input type="text" asp-for="LicensePlate" class="form-control rounded-3" 
+                                       placeholder="Ví dụ: 59A1-12345" oninput="this.value = this.value.toUpperCase()">
                             </div>
                         </div>
-                    </div>
 
-                    <!-- SECTION 3: GHI CHÚ -->
-                    <div class="booking-section p-4 bg-white rounded-4 shadow-sm border">
-                        <h5 class="fw-bold mb-4 d-flex align-items-center"><i class='bx bx-chat text-danger me-2'></i> Ghi chú thêm</h5>
-                        <textarea name="Note" class="form-control form-control-custom" rows="3" placeholder="Mô tả tình trạng xe..."></textarea>
-                    </div>
+                        <!-- SECTION: NOTES -->
+                        <div class="mb-0">
+                            <label class="form-label small fw-bold">Ghi chú yêu cầu thêm</label>
+                            <textarea asp-for="Note" class="form-control rounded-3" rows="3" placeholder="Mô tả tình trạng xe hoặc yêu cầu riêng..."></textarea>
+                        </div>
+
+                        <!-- HIDDEN INPUTS FOR DATE/TIME -->
+                        <input type="hidden" asp-for="ServiceDate" id="selectedDate">
+                        <input type="hidden" asp-for="TimeSlot" id="selectedTime">
+                    </form>
                 </div>
+            </div>
 
-                <!-- RIGHT COLUMN: SUMMARY & TIME -->
-                <div class="col-lg-4">
-                    <div class="booking-summary-card sticky-top" style="top: 20px;">
-                        <div class="p-4 bg-white rounded-4 shadow-sm border">
-                            <h5 class="fw-bold mb-4 border-bottom pb-2">Tóm tắt lịch hẹn</h5>
-                            
-                            <!-- CHỌN NGÀY HẸN -->
-                            <div class="mb-4">
-                                <label class="form-label-custom text-uppercase">Chọn ngày hẹn *</label>
-                                <div class="date-scroll-container d-flex gap-2 pb-2" style="overflow-x: auto; white-space: nowrap;">
-                                    @for (int i = 0; i < 7; i++)
-                                    {
-                                        var date = DateTime.Today.AddDays(i);
-                                        var isSunday = date.DayOfWeek == DayOfWeek.Sunday;
-                                        <div class="date-btn @(isSunday ? "disabled" : "") @(i == 0 && !isSunday ? "active" : "")" 
-                                             data-date="@date.ToString("yyyy-MM-dd")" 
-                                             onclick="selectDate(this)">
-                                            <div class="small">@date.ToString("ddd", new CultureInfo("vi-VN"))</div>
-                                            <div class="fw-bold">@date.Day</div>
-                                        </div>
-                                    }
-                                </div>
-                                <input type="hidden" name="ServiceDate" id="finalServiceDate">
-                            </div>
-
-                            <!-- CHỌN KHUNG GIỜ -->
-                            <div class="mb-4">
-                                <label class="form-label-custom text-uppercase">Chọn khung giờ *</label>
-                                <div class="time-grid row g-2">
-                                    @{
-                                        string[] slots = { "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "17:00" };
-                                        foreach (var slot in slots)
-                                        {
-                                            var isBooked = bookedSlots.Contains(slot);
-                                            <div class="col-3">
-                                                <button type="button" class="time-btn w-100 @(isBooked ? "disabled" : "")" 
-                                                        data-time="@slot" 
-                                                        onclick="selectTime(this)" @(isBooked ? "disabled" : "")>
-                                                    @slot
-                                                </button>
-                                            </div>
-                                        }
-                                    }
-                                </div>
-                                <input type="hidden" name="TimeSlot" id="finalTimeSlot">
-                            </div>
-
-                            <!-- TỔNG KẾT -->
-                            <div class="border-top pt-3 mb-4">
-                                <div class="d-flex justify-content-between mb-3 align-items-center">
-                                    <span class="fw-bold">TỔNG CỘC (30%):</span>
-                                    <span class="text-danger fw-bold fs-4">@ViewBag.DepositAmount.ToString("N0")đ</span>
-                                </div>
-                            </div>
-
-                            <!-- NÚT XÁC NHẬN -->
-                            <button type="button" id="btnConfirm" class="btn btn-danger rounded-pill fw-bold w-100 py-3 mb-3 shadow-sm" disabled onclick="submitBooking()">
-                                Xác nhận đặt lịch
-                            </button>
+            <!-- 2. RIGHT: SUMMARY & SLOTS -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 position-sticky" style="top: 100px;">
+                    <h5 class="fw-bold mb-3">TÓM TẮT DỊCH VỤ</h5>
+                    
+                    <div class="bg-light rounded-3 p-3 mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="fw-bold">@selectedService?.ServiceName</span>
+                            <span class="text-danger fw-bold">@selectedService?.Price.ToString("N0")đ</span>
                         </div>
+                        <div class="small text-muted">
+                            <i class='bx bx-time-five'></i> Dự kiến: @(selectedService?.Duration ?? 30) phút
+                        </div>
+                    </div>
+
+                    <!-- DATE PICKER -->
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold mb-2">CHỌN NGÀY HẸN <span class="text-danger">*</span></label>
+                        <div class="date-scroll d-flex gap-2 overflow-auto pb-2" id="dateRow">
+                            <!-- JS will render dates here -->
+                        </div>
+                    </div>
+
+                    <!-- TIME PICKER -->
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold mb-2">CHỌN KHUNG GIỜ <span class="text-danger">*</span></label>
+                        <div class="time-grid" id="timeGrid">
+                            <div class="text-muted small py-3 text-center w-100">Vui lòng chọn ngày trước</div>
+                        </div>
+                        <div class="d-flex gap-3 mt-2">
+                            <small class="d-flex align-items-center gap-1"><span class="legend-dot active"></span> Đang chọn</small>
+                            <small class="d-flex align-items-center gap-1"><span class="legend-dot disabled"></span> Đã có khách</small>
+                        </div>
+                    </div>
+
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted small">Cọc trước (30%)</span>
+                            <span class="text-danger fw-bold">@ViewBag.DepositAmount?.ToString("N0")đ</span>
+                        </div>
+                        <p class="x-small text-muted mb-4">Lưu ý: Bạn cần chuyển khoản cọc để giữ chỗ. Lịch hẹn sẽ tự động hủy nếu không cọc sau 2 tiếng.</p>
+                        
+                        <button type="button" id="btnSubmit" onclick="submitBooking()" class="btn btn-danger w-100 py-3 rounded-pill fw-bold shadow-sm">XÁC NHẬN ĐẶT LỊCH</button>
                     </div>
                 </div>
             </div>
-        </form>
+        </div>
     }
 </main>
 
-<style>
-    .form-label-custom { font-size: 12px; font-weight: 600; color: #6c757d; text-transform: uppercase; margin-bottom: 8px; display: block; }
-    .form-control-custom { border-radius: 10px; padding: 10px 15px; border: 1.5px solid #eee; font-size: 14px; }
-    .form-control-custom:focus { border-color: #E24B4A; box-shadow: none; background: #fff; }
-    .date-btn { min-width: 55px; padding: 10px 5px; border: 1.5px solid #eee; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.2s; }
-    .date-btn.active { background: #E24B4A; color: #fff; border-color: #E24B4A; }
-    .date-btn.disabled { opacity: 0.3; cursor: not-allowed; background: #f8f9fa; }
-    .time-btn { padding: 8px 4px; border-radius: 8px; font-size: 12px; font-weight: 600; border: 1.5px solid #eee; background: #fff; cursor: pointer; }
-    .time-btn.active { background: #E24B4A !important; color: #fff !important; border-color: #E24B4A !important; }
-    .time-btn.disabled { opacity: 0.4; cursor: not-allowed; text-decoration: line-through; background: #f8f9fa; }
-</style>
-
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const activeDate = document.querySelector('.date-btn.active');
-            if (activeDate) document.getElementById('finalServiceDate').value = activeDate.dataset.date;
-            
-            document.getElementById('bookingForm').addEventListener('input', checkFormReady);
-            document.getElementById('bookingForm').addEventListener('change', checkFormReady);
-        });
+        const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+        const dateRow = document.getElementById('dateRow');
+        const timeGrid = document.getElementById('timeGrid');
+        const allSlots = ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'];
 
+        // 1. RENDER 7 DAYS
+        function initDates() {
+            const today = new Date();
+            for (let i = 1; i <= 7; i++) {
+                const d = new Date(today);
+                d.setDate(today.getDate() + i);
+                
+                const isSunday = d.getDay() === 0;
+                const dateStr = d.toISOString().split('T')[0];
+                
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `date-btn ${isSunday ? 'disabled' : ''}`;
+                btn.disabled = isSunday;
+                btn.innerHTML = `
+                    <div class="small">${days[d.getDay()]}</div>
+                    <div class="fw-bold">${d.getDate()}</div>
+                `;
+                if (!isSunday) {
+                    btn.onclick = () => selectDate(dateStr, btn);
+                } else {
+                    btn.title = "Cửa hàng nghỉ Chủ Nhật";
+                }
+                dateRow.appendChild(btn);
+            }
+        }
+
+        // 2. SELECT DATE
+        async function selectDate(date, el) {
+            document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('selectedDate').value = date;
+            
+            // Clear current selection
+            document.getElementById('selectedTime').value = '';
+            
+            // Load slots
+            timeGrid.innerHTML = '<div class="text-center w-100 py-3"><div class="spinner-border spinner-border-sm text-danger"></div></div>';
+            try {
+                const res = await fetch(`/Service/GetBookedSlots?date=${date}`);
+                const booked = await res.json();
+                
+                timeGrid.innerHTML = '';
+                allSlots.forEach(slot => {
+                    const isBooked = booked.includes(slot);
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `time-btn ${isBooked ? 'disabled' : ''}`;
+                    btn.disabled = isBooked;
+                    btn.textContent = slot;
+                    if (!isBooked) {
+                        btn.onclick = () => selectTime(slot, btn);
+                    }
+                    timeGrid.appendChild(btn);
+                });
+            } catch (err) {
+                timeGrid.innerHTML = '<div class="text-danger small">Lỗi tải dữ liệu. Vui lòng thử lại.</div>';
+            }
+        }
+
+        // 3. SELECT TIME
+        function selectTime(time, el) {
+            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('selectedTime').value = time;
+        }
+
+        // 4. LOAD MODELS
         async function loadModels(brand) {
             const sel = document.getElementById('modelSel');
-            sel.innerHTML = '<option value="">-- Đang tải... --</option>';
             sel.disabled = true;
+            sel.innerHTML = '<option>Đang tải...</option>';
+            
+            if (!brand) {
+                sel.innerHTML = '<option value="">-- Chọn hãng trước --</option>';
+                return;
+            }
+
             try {
                 const res = await fetch(`/Service/GetModelsByBrand?brand=${encodeURIComponent(brand)}`);
                 const models = await res.json();
+                
                 sel.innerHTML = '<option value="">-- Chọn dòng xe --</option>';
                 models.forEach(m => {
                     const opt = document.createElement('option');
@@ -240,71 +251,103 @@
                     sel.appendChild(opt);
                 });
                 sel.disabled = false;
-            } catch (e) { console.error(e); }
-            checkFormReady();
+            } catch (err) {
+                sel.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+            }
         }
 
-        function selectDate(btn) {
-            if(btn.classList.contains('disabled')) return;
-            document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('finalServiceDate').value = btn.dataset.date;
-            // Reset time
-            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('finalTimeSlot').value = "";
-            loadBookedSlots(btn.dataset.date);
-            checkFormReady();
-        }
-
-        async function loadBookedSlots(date) {
-            const res = await fetch(`/Service/GetBookedSlots?date=${date}`);
-            const booked = await res.json();
-            document.querySelectorAll('.time-btn').forEach(btn => {
-                const t = btn.dataset.time;
-                if (booked.includes(t)) { btn.classList.add('disabled'); btn.disabled = true; }
-                else { btn.classList.remove('disabled'); btn.disabled = false; }
-            });
-        }
-
-        function selectTime(btn) {
-            if (btn.classList.contains('disabled')) return;
-            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('finalTimeSlot').value = btn.dataset.time;
-            checkFormReady();
-        }
-
-        function checkFormReady() {
-            const hasDate = document.getElementById('finalServiceDate').value !== "";
-            const hasTime = document.getElementById('finalTimeSlot').value !== "";
-            const hasBrand = document.getElementById('brandSel').value !== "";
-            const hasModel = document.getElementById('modelSel').value !== "";
-            const formValid = document.getElementById('bookingForm').checkValidity();
-            document.getElementById('btnConfirm').disabled = !(hasDate && hasTime && hasBrand && hasModel && formValid);
-        }
-
+        // 5. SUBMIT BOOKING
         async function submitBooking() {
-            const btn = document.getElementById('btnConfirm');
             const form = document.getElementById('bookingForm');
-            const date = document.getElementById('finalServiceDate').value;
-            const time = document.getElementById('finalTimeSlot').value;
+            const date = document.getElementById('selectedDate').value;
+            const time = document.getElementById('selectedTime').value;
+            const btn = document.getElementById('btnSubmit');
 
+            // Reset validation states
+            form.querySelectorAll('.is-invalid').forEach(i => i.classList.remove('is-invalid'));
+
+            // Client-side quick check
+            if (!date || !time) {
+                Swal.fire('Thông báo', 'Vui lòng chọn Ngày và Giờ hẹn ở cột bên phải!', 'warning');
+                return;
+            }
+
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                // Highlight invalid fields
+                form.querySelectorAll(':invalid').forEach(i => i.classList.add('is-invalid'));
+                return;
+            }
+
+            // Start loading
+            const originalText = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> ĐANG XỬ LÝ...';
 
-            const formData = new FormData(form);
-            // Quan trọng: Gán ServiceDate bao gồm cả giờ để Binding chính xác
-            formData.set('ServiceDate', `${date}T${time}:00`);
-            formData.set('TimeSlot', time);
+            try {
+                const formData = new FormData(form);
+                const res = await fetch('/Service/Booking', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
 
-            const res = await fetch(form.action, {
-                method: 'POST',
-                body: formData,
-                headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value }
-            });
-            const data = await res.json();
-            if (data.success) window.location.href = data.redirectUrl;
-            else { alert(data.message); btn.disabled = false; btn.innerHTML = 'Xác nhận đặt lịch'; }
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Thành công!',
+                        text: 'Lịch hẹn đã được ghi nhận. Đang chuyển đến trang thanh toán cọc...',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = data.redirectUrl;
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Lỗi thông tin',
+                        html: data.message,
+                        icon: 'error'
+                    });
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            } catch (error) {
+                Swal.fire('Lỗi kết nối', 'Không thể kết nối với máy chủ. Vui lòng thử lại sau!', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
         }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', initDates);
     </script>
+
+    <style>
+        .date-btn { 
+            border: 1px solid #eee; background: #fff; padding: 10px; min-width: 65px; 
+            border-radius: 12px; display: flex; flex-direction: column; align-items: center;
+            transition: all 0.2s; cursor: pointer;
+        }
+        .date-btn:hover:not(.disabled) { border-color: #E24B4A; color: #E24B4A; background: #fff9f9; }
+        .date-btn.active { background: #E24B4A; color: #fff; border-color: #E24B4A; box-shadow: 0 4px 10px rgba(226, 75, 74, 0.3); }
+        .date-btn.disabled { opacity: 0.3; cursor: not-allowed; background: #f8f8f8; }
+
+        .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .time-btn { 
+            border: 1px solid #eee; background: #fff; padding: 8px; font-size: 13px; 
+            font-weight: 600; border-radius: 8px; transition: 0.2s; 
+        }
+        .time-btn:hover:not(.disabled) { border-color: #111; }
+        .time-btn.active { background: #111; color: #fff; border-color: #111; }
+        .time-btn.disabled { background: #f5f5f5; color: #ccc; cursor: not-allowed; text-decoration: line-through; }
+
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .legend-dot.active { background: #111; }
+        .legend-dot.disabled { background: #f5f5f5; border: 1px solid #eee; }
+
+        .is-invalid { border-color: #dc3545 !important; background-image: none !important; }
+        .x-small { font-size: 11px; }
+        .date-scroll::-webkit-scrollbar { height: 4px; }
+        .date-scroll::-webkit-scrollbar-thumb { background: #eee; border-radius: 10px; }
+    </style>
 }

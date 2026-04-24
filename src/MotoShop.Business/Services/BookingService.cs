@@ -178,5 +178,25 @@ namespace MotoShop.Business.Services
                 await _uow.CompleteAsync();
             }
         }
+
+        public async Task<bool> CancelBookingAsync(int bookingId, string reason, int? customerId)
+        {
+            var booking = await _uow.Repository<ServiceBooking>().GetByIdAsync(bookingId);
+            if (booking == null) return false;
+
+            // Nếu customerId được truyền vào, kiểm tra quyền sở hữu
+            if (customerId.HasValue && booking.CustomerId != customerId.Value)
+                return false;
+
+            // Chỉ cho phép hủy khi đang ở trạng thái Chờ cọc hoặc Đã xác nhận
+            if (booking.Status != "Pending" && booking.Status != "Confirmed")
+                return false;
+
+            booking.Status = "Cancelled";
+            booking.CancelReason = reason;
+            
+            await _uow.CompleteAsync();
+            return true;
+        }
     }
 }

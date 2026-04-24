@@ -1,62 +1,104 @@
-import os
-import re
 
-html_dir = r'D:\THÔNG\sneat-1.0.0\admin-ecommerce\html'
-files = [f for f in os.listdir(html_dir) if f.endswith('.html')]
+-- SQL Update Script for MotoShop - Branch sql-23
+-- Date: 2026-04-24
 
-new_scripts_template = """    <!-- Core JS -->
-    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
-    <script src="../assets/vendor/js/bootstrap.js"></script>
-    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
-    <script src="../assets/vendor/js/menu.js"></script>
-    <script src="../assets/js/main.js"></script>
-    <script src="../assets/js/design-system.js"></script>
-    <script src="../assets/js/ui-interactions.js"></script>"""
+-- 1. Bảng Coupons (Mã giảm giá) - Thêm tính năng áp dụng theo sản phẩm/danh mục
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'IsAllProducts')
+    ALTER TABLE Coupons ADD IsAllProducts BIT DEFAULT 1;
 
-for filename in files:
-    path = os.path.join(html_dir, filename)
-    with open(path, 'r', encoding='utf-8') as f:
-        content = f.read()
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'AppliedCategoryIds')
+    ALTER TABLE Coupons ADD AppliedCategoryIds NVARCHAR(MAX) NULL;
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'AppliedProductIds')
+    ALTER TABLE Coupons ADD AppliedProductIds NVARCHAR(MAX) NULL;
+
+-- 2. Bảng OrderStatusHistory (Lịch sử đơn hàng) - Theo dõi tiến trình
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'OrderStatusHistory')
+BEGIN
+    CREATE TABLE OrderStatusHistory (
+        HistoryId INT IDENTITY(1,1) PRIMARY KEY,
+        OrderId INT NOT NULL,
+        Status NVARCHAR(100) NOT NULL,
+        ChangedDate DATETIME DEFAULT GETDATE(),
+        Note NVARCHAR(MAX) NULL,
+        CONSTRAINT FK_OrderStatusHistory_Orders FOREIGN KEY (OrderId) REFERENCES Orders(OrderId) ON DELETE CASCADE
+    );
+END
+ELSE
+BEGIN
+    -- Đảm bảo tên cột là HistoryId nếu trước đó lỡ tạo là Id
+    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('OrderStatusHistory') AND name = 'Id')
+        EXEC sp_rename 'OrderStatusHistory.Id', 'HistoryId', 'COLUMN';
     
-    # Identify the core JS range
-    # Start: <!-- Core JS --> or jquery.js script tag
-    start_match = re.search(r'(?:<!--\s*Core JS\s*-->.*?<script[^>]*?jquery\.js.*?>|<script[^>]*?jquery\.js.*?>)', content, re.DOTALL)
-    if start_match:
-        start_index = start_match.start()
-        
-        # End: the last core-related script tag
-        end_search_content = content[start_index:]
-        # We look for the last script tag that we consider part of the "core" block
-        # This includes main.js, design-system.js, ui-interactions.js, menu.js, bootstrap.js, etc.
-        # We also match the closing </script> tag.
-        end_matches = list(re.finditer(r'<script[^>]*?(?:ui-interactions\.js|design-system\.js|main\.js|menu\.js|bootstrap\.js|popper\.js|perfect-scrollbar\.js|jquery\.js)[^>]*?>\s*</script>(\s*<!--\s*endbuild\s*-->)?', end_search_content))
-        
-        if end_matches:
-            last_end_match = end_matches[-1]
-            end_index = start_index + last_end_match.end()
-            
-            # Extract the range to be replaced
-            old_block = content[start_index:end_index]
-            
-            # Find any script tags in old_block that are NOT in our core set
-            other_tags = []
-            for m in re.finditer(r'<script[^>]*?src=["\']([^"\']+)["\'][^>]*?>\s*</script>', old_block):
-                src = m.group(1)
-                is_core = any(lib in src for lib in ['jquery.js', 'popper.js', 'bootstrap.js', 'perfect-scrollbar.js', 'menu.js', 'main.js', 'design-system.js', 'ui-interactions.js'])
-                if not is_core:
-                    other_tags.append(m.group(0))
-            
-            replacement = new_scripts_template
-            if other_tags:
-                # Add a separator and the other tags
-                replacement += "\n\n    <!-- Page Specific Libraries -->\n    " + "\n    ".join(other_tags)
-            
-            new_content = content[:start_index] + replacement + content[end_index:]
-            
-            with open(path, 'w', encoding='utf-8') as f:
-                f.write(new_content)
-            print(f"Updated {filename}")
-        else:
-            print(f"Could not find end of block in {filename}")
-    else:
-        print(f"Could not find start of block in {filename}")
+    -- Thêm cột Note nếu chưa có
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('OrderStatusHistory') AND name = 'Note')
+        ALTER TABLE OrderStatusHistory ADD Note NVARCHAR(MAX) NULL;
+END
+
+-- 3. Phân quyền (Roles) - Đảm bảo có Role Customer cho đăng ký mới
+IF NOT EXISTS (SELECT * FROM AspNetRoles WHERE Name = 'Customer')
+BEGIN
+    INSERT INTO AspNetRoles (Id, Name, NormalizedName, ConcurrencyStamp) 
+    VALUES (NEWID(), 'Customer', 'CUSTOMER', NEWID());
+END
+
+-- 4. Blog & Tin tức - Đảm bảo cấu trúc hỗ trợ hiển thị ổn định
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'BlogCategories')
+BEGIN
+    CREATE TABLE BlogCategories (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        Name NVARCHAR(200) NOT NULL,
+        Slug NVARCHAR(255) NULL
+    );
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Blogs')
+BEGIN
+    CREATE TABLE Blogs (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        Title NVARCHAR(300) NOT NULL,
+        Slug NVARCHAR(300) NOT NULL,
+        Content NVARCHAR(MAX) NOT NULL,
+        Thumbnail NVARCHAR(500) NULL,
+        CategoryId INT NOT NULL,
+        Status INT DEFAULT 0,
+        CreatedDate DATETIME DEFAULT GETDATE(),
+        UpdatedDate DATETIME NULL,
+        IsPublished BIT DEFAULT 0,
+        CONSTRAINT FK_Blogs_Categories FOREIGN KEY (CategoryId) REFERENCES BlogCategories(Id) ON DELETE CASCADE
+    );
+END
+ELSE
+BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Blogs') AND name = 'IsPublished')
+        ALTER TABLE Blogs ADD IsPublished BIT DEFAULT 0;
+END
+
+-- 5. Bảng Services - Cập nhật để hỗ trợ hiển thị giao diện mới
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Services') AND name = 'ImageUrl')
+    ALTER TABLE Services ADD ImageUrl NVARCHAR(500);
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Services') AND name = 'IsActive')
+    ALTER TABLE Services ADD IsActive BIT DEFAULT 1;
+
+-- 6. Đồng bộ các bảng mới hỗ trợ Address và Wishlist
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'WishlistsNew')
+CREATE TABLE WishlistsNew (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    UserId NVARCHAR(450) NOT NULL,
+    ProductId INT NOT NULL,
+    CreatedAt DATETIME DEFAULT GETDATE()
+);
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AddressesNew')
+CREATE TABLE AddressesNew (
+    Id INT IDENTITY(1,1) PRIMARY KEY, 
+    CustomerId INT NOT NULL, 
+    FullName NVARCHAR(200), 
+    Phone NVARCHAR(50), 
+    Province NVARCHAR(100), 
+    District NVARCHAR(100), 
+    Ward NVARCHAR(100), 
+    Street NVARCHAR(200), 
+    IsDefault BIT DEFAULT 0
+);

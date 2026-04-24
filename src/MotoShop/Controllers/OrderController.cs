@@ -46,8 +46,12 @@ namespace MotoShop.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(string status = "all", int page = 1)
         {
-            int customerId = await GetCurrentCustomerIdAsync();
-            if (customerId == 0) return RedirectToAction("Login", "Account");
+            var identityUserId = _userManager.GetUserId(User);
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == identityUserId);
+            if (customer == null) return RedirectToAction("Login", "Account");
+
+            ViewBag.Customer = customer;
+            int customerId = customer.CustomerId;
 
             int pageSize = 5; // Yêu cầu 5 đơn/trang
 

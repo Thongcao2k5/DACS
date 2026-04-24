@@ -76,5 +76,35 @@ namespace MotoShop.Areas.Admin.Controllers
 
             return Json(new { success = true, message = "Cập nhật trạng thái thành công" });
         }
+
+        [HttpPost]
+        public async Task<IActionResult> ApproveDeposit(int bookingId)
+        {
+            var booking = await _context.ServiceBookings.FindAsync(bookingId);
+            if (booking == null) return Json(new { success = false });
+
+            booking.Status = "Confirmed";
+            booking.DepositStatus = "Paid";
+            booking.ConfirmedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+            
+            // TODO: Gửi Email/SMS thông báo
+            
+            return Json(new { success = true, message = "Duyệt cọc thành công!" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RejectDeposit(int bookingId, string reason)
+        {
+            var booking = await _context.ServiceBookings.FindAsync(bookingId);
+            if (booking == null) return Json(new { success = false });
+
+            booking.Status = "Cancelled";
+            booking.CancelReason = reason;
+            booking.DepositStatus = "Rejected";
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Đã từ chối cọc và hủy lịch." });
+        }
     }
 }

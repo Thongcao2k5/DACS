@@ -50,8 +50,12 @@ namespace MotoShop.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            int customerId = await GetCurrentCustomerIdAsync();
-            if (customerId == 0) return RedirectToAction("Login", "Account");
+            var identityId = _userManager.GetUserId(User);
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == identityId);
+            if (customer == null) return RedirectToAction("Login", "Account");
+            
+            ViewBag.Customer = customer;
+            int customerId = customer.CustomerId;
             
             var addresses = await _context.AddressesNew
                 .Where(a => a.CustomerId == customerId)

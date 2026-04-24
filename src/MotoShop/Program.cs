@@ -59,6 +59,8 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
 
 builder.Services.ConfigureApplicationCookie(options => {
     options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/Login";
+    options.ReturnUrlParameter = "returnUrl";
     options.Cookie.Name = "MotoShop.Auth";
     options.ExpireTimeSpan = TimeSpan.FromDays(30);
 });
@@ -74,10 +76,10 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddHostedService<BookingExpiryService>();
 
 var app = builder.Build();
 
-// TỐI ƯU HÓA KHỞI ĐỘNG (CHỈ TẠO BẢNG NẾU CẦN)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -87,150 +89,114 @@ using (var scope = app.Services.CreateScope())
 
     try 
     {
-        Log.Information("Checking and Seeding data...");
+        Log.Information("Updating Database Schema...");
         
-        // ĐẢM BẢO BẢNG SMART FEATURES TỒN TẠI VÀ ĐÚNG CẤU TRÚC
+        // GIAI ĐOẠN 1: TẠO BẢNG VÀ CỘT
         await context.Database.ExecuteSqlRawAsync(@"
-            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'WishlistsNew')
-            CREATE TABLE WishlistsNew (
-                Id INT IDENTITY PRIMARY KEY,
-                UserId INT NOT NULL,
-                ProductId INT NOT NULL,
-                CreatedAt DATETIME DEFAULT GETDATE()
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ServiceCategories')
+            CREATE TABLE ServiceCategories (
+                CategoryId INT IDENTITY PRIMARY KEY,
+                CategoryName NVARCHAR(100) NOT NULL,
+                Slug NVARCHAR(255),
+                Icon NVARCHAR(50),
+                IsActive BIT DEFAULT 1
             );
 
-            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AddressesNew')
-            CREATE TABLE AddressesNew (
-                Id INT IDENTITY PRIMARY KEY, 
-                CustomerId INT NOT NULL, 
-                FullName NVARCHAR(200), 
-                Phone NVARCHAR(50), 
-                Province NVARCHAR(100), 
-                District NVARCHAR(100), 
-                Ward NVARCHAR(100), 
-                Street NVARCHAR(200), 
-                IsDefault BIT DEFAULT 0
-            );
-
-            -- Sửa lỗi thiếu cột UserId trong bảng Carts (để hỗ trợ Guest Cart)
-            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Carts') AND name = 'UserId')
-                ALTER TABLE Carts ADD UserId NVARCHAR(450);
-
-            -- Sửa lỗi thiếu cột ImageUrl và IsActive trong Services
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Services') AND name = 'CategoryId')
+                ALTER TABLE Services ADD CategoryId INT NULL;
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Services') AND name = 'Slug')
+                ALTER TABLE Services ADD Slug NVARCHAR(255);
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Services') AND name = 'Duration')
+                ALTER TABLE Services ADD Duration INT DEFAULT 30;
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Services') AND name = 'ShortDescription')
+                ALTER TABLE Services ADD ShortDescription NVARCHAR(MAX);
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Services') AND name = 'WarrantyDays')
+                ALTER TABLE Services ADD WarrantyDays INT DEFAULT 30;
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Services') AND name = 'TotalBookings')
+                ALTER TABLE Services ADD TotalBookings INT DEFAULT 0;
             IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Services') AND name = 'ImageUrl')
                 ALTER TABLE Services ADD ImageUrl NVARCHAR(500);
             IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Services') AND name = 'IsActive')
                 ALTER TABLE Services ADD IsActive BIT DEFAULT 1;
 
-            -- Cập nhật ServiceBookings để hỗ trợ ComboId
-            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ServiceBookings') AND name = 'ComboId')
-                ALTER TABLE ServiceBookings ADD ComboId INT NULL;
-
-            -- Tạo bảng ServiceCombos nếu chưa có (Tránh lỗi SQL khi truy vấn)
-            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ServiceCombos')
-            CREATE TABLE ServiceCombos (
-                ComboId INT IDENTITY PRIMARY KEY,
-                ComboName NVARCHAR(200) NOT NULL,
-                TotalPrice DECIMAL(18,2) NOT NULL,
-                DiscountPrice DECIMAL(18,2) NOT NULL,
-                Description NVARCHAR(MAX),
-                ImageUrl NVARCHAR(500),
-                IsActive BIT DEFAULT 1
-            );
-
-            -- Tạo bảng ServiceComboItems nếu chưa có
-            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ServiceComboItems')
-            CREATE TABLE ServiceComboItems (
-                Id INT IDENTITY PRIMARY KEY,
-                ComboId INT NOT NULL,
-                ServiceId INT NOT NULL,
-                CONSTRAINT FK_ServiceComboItems_Combos FOREIGN KEY (ComboId) REFERENCES ServiceCombos(ComboId) ON DELETE CASCADE,
-                CONSTRAINT FK_ServiceComboItems_Services FOREIGN KEY (ServiceId) REFERENCES Services(ServiceId) ON DELETE CASCADE
-            );
-
-            -- Tạo bảng OrderStatusHistory nếu chưa có
-            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'OrderStatusHistory')
-            CREATE TABLE OrderStatusHistory (
-                HistoryId INT IDENTITY PRIMARY KEY,
-                OrderId INT NOT NULL,
-                Status NVARCHAR(100) NOT NULL,
-                ChangedDate DATETIME DEFAULT GETDATE(),
-                Note NVARCHAR(MAX) NULL,
-                CONSTRAINT FK_OrderStatusHistory_Orders FOREIGN KEY (OrderId) REFERENCES Orders(OrderId) ON DELETE CASCADE
-            );
-            ELSE
-            BEGIN
-                -- Nếu lỡ tạo với tên cột 'Id', đổi tên thành 'HistoryId'
-                IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('OrderStatusHistory') AND name = 'Id')
-                    EXEC sp_rename 'OrderStatusHistory.Id', 'HistoryId', 'COLUMN';
-            END
-
-
-
-
-            -- Sửa lỗi tên bảng Staff (cũ) thành Staffs (mới)
-            IF EXISTS (SELECT * FROM sys.tables WHERE name = 'Staff') AND NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Staffs')
-                EXEC sp_rename 'Staff', 'Staffs';
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Custom_Wishlists')
+                CREATE TABLE Custom_Wishlists (Id INT IDENTITY PRIMARY KEY, UserId INT NOT NULL, ProductId INT NOT NULL, CreatedAt DATETIME DEFAULT GETDATE());
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'WishlistsNew')
+                CREATE TABLE WishlistsNew (Id INT IDENTITY PRIMARY KEY, UserId INT NOT NULL, ProductId INT NOT NULL, CreatedAt DATETIME DEFAULT GETDATE());
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AddressesNew')
+                CREATE TABLE AddressesNew (Id INT IDENTITY PRIMARY KEY, CustomerId INT NOT NULL, FullName NVARCHAR(200), Phone NVARCHAR(50), Province NVARCHAR(100), District NVARCHAR(100), Ward NVARCHAR(100), Street NVARCHAR(200), IsDefault BIT DEFAULT 0);
             
-            -- Tạo bảng InventoryTransactions nếu chưa có (thay thế StockMovements)
-            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'InventoryTransactions')
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Carts') AND name = 'UserId')
+                ALTER TABLE Carts ADD UserId NVARCHAR(450);
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Customers') AND name = 'AvatarUrl')
+                ALTER TABLE Customers ADD AvatarUrl NVARCHAR(MAX) NULL;
+
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ServiceReviews')
+                CREATE TABLE ServiceReviews (ReviewId INT IDENTITY PRIMARY KEY, ServiceId INT NOT NULL, CustomerId INT NULL, Rating INT NOT NULL, Comment NVARCHAR(MAX), IsApproved BIT DEFAULT 0, CreatedDate DATETIME DEFAULT GETDATE());
+
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Blogs') AND name = 'IsPublished')
+                ALTER TABLE Blogs ADD IsPublished BIT DEFAULT 0;
+            
+            -- Đảm bảo không có giá trị NULL cho cột IsPublished (Sửa lỗi SqlNullValueException)
+            UPDATE Blogs SET IsPublished = 0 WHERE IsPublished IS NULL;
+
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Blogs') AND name = 'MetaTitle')
+                ALTER TABLE Blogs ADD MetaTitle NVARCHAR(255) NULL;
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Blogs') AND name = 'MetaDescription')
+                ALTER TABLE Blogs ADD MetaDescription NVARCHAR(500) NULL;
+
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Banners') AND name = 'DisplayOrder')
+                ALTER TABLE Banners ADD DisplayOrder INT DEFAULT 0;
+            
+            -- Đảm bảo không có giá trị NULL cho cột DisplayOrder (Sửa lỗi SqlNullValueException)
+            UPDATE Banners SET DisplayOrder = 0 WHERE DisplayOrder IS NULL;
+
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ServiceBookings') AND name = 'DepositAmount')
+                ALTER TABLE ServiceBookings ADD DepositAmount DECIMAL(18,2) DEFAULT 0, DepositStatus NVARCHAR(50) DEFAULT 'Unpaid', TransferProof NVARCHAR(500) NULL, ConfirmedAt DATETIME NULL, ExpireAt DATETIME NULL, CancelReason NVARCHAR(500) NULL;
+
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'OrderStatusHistory')
+                CREATE TABLE OrderStatusHistory (HistoryId INT IDENTITY PRIMARY KEY, OrderId INT NOT NULL, Status NVARCHAR(100) NOT NULL, ChangedDate DATETIME DEFAULT GETDATE(), Note NVARCHAR(MAX) NULL);
+        ");
+
+        // GIAI ĐOẠN 2: SEED DATA
+        Log.Information("Seeding Data...");
+        await context.Database.ExecuteSqlRawAsync(@"
+            IF NOT EXISTS (SELECT * FROM ServiceCategories)
             BEGIN
-                IF EXISTS (SELECT * FROM sys.tables WHERE name = 'StockMovements')
-                    EXEC sp_rename 'StockMovements', 'InventoryTransactions';
-                ELSE
-                CREATE TABLE InventoryTransactions (
-                    TransactionId INT IDENTITY PRIMARY KEY,
-                    ProductVariantId INT NULL,
-                    Quantity INT NOT NULL,
-                    TransactionType NVARCHAR(50) NOT NULL,
-                    TransactionDate DATETIME DEFAULT GETDATE(),
-                    Note NVARCHAR(MAX)
-                );
+                INSERT INTO ServiceCategories (CategoryName, Slug, Icon) VALUES 
+                (N'Bảo dưỡng', 'bao-duong', 'bx-wrench'),
+                (N'Phụ tùng', 'phu-tung', 'bx-cog'),
+                (N'Độ xe', 'do-xe', 'bx-tachometer'),
+                (N'Cứu hộ', 'cuu-ho', 'bx-unite'),
+                (N'Rửa xe', 'rua-xe', 'bx-water');
+
+                DECLARE @catBaoDuong INT = (SELECT CategoryId FROM ServiceCategories WHERE Slug = 'bao-duong');
+                DECLARE @catPhuTung INT = (SELECT CategoryId FROM ServiceCategories WHERE Slug = 'phu-tung');
+                DECLARE @catDoXe INT = (SELECT CategoryId FROM ServiceCategories WHERE Slug = 'do-xe');
+                DECLARE @catCuuHo INT = (SELECT CategoryId FROM ServiceCategories WHERE Slug = 'cuu-ho');
+                DECLARE @catRuaXe INT = (SELECT CategoryId FROM ServiceCategories WHERE Slug = 'rua-xe');
+
+                DELETE FROM Services;
+                INSERT INTO Services (ServiceName, Price, Duration, Slug, CategoryId, Description, WarrantyDays, TotalBookings, IsActive) VALUES
+                (N'Thay nhớt động cơ', 120000, 30, 'thay-nhot-dong-co', @catBaoDuong, N'Thay nhớt động cơ giúp xe vận hành mượt mà hơn.', 30, 120, 1),
+                (N'Bảo dưỡng định kỳ', 350000, 90, 'bao-duong-dinh-ky', @catBaoDuong, N'Bao gồm kiểm tra phanh, nhớt, lọc gió, bugi và hệ thống điện.', 45, 85, 1),
+                (N'Kiểm tra phanh', 180000, 45, 'kiem-tra-phanh', @catBaoDuong, N'Kiểm tra bố thắng, dầu phanh và hiệu suất phanh.', 30, 50, 1),
+                (N'Thay lốp xe', 450000, 60, 'thay-lop-xe', @catPhuTung, N'Thay lốp mới và cân chỉnh áp suất tiêu chuẩn.', 60, 65, 1),
+                (N'Thay bugi', 200000, 30, 'thay-bugi', @catPhuTung, N'Giúp xe đề nổ tốt hơn và tiết kiệm nhiên liệu.', 30, 40, 1),
+                (N'Lắp đèn LED', 500000, 60, 'lap-den-led', @catPhuTung, N'Tăng độ sáng và tính thẩm mỹ cho xe.', 90, 32, 1),
+                (N'Độ pô xe', 1200000, 180, 'do-po-xe', @catDoXe, N'Tăng hiệu suất động cơ và âm thanh mạnh mẽ.', 90, 22, 1),
+                (N'Sơn tem xe', 900000, 240, 'son-tem-xe', @catDoXe, N'Tùy chỉnh phong cách xe theo sở thích.', 60, 18, 1),
+                (N'Cứu hộ xe chết máy', 250000, 60, 'cuu-ho-xe-chet-may', @catCuuHo, N'Hỗ trợ xe chết máy tại chỗ trong nội thành.', 7, 55, 1),
+                (N'Cứu hộ thủng lốp', 200000, 45, 'cuu-ho-thung-lop', @catCuuHo, N'Hỗ trợ khẩn cấp khi xe bị thủng lốp.', 7, 38, 1),
+                (N'Rửa xe cơ bản', 50000, 20, 'rua-xe-co-ban', @catRuaXe, N'Làm sạch thân xe và bánh xe.', 0, 150, 1),
+                (N'Rửa xe cao cấp', 150000, 45, 'rua-xe-cao-cap', @catRuaXe, N'Bao gồm đánh bóng và vệ sinh chuyên sâu.', 0, 95, 1);
             END
 
-            -- Tạo bảng BlogCategories nếu chưa có
-            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'BlogCategories')
-            CREATE TABLE BlogCategories (
-                Id INT IDENTITY PRIMARY KEY,
-                Name NVARCHAR(200) NOT NULL,
-                Slug NVARCHAR(255) NULL
-            );
-
-            -- Tạo bảng Blogs nếu chưa có và thêm cột IsPublished nếu thiếu
-            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Blogs')
-            CREATE TABLE Blogs (
-                Id INT IDENTITY PRIMARY KEY,
-                Title NVARCHAR(300) NOT NULL,
-                Slug NVARCHAR(300) NOT NULL,
-                Content NVARCHAR(MAX) NOT NULL,
-                Thumbnail NVARCHAR(500) NULL,
-                CategoryId INT NOT NULL,
-                Status INT DEFAULT 0,
-                CreatedDate DATETIME DEFAULT GETDATE(),
-                UpdatedDate DATETIME NULL,
-                IsPublished BIT DEFAULT 0,
-                CONSTRAINT FK_Blogs_Categories FOREIGN KEY (CategoryId) REFERENCES BlogCategories(Id) ON DELETE CASCADE
-            );
-            ELSE
-            BEGIN
-                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Blogs') AND name = 'IsPublished')
-                    ALTER TABLE Blogs ADD IsPublished BIT DEFAULT 0;
-            END
-
-            -- Thêm các cột cho Coupons nếu thiếu
-            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'IsAllProducts')
-                ALTER TABLE Coupons ADD IsAllProducts BIT DEFAULT 1;
-            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'AppliedCategoryIds')
-                ALTER TABLE Coupons ADD AppliedCategoryIds NVARCHAR(MAX) NULL;
-            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'AppliedProductIds')
-                ALTER TABLE Coupons ADD AppliedProductIds NVARCHAR(MAX) NULL;
-
-            -- Đảm bảo Role 'Customer' tồn tại
-            IF NOT EXISTS (SELECT * FROM AspNetRoles WHERE Name = 'Customer')
-            BEGIN
-                INSERT INTO AspNetRoles (Id, Name, NormalizedName, ConcurrencyStamp) 
-                VALUES (NEWID(), 'Customer', 'CUSTOMER', NEWID());
-            END
+            UPDATE Services SET Duration = 30 WHERE Duration IS NULL;
+            UPDATE Services SET IsActive = 1 WHERE IsActive IS NULL;
+            UPDATE Services SET TotalBookings = 0 WHERE TotalBookings IS NULL;
+            UPDATE Services SET WarrantyDays = 30 WHERE WarrantyDays IS NULL;
+            UPDATE ServiceCategories SET IsActive = 1 WHERE IsActive IS NULL;
         ");
 
         if (!context.Categories.Any()) {

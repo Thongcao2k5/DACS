@@ -43,6 +43,13 @@
     <form id="checkoutForm" method="post">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="AddressId" id="inputAddressId" value="@defaultAddr?.Id">
+        
+        @if (ViewBag.IsDirectCheckout == true)
+        {
+            <input type="hidden" asp-for="DirectVariantId" value="@ViewBag.DirectVariantId">
+            <input type="hidden" asp-for="DirectQuantity" value="@ViewBag.DirectQuantity">
+        }
+
         <div class="row g-4">
             <!-- LEFT COLUMN -->
             <div class="col-lg-7">
@@ -94,13 +101,13 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label-custom small fw-bold">Quận/Huyện *</label>
-                                <select asp-for="District" id="district" class="form-select form-control-custom" disabled>
+                                <select asp-for="District" id="district" class="form-select form-control-custom">
                                     <option value="">Chọn Quận/Huyện</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label-custom small fw-bold">Phường/Xã *</label>
-                                <select asp-for="Ward" id="ward" class="form-select form-control-custom" disabled>
+                                <select asp-for="Ward" id="ward" class="form-select form-control-custom">
                                     <option value="">Chọn Phường/Xã</option>
                                 </select>
                             </div>
@@ -159,13 +166,28 @@
                     <ul class="list-unstyled mb-4">
                         @foreach(var item in cartItems) {
                             <li class="d-flex gap-3 mb-3 pb-3 border-bottom">
-                                <img src="@(item.ImageUrl ?? "/assets/img/elements/18.jpg")" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
-                                <div class="flex-grow-1">
-                                    <div class="fw-bold small">@item.ProductName</div>
-                                    <div class="x-small text-muted">Phân loại: @item.VariantName</div>
-                                    <div class="x-small text-muted">SL: @item.Quantity x @item.Price.ToString("N0")đ</div>
+                                <div class="position-relative">
+                                    <img src="@(item.ImageUrl ?? "/assets/img/elements/18.jpg")" class="rounded border" style="width: 70px; height: 70px; object-fit: cover;">
+                                    @if(item.PromotionDiscount > 0) {
+                                        <span class="badge bg-danger position-absolute top-0 start-0 translate-middle-y x-small" style="font-size: 10px;">GIẢM GIÁ</span>
+                                    }
                                 </div>
-                                <div class="fw-bold small">@item.Total.ToString("N0")đ</div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold small text-truncate-2">@item.ProductName</div>
+                                    <div class="x-small text-muted mb-1">Phân loại: @item.VariantName</div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="text-danger fw-bold small">@item.Price.ToString("N0")đ</span>
+                                        @if(item.OriginalPrice > item.Price) {
+                                            <del class="text-muted x-small">@item.OriginalPrice.ToString("N0")đ</del>
+                                        }
+                                        <span class="x-small text-dark fw-medium ms-auto">x @item.Quantity</span>
+                                    </div>
+                                    @if(item.PromotionDiscount > 0) {
+                                        <div class="text-success x-small fw-bold mt-1 animate__animated animate__pulse animate__infinite">
+                                            <i class='bx bxs-check-shield'></i> Flash Sale - Tiết kiệm @((item.PromotionDiscount * item.Quantity).ToString("N0"))đ
+                                        </div>
+                                    }
+                                </div>
                             </li>
                         }
                     </ul>

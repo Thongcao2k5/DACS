@@ -1,162 +1,89 @@
-@using MotoShop.Business.DTOs
-@model IEnumerable<ProductDto>
+@model IEnumerable<MotoShop.Business.DTOs.ProductDto>
 @{
-    ViewData["Title"] = "Khuyến mãi hấp dẫn - MotoShop";
+    ViewData["Title"] = "Siêu Sale MotoShop - Ưu đãi khủng";
 }
 
 <!-- 1. BREADCRUMB -->
-<div class="breadcrumb-wrapper">
+<div class="breadcrumb-wrapper py-3 bg-light border-bottom mb-4">
     <div class="container">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Chương trình khuyến mãi</li>
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none text-muted">Trang chủ</a></li>
+                <li class="breadcrumb-item active fw-bold" aria-current="page">Chương trình khuyến mãi</li>
             </ol>
         </nav>
     </div>
 </div>
 
-<main class="container mb-5">
-    <!-- 2. PROMOTION BANNER -->
-    <section class="p-0 mb-5">
-        <div class="promo-banner-large rounded-4 overflow-hidden position-relative">
-            <img src="/assets/img/backgrounds/promo-banner.jpg" onerror="this.src='https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1600&q=80'" class="w-100" style="height: 400px; object-fit: cover;" alt="Promo">
-            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="background: linear-gradient(to right, rgba(0,0,0,0.7), transparent); padding: 60px;">
-                <div class="text-white col-lg-6">
-                    <h4 class="fw-bold text-warning mb-2">ƯU ĐÃI ĐẶC BIỆT</h4>
-                    <h1 class="display-4 fw-bolder mb-3">SĂN PHỤ TÙNG<br>GIẢM ĐẾN 50%</h1>
-                    <p class="fs-5 mb-4 opacity-75">Áp dụng cho các linh kiện chính hãng Honda, Yamaha & Motul đang có mặt tại cửa hàng.</p>
-                    <a href="#discountGrid" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold">SĂN DEAL NGAY</a>
+<main class="container">
+    <!-- 2. HERO BANNER -->
+    <section class="promo-hero mb-5">
+        <div class="promo-banner-large rounded-4 overflow-hidden position-relative shadow-sm">
+            <img src="/assets/img/backgrounds/promo-banner.jpg" onerror="this.src='https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1600&q=80'" class="w-100 h-100 object-fit-cover" style="min-height: 350px;" alt="Promo">
+            <div class="hero-overlay-gradient position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center">
+                <div class="container p-5">
+                    <div class="col-lg-6">
+                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3 animate__animated animate__fadeInDown">LIMITED OFFER</span>
+                        <h1 class="display-3 fw-bolder text-white mb-3 line-height-1 animate__animated animate__fadeInLeft">ĐẠI TIỆC<br><span class="text-danger">PHỤ TÙNG</span></h1>
+                        <p class="fs-5 text-white-50 mb-4 animate__animated animate__fadeInUp">Giảm giá lên đến 50% cho tất cả dòng xe Honda, Yamaha, Suzuki. Chỉ trong tuần này!</p>
+                        <a href="#discountGrid" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold shadow-lg transform-hover">SĂN DEAL NGAY</a>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- 4. FLASH SALE SECTION -->
-    <section class="p-0 mb-5">
-        <div class="flash-sale-header">
+    <section class="flash-sale-section mb-5 p-4 rounded-4 bg-white shadow-sm border border-danger border-opacity-25">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
             <div class="d-flex align-items-center gap-3">
-                <h3 class="fw-bolder mb-0 italic">FLASH SALE</h3>
-                <div class="countdown-timer">
-                    <span class="small fw-bold me-1">KẾT THÚC TRONG:</span>
-                    <div class="timer-unit" id="hr">02</div>
-                    <span class="fw-bold">:</span>
-                    <div class="timer-unit" id="mn">15</div>
-                    <span class="fw-bold">:</span>
-                    <div class="timer-unit" id="sc">30</div>
+                <div class="flash-title">
+                    <i class='bx bxs-zap fs-2'></i>
+                    <h3 class="fw-bolder mb-0">FLASH SALE</h3>
+                </div>
+                <div class="countdown-wrapper d-flex align-items-center gap-2">
+                    <span class="fw-bold small text-muted text-uppercase d-none d-md-block">Kết thúc trong</span>
+                    <div class="d-flex gap-1" id="countdown">
+                        <div class="time-box" id="hr">02</div>
+                        <span class="fw-bold">:</span>
+                        <div class="time-box" id="mn">45</div>
+                        <span class="fw-bold">:</span>
+                        <div class="time-box" id="sc">12</div>
+                    </div>
                 </div>
             </div>
+            <a href="#" class="text-danger fw-bold text-decoration-none hover-underline">Xem tất cả <i class='bx bx-chevron-right'></i></a>
         </div>
-        <div class="flash-sale-body mt-4">
-            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
-                @if (Model != null && Model.Any())
-                {
-                    foreach (var product in Model.Take(4))
-                    {
-                        var primaryImg = product.PrimaryImageUrl ?? "/assets/img/elements/1.jpg";
-                        var price = product.MinPrice;
-                        var oldPrice = product.OldPrice ?? (price * 1.2m); // Giả lập giá cũ nếu không có
 
-                        <div class="col">
-                            <div class="product-card h-100 shadow-sm border-0">
-                                @if (product.DiscountPercent > 0)
-                                {
-                                    <div class="discount-badge-large">-@product.DiscountPercent%</div>
-                                }
-                                <div class="product-img-wrapper position-relative">
-                                    <a href="@Url.Action("Details", "Product", new { slug = product.Slug })" class="d-block w-100 h-100">
-                                        <img src="@primaryImg" alt="@product.ProductName" onerror="this.src='https://via.placeholder.com/400'">
-                                    </a>
-                                    <button type="button" class="btn-wishlist-abs" onclick="addToWishlist(@product.ProductId)" title="Thêm vào yêu thích">
-                                        <i class='bx bx-heart'></i>
-                                    </button>
-                                </div>
-                                <div class="product-info flex-grow-1">
-                                    <a href="@Url.Action("Details", "Product", new { slug = product.Slug })" class="text-decoration-none">
-                                        <h6 class="name text-truncate text-dark">@product.ProductName</h6>
-                                    </a>
-                                    <div class="product-price">
-                                        <span class="current">@price.ToString("N0")đ</span>
-                                        @if (product.OldPrice > product.MinPrice)
-                                        {
-                                            <span class="old">@product.OldPrice?.ToString("N0")đ</span>
-                                        }
-                                    </div>
-                                    <!-- Stock Progress -->
-                                    <div class="stock-progress-wrapper mt-2">
-                                        <div class="stock-label">
-                                            <span>Sắp cháy hàng</span>
-                                        </div>
-                                        <div class="progress-bar-custom">
-                                            <div class="progress-fill" style="width: 85%;"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button class="btn btn-danger w-100 rounded-pill fw-bold mt-3" onclick="handleBuyNow(@product.DefaultVariantId)">MUA NGAY</button>
-                            </div>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <div class="col-12 text-center py-5">
-                        <p class="text-muted">Hiện chưa có sản phẩm Flash Sale.</p>
-                    </div>
-                }
-            </div>
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" id="flashSaleList">
+            <!-- Rendered by JS -->
         </div>
     </section>
 
-    <!-- 5. DISCOUNT PRODUCTS GRID -->
-    <section class="p-0" id="discountGrid">
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-            <h3 class="fw-bold mb-0 text-uppercase">SẢN PHẨM ƯU ĐÃI</h3>
+    <!-- 5. ALL PROMOTIONS -->
+    <section id="discountGrid" class="mb-5">
+        <div class="section-header d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <h3 class="fw-bolder mb-1 text-uppercase">Sản phẩm ưu đãi</h3>
+                <p class="text-muted mb-0">Danh sách phụ tùng chính hãng đang giảm giá tốt nhất</p>
+            </div>
+            <div class="filter-sort d-none d-md-block">
+                <select class="form-select rounded-pill border-0 bg-light px-4 shadow-sm">
+                    <option>Sắp xếp: Mới nhất</option>
+                    <option>Giá: Thấp đến cao</option>
+                    <option>Giảm giá nhiều nhất</option>
+                </select>
+            </div>
         </div>
 
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
-            @if (Model != null && Model.Any())
-            {
-                foreach (var product in Model)
-                {
-                    var primaryImg = product.PrimaryImageUrl ?? "/assets/img/elements/1.jpg";
-                    var price = product.MinPrice;
-                    var oldPrice = product.OldPrice ?? (price * 1.15m);
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4" id="promoGrid">
+            <!-- Rendered by JS -->
+        </div>
 
-                    <div class="col">
-                        <div class="product-card h-100 shadow-sm border-0">
-                            <span class="product-badge badge-hot">HOT</span>
-                            <div class="product-img-wrapper position-relative">
-                                <a href="@Url.Action("Details", "Product", new { slug = product.Slug })" class="d-block w-100 h-100">
-                                    <img src="@primaryImg" alt="@product.ProductName" onerror="this.src='https://via.placeholder.com/400'">
-                                </a>
-                                <button type="button" class="btn-wishlist-abs" onclick="addToWishlist(@product.ProductId)" title="Thêm vào yêu thích">
-                                    <i class='bx bx-heart'></i>
-                                </button>
-                            </div>
-                            <div class="product-info flex-grow-1">
-                                <span class="brand text-uppercase small text-muted">@(product.BrandName ?? "MotoShop")</span>
-                                <a href="@Url.Action("Details", "Product", new { slug = product.Slug })" class="text-decoration-none">
-                                    <h6 class="name text-truncate text-dark">@product.ProductName</h6>
-                                </a>
-                                <div class="product-price">
-                                    <span class="current">@price.ToString("N0")đ</span>
-                                    @if (product.OldPrice > product.MinPrice)
-                                    {
-                                        <span class="old">@product.OldPrice?.ToString("N0")đ</span>
-                                    }
-                                </div>
-                            </div>
-                            <button class="btn btn-add-cart w-100 rounded-pill fw-bold mt-3" onclick="handleAddToCart(@product.DefaultVariantId)">THÊM VÀO GIỎ</button>
-                        </div>
-                    </div>
-                }
-            }
-            else
-            {
-                <div class="col-12 text-center py-5">
-                    <i class='bx bx-purchase-tag-alt fs-1 text-muted mb-3 d-block'></i>
-                    <h5 class="text-muted">Đang cập nhật thêm các sản phẩm ưu đãi khác.</h5>
-                </div>
+        <!-- Skeleton Loader -->
+        <div id="promoLoading" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4 mt-1">
+            @for(int i=0; i<10; i++) {
+                <div class="col"><div class="skeleton-card"></div></div>
             }
         </div>
     </section>
@@ -164,24 +91,247 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="~/assets/js/design-system.js"></script>
     <script src="~/js/cart-handler.js"></script>
     <script>
-        // Simple countdown logic
-        function startTimer() {
-            let h = 2, m = 15, s = 30;
-            setInterval(() => {
+        $(document).ready(function() {
+            loadPromotionData();
+            startCountdown();
+        });
+
+        async function loadPromotionData() {
+            try {
+                const response = await fetch('/Product/GetPromotionProductsJson?count=20');
+                const products = await response.json();
+
+                $('#flashSaleList').empty();
+                $('#promoGrid').empty();
+
+                if (products && products.length > 0) {
+                    // Render Flash Sale
+                    products.slice(0, 5).forEach(p => {
+                        $('#flashSaleList').append(renderModernProductCard(p, true));
+                    });
+
+                    // Render Main Grid
+                    products.forEach(p => {
+                        $('#promoGrid').append(renderModernProductCard(p, false));
+                    });
+                }
+            } catch (error) {
+                $('#promoGrid').html('<div class="col-12 text-center py-5 text-danger"><i class="bx bx-error-circle fs-1 mb-2"></i><p>Không thể tải dữ liệu. Vui lòng thử lại.</p></div>');
+            } finally {
+                $('#promoLoading').fadeOut();
+            }
+        }
+
+        function renderModernProductCard(p, isFlashSale) {
+            const formatPrice = (val) => new Intl.NumberFormat('vi-VN').format(val) + '₫';
+            const primaryImg = p.primaryImageUrl || '/assets/img/elements/1.jpg';
+            const discountPercent = p.discountPercent || 20; // fallback if null
+
+            return `
+                <div class="col">
+                    <div class="modern-product-card">
+                        <div class="card-img-container">
+                            <span class="badge-discount">-${discountPercent}%</span>
+                            <a href="/Product/Details?slug=${p.slug}">
+                                <img src="${primaryImg}" class="product-img" alt="${p.productName}" onerror="this.src='/assets/img/elements/18.jpg'">
+                            </a>
+                            <div class="card-actions">
+                                <button onclick="addToWishlist(${p.productId})" class="action-btn" title="Yêu thích"><i class='bx bx-heart'></i></button>
+                                <button onclick="quickView(${p.productId})" class="action-btn" title="Xem nhanh"><i class='bx bx-search'></i></button>
+                            </div>
+                        </div>
+                        <div class="card-body-content">
+                            <div class="product-brand">${p.brandName || 'MotoShop'}</div>
+                            <h6 class="product-name">
+                                <a href="/Product/Details?slug=${p.slug}">${p.productName}</a>
+                            </h6>
+                            <div class="price-group">
+                                <span class="price-current">${formatPrice(p.minPrice)}</span>
+                                <span class="price-old">${formatPrice(p.oldPrice || p.minPrice * 1.2)}</span>
+                            </div>
+                            ${isFlashSale ? `
+                                <div class="flash-progress-wrapper">
+                                    <div class="progress">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-danger" style="width: 65%"></div>
+                                    </div>
+                                    <span class="progress-text">Đã bán 18</span>
+                                </div>
+                                <button class="btn btn-danger w-100 rounded-pill btn-buy-now mt-2" onclick="handleBuyNow(${p.defaultVariantId})">MUA NGAY</button>
+                            ` : `
+                                <button class="btn btn-outline-danger w-100 rounded-pill btn-add-cart mt-2" onclick="handleAddToCart(${p.defaultVariantId})">
+                                    <i class='bx bx-cart-add'></i> THÊM GIỎ
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function startCountdown() {
+            let h = 2, m = 45, s = 12;
+            const timer = setInterval(() => {
                 s--;
                 if(s < 0) { s = 59; m--; }
                 if(m < 0) { m = 59; h--; }
-                const hrElem = document.getElementById('hr');
-                const mnElem = document.getElementById('mn');
-                const scElem = document.getElementById('sc');
-                if(hrElem) hrElem.innerText = h.toString().padStart(2, '0');
-                if(mnElem) mnElem.innerText = m.toString().padStart(2, '0');
-                if(scElem) scElem.innerText = s.toString().padStart(2, '0');
+                if(h < 0) { clearInterval(timer); return; }
+                $('#hr').text(h.toString().padStart(2, '0'));
+                $('#mn').text(m.toString().padStart(2, '0'));
+                $('#sc').text(s.toString().padStart(2, '0'));
             }, 1000);
         }
-        startTimer();
+
+        function handleBuyNow(variantId) {
+            if (!variantId) {
+                Swal.fire('Thông báo', 'Sản phẩm này hiện đang hết hàng.', 'info');
+                return;
+            }
+            // Chuyển hướng thẳng tới trang thanh toán với duy nhất sản phẩm này
+            window.location.href = `/Cart/Checkout?variantId=${variantId}&quantity=1`;
+        }
+
+        async function addToWishlist(productId) {
+            try {
+                const res = await fetch('/Account/ToggleWishlist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productId: productId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, 
+                               title: data.added ? 'Đã thêm vào yêu thích' : 'Đã xóa khỏi yêu thích', icon: 'success' });
+                }
+            } catch (e) {
+                console.error('Wishlist error:', e);
+            }
+        }
     </script>
+
+    <style>
+        :root {
+            --ms-red: #E24B4A;
+            --ms-dark: #111111;
+            --ms-gray: #666666;
+            --ms-light-bg: #f8f9fa;
+        }
+
+        .hero-overlay-gradient { background: linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%); }
+        .line-height-1 { line-height: 1.1; }
+        .transform-hover:hover { transform: scale(1.05); transition: 0.3s; }
+
+        /* Flash Sale Styles */
+        .flash-title { display: flex; align-items: center; gap: 8px; color: var(--ms-red); }
+        .time-box { background: var(--ms-dark); color: white; padding: 4px 8px; border-radius: 6px; font-family: monospace; font-size: 1.2rem; min-width: 40px; text-align: center; }
+        
+        /* Modern Product Card */
+        .modern-product-card {
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%;
+            border: 1px solid #f0f0f0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modern-product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: var(--ms-red);
+        }
+
+        .card-img-container {
+            position: relative;
+            aspect-ratio: 1/1;
+            overflow: hidden;
+            background: #fdfdfd;
+        }
+
+        .product-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .modern-product-card:hover .product-img {
+            transform: scale(1.1);
+        }
+
+        .badge-discount {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: var(--ms-red);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            z-index: 2;
+            box-shadow: 0 4px 10px rgba(226, 75, 74, 0.4);
+        }
+
+        .card-actions {
+            position: absolute;
+            bottom: -50px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(255,255,255,0.9);
+            transition: bottom 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .modern-product-card:hover .card-actions { bottom: 0; }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid #eee;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            color: var(--ms-dark);
+        }
+
+        .action-btn:hover { background: var(--ms-red); color: white; border-color: var(--ms-red); }
+
+        .card-body-content { padding: 16px; flex-grow: 1; display: flex; flex-direction: column; }
+        .product-brand { font-size: 0.75rem; font-weight: 600; color: var(--ms-gray); text-transform: uppercase; margin-bottom: 4px; }
+        .product-name { font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; height: 42px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .product-name a { color: var(--ms-dark); text-decoration: none; transition: 0.2s; }
+        .product-name a:hover { color: var(--ms-red); }
+
+        .price-group { display: flex; align-items: center; gap: 10px; margin-top: auto; }
+        .price-current { color: var(--ms-red); font-weight: 800; font-size: 1.15rem; }
+        .price-old { color: #aaa; text-decoration: line-through; font-size: 0.85rem; }
+
+        /* Progress Bar */
+        .flash-progress-wrapper { margin-top: 12px; }
+        .flash-progress-wrapper .progress { height: 8px; border-radius: 10px; margin-bottom: 4px; background: #eee; }
+        .progress-text { font-size: 0.75rem; color: var(--ms-gray); font-weight: 600; }
+
+        .btn-add-cart, .btn-buy-now { font-size: 0.85rem; font-weight: 700; padding: 10px; }
+
+        /* Skeleton */
+        .skeleton-card { height: 350px; background: linear-gradient(90deg, #f2f2f2 25%, #e6e6e6 50%, #f2f2f2 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite; border-radius: 16px; }
+        @@keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        @@media (max-width: 768px) {
+            .hero-overlay-gradient { background: rgba(0,0,0,0.6); }
+            .display-3 { font-size: 2.5rem; }
+            .time-box { font-size: 1rem; min-width: 32px; }
+        }
+    </style>
 }

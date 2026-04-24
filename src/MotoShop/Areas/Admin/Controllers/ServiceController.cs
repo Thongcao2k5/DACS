@@ -53,8 +53,9 @@ namespace MotoShop.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Save(Service service, IFormFile? imageFile)
+        public async Task<IActionResult> Save(Service service, IFormFile? imageFile, bool IsActive = false)
         {
+            service.IsActive = IsActive;
             if (service.ServiceId == 0)
             {
                 if (imageFile != null)
@@ -70,6 +71,11 @@ namespace MotoShop.Areas.Admin.Controllers
                     }
                     service.ImageUrl = "/uploads/services/" + uniqueFileName;
                 }
+                
+                // Tự động tạo Slug nếu chưa có
+                if (string.IsNullOrEmpty(service.Slug)) 
+                    service.Slug = service.ServiceName.ToLower().Replace(" ", "-");
+
                 _context.Services.Add(service);
             }
             else
@@ -80,7 +86,7 @@ namespace MotoShop.Areas.Admin.Controllers
                 existing.ServiceName = service.ServiceName;
                 existing.Price = service.Price;
                 existing.Description = service.Description;
-                existing.IsActive = service.IsActive;
+                existing.IsActive = IsActive;
 
                 if (imageFile != null)
                 {

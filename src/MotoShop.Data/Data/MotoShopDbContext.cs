@@ -50,6 +50,8 @@ namespace MotoShop.Data.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Coupon> Coupons { get; set; }
         public DbSet<ShippingMethod> ShippingMethods { get; set; }
+        public DbSet<ServiceReview> ServiceReviews { get; set; }
+        public DbSet<ServiceCategory> ServiceCategories { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

@@ -1,116 +1,452 @@
 @model MotoShop.Data.Models.Service
-
 @{
-    ViewData["Title"] = Model.ServiceName;
+    ViewData["Title"] = Model.ServiceName + " - MotoShop";
+    var avgRating = ViewBag.AvgRating ?? 0;
+    var ratingBreakdown = ViewBag.RatingBreakdown;
+    var relatedServices = ViewBag.RelatedServices as List<MotoShop.Data.Models.Service> ?? new List<MotoShop.Data.Models.Service>();
+    var remainingSlots = ViewBag.RemainingSlots != null ? (int)ViewBag.RemainingSlots : 0;
+    var depositAmount = ViewBag.DepositAmount != null ? (decimal)ViewBag.DepositAmount : 0;
 }
+
+@Html.AntiForgeryToken()
 
 <div class="breadcrumb-wrapper">
     <div class="container">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
-                <li class="breadcrumb-item"><a asp-controller="Service" asp-action="Index">Dịch vụ</a></li>
-                <li class="breadcrumb-item active" aria-current="page">@Model.ServiceName</li>
+                <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="/Service">Dịch vụ</a></li>
+                <li class="breadcrumb-item active">@Model.ServiceName</li>
             </ol>
         </nav>
     </div>
 </div>
 
-<main class="container mb-5">
-    <!-- 2. SERVICE DETAIL LAYOUT -->
-    <div class="row g-5">
-        <!-- LEFT - SERVICE IMAGE -->
-        <div class="col-lg-6">
-            <div class="service-gallery">
-                <div class="main-img-wrapper mb-3" style="aspect-ratio: 16/9;">
-                    <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800" : Model.ImageUrl)" 
-                         class="w-100 h-100 object-fit-cover rounded-4 shadow-sm" alt="@Model.ServiceName">
-                </div>
-            </div>
-        </div>
-
-        <!-- RIGHT - SERVICE INFORMATION -->
-        <div class="col-lg-6">
-            <div class="service-detail-info">
-                <h1 class="fw-bold mb-3">@Model.ServiceName</h1>
-                <div class="mb-4">
-                    <p class="text-muted fs-5">@Model.Description</p>
-                </div>
-                
-                <div class="service-meta-info mb-4">
-                    <div class="meta-item d-flex align-items-center mb-2">
-                        <i class='bx bx-time-five me-2 text-danger fs-4'></i>
-                        <span class="text-uppercase fw-semibold">Thời gian: 30-60 phút (tùy tình trạng xe)</span>
-                    </div>
-                    <div class="meta-item d-flex align-items-center mb-2">
-                        <i class='bx bx-check-shield me-2 text-success fs-4'></i>
-                        <span class="text-uppercase fw-semibold">Bảo hành vận hành sau dịch vụ</span>
-                    </div>
-                    <div class="meta-item d-flex align-items-center mb-2">
-                        <i class='bx bx-user-voice me-2 text-info fs-4'></i>
-                        <span class="text-uppercase fw-semibold">Tư vấn kỹ thuật miễn phí</span>
-                    </div>
-                </div>
-
-                <div class="d-flex align-items-center gap-3 mb-5">
-                    <h2 class="text-danger fw-bold mb-0 display-6">@Model.Price.ToString("N0")đ</h2>
-                </div>
-
-                <div class="d-flex gap-3">
-                    <a asp-controller="Service" asp-action="Booking" asp-route-serviceId="@Model.ServiceId" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold flex-grow-1 py-3 shadow-sm">
-                        ĐẶT LỊCH DỊCH VỤ NGAY
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. SERVICE PROCESS (Static for now, can be expanded) -->
-    <div class="row mt-5 pt-5">
+<main class="container py-5">
+    <div class="row g-4">
+        <!-- 1. LEFT COLUMN -->
         <div class="col-lg-8">
-            <div class="card border-0 bg-light rounded-4 p-4 p-md-5">
-                <h4 class="fw-bold mb-4 text-uppercase border-bottom pb-3">Quy trình thực hiện chuyên nghiệp</h4>
-                <div class="service-process-list">
-                    <div class="process-step mb-4 d-flex gap-4">
-                        <div class="process-step-number bg-danger text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; font-weight: bold;">1</div>
-                        <div>
-                            <h6 class="fw-bold mb-1">Kiểm tra & Tư vấn</h6>
-                            <p class="text-muted mb-0 small">Kỹ thuật viên kiểm tra tình trạng thực tế của xe và tư vấn giải pháp tối ưu nhất cho khách hàng.</p>
+            <!-- HERO SECTION -->
+            <div class="service-hero-detail rounded-4 overflow-hidden position-relative mb-4">
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <img src="@Model.ImageUrl" class="w-100 h-100 object-fit-cover" alt="@Model.ServiceName">
+                }
+                else
+                {
+                    <div class="w-100 h-100 bg-dark d-flex align-items-center justify-content-center">
+                        <i class='bx bx-wrench text-white-50' style="font-size: 80px;"></i>
+                    </div>
+                }
+                <div class="hero-overlay p-4 p-md-5 w-100 position-absolute bottom-0 start-0">
+                    <span class="badge bg-danger rounded-pill px-3 mb-2">@(Model.ServiceCategory?.CategoryName ?? "Dịch vụ")</span>
+                    <h1 class="text-white fw-bold display-5">@Model.ServiceName</h1>
+                    <div class="d-flex align-items-center gap-2 text-warning">
+                        <div class="small">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <i class="bi bi-star@(i <= avgRating ? "-fill" : (i - 0.5 <= avgRating ? "-half" : ""))"></i>
+                            }
+                        </div>
+                        <span class="text-white-50 small">(@Model.Reviews.Count lượt đánh giá)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUICK INFO GRID -->
+            <div class="row g-3 mb-5">
+                <div class="col-6 col-md-3">
+                    <div class="info-card p-3 rounded-4 bg-white border text-center h-100">
+                        <div class="text-muted small mb-1">💰 Giá dịch vụ</div>
+                        <div class="fw-bold text-danger">@Model.Price.ToString("N0")đ</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="info-card p-3 rounded-4 bg-white border text-center h-100">
+                        <div class="text-muted small mb-1">⏱ Thời gian</div>
+                        <div class="fw-bold">~@Model.Duration phút</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="info-card p-3 rounded-4 bg-white border text-center h-100">
+                        <div class="text-muted small mb-1">🛡 Bảo hành</div>
+                        <div class="fw-bold">@Model.WarrantyDays ngày</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="info-card p-3 rounded-4 bg-white border text-center h-100">
+                        <div class="text-muted small mb-1">✅ Đã đặt</div>
+                        <div class="fw-bold">@Model.TotalBookings lượt</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABS -->
+            <div class="service-tabs">
+                <div class="d-flex gap-2 mb-4 border-bottom">
+                    <button class="tab-btn active" data-tab="tab-desc">Mô tả chi tiết</button>
+                    <button class="tab-btn" data-tab="tab-process">Quy trình thực hiện</button>
+                    <button class="tab-btn" data-tab="tab-review">Đánh giá khách hàng</button>
+                </div>
+
+                <div class="tab-content">
+                    <!-- TAB 1: DESCRIPTION -->
+                    <div class="tab-pane active" id="tab-desc">
+                        <div id="descContent" class="collapsed">
+                            <div class="rich-text mb-4">
+                                @Html.Raw(Model.Description)
+                            </div>
+                            <h6 class="fw-bold mb-3">Dịch vụ bao gồm:</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><i class='bx bx-check-circle text-success me-2'></i> Kiểm tra toàn bộ hệ thống điện & phanh</li>
+                                <li class="mb-2"><i class='bx bx-check-circle text-success me-2'></i> Vệ sinh bộ lọc gió và bugi</li>
+                                <li class="mb-2"><i class='bx bx-check-circle text-success me-2'></i> Kiểm tra áp suất lốp & độ mòn vỏ xe</li>
+                                <li class="mb-2"><i class='bx bx-check-circle text-success me-2'></i> Tư vấn thay phụ tùng chính hãng (nếu cần)</li>
+                            </ul>
+                        </div>
+                        <button id="toggleDescBtn" onclick="toggleDesc()" class="btn btn-link text-danger p-0 mt-2 fw-bold text-decoration-none">Xem thêm ▼</button>
+                    </div>
+
+                    <!-- TAB 2: PROCESS -->
+                    <div class="tab-pane" id="tab-process">
+                        <div class="timeline">
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <h6 class="fw-bold mb-1">Bước 1: Tiếp nhận xe</h6>
+                                <p class="text-muted small">Kỹ thuật viên kiểm tra sơ bộ tình trạng xe, ghi nhận các yêu cầu đặc biệt từ khách hàng và xác nhận dịch vụ cần thực hiện.</p>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <h6 class="fw-bold mb-1">Bước 2: Chuẩn bị</h6>
+                                <p class="text-muted small">Chuẩn bị đầy đủ dụng cụ chuyên dụng, phụ tùng và các loại hóa chất/nhớt theo đúng tiêu chuẩn kỹ thuật.</p>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <h6 class="fw-bold mb-1">Bước 3: Thực hiện</h6>
+                                <p class="text-muted small">Tiến hành bảo dưỡng hoặc sửa chữa theo quy trình chuẩn của nhà sản xuất, đảm bảo tính tỉ mỉ và an toàn.</p>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <h6 class="fw-bold mb-1">Bước 4: Kiểm tra & Chạy thử</h6>
+                                <p class="text-muted small">Kiểm tra lại toàn bộ các chi tiết vừa xử lý, tiến hành chạy thử xe để đảm bảo mọi bộ phận hoạt động hoàn hảo.</p>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <h6 class="fw-bold mb-1">Bước 5: Bàn giao xe</h6>
+                                <p class="text-muted small">Vệ sinh xe, bàn giao cho khách hàng kèm phiếu bảo hành và hướng dẫn lịch bảo dưỡng định kỳ tiếp theo.</p>
+                            </div>
                         </div>
                     </div>
-                    <div class="process-step mb-4 d-flex gap-4">
-                        <div class="process-step-number bg-danger text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; font-weight: bold;">2</div>
-                        <div>
-                            <h6 class="fw-bold mb-1">Thực hiện dịch vụ</h6>
-                            <p class="text-muted mb-0 small">Tiến hành các bước kỹ thuật chuyên sâu bằng thiết bị hiện đại và phụ tùng chính hãng.</p>
-                        </div>
-                    </div>
-                    <div class="process-step mb-4 d-flex gap-4">
-                        <div class="process-step-number bg-danger text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; font-weight: bold;">3</div>
-                        <div>
-                            <h6 class="fw-bold mb-1">Kiểm tra vận hành</h6>
-                            <p class="text-muted mb-0 small">Sau khi hoàn tất, xe được nổ máy và chạy thử để đảm bảo mọi thông số đều ổn định.</p>
-                        </div>
-                    </div>
-                    <div class="process-step d-flex gap-4">
-                        <div class="process-step-number bg-danger text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; font-weight: bold;">4</div>
-                        <div>
-                            <h6 class="fw-bold mb-1">Bàn giao & Bảo hành</h6>
-                            <p class="text-muted mb-0 small">Bàn giao xe kèm phiếu bảo hành dịch vụ và hướng dẫn khách hàng cách bảo quản xe tốt hơn.</p>
+
+                    <!-- TAB 3: REVIEW -->
+                    <div class="tab-pane" id="tab-review">
+                        <div class="row g-4">
+                            <div class="col-md-5">
+                                <div class="rating-summary p-4 rounded-4 bg-light text-center">
+                                    <div class="display-4 fw-bold text-danger">@avgRating</div>
+                                    <div class="text-warning mb-2 h5">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <i class="bi bi-star@(i <= avgRating ? "-fill" : (i - 0.5 <= avgRating ? "-half" : ""))"></i>
+                                        }
+                                    </div>
+                                    <p class="text-muted small">@Model.Reviews.Count đánh giá thực tế</p>
+                                    
+                                    <div class="rating-bars mt-4">
+                                        @foreach (var item in ratingBreakdown)
+                                        {
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <span class="small fw-bold" style="width: 20px;">@item.Star★</span>
+                                                <div class="progress flex-grow-1" style="height: 8px;">
+                                                    <div class="progress-bar bg-warning" style="width: @item.Percent%"></div>
+                                                </div>
+                                                <span class="small text-muted" style="width: 35px;">@item.Count</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+
+                                @if (User.Identity.IsAuthenticated)
+                                {
+                                    @if (ViewBag.CanReview == true && ViewBag.HasReviewed == false)
+                                    {
+                                        <div class="review-form-box mt-4 p-4 border rounded-4" id="reviewForm">
+                                            <h6 class="fw-bold mb-3">Gửi đánh giá của bạn</h6>
+                                            <div class="star-selector mb-3 d-flex gap-2">
+                                                @for (int i = 1; i <= 5; i++)
+                                                {
+                                                    <button type="button" class="star-btn" data-val="@i">★</button>
+                                                }
+                                                <input type="hidden" id="ratingInput" value="0">
+                                            </div>
+                                            <textarea id="reviewComment" class="form-control rounded-3 mb-3" rows="3" placeholder="Chia sẻ trải nghiệm của bạn..."></textarea>
+                                            <button onclick="submitReview()" class="btn btn-danger w-100 rounded-pill fw-bold">GỬI ĐÁNH GIÁ</button>
+                                        </div>
+                                    }
+                                    else if (ViewBag.HasReviewed == true)
+                                    {
+                                        <div class="alert alert-success rounded-4 mt-4 small"><i class='bx bx-check-circle me-1'></i> Bạn đã đánh giá dịch vụ này.</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-light border rounded-4 mt-4 small text-muted"><i class='bx bx-info-circle me-1'></i> Hoàn thành dịch vụ này để được đánh giá.</div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="mt-4 p-4 border border-dashed rounded-4 text-center">
+                                        <p class="small text-muted mb-2">Đăng nhập để gửi đánh giá</p>
+                                        <a href="/Account/Login?returnUrl=@Context.Request.Path" class="btn btn-outline-danger btn-sm rounded-pill px-4">Đăng nhập</a>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="col-md-7">
+                                <div id="reviewList">
+                                    @if (Model.Reviews.Any(r => r.IsApproved))
+                                    {
+                                        foreach (var r in Model.Reviews.Where(r => r.IsApproved).OrderByDescending(x => x.CreatedDate).Take(5))
+                                        {
+                                            <div class="review-item mb-4 pb-4 border-bottom">
+                                                <div class="d-flex align-items-center gap-3 mb-2">
+                                                    <div class="avatar-circle">@(r.Customer?.FullName?[0].ToString() ?? "A")</div>
+                                                    <div>
+                                                        <div class="fw-bold small">@(r.Customer?.FullName ?? "Khách hàng")</div>
+                                                        <div class="text-warning x-small">
+                                                            @for (int i = 1; i <= 5; i++) { <i class="bi bi-star@(i <= r.Rating ? "-fill" : "")"></i> }
+                                                            <span class="text-muted ms-2">@r.CreatedDate.ToString("dd/MM/yyyy")</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <p class="text-secondary small mb-0">@r.Comment</p>
+                                            </div>
+                                        }
+                                        @if (Model.Reviews.Count(r => r.IsApproved) > 5)
+                                        {
+                                            <button id="loadMoreBtn" onclick="loadMoreReviews()" class="btn btn-link text-danger w-100 text-decoration-none fw-bold small">Xem thêm đánh giá <i class='bx bx-chevron-down'></i></button>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="text-center py-5 text-muted small">Chưa có đánh giá nào cho dịch vụ này.</div>
+                                    }
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- 2. RIGHT COLUMN (STICKY) -->
         <div class="col-lg-4">
-            <div class="service-note-box bg-dark text-white p-4 rounded-4 shadow-sm h-100">
-                <h6 class="fw-bold mb-3"><i class='bx bx-info-circle me-2'></i> LƯU Ý KỸ THUẬT</h6>
-                <p class="small opacity-75 mb-4">Để đảm bảo xe luôn trong trạng thái vận hành tốt nhất, quý khách nên thực hiện kiểm tra định kỳ theo khuyến cáo của nhà sản xuất.</p>
-                <div class="d-grid">
-                    <a asp-action="Index" class="btn btn-outline-light rounded-pill btn-sm fw-bold">XEM CÁC DỊCH VỤ KHÁC</a>
+            <div class="booking-card bg-white shadow-sm rounded-4 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted small">Giá dịch vụ</span>
+                    <h4 class="fw-bold text-danger mb-0">@Model.Price.ToString("N0")đ</h4>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <span class="text-muted small">Tiền cọc giữ chỗ (30%)</span>
+                    <span class="fw-bold text-dark">@ViewBag.DepositAmount.ToString("N0")đ</span>
+                </div>
+
+                <div class="booking-details border-top border-bottom py-3 mb-4">
+                    <div class="d-flex align-items-center gap-2 mb-2 small">
+                        <i class='bx bx-time-five text-danger'></i> <span>Thời gian: <strong>~@Model.Duration phút</strong></span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 mb-2 small">
+                        <i class='bx bx-shield-check text-danger'></i> <span>Bảo hành: <strong>@Model.WarrantyDays ngày</strong></span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 small">
+                        <i class='bx bx-map text-danger'></i> <span>Thực hiện tại: <strong>Cửa hàng MotoShop</strong></span>
+                    </div>
+                </div>
+
+                <a href="/Service/Booking?serviceId=@Model.ServiceId" class="btn btn-danger w-100 py-3 rounded-pill fw-bold mb-3 shadow-sm">ĐẶT LỊCH NGAY</a>
+                <a href="tel:@ViewBag.StorePhone" class="btn btn-outline-dark w-100 py-3 rounded-pill fw-bold mb-4">GỌI TƯ VẤN: @ViewBag.StorePhone</a>
+
+                @{
+                    var slots = (int)ViewBag.RemainingSlots;
+                    var slotClass = slots > 3 ? "slot-badge-green" : (slots > 0 ? "slot-badge-orange" : "slot-badge-red");
+                    var slotText = slots > 0 ? $"⚡ Còn {slots} slot trống hôm nay" : "❌ Đã hết slot hôm nay";
+                }
+                <div class="text-center @slotClass fw-bold small">@slotText</div>
+            </div>
+
+            <!-- RELATED SERVICES -->
+            <div class="mt-4 p-4 border rounded-4 bg-white shadow-sm">
+                <h6 class="fw-bold mb-3">Dịch vụ liên quan</h6>
+                <div class="related-list">
+                    @foreach (var rs in relatedServices)
+                    {
+                        <a href="/Service/Details?slug=@rs.Slug" class="related-svc-item d-flex align-items-center gap-3 py-2 border-bottom">
+                            <img src="@(rs.ImageUrl ?? "/assets/img/elements/18.jpg")" class="rounded-3" style="width: 50px; height: 50px; object-fit: cover;">
+                            <div>
+                                <div class="fw-bold small text-dark">@rs.ServiceName</div>
+                                <div class="text-danger x-small">@rs.Price.ToString("N0")đ</div>
+                            </div>
+                            <i class='bx bx-chevron-right ms-auto text-muted'></i>
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <!-- STORE INFO -->
+            <div class="mt-4 p-4 border rounded-4 bg-dark text-white">
+                <h6 class="fw-bold mb-3 text-danger">MOTO SHOP</h6>
+                <div class="small mb-2 d-flex gap-2">
+                    <i class='bx bx-map-pin text-danger'></i> <span>@ViewBag.StoreAddress</span>
+                </div>
+                <div class="small mb-2 d-flex gap-2">
+                    <i class='bx bx-phone-call text-danger'></i> <span>Hotline: @ViewBag.StorePhone</span>
+                </div>
+                <div class="small d-flex gap-2">
+                    <i class='bx bx-time text-danger'></i> <span>Làm việc: 7:00 - 20:00 (Hàng ngày)</span>
                 </div>
             </div>
         </div>
     </div>
 </main>
+
+<style>
+    .service-hero-detail { height: 400px; }
+    .hero-overlay { background: linear-gradient(transparent, rgba(0,0,0,0.9)); }
+    
+    .tab-btn { border: none; background: none; padding: 10px 20px; font-size: 14px; color: #666; border-bottom: 2px solid transparent; cursor: pointer; transition: 0.2s; }
+    .tab-btn.active { color: #E24B4A; border-bottom-color: #E24B4A; font-weight: 700; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; animation: fadeIn 0.3s; }
+
+    .timeline { position: relative; padding-left: 32px; }
+    .timeline::before { content: ''; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; background: #eee; }
+    .timeline-step { position: relative; margin-bottom: 24px; }
+    .timeline-dot { position: absolute; left: -31px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: #E24B4A; border: 2px solid #fff; box-shadow: 0 0 0 2px #E24B4A; }
+
+    .star-btn { font-size: 28px; color: #ddd; cursor: pointer; background: none; border: none; transition: color 0.1s; }
+    .star-btn.active { color: #FFA500; }
+    
+    .avatar-circle { width: 40px; height: 40px; border-radius: 50%; background: #FCEBEB; color: #E24B4A; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .related-svc-item { text-decoration: none; transition: 0.2s; }
+    .related-svc-item:hover { background: #fafafa; border-radius: 8px; }
+    .related-svc-item:last-child { border-bottom: none !important; }
+
+    .slot-badge-green { color: #3B6D11; }
+    .slot-badge-orange { color: #BA7517; }
+    .slot-badge-red { color: #E24B4A; }
+
+    #descContent.collapsed { max-height: 300px; overflow: hidden; position: relative; }
+    #descContent.collapsed::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(transparent, white); }
+    
+    @@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .x-small { font-size: 11px; }
+</style>
+
+@section Scripts {
+    <script>
+        // 1. TABS
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.onclick = function() {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-pane').forEach(p => b.classList.remove('active')); // Oops, 'b' is wrong
+                this.classList.add('active');
+                // Fix:
+                document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                document.getElementById(this.dataset.tab).classList.add('active');
+            };
+        });
+
+        // 2. TOGGLE DESCRIPTION
+        function toggleDesc() {
+            const desc = document.getElementById('descContent');
+            const btn = document.getElementById('toggleDescBtn');
+            if (desc.classList.contains('collapsed')) {
+                desc.style.maxHeight = 'none';
+                desc.classList.remove('collapsed');
+                btn.textContent = 'Thu gọn ▲';
+            } else {
+                desc.style.maxHeight = '300px';
+                desc.classList.add('collapsed');
+                btn.textContent = 'Xem thêm ▼';
+            }
+        }
+
+        // 3. RATING
+        let selectedRating = 0;
+        document.querySelectorAll('.star-btn').forEach((btn, idx) => {
+            btn.onmouseover = () => highlightStars(idx + 1);
+            btn.onmouseout = () => highlightStars(selectedRating);
+            btn.onclick = () => {
+                selectedRating = idx + 1;
+                document.getElementById('ratingInput').value = selectedRating;
+                highlightStars(selectedRating);
+            };
+        });
+
+        function highlightStars(count) {
+            document.querySelectorAll('.star-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', idx < count);
+            });
+        }
+
+        async function submitReview() {
+            const rating = document.getElementById('ratingInput').value;
+            const comment = document.getElementById('reviewComment').value;
+            const serviceId = '@Model.ServiceId';
+
+            if (rating == 0) return Swal.fire('Thông báo', 'Vui lòng chọn số sao', 'warning');
+            if (comment.length < 10) return Swal.fire('Thông báo', 'Nội dung tối thiểu 10 ký tự', 'warning');
+
+            const token = document.querySelector('[name=__RequestVerificationToken]').value;
+            const formData = new FormData();
+            formData.append('serviceId', serviceId);
+            formData.append('rating', rating);
+            formData.append('comment', comment);
+            formData.append('__RequestVerificationToken', token);
+
+            try {
+                const res = await fetch('/Service/CreateServiceReview', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    Swal.fire('Thành công', data.message, 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Lỗi', data.message, 'error');
+                }
+            } catch (err) {
+                Swal.fire('Lỗi', 'Không thể kết nối máy chủ', 'error');
+            }
+        }
+
+        // 4. LOAD MORE
+        let reviewPage = 1;
+        async function loadMoreReviews() {
+            reviewPage++;
+            try {
+                const res = await fetch(`/Service/LoadMoreReviews?serviceId=@Model.ServiceId&page=${reviewPage}`);
+                const reviews = await res.json();
+                if (reviews.length === 0) {
+                    document.getElementById('loadMoreBtn').style.display = 'none';
+                    return;
+                }
+                const container = document.getElementById('reviewList');
+                reviews.forEach(r => {
+                    const html = `
+                        <div class="review-item mb-4 pb-4 border-bottom">
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                <div class="avatar-circle">${r.customerName[0]}</div>
+                                <div>
+                                    <div class="fw-bold small">${r.customerName}</div>
+                                    <div class="text-warning x-small">
+                                        ${'<i class="bi bi-star-fill"></i>'.repeat(r.rating)}${'<i class="bi bi-star"></i>'.repeat(5-r.rating)}
+                                        <span class="text-muted ms-2">${r.createdDate}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="text-secondary small mb-0">${r.comment}</p>
+                        </div>`;
+                    container.insertAdjacentHTML('beforeend', html);
+                });
+                if (reviews.length < 5) document.getElementById('loadMoreBtn').style.display = 'none';
+            } catch (err) {}
+        }
+    </script>
+}

@@ -186,6 +186,33 @@
             sModal.show();
         });
 
+        $('#serviceForm').on('submit', function(e) {
+            e.preventDefault();
+            const btn = $(this).find('button[type=submit]');
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> ĐANG LƯU...');
+            
+            const formData = new FormData(this);
+            $.ajax({
+                url: '/Admin/Service/Save',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(res) {
+                    if (res.success) {
+                        Swal.fire('Thành công', res.message, 'success').then(() => location.reload());
+                    } else {
+                        Swal.fire('Lỗi', res.message, 'error');
+                        btn.prop('disabled', false).text('LƯU DỮ LIỆU');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Lỗi', 'Không thể kết nối máy chủ', 'error');
+                    btn.prop('disabled', false).text('LƯU DỮ LIỆU');
+                }
+            });
+        });
+
         $(document).on('click', '.btn-delete-service', function() {
             const id = $(this).data('id');
             if(confirm("Bạn có chắc muốn xóa dịch vụ này?")) {

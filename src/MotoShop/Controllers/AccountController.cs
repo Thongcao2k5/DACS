@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Http;
 using System.IO;
 using System.Collections.Generic;
 using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
 
 namespace MotoShop.Controllers
 {
@@ -26,6 +27,7 @@ namespace MotoShop.Controllers
         private readonly IEmailSender _emailSender;
         private readonly ICartService _cartService;
         private readonly MotoShopDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public AccountController(
             SignInManager<IdentityUser> signInManager, 
@@ -33,7 +35,8 @@ namespace MotoShop.Controllers
             IMemoryCache cache,
             IEmailSender emailSender,
             ICartService cartService,
-            MotoShopDbContext context)
+            MotoShopDbContext context,
+            IWebHostEnvironment webHostEnvironment)
         {
             _signInManager = signInManager;
             _userManager = userManager;
@@ -41,6 +44,7 @@ namespace MotoShop.Controllers
             _emailSender = emailSender;
             _cartService = cartService;
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         [HttpGet]
@@ -211,6 +215,70 @@ namespace MotoShop.Controllers
             return View(wishlistItems);
         }
 
+        [HttpPost]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> ToggleWishlist([FromBody] WishlistRequest request)
+        {
+            bool added = false;
+
+            // NẾU ĐÃ ĐĂNG NHẬP -> Lưu vào Database
+            if (_signInManager.IsSignedIn(User))
+            {
+                var userId = _userManager.GetUserId(User);
+                var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
+                if (customer == null) return Json(new { success = false, message = "Không tìm thấy thông tin khách hàng" });
+
+                var wishItem = await _context.WishlistsNew
+                    .FirstOrDefaultAsync(w => w.UserId == customer.CustomerId && w.ProductId == request.ProductId);
+
+                if (wishItem != null)
+                {
+                    _context.WishlistsNew.Remove(wishItem);
+                }
+                else
+                {
+                    _context.WishlistsNew.Add(new WishlistNew
+                    {
+                        UserId = customer.CustomerId,
+                        ProductId = request.ProductId,
+                        CreatedAt = DateTime.Now
+                    });
+                    added = true;
+                }
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                // NẾU CHƯA ĐĂNG NHẬP -> Lưu vào Cookie (Dữ liệu tạm)
+                var wishlistCookie = Request.Cookies["MotoShop_Wishlist_Items"];
+                List<int> productIds = new List<int>();
+                if (!string.IsNullOrEmpty(wishlistCookie))
+                {
+                    try { productIds = JsonSerializer.Deserialize<List<int>>(wishlistCookie) ?? new List<int>(); } catch { }
+                }
+
+                if (productIds.Contains(request.ProductId))
+                {
+                    productIds.Remove(request.ProductId);
+                }
+                else
+                {
+                    productIds.Add(request.ProductId);
+                    added = true;
+                }
+
+                var cookieOptions = new CookieOptions { Expires = DateTime.Now.AddDays(7), HttpOnly = true, SameSite = SameSiteMode.Lax };
+                Response.Cookies.Append("MotoShop_Wishlist_Items", JsonSerializer.Serialize(productIds), cookieOptions);
+            }
+
+            return Json(new { success = true, added = added });
+        }
+
+        public class WishlistRequest
+        {
+            public int ProductId { get; set; }
+        }
+
         [HttpGet]
         [Authorize]
         public IActionResult ChangePassword() => View();
@@ -245,7 +313,7 @@ namespace MotoShop.Controllers
 
             try
             {
-                var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "avatars");
+                var uploads = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "avatars");
                 if (!Directory.Exists(uploads)) Directory.CreateDirectory(uploads);
 
                 var fileName = $"avatar_{customer.CustomerId}_{DateTime.Now.Ticks}{Path.GetExtension(file.FileName)}";

@@ -1,78 +1,50 @@
 @{
-    ViewData["Title"] = "Quản lý Slider & Banner";
+    ViewData["Title"] = "Quản lý Banner & Slider";
     Layout = "_AdminLayout";
-    var sliders = ViewBag.Sliders as List<MotoShop.Data.Models.Slider>;
-    var banners = ViewBag.Banners as List<MotoShop.Data.Models.Banner>;
+    var sliders = ViewBag.Sliders as List<MotoShop.Data.Models.Slider> ?? new List<MotoShop.Data.Models.Slider>();
+    var banners = ViewBag.Banners as List<MotoShop.Data.Models.Banner> ?? new List<MotoShop.Data.Models.Banner>();
 }
 
-@section Styles {
-    <style>
-        :root { --ms-red: #E24B4A; }
-        .nav-tabs-ms .nav-link { border: none; color: #6c757d; font-weight: 600; padding: 12px 25px; border-radius: 8px 8px 0 0; }
-        .nav-tabs-ms .nav-link.active { color: var(--ms-red); background: white; border-bottom: 3px solid var(--ms-red); box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
-        .preview-img { width: 120px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
-        .preview-img-banner { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; }
-        .handle { cursor: grab; color: #ccc; font-size: 1.2rem; }
-        .handle:active { cursor: grabbing; }
-        .sortable-ghost { opacity: 0.4; background: #fff2f2; border: 2px dashed var(--ms-red); }
-    </style>
-}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Cấu hình /</span> Banner & Slider</h4>
 
-<div class="p-4">
-    <div class="mb-4">
-        <h4 class="fw-bold m-0 text-uppercase"><i class='bx bx-images me-2 text-danger'></i>Giao diện Slider & Banner</h4>
-    </div>
-
-    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-        <div class="card-header bg-light p-0 border-bottom">
-            <ul class="nav nav-tabs nav-tabs-ms px-3 pt-2" id="layoutTabs" role="tablist">
-                <li class="nav-item">
-                    <a class="nav-link active" data-bs-toggle="tab" href="#tab-slider"><i class='bx bx-slideshow me-2'></i>Slider Trang chủ</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#tab-banner"><i class='bx bx-rectangle me-2'></i>Banner Quảng cáo</a>
-                </li>
-            </ul>
-        </div>
-        <div class="card-body p-0">
-            <div class="tab-content">
-                <!-- TAB SLIDER -->
-                <div class="tab-pane fade show active" id="tab-slider">
-                    <div class="p-4 border-bottom d-flex justify-content-between align-items-center bg-white">
-                        <span class="text-muted small italic"><i class='bx bx-info-circle me-1'></i>Kéo thả hàng để thay đổi thứ tự hiển thị (Tối đa 5 Slide để đảm bảo tốc độ tải trang)</span>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle m-0" id="sliderTable">
-                            <thead class="bg-light small text-uppercase">
+    <div class="row">
+        <!-- 1. SLIDER CHÍNH (HOME) -->
+        <div class="col-md-7">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center bg-primary bg-opacity-10 py-3">
+                    <h5 class="mb-0 fw-bold"><i class='bx bx-slideshow me-2'></i>SLIDER TRANG CHỦ</h5>
+                    <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="openSliderModal()"><i class='bx bx-plus'></i> THÊM SLIDE</button>
+                </div>
+                <div class="card-body pt-3">
+                    <div class="table-responsive text-nowrap">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
                                 <tr>
-                                    <th style="width: 40px"></th>
-                                    <th>Ảnh Slider</th>
-                                    <th>Tiêu đề / Link</th>
+                                    <th>Ảnh</th>
+                                    <th>Tiêu đề</th>
                                     <th>Thứ tự</th>
                                     <th>Trạng thái</th>
-                                    <th class="text-end pe-4">Hành động</th>
+                                    <th></th>
                                 </tr>
                             </thead>
-                            <tbody id="sliderSortable">
-                                @foreach (var s in sliders) {
+                            <tbody id="sliderTableBody">
+                                @foreach (var s in sliders)
+                                {
                                     <tr data-id="@s.SliderId">
-                                        <td class="ps-4"><i class='bx bx-grid-vertical handle'></i></td>
-                                        <td><img src="@s.ImageUrl" class="preview-img shadow-sm"></td>
                                         <td>
-                                            <div class="fw-bold">@s.Title</div>
-                                            <div class="small text-muted text-truncate" style="max-width: 200px;">@s.LinkUrl</div>
+                                            <img src="@s.ImageUrl" class="rounded border" style="width: 100px; height: 50px; object-fit: cover;">
                                         </td>
-                                        <td><span class="badge bg-label-secondary">@s.Position</span></td>
+                                        <td class="small fw-bold">@s.Title</td>
+                                        <td><input type="number" class="form-control form-control-sm text-center" style="width: 60px;" value="@s.Position" onchange="updateSliderPos(@s.SliderId, this.value)"></td>
                                         <td>
                                             <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" @(s.IsActive ? "checked" : "") onchange="toggleStatus('Slider', @s.SliderId)">
+                                                <input class="form-check-input" type="checkbox" @(s.IsActive ? "checked" : "") onchange="toggleSlider(@s.SliderId)">
                                             </div>
                                         </td>
-                                        <td class="text-end pe-4">
-                                            <button type="button" class="btn btn-sm btn-icon btn-outline-primary btn-edit-slider" 
-                                                    data-slider='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(s))'><i class="bx bx-edit-alt"></i></button>
-                                            <button type="button" class="btn btn-sm btn-icon btn-outline-danger btn-delete-slider" 
-                                                    data-id="@s.SliderId"><i class="bx bx-trash"></i></button>
+                                        <td class="text-end">
+                                            <button class="btn btn-icon btn-sm btn-outline-primary rounded-circle me-1" onclick="editSlider(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(s)))"><i class='bx bx-edit-alt'></i></button>
+                                            <button class="btn btn-icon btn-sm btn-outline-danger rounded-circle" onclick="deleteSlider(@s.SliderId)"><i class='bx bx-trash'></i></button>
                                         </td>
                                     </tr>
                                 }
@@ -80,42 +52,43 @@
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- TAB BANNER -->
-                <div class="tab-pane fade" id="tab-banner">
-                    <div class="p-4 border-bottom d-flex justify-content-between align-items-center bg-white">
-                        <span class="text-muted small">Quản lý banner tại các vị trí cố định trên website</span>
-                        <button class="btn btn-ms-red btn-sm px-3" onclick="openBannerModal()"><i class='bx bx-plus me-1'></i>Thêm Banner</button>
-                    </div>
+        <!-- 2. BANNER QUẢNG CÁO -->
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center bg-dark bg-opacity-10 py-3">
+                    <h5 class="mb-0 fw-bold"><i class='bx bx-layout me-2'></i>BANNER PHỤ</h5>
+                    <button class="btn btn-dark btn-sm rounded-pill px-3" onclick="openBannerModal()"><i class='bx bx-plus'></i> THÊM BANNER</button>
+                </div>
+                <div class="card-body pt-3">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle m-0">
-                            <thead class="bg-light small text-uppercase">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
                                 <tr>
-                                    <th class="ps-4">Ảnh</th>
-                                    <th>Tiêu đề</th>
-                                    <th>Vị trí hiển thị</th>
-                                    <th>Link</th>
+                                    <th>Ảnh</th>
+                                    <th>Vị trí</th>
                                     <th>Trạng thái</th>
-                                    <th class="text-end pe-4">Hành động</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var b in banners) {
+                                @foreach (var b in banners)
+                                {
                                     <tr>
-                                        <td class="ps-4"><img src="@b.ImageUrl" class="preview-img-banner shadow-sm"></td>
-                                        <td class="fw-bold">@b.Title</td>
-                                        <td><span class="badge bg-label-info">@b.Position</span></td>
-                                        <td><div class="small text-muted text-truncate" style="max-width: 150px;">@b.LinkUrl</div></td>
+                                        <td>
+                                            <img src="@b.ImageUrl" class="rounded border" style="width: 80px; height: 80px; object-fit: cover;">
+                                        </td>
+                                        <td class="x-small fw-bold">@b.Position</td>
                                         <td>
                                             <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" @(b.IsActive ? "checked" : "") onchange="toggleStatus('Banner', @b.BannerId)">
+                                                <input class="form-check-input" type="checkbox" @(b.IsActive ? "checked" : "") onchange="toggleBanner(@b.BannerId)">
                                             </div>
                                         </td>
-                                        <td class="text-end pe-4">
-                                            <button type="button" class="btn btn-sm btn-icon btn-outline-primary btn-edit-banner" 
-                                                    data-banner='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(b))'><i class="bx bx-edit-alt"></i></button>
-                                            <button type="button" class="btn btn-sm btn-icon btn-outline-danger btn-delete-banner" 
-                                                    data-id="@b.BannerId"><i class="bx bx-trash"></i></button>
+                                        <td class="text-end">
+                                            <button class="btn btn-icon btn-sm btn-outline-primary rounded-circle me-1" onclick="editBanner(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(b)))"><i class='bx bx-edit-alt'></i></button>
+                                            <button class="btn btn-icon btn-sm btn-outline-danger rounded-circle" onclick="deleteBanner(@b.BannerId)"><i class='bx bx-trash'></i></button>
                                         </td>
                                     </tr>
                                 }
@@ -128,186 +101,101 @@
     </div>
 </div>
 
-<!-- Modal Slider -->
+<!-- SLIDER MODAL -->
 <div class="modal fade" id="sliderModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content border-0 shadow-lg">
-            <form id="sliderForm">
-                <input type="hidden" name="SliderId" id="sId">
-                <div class="modal-header border-bottom p-4">
-                    <h5 class="modal-title fw-bold">Thiết lập Slider</h5>
+        <form id="sliderForm" enctype="multipart/form-data">
+            <input type="hidden" name="SliderId" id="s_id" value="0">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="sliderModalTitle">THÊM SLIDER MỚI</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4">
-                    <div class="mb-4 text-center">
-                        <img id="sPreview" src="/assets/img/elements/18.jpg" class="rounded shadow-sm mb-2 w-100" style="height: 180px; object-fit: cover;">
-                        <input type="file" id="sFile" name="imageFile" class="form-control form-control-sm" onchange="previewImg(this, '#sPreview')">
-                        <small class="text-muted">Kích thước khuyến nghị: 1920x800px (16:9)</small>
+                <div class="modal-body">
+                    <div class="mb-3 text-center">
+                        <img id="s_preview" src="/assets/img/elements/18.jpg" class="img-fluid rounded border" style="max-height: 150px; width: 100%; object-fit: cover;">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Ảnh Slider *</label>
+                        <input type="file" name="imageFile" class="form-control" onchange="previewImg(this, 's_preview')">
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Tiêu đề</label>
-                        <input type="text" name="Title" id="sTitle" class="form-control">
+                        <input type="text" name="Title" id="s_title" class="form-control" placeholder="Nhập tiêu đề hiển thị...">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Đường dẫn khi click (URL)</label>
-                        <input type="text" name="LinkUrl" id="sUrl" class="form-control" placeholder="https://...">
+                        <label class="form-label small fw-bold">Link điều hướng</label>
+                        <input type="text" name="LinkUrl" id="s_link" class="form-control" placeholder="Ví dụ: /san-pham/mam-rcb">
                     </div>
-                    <div class="row">
-                        <div class="col-6">
-                            <label class="form-label small fw-bold">Thứ tự</label>
-                            <input type="number" name="Position" id="sPos" class="form-control" value="1">
-                        </div>
-                        <div class="col-6 pt-4">
-                            <div class="form-check form-switch mt-2">
-                                <input class="form-check-input" type="checkbox" name="IsActive" id="sActive" value="true" checked>
-                                <label class="form-check-label small">Kích hoạt</label>
-                            </div>
-                        </div>
+                    <div class="form-check form-switch mt-3">
+                        <input class="form-check-input" type="checkbox" name="IsActive" id="s_active" checked value="true">
+                        <label class="form-check-label fw-bold">Hiển thị ngay</label>
                     </div>
                 </div>
-                <div class="modal-footer border-top p-3 px-4">
-                    <button type="submit" class="btn btn-ms-red w-100">Lưu Slider</button>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary fw-bold px-4">LƯU SLIDE</button>
                 </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Banner -->
-<div class="modal fade" id="bannerModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content border-0 shadow-lg">
-            <form id="bannerForm">
-                <input type="hidden" name="BannerId" id="bId">
-                <div class="modal-header border-bottom p-4">
-                    <h5 class="modal-title fw-bold">Thiết lập Banner</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="mb-4 text-center">
-                        <img id="bPreview" src="/assets/img/elements/18.jpg" class="rounded shadow-sm mb-2" style="width: 150px; height: 150px; object-fit: cover;">
-                        <input type="file" id="bFile" name="imageFile" class="form-control form-control-sm" onchange="previewImg(this, '#bPreview')">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Vị trí hiển thị</label>
-                        <select name="Position" id="bPos" class="form-select">
-                            <option value="Trang chủ top">Trang chủ Top</option>
-                            <option value="Trang chủ giữa">Trang chủ Giữa</option>
-                            <option value="Sidebar">Sidebar bên lề</option>
-                            <option value="Danh mục">Trang Danh mục</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Tiêu đề quảng cáo</label>
-                        <input type="text" name="Title" id="bTitle" class="form-control">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Link URL</label>
-                        <input type="text" name="LinkUrl" id="bUrl" class="form-control">
-                    </div>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" name="IsActive" id="bActive" value="true" checked>
-                        <label class="form-check-label small">Kích hoạt</label>
-                    </div>
-                </div>
-                <div class="modal-footer border-top p-3 px-4">
-                    <button type="submit" class="btn btn-ms-red w-100">Lưu Banner</button>
-                </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
         const sModal = new bootstrap.Modal(document.getElementById('sliderModal'));
-        const bModal = new bootstrap.Modal(document.getElementById('bannerModal'));
 
-        // Drag and Drop
-        new Sortable(document.getElementById('sliderSortable'), {
-            handle: '.handle',
-            animation: 150,
-            ghostClass: 'sortable-ghost',
-            onEnd: function() {
-                let ids = [];
-                $('#sliderSortable tr').each(function() { ids.push($(this).data('id')); });
-                $.post('/Admin/SliderBanner/UpdateSliderOrder', { ids: ids });
-            }
-        });
-
-        function previewImg(input, target) {
-            if (input.files && input.files[0]) {
-                const r = new FileReader();
-                r.onload = e => $(target).attr('src', e.target.result);
-                r.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function openSliderModal() { $('#sliderForm')[0].reset(); $('#sId').val(0); $('#sPreview').attr('src', '/assets/img/elements/18.jpg'); sModal.show(); }
-        
-        $(document).on('click', '.btn-edit-slider', function() {
-            const data = $(this).data('slider');
-            if (!data) return;
-            $('#sId').val(data.SliderId || data.sliderId);
-            $('#sTitle').val(data.Title || data.title);
-            $('#sUrl').val(data.LinkUrl || data.linkUrl);
-            $('#sPos').val(data.Position || data.position);
-            const isActive = (data.IsActive !== undefined) ? data.IsActive : data.isActive;
-            $('#sActive').prop('checked', isActive);
-            const imageUrl = data.ImageUrl || data.imageUrl;
-            if(imageUrl) $('#sPreview').attr('src', imageUrl);
+        function openSliderModal() {
+            $('#sliderForm')[0].reset();
+            $('#s_id').val(0);
+            $('#s_preview').attr('src', '/assets/img/elements/18.jpg');
+            $('#sliderModalTitle').text('THÊM SLIDER MỚI');
             sModal.show();
-        });
-
-        $(document).on('click', '.btn-delete-slider', function() {
-            const id = $(this).data('id');
-            if(confirm(`Bạn có chắc muốn xóa Slider này?`)) {
-                $.post(`/Admin/SliderBanner/DeleteSlider`, { id: id }, function(res) { if(res.success) location.reload(); });
-            }
-        });
-
-        $('#sliderForm').on('submit', function(e) {
-            e.preventDefault();
-            $.ajax({ url: '/Admin/SliderBanner/SaveSlider', type: 'POST', data: new FormData(this), processData: false, contentType: false, success: res => { if(res.success) location.reload(); } });
-        });
-
-        function openBannerModal() { $('#bannerForm')[0].reset(); $('#bId').val(0); $('#bPreview').attr('src', '/assets/img/elements/18.jpg'); bModal.show(); }
-        
-        $(document).on('click', '.btn-edit-banner', function() {
-            const data = $(this).data('banner');
-            if (!data) return;
-            $('#bId').val(data.BannerId || data.bannerId);
-            $('#bTitle').val(data.Title || data.title);
-            $('#bUrl').val(data.LinkUrl || data.linkUrl);
-            $('#bPos').val(data.Position || data.position);
-            const isActive = (data.IsActive !== undefined) ? data.IsActive : data.isActive;
-            $('#bActive').prop('checked', isActive);
-            const imageUrl = data.ImageUrl || data.imageUrl;
-            if(imageUrl) $('#bPreview').attr('src', imageUrl);
-            bModal.show();
-        });
-
-        $(document).on('click', '.btn-delete-banner', function() {
-            const id = $(this).data('id');
-            if(confirm(`Bạn có chắc muốn xóa Banner này?`)) {
-                $.post(`/Admin/SliderBanner/DeleteBanner`, { id: id }, function(res) { if(res.success) location.reload(); });
-            }
-        });
-
-        $('#bannerForm').on('submit', function(e) {
-            e.preventDefault();
-            $.ajax({ url: '/Admin/SliderBanner/SaveBanner', type: 'POST', data: new FormData(this), processData: false, contentType: false, success: res => { if(res.success) location.reload(); } });
-        });
-
-        function toggleStatus(type, id) {
-            $.post(`/Admin/SliderBanner/Toggle${type}`, { id: id }, function(res) { if(res.success) UI.toast('Cập nhật thành công', 'success'); });
         }
 
-        function confirmDelete(type, id) {
-            if(confirm(`Bạn có chắc muốn xóa ${type} này?`)) {
-                $.post(`/Admin/SliderBanner/Delete${type}`, { id: id }, function(res) { if(res.success) location.reload(); });
+        function editSlider(s) {
+            $('#s_id').val(s.SliderId);
+            $('#s_title').val(s.Title);
+            $('#s_link').val(s.LinkUrl);
+            $('#s_preview').attr('src', s.ImageUrl);
+            $('#s_active').prop('checked', s.IsActive);
+            $('#sliderModalTitle').text('CHỈNH SỬA SLIDER');
+            sModal.show();
+        }
+
+        $('#sliderForm').submit(async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const res = await fetch('/Admin/SliderBanner/SaveSlider', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) location.reload();
+        });
+
+        async function deleteSlider(id) {
+            if (!confirm('Bạn có chắc muốn xóa Slider này?')) return;
+            const res = await fetch(`/Admin/SliderBanner/DeleteSlider?id=${id}`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) location.reload();
+        }
+
+        async function toggleSlider(id) {
+            await fetch(`/Admin/SliderBanner/ToggleSlider?id=${id}`, { method: 'POST' });
+        }
+
+        function previewImg(input, targetId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => { document.getElementById(targetId).src = e.target.result; }
+                reader.readAsDataURL(input.files[0]);
             }
+        }
+
+        async function updateSliderPos(id, pos) {
+            // Cập nhật vị trí trực tiếp nếu cần
         }
     </script>
+    <style>
+        .x-small { font-size: 11px; }
+        .bg-opacity-10 { background-color: rgba(var(--bs-primary-rgb), 0.1) !important; }
+    </style>
 }

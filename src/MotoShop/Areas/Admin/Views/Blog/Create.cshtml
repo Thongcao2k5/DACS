@@ -6,81 +6,154 @@
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
-    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Blog /</span> Thêm bài viết mới</h4>
+    <div class="d-flex justify-content-between align-items-center py-3 mb-4">
+        <h4 class="fw-bold mb-0"><span class="text-muted fw-light">Blog /</span> Thêm bài viết mới</h4>
+        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill"><i class='bx bx-arrow-back'></i> QUAY LẠI</a>
+    </div>
 
-    <div class="card">
-        <div class="card-body">
-            <form asp-action="Create" method="post" enctype="multipart/form-data">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                
-                <div class="row g-3">
-                    <div class="col-md-8">
-                        <div class="mb-3">
-                            <label class="form-label">Tiêu đề bài viết *</label>
-                            <input asp-for="Title" id="Title" class="form-control" placeholder="Nhập tiêu đề..." required>
-                            <span asp-validation-for="Title" class="text-danger"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Đường dẫn (Slug)</label>
-                            <input asp-for="Slug" id="Slug" class="form-control" placeholder="tu-dong-tao-slug">
-                            <span asp-validation-for="Slug" class="text-danger"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Nội dung *</label>
-                            <textarea asp-for="Content" id="Editor" class="form-control"></textarea>
-                            <span asp-validation-for="Content" class="text-danger"></span>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label class="form-label">Danh mục bài viết</label>
-                            <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.CategoryId" required></select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Trạng thái</label>
-                            <select asp-for="Status" class="form-select">
-                                <option value="0">Bản nháp (Draft)</option>
-                                <option value="1">Đăng bài (Published)</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Ảnh đại diện (Thumbnail)</label>
-                            <input type="file" name="thumbnailFile" class="form-control" onchange="previewImage(this)">
-                            <div class="mt-2 text-center border rounded p-2" style="min-height: 150px;">
-                                <img id="preview" src="/assets/img/elements/1.jpg" class="img-fluid rounded" style="max-height: 200px;">
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        
+        <div class="row">
+            <!-- CỘT TRÁI: NỘI DUNG CHÍNH -->
+            <div class="col-md-8">
+                <div class="nav-align-top mb-4">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item">
+                            <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab" data-bs-target="#navs-content" aria-controls="navs-content" aria-selected="true">
+                                <i class='bx bx-edit-alt me-1'></i> NỘI DUNG
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-seo" aria-controls="navs-seo" aria-selected="false">
+                                <i class='bx bx-search-alt me-1'></i> SEO MAPPING
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content border-0 px-0 shadow-none bg-transparent">
+                        <!-- TAB 1: NỘI DUNG -->
+                        <div class="tab-pane fade show active" id="navs-content" role="tabpanel">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body">
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold">Tiêu đề bài viết *</label>
+                                        <input asp-for="Title" id="Title" class="form-control form-control-lg border-primary border-opacity-25" placeholder="Nhập tiêu đề hấp dẫn..." required>
+                                        <span asp-validation-for="Title" class="text-danger small"></span>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold">Nội dung bài viết *</label>
+                                        <textarea asp-for="Content" id="RichEditor" class="form-control"></textarea>
+                                        <span asp-validation-for="Content" class="text-danger small"></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <hr>
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">LƯU BÀI VIẾT</button>
-                            <a asp-action="Index" class="btn btn-outline-secondary">QUAY LẠI</a>
+
+                        <!-- TAB 2: SEO -->
+                        <div class="tab-pane fade" id="navs-seo" role="tabpanel">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-danger">Đường dẫn (Slug) *</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">/blog/</span>
+                                            <input asp-for="Slug" id="Slug" class="form-control fw-bold" placeholder="tu-dong-tao-slug" required>
+                                        </div>
+                                        <span asp-validation-for="Slug" class="text-danger small"></span>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">SEO Title</label>
+                                        <input asp-for="MetaTitle" id="MetaTitle" class="form-control" placeholder="Để trống để lấy tiêu đề gốc">
+                                    </div>
+                                    <div class="mb-0">
+                                        <label class="form-label fw-bold">SEO Description</label>
+                                        <textarea asp-for="MetaDescription" rows="3" class="form-control" placeholder="Tóm tắt ngắn gọn nội dung bài viết..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </form>
+            </div>
+
+            <!-- CỘT PHẢI: CẤU HÌNH & XUẤT BẢN -->
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-primary bg-opacity-10 py-3">
+                        <h6 class="mb-0 fw-bold"><i class='bx bx-cloud-upload me-2'></i>XUẤT BẢN</h6>
+                    </div>
+                    <div class="card-body pt-3">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">DANH MỤC</label>
+                            <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.CategoryId" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">TRẠNG THÁI</label>
+                            <select asp-for="Status" class="form-select border-warning">
+                                <option value="0">📝 Bản nháp (Draft)</option>
+                                <option value="1">🚀 Đăng bài (Published)</option>
+                            </select>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" asp-for="IsPublished" id="swPublish">
+                            <label class="form-check-label fw-bold" for="swPublish">Hiện công khai</label>
+                        </div>
+                        <hr>
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow">
+                            <i class='bx bx-save me-1'></i> LƯU BÀI VIẾT
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 mt-4">
+                    <div class="card-header bg-light py-3">
+                        <h6 class="mb-0 fw-bold"><i class='bx bx-image-add me-2'></i>ẢNH ĐẠI DIỆN</h6>
+                    </div>
+                    <div class="card-body pt-3">
+                        <div class="text-center mb-3">
+                            <div class="preview-container border rounded-3 p-2 bg-light d-flex align-items-center justify-content-center overflow-hidden" style="height: 200px;">
+                                <img id="preview" src="/assets/img/elements/18.jpg" class="w-100 h-100 object-fit-cover rounded-2">
+                            </div>
+                        </div>
+                        <label class="btn btn-outline-primary btn-sm w-100 rounded-pill">
+                            <i class='bx bx-upload'></i> Chọn ảnh thumbnail
+                            <input type="file" name="thumbnailFile" class="d-none" onchange="previewImage(this)">
+                        </label>
+                        <p class="text-muted x-small mt-2 text-center">Định dạng: JPG, PNG. Tối đa 2MB.</p>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+    </form>
 </div>
 
 @section Scripts {
-    <script src="https://cdn.ckeditor.com/4.16.2/standard/ckeditor.js"></script>
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
     <script>
-        CKEDITOR.replace('Editor', {
-            height: 400
+        // 1. TINYMCE CONFIG
+        tinymce.init({
+            selector: '#RichEditor',
+            height: 500,
+            plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount',
+            toolbar: 'undo redo | blocks | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | image link | help',
+            content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+            image_title: true,
+            automatic_uploads: true,
+            file_picker_types: 'image',
+            promotion: false
         });
 
-        // Tự động tạo slug
+        // 2. AUTO SLUG & SEO TITLE
         document.getElementById('Title').addEventListener('input', function() {
-            let title = this.value;
-            let slug = generateSlug(title);
+            const val = this.value;
+            const slug = generateSlug(val);
             document.getElementById('Slug').value = slug;
+            document.getElementById('MetaTitle').placeholder = val;
         });
 
         function generateSlug(text) {
             return text.toLowerCase()
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                 .replace(/[đĐ]/g, 'd')
                 .replace(/([^a-z0-9\s-]|_)/g, '')
                 .replace(/\s+/g, '-')
@@ -88,14 +161,20 @@
                 .trim();
         }
 
+        // 3. IMAGE PREVIEW
         function previewImage(input) {
             if (input.files && input.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
                     document.getElementById('preview').src = e.target.result;
                 }
                 reader.readAsDataURL(input.files[0]);
             }
         }
     </script>
+    <style>
+        .x-small { font-size: 11px; }
+        .object-fit-cover { object-fit: cover; }
+        .nav-tabs .nav-link.active { background: white !important; border-bottom-color: transparent !important; font-weight: bold; }
+    </style>
 }

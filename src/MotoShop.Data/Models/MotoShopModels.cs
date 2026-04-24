@@ -162,12 +162,10 @@ namespace MotoShop.Data.Models
         public string? Phone { get; set; }
         [StringLength(500)]
         public string? Address { get; set; }
-        
-        [NotMapped]
+
         public string? AvatarUrl { get; set; }
-        
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
-        public bool IsLocked { get; set; } = false;
+
+        public DateTime CreatedDate { get; set; } = DateTime.Now;        public bool IsLocked { get; set; } = false;
 
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
         public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
@@ -248,6 +246,19 @@ namespace MotoShop.Data.Models
         public virtual ProductVariant? ProductVariant { get; set; }
     }
 
+    public class ServiceCategory
+    {
+        [Key]
+        public int CategoryId { get; set; }
+        [Required, StringLength(100)]
+        public string CategoryName { get; set; } = string.Empty;
+        public string? Slug { get; set; }
+        public string? Icon { get; set; } // Class Boxicons (vd: bx-wrench)
+        public bool IsActive { get; set; } = true;
+
+        public virtual ICollection<Service> Services { get; set; } = new List<Service>();
+    }
+
     public class Service
     {
         [Key]
@@ -256,13 +267,42 @@ namespace MotoShop.Data.Models
         public string ServiceName { get; set; } = string.Empty;
         [Column(TypeName = "decimal(18, 2)")]
         public decimal Price { get; set; }
+        public int Duration { get; set; } = 30;
+        
+        public string? Slug { get; set; }
+        public string? ShortDescription { get; set; }
         public string? Description { get; set; }
+        public int? WarrantyDays { get; set; }
+        public int TotalBookings { get; set; } = 0;
+        
+        public int? CategoryId { get; set; }
+        [ForeignKey("CategoryId")]
+        public virtual ServiceCategory? ServiceCategory { get; set; }
+
         [StringLength(500)]
         public string? ImageUrl { get; set; }
         public bool IsActive { get; set; } = true;
 
         public virtual ICollection<ServiceBooking> Bookings { get; set; } = new List<ServiceBooking>();
         public virtual ICollection<ServiceComboItem> ComboItems { get; set; } = new List<ServiceComboItem>();
+        public virtual ICollection<ServiceReview> Reviews { get; set; } = new List<ServiceReview>();
+    }
+
+    public class ServiceReview
+    {
+        [Key]
+        public int ReviewId { get; set; }
+        public int ServiceId { get; set; }
+        public int? CustomerId { get; set; }
+        public int Rating { get; set; }
+        public string? Comment { get; set; }
+        public bool IsApproved { get; set; } = false;
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
+
+        [ForeignKey("ServiceId")]
+        public virtual Service? Service { get; set; }
+        [ForeignKey("CustomerId")]
+        public virtual Customer? Customer { get; set; }
     }
 
     public class ServiceCombo
@@ -462,6 +502,7 @@ namespace MotoShop.Data.Models
         public string? LinkUrl { get; set; }
         [StringLength(100)]
         public string? Position { get; set; }
+        public int DisplayOrder { get; set; } = 0;
         public bool IsActive { get; set; } = true;
     }
 
@@ -475,7 +516,7 @@ namespace MotoShop.Data.Models
         public string? ImageUrl { get; set; }
         [StringLength(500)]
         public string? LinkUrl { get; set; }
-        public int Position { get; set; }
+        public int Position { get; set; } = 0;
         public bool IsActive { get; set; } = true;
     }
 
@@ -646,9 +687,12 @@ namespace MotoShop.Data.Models
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
 
+        public string? MetaTitle { get; set; }
+        public string? MetaDescription { get; set; }
+        public bool IsPublished { get; set; } = false;
+
         [ForeignKey("CategoryId")]
         public virtual BlogCategory? Category { get; set; }
-        public bool IsPublished { get; set; }
     }
 
     public class Notification

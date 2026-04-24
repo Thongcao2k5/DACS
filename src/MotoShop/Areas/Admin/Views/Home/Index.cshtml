@@ -1,379 +1,153 @@
-@using System.Globalization
+@model IEnumerable<MotoShop.Data.Models.Order>
 @{
-    ViewData["Title"] = "Bảng điều khiển";
+    ViewData["Title"] = "Bảng điều khiển Admin";
     Layout = "_AdminLayout";
+    var revVsYes = (double)ViewBag.RevenueVsYesterday;
 }
 
-<style>
-    :root {
-        --color-background-primary: #ffffff;
-        --color-background-secondary: #f8f9fa;
-        --color-text-primary: #333333;
-        --color-text-secondary: #666666;
-        --color-border-tertiary: #dee2e6;
-        --border-radius-lg: 12px;
-        --ms-red: #E24B4A;
-        --ms-blue: #3498db;
-        --ms-green: #2ecc71;
-        --ms-orange: #f39c12;
-        --ms-purple: #9b59b6;
-    }
-
-    .ms-dashboard {
-        font-family: 'Inter', sans-serif;
-        color: var(--color-text-primary);
-        background-color: var(--color-background-secondary);
-    }
-
-    a.ms-card {
-        text-decoration: none;
-        color: inherit;
-        display: block;
-        transition: all 0.15s ease;
-    }
-
-    a.ms-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        border-color: var(--ms-red);
-    }
-
-    a.ms-card:active {
-        transform: translateY(0);
-    }
-
-    .ms-card {
-        background: var(--color-background-primary);
-        border: 0.5px solid var(--color-border-tertiary);
-        border-radius: var(--border-radius-lg);
-        padding: 1.25rem;
-        height: 100%;
-    }
-
-    .ms-metric-card {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .ms-icon-box {
-        width: 48px;
-        height: 48px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        color: white;
-    }
-
-    .ms-metric-info h3 {
-        margin: 0;
-        font-size: 1.5rem;
-        font-weight: 700;
-    }
-
-    .ms-metric-info p {
-        margin: 0;
-        color: var(--color-text-secondary);
-        font-size: 0.85rem;
-    }
-
-    .ms-badge {
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-
-    .bg-gap { background-color: #ffebee; color: #d32f2f; }
-    .bg-cho { background-color: #fff3e0; color: #ef6c00; }
-    .bg-giao { background-color: #e3f2fd; color: #1976d2; }
-
-    .ms-table th {
-        font-weight: 600;
-        color: var(--color-text-secondary);
-        font-size: 0.8rem;
-        border-bottom: 0.5px solid var(--color-border-tertiary);
-        padding: 12px;
-    }
-
-    .ms-table td {
-        padding: 12px;
-        vertical-align: middle;
-        border-bottom: 0.5px solid var(--color-border-tertiary);
-        font-size: 0.9rem;
-    }
-
-    .ms-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: var(--ms-red);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .ms-progress {
-        height: 8px;
-        background: #eee;
-        border-radius: 4px;
-        overflow: hidden;
-        margin-top: 5px;
-    }
-
-    .ms-progress-bar {
-        height: 100%;
-    }
-
-    .chart-container {
-        position: relative;
-        height: 300px;
-        width: 100%;
-    }
-
-    .ms-btn-link {
-        color: var(--ms-red);
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 0.85rem;
-        cursor: pointer;
-    }
-</style>
-
-<div class="ms-dashboard">
-    <!-- HÀNG 1 - METRIC CARDS -->
-    <div class="row g-3 mb-4">
-        <!-- CARD 1 - Doanh thu hôm nay -->
-        <div class="col-xl col-md-4 col-sm-6">
-            <a asp-controller="Report" asp-action="Revenue" asp-route-filter="today" class="ms-card ms-metric-card">
-                <div class="ms-icon-box" style="background-color: var(--ms-red);">
-                    <i class='bx bx-dollar-circle'></i>
-                </div>
-                <div class="ms-metric-info">
-                    <p>Doanh thu hôm nay</p>
-                    <h3>@ViewBag.RevenueToday.ToString("C0", new CultureInfo("vi-VN"))</h3>
-                    @{
-                        var revVsYesterday = (double)ViewBag.RevenueVsYesterday;
-                        var revClass = revVsYesterday >= 0 ? "text-success" : "text-danger";
-                        var revIcon = revVsYesterday >= 0 ? "bx-up-arrow-alt" : "bx-down-arrow-alt";
-                    }
-                    <small class="@revClass"><i class='bx @revIcon'></i> @Math.Abs(revVsYesterday).ToString("F1")% so hôm qua</small>
-                </div>
-            </a>
-        </div>
-        <!-- CARD 2 - Đơn hàng hôm nay -->
-        <div class="col-xl col-md-4 col-sm-6">
-            <a asp-controller="Order" asp-action="Index" 
-               asp-route-fromDate="@DateTime.Now.ToString("yyyy-MM-dd")" 
-               asp-route-toDate="@DateTime.Now.ToString("yyyy-MM-dd")" 
-               class="ms-card ms-metric-card">
-                <div class="ms-icon-box" style="background-color: var(--ms-blue);">
-                    <i class='bx bx-cart'></i>
-                </div>
-                <div class="ms-metric-info">
-                    <p>Đơn hàng hôm nay</p>
-                    <h3>@ViewBag.TotalOrdersToday</h3>
-                    <small class="text-muted">@ViewBag.CompletedOrdersToday Hoàn thành / @ViewBag.PendingOrdersToday Chờ</small>
-                </div>
-            </a>
-        </div>
-        <!-- CARD 3 - Khách hàng -->
-        <div class="col-xl col-md-4 col-sm-6">
-            <a asp-controller="Customer" asp-action="Index" class="ms-card ms-metric-card">
-                <div class="ms-icon-box" style="background-color: var(--ms-green);">
-                    <i class='bx bx-group'></i>
-                </div>
-                <div class="ms-metric-info">
-                    <p>Khách hàng</p>
-                    <h3>@ViewBag.TotalCustomers.ToString("N0")</h3>
-                    <small class="text-success">+@ViewBag.NewCustomersToday mới hôm nay</small>
-                </div>
-            </a>
-        </div>
-        <!-- CARD 4 - Sản phẩm -->
-        <div class="col-xl col-md-4 col-sm-6">
-            <a asp-controller="Product" asp-action="Index" asp-route-status="active" class="ms-card ms-metric-card">
-                <div class="ms-icon-box" style="background-color: var(--ms-orange);">
-                    <i class='bx bx-package'></i>
-                </div>
-                <div class="ms-metric-info">
-                    <p>Sản phẩm</p>
-                    <h3>@ViewBag.ActiveProducts.ToString("N0")</h3>
-                    <small class="text-muted">Đang bán</small>
-                </div>
-            </a>
-        </div>
-        <!-- CARD 5 - Hóa đơn tháng này -->
-        <div class="col-xl col-md-4 col-sm-6">
-            <a asp-controller="Order" asp-action="Index" 
-               asp-route-fromDate="@(new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).ToString("yyyy-MM-dd"))" 
-               asp-route-toDate="@(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month)).ToString("yyyy-MM-dd"))" 
-               class="ms-card ms-metric-card">
-                <div class="ms-icon-box" style="background-color: var(--ms-purple);">
-                    <i class='bx bx-receipt'></i>
-                </div>
-                <div class="ms-metric-info">
-                    <p>Hóa đơn tháng này</p>
-                    <h3>@ViewBag.TotalOrdersMonth</h3>
-                    <small class="text-muted">@ViewBag.CompletedOrdersMonth Xong / @ViewBag.PendingOrdersMonth Còn lại</small>
-                </div>
-            </a>
-        </div>
-    </div>
-
-    <!-- HÀNG 2 - BIỂU ĐỒ -->
-    <div class="row g-3 mb-4">
-        <div class="col-lg-7">
-            <div class="ms-card">
-                <h6 class="fw-bold mb-4 text-uppercase small">Doanh thu & Đơn hàng theo tháng</h6>
-                <div class="chart-container">
-                    <canvas id="monthlyChart"></canvas>
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row">
+        <!-- 1. CHÀO MỪNG & THỐNG KÊ NHANH -->
+        <div class="col-lg-8 mb-4 order-0">
+            <div class="card shadow-none border-0 bg-primary text-white overflow-hidden rounded-4">
+                <div class="d-flex align-items-end row">
+                    <div class="col-sm-7">
+                        <div class="card-body py-5 ps-4">
+                            <h5 class="card-title text-white fw-bold mb-3">Xin chào Admin! 🎉</h5>
+                            <p class="mb-4">Doanh thu hôm nay đã tăng <span class="fw-bold">@revVsYes.ToString("0.0")%</span> so với hôm qua. Hãy kiểm tra các đơn hàng mới nhất bên dưới.</p>
+                            <a href="/Admin/Order" class="btn btn-white btn-sm fw-bold rounded-pill px-4 text-primary shadow-sm">XEM ĐƠN HÀNG</a>
+                        </div>
+                    </div>
+                    <div class="col-sm-5 text-center text-sm-left">
+                        <div class="card-body pb-0 px-0 px-md-4">
+                            <img src="/assets/img/illustrations/man-with-laptop-light.png" height="180" alt="View Badge User">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-5">
-            <div class="ms-card">
-                <h6 class="fw-bold mb-4 text-uppercase small">Biểu đồ doanh thu hôm nay (8h-17h)</h6>
-                <div class="chart-container">
-                    <canvas id="hourlyChart"></canvas>
+
+        <div class="col-lg-4 col-md-4 order-1">
+            <div class="row">
+                <div class="col-lg-6 col-md-12 col-6 mb-4">
+                    <div class="card shadow-sm border-0 rounded-4">
+                        <div class="card-body">
+                            <div class="card-title d-flex align-items-start justify-content-between">
+                                <div class="avatar flex-shrink-0">
+                                    <span class="avatar-initial rounded bg-label-success"><i class="bx bx-dollar"></i></span>
+                                </div>
+                            </div>
+                            <span class="fw-semibold d-block mb-1">Doanh thu</span>
+                            <h4 class="card-title mb-2 fw-bold">@(((decimal)ViewBag.RevenueToday).ToString("N0"))</h4>
+                            <small class="@(revVsYes >= 0 ? "text-success" : "text-danger") fw-semibold">
+                                <i class="bx bx-up-arrow-alt"></i> @revVsYes.ToString("0.0")%
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-12 col-6 mb-4">
+                    <div class="card shadow-sm border-0 rounded-4">
+                        <div class="card-body">
+                            <div class="card-title d-flex align-items-start justify-content-between">
+                                <div class="avatar flex-shrink-0">
+                                    <span class="avatar-initial rounded bg-label-info"><i class="bx bx-cart"></i></span>
+                                </div>
+                            </div>
+                            <span class="fw-semibold d-block mb-1">Đơn hôm nay</span>
+                            <h4 class="card-title mb-2 fw-bold">@ViewBag.TotalOrdersToday</h4>
+                            <small class="text-info fw-semibold"><i class='bx bx-time-five'></i> @ViewBag.PendingOrdersToday chờ</small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- HÀNG 3 - WIDGETS -->
-    <div class="row g-3 mb-4">
-        <div class="col-lg-8">
-            <div class="ms-card">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h6 class="fw-bold m-0 text-uppercase small">Đơn hàng cần xử lý gấp</h6>
-                    <a onclick="sendPrompt('Show all pending orders for processing')" class="ms-btn-link">Xem tất cả</a>
+    <div class="row">
+        <!-- 2. ĐƠN HÀNG GẦN ĐÂY -->
+        <div class="col-md-12 col-lg-8 order-2 mb-4">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white py-4 border-0">
+                    <h5 class="mb-0 fw-bold"><i class='bx bx-history me-2'></i>ĐƠN HÀNG GẦN ĐÂY</h5>
                 </div>
-                <div class="table-responsive">
-                    <table class="table ms-table m-0">
-                        <thead>
+                <div class="table-responsive text-nowrap">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
                             <tr>
-                                <th>MÃ ĐƠN</th>
-                                <th>KHÁCH HÀNG</th>
-                                <th>TỔNG TIỀN</th>
-                                <th>TRẠNG THÁI</th>
+                                <th>Mã đơn</th>
+                                <th>Khách hàng</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày đặt</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td class="fw-bold">#DH0012</td>
-                                <td>Nguyễn Văn A</td>
-                                <td>1,250,000đ</td>
-                                <td><span class="ms-badge bg-gap">Gấp</span></td>
-                            </tr>
-                            <tr>
-                                <td class="fw-bold">#DH0015</td>
-                                <td>Trần Thị B</td>
-                                <td>450,000đ</td>
-                                <td><span class="ms-badge bg-cho">Chờ xử lý</span></td>
-                            </tr>
-                            <tr>
-                                <td class="fw-bold">#DH0018</td>
-                                <td>Lê Văn C</td>
-                                <td>8,900,000đ</td>
-                                <td><span class="ms-badge bg-giao">Đang giao</span></td>
-                            </tr>
+                            @foreach (var o in Model)
+                            {
+                                <tr>
+                                    <td class="fw-bold"><a href="/Admin/Order/Details/@o.OrderId">#@o.OrderCode</a></td>
+                                    <td>@(o.Customer?.FullName ?? "N/A")</td>
+                                    <td class="text-danger fw-bold">@o.TotalAmount.ToString("N0")đ</td>
+                                    <td>
+                                        @{
+                                            var statusClass = o.Status switch {
+                                                "Completed" => "bg-label-success",
+                                                "Pending" => "bg-label-warning",
+                                                "Cancelled" => "bg-label-danger",
+                                                _ => "bg-label-primary"
+                                            };
+                                        }
+                                        <span class="badge @statusClass">@o.Status</span>
+                                    </td>
+                                    <td class="small">@o.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                </tr>
+                            }
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="ms-card">
-                <h6 class="fw-bold mb-4 text-uppercase small">Lịch dịch vụ hôm nay</h6>
-                <div class="d-flex flex-column gap-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="ms-avatar" style="background-color: var(--ms-blue);">TD</div>
-                            <div>
-                                <div class="fw-bold small">Trần Duy</div>
-                                <div class="text-muted" style="font-size: 11px;">Thay nhớt Motul</div>
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <div class="fw-bold small">09:30</div>
-                            <span class="ms-badge bg-cho">Chờ</span>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="ms-avatar" style="background-color: var(--ms-green);">HK</div>
-                            <div>
-                                <div class="fw-bold small">Hoàng Kim</div>
-                                <div class="text-muted" style="font-size: 11px;">Bảo dưỡng nồi</div>
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <div class="fw-bold small">10:45</div>
-                            <span class="ms-badge bg-giao">Xong</span>
-                        </div>
-                    </div>
+                <div class="card-footer bg-white text-center py-3 border-0">
+                    <a href="/Admin/Order" class="btn btn-link text-primary fw-bold text-decoration-none">Xem tất cả đơn hàng <i class='bx bx-right-arrow-alt'></i></a>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- HÀNG 4 - WIDGETS -->
-    <div class="row g-3">
-        <div class="col-lg-6">
-            <div class="ms-card">
-                <h6 class="fw-bold mb-4 text-uppercase small">Top sản phẩm bán chạy tháng này</h6>
-                <div class="d-flex flex-column gap-3">
-                    <div>
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span>Nhớt Motul 300V 10W40</span>
-                            <span class="fw-bold">128 lon</span>
-                        </div>
-                        <div class="ms-progress"><div class="ms-progress-bar" style="width: 85%; background: var(--ms-red);"></div></div>
-                    </div>
-                    <div>
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span>Phuộc Ohlins Vario</span>
-                            <span class="fw-bold">45 cặp</span>
-                        </div>
-                        <div class="ms-progress"><div class="ms-progress-bar" style="width: 60%; background: var(--ms-blue);"></div></div>
-                    </div>
-                    <div>
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span>Lốp Michelin City Grip</span>
-                            <span class="fw-bold">32 cái</span>
-                        </div>
-                        <div class="ms-progress"><div class="ms-progress-bar" style="width: 40%; background: var(--ms-green);"></div></div>
-                    </div>
+        <!-- 3. THỐNG KÊ TỔNG QUAN -->
+        <div class="col-md-12 col-lg-4 order-3 mb-4">
+            <div class="card h-100 shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white py-4 border-0">
+                    <h5 class="mb-0 fw-bold"><i class='bx bx-stats me-2'></i>CHỈ SỐ THÁNG NÀY</h5>
                 </div>
-            </div>
-        </div>
-        <div class="col-lg-6">
-            <div class="ms-card">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h6 class="fw-bold m-0 text-uppercase small">Hàng tồn kho gần hết</h6>
-                    <a onclick="sendPrompt('Go to Inventory Management to restock items')" class="ms-btn-link">Nhập kho</a>
-                </div>
-                <div class="d-flex flex-column gap-3">
-                    <div>
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span>Má phanh Honda Winner</span>
-                            <span class="fw-bold text-danger">3 cái còn lại</span>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar bg-label-primary rounded p-2 me-3"><i class="bx bx-user fs-3"></i></div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 fw-bold">Tổng khách hàng</h6>
+                            <small class="text-muted">Dữ liệu từ lúc bắt đầu</small>
                         </div>
-                        <div class="ms-progress"><div class="ms-progress-bar" style="width: 15%; background: var(--ms-red);"></div></div>
+                        <div class="fw-bold fs-5">@ViewBag.TotalCustomers</div>
                     </div>
-                    <div>
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span>Bugi NGK Iridium</span>
-                            <span class="fw-bold text-warning">12 cái còn lại</span>
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar bg-label-warning rounded p-2 me-3"><i class="bx bx-package fs-3"></i></div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 fw-bold">Sản phẩm đang bán</h6>
+                            <small class="text-muted">IsActive = true</small>
                         </div>
-                        <div class="ms-progress"><div class="ms-progress-bar" style="width: 35%; background: var(--ms-orange);"></div></div>
+                        <div class="fw-bold fs-5">@ViewBag.ActiveProducts</div>
+                    </div>
+                    <hr>
+                    <div class="mt-4">
+                        <h6 class="fw-bold mb-3">Hiệu suất đơn hàng tháng @DateTime.Now.Month</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small">Đã hoàn thành</span>
+                            <span class="fw-bold">@ViewBag.CompletedOrdersMonth / @ViewBag.TotalOrdersMonth</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            @{
+                                var completionRate = ViewBag.TotalOrdersMonth > 0 ? (int)(ViewBag.CompletedOrdersMonth * 100 / ViewBag.TotalOrdersMonth) : 0;
+                            }
+                            <div class="progress-bar bg-success" style="width: @completionRate%"></div>
+                        </div>
+                        <p class="x-small text-muted mt-2">Tỷ lệ hoàn thành: @completionRate%</p>
                     </div>
                 </div>
             </div>
@@ -381,58 +155,15 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Monthly Chart
-    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-    new Chart(monthlyCtx, {
-        type: 'bar',
-        data: {
-            labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
-            datasets: [{
-                label: 'Doanh thu (Triệu)',
-                data: [65, 59, 80, 81, 56, 55, 40, 70, 90, 110, 130, 150],
-                backgroundColor: '#E24B4A',
-                borderRadius: 4
-            }, {
-                label: 'Đơn hàng',
-                data: [28, 48, 40, 19, 86, 27, 90, 65, 45, 100, 120, 140],
-                backgroundColor: '#3498db',
-                borderRadius: 4
-            }]
-        },
-        options: {
-            maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom' } },
-            scales: { y: { beginAtZero: true, border: { display: false } } }
-        }
-    });
-
-    // Hourly Chart
-    const hourlyCtx = document.getElementById('hourlyChart').getContext('2d');
-    new Chart(hourlyCtx, {
-        type: 'line',
-        data: {
-            labels: ['8h', '9h', '10h', '11h', '12h', '13h', '14h', '15h', '16h', '17h'],
-            datasets: [{
-                label: 'Doanh thu (Triệu)',
-                data: [1.2, 2.5, 4.8, 3.2, 1.5, 2.0, 5.5, 6.2, 4.0, 2.1],
-                borderColor: '#E24B4A',
-                backgroundColor: '#E24B4A',
-                tension: 0.4,
-                pointRadius: 3
-            }]
-        },
-        options: {
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, border: { display: false } } }
-        }
-    });
-
-    function sendPrompt(msg) {
-        // Giả lập hàm sendPrompt từ yêu cầu
-        console.log("Sending prompt:", msg);
-        alert("Action: " + msg);
-    }
-</script>
+<style>
+    .rounded-4 { border-radius: 1rem !important; }
+    .btn-white { background: white; color: var(--bs-primary); border: none; }
+    .btn-white:hover { background: #f8f9fa; color: var(--bs-primary); }
+    .avatar-initial { width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; }
+    .bg-label-success { background-color: #e8fadf !important; color: #71dd37 !important; }
+    .bg-label-info { background-color: #d7f5fc !important; color: #03c3ec !important; }
+    .bg-label-primary { background-color: #e7e7ff !important; color: #696cff !important; }
+    .bg-label-warning { background-color: #fff2e2 !important; color: #ffab00 !important; }
+    .bg-label-danger { background-color: #ffe5e5 !important; color: #ff3e1d !important; }
+    .x-small { font-size: 11px; }
+</style>

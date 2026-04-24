@@ -85,48 +85,75 @@ namespace MotoShop.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Checkout()
+        public async Task<IActionResult> Checkout(int? variantId, int quantity = 1)
         {
             var userId = _userManager.GetUserId(User);
             if (string.IsNullOrEmpty(userId)) 
-                return RedirectToAction("Login", "Account", new { returnUrl = Url.Action("Checkout", "Cart") });
+                return RedirectToAction("Login", "Account", new { returnUrl = Request.Path + Request.QueryString });
 
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
             if (customer == null) return RedirectToAction("Profile", "Account");
 
-            // Truy vấn đúng bảng AddressesNew (Sử dụng CustomerId thay vì UserId)
             var savedAddresses = await _context.AddressesNew
                 .Where(a => a.CustomerId == customer.CustomerId)
                 .OrderByDescending(a => a.IsDefault)
                 .ToListAsync();
 
-            if (Request.Cookies.ContainsKey("MotoShop_GuestId"))
+            List<CartItemDto> finalItems;
+            if (variantId.HasValue)
             {
-                var guestId = Request.Cookies["MotoShop_GuestId"];
-                await _cartService.SyncCartAsync(guestId!, userId);
-                Response.Cookies.Delete("MotoShop_GuestId");
-            }
+                // MUA NGAY: Chỉ lấy sản phẩm được chọn
+                var variant = await _context.ProductVariants
+                    .Include(v => v.Product)
+                    .FirstOrDefaultAsync(v => v.ProductVariantId == variantId.Value);
 
-            var cartItems = await _cartService.GetCartAsync(userId);
-            if (!cartItems.Any()) return RedirectToAction("Index");
+                if (variant == null) return RedirectToAction("Index");
+
+                // Tính toán giá gốc nếu database bị thiếu (giả lập 125%)
+                decimal originalPrice = variant.OriginalPrice ?? (variant.Price * 1.25m);
+
+                finalItems = new List<CartItemDto> {
+                    new CartItemDto {
+                        ProductVariantId = variant.ProductVariantId,
+                        ProductName = variant.Product?.ProductName ?? "Sản phẩm",
+                        VariantName = variant.VariantName,
+                        Price = variant.Price,
+                        OriginalPrice = originalPrice,
+                        Quantity = quantity,
+                        ImageUrl = variant.ImageUrl ?? (variant.Product?.Images?.FirstOrDefault()?.ImageUrl ?? "")
+                    }
+                };
+                ViewBag.IsDirectCheckout = true;
+                ViewBag.DirectVariantId = variantId.Value;
+                ViewBag.DirectQuantity = quantity;
+            }
+            else
+            {
+                // THANH TOÁN GIỎ HÀNG: Lấy toàn bộ như cũ
+                if (Request.Cookies.ContainsKey("MotoShop_GuestId"))
+                {
+                    var guestId = Request.Cookies["MotoShop_GuestId"];
+                    await _cartService.SyncCartAsync(guestId!, userId);
+                    Response.Cookies.Delete("MotoShop_GuestId");
+                }
+                finalItems = (await _cartService.GetCartAsync(userId)).ToList();
+                if (!finalItems.Any()) return RedirectToAction("Index");
+                ViewBag.IsDirectCheckout = false;
+            }
 
             var shippingMethods = await _unitOfWork.Repository<ShippingMethod>().Find(s => s.IsActive).ToListAsync();
 
-            ViewBag.CartItems = cartItems;
-            ViewBag.TotalAmount = cartItems.Sum(i => i.Total);
+            ViewBag.CartItems = finalItems;
+            ViewBag.TotalAmount = finalItems.Sum(i => i.Total);
             ViewBag.ShippingMethods = shippingMethods;
             ViewBag.SavedAddresses = savedAddresses;
 
             var model = new CheckoutDto();
             var defaultAddr = savedAddresses.FirstOrDefault(a => a.IsDefault) ?? savedAddresses.FirstOrDefault();
-            if (defaultAddr != null)
-            {
-                model.FullName = defaultAddr.FullName;
-                model.Phone = defaultAddr.Phone;
-                model.Province = defaultAddr.Province;
-                model.District = defaultAddr.District;
-                model.Ward = defaultAddr.Ward;
-                model.Address = defaultAddr.Street; 
+            if (defaultAddr != null) {
+                model.FullName = defaultAddr.FullName; model.Phone = defaultAddr.Phone;
+                model.Province = defaultAddr.Province; model.District = defaultAddr.District;
+                model.Ward = defaultAddr.Ward; model.Address = defaultAddr.Street; 
             }
 
             return View(model);

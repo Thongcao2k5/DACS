@@ -1,330 +1,112 @@
+@model IEnumerable<MotoShop.Data.Models.Service>
 @{
-    ViewData["Title"] = "Dịch vụ bảo dưỡng & Chăm sóc xe";
-    Layout = "_Layout";
+    ViewData["Title"] = "Dịch vụ MotoShop";
+    var categories = ViewBag.ServiceCategories as List<MotoShop.Data.Models.ServiceCategory>;
+    var currentCatId = ViewBag.CurrentCategoryId as int?;
 }
 
-<!-- 1. HERO BANNER -->
-<section class="service-hero">
-    <div class="container text-center py-5">
-        <div class="hero-content py-5">
-            <span class="badge bg-danger rounded-pill px-3 py-2 mb-3 glow-effect">DỊCH VỤ CHUYÊN NGHIỆP</span>
-            <h1 class="display-4 fw-bold text-white mb-3">Dịch vụ chăm sóc & bảo dưỡng</h1>
-            <p class="lead text-white-50 mx-auto mb-4" style="max-width: 600px;">
-                Đội ngũ kỹ thuật viên tay nghề cao, trang thiết bị hiện đại, cam kết mang lại trải nghiệm tốt nhất cho xế yêu của bạn.
-            </p>
-        </div>
-    </div>
-</section>
-
-<!-- 2. FILTER BAR -->
-<div id="booking-anchor" style="position: relative; top: -120px; visibility: hidden;"></div>
-<div class="filter-wrapper sticky-top shadow-sm" id="service-filter-section">
-    <div class="container py-3">
-        <div class="d-flex justify-content-center flex-wrap gap-2" id="filter-buttons">
-            <button class="btn btn-pill active" data-filter="all">Tất cả</button>
-            <button class="btn btn-pill" data-filter="maintenance">Bảo dưỡng xe</button>
-            <button class="btn btn-pill" data-filter="install">Lắp đặt phụ tùng</button>
-            <button class="btn btn-pill" data-filter="tuning">Độ xe</button>
-            <button class="btn btn-pill" data-filter="rescue">Cứu hộ</button>
-            <button class="btn btn-pill" data-filter="washing">Rửa xe</button>
-        </div>
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+                <li class="breadcrumb-item active">Dịch vụ</li>
+            </ol>
+        </nav>
     </div>
 </div>
 
-<!-- 3. SERVICE CARD GRID -->
-<section class="container py-5">
-    <div class="row g-4" id="service-grid">
-        <!-- Dịch vụ 1: Bảo dưỡng -->
-        <div class="col-md-6 col-lg-4 service-item" data-category="maintenance">
-            <div class="card h-100 service-card">
-                <div class="card-body p-4 text-center">
-                    <div class="service-icon-box bg-orange-light text-orange mb-3">
-                        <i class='bx bx-wrench'></i>
-                    </div>
-                    <span class="service-badge badge bg-warning">Phổ biến</span>
-                    <h5 class="fw-bold mb-3">Bảo dưỡng định kỳ (Full)</h5>
-                    <p class="text-muted small mb-4">Kiểm tra tổng quát 24 hạng mục, vệ sinh nồi, họng xăng và thay nhớt máy.</p>
-                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
-                        <span class="h5 fw-bold text-danger mb-0">350.000đ</span>
-                        <a href="/Service/Booking?serviceId=1" class="btn btn-danger rounded-pill px-4">Đặt lịch</a>
-                    </div>
+<main class="container py-5">
+    <div class="row g-4">
+        <!-- 1. SIDEBAR FILTER -->
+        <aside class="col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-4 sticky-top" style="top: 100px;">
+                <h6 class="fw-bold mb-3 text-uppercase">Danh mục dịch vụ</h6>
+                <div class="list-group list-group-flush service-category-list">
+                    <a href="/Service" class="list-group-item list-group-item-action border-0 px-0 d-flex justify-content-between align-items-center @(currentCatId == null ? "active text-danger fw-bold" : "")">
+                        <span><i class='bx bx-grid-alt me-2'></i> Tất cả dịch vụ</span>
+                    </a>
+                    @if (categories != null)
+                    {
+                        foreach (var cat in categories)
+                        {
+                            <a href="/Service?categoryId=@cat.CategoryId" class="list-group-item list-group-item-action border-0 px-0 d-flex justify-content-between align-items-center @(currentCatId == cat.CategoryId ? "active text-danger fw-bold" : "")">
+                                <span><i class='bx @(cat.Icon ?? "bx-wrench") me-2'></i> @cat.CategoryName</span>
+                                <span class="badge bg-light text-muted rounded-pill small">@cat.Services.Count</span>
+                            </a>
+                        }
+                    }
                 </div>
-            </div>
-        </div>
 
-        <!-- Dịch vụ 2: Lắp đặt -->
-        <div class="col-md-6 col-lg-4 service-item" data-category="install">
-            <div class="card h-100 service-card">
-                <div class="card-body p-4 text-center">
-                    <div class="service-icon-box bg-blue-light text-blue mb-3">
-                        <i class='bx bx-cog'></i>
-                    </div>
-                    <span class="service-badge badge bg-info">Mới</span>
-                    <h5 class="fw-bold mb-3">Lắp đặt Phuộc & Phanh</h5>
-                    <p class="text-muted small mb-4">Thay thế phuộc Ohlins, YSS, heo dầu Brembo chuẩn kỹ thuật, không cấn cọ.</p>
-                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
-                        <span class="h5 fw-bold text-danger mb-0">150.000đ</span>
-                        <a href="/Service/Booking?serviceId=2" class="btn btn-danger rounded-pill px-4">Đặt lịch</a>
-                    </div>
+                <div class="mt-5 p-3 bg-dark rounded-4 text-white">
+                    <h6 class="fw-bold mb-2 text-danger">Hỗ trợ 24/7</h6>
+                    <p class="x-small mb-3 text-white-50">Liên hệ ngay để được tư vấn kỹ thuật miễn phí.</p>
+                    <a href="tel:0123456789" class="btn btn-danger w-100 rounded-pill btn-sm fw-bold">GỌI NGAY</a>
                 </div>
             </div>
-        </div>
+        </aside>
 
-        <!-- Dịch vụ 3: Độ xe -->
-        <div class="col-md-6 col-lg-4 service-item" data-category="tuning">
-            <div class="card h-100 service-card">
-                <div class="card-body p-4 text-center">
-                    <div class="service-icon-box bg-purple-light text-purple mb-3">
-                        <i class='bx bx-bolt-circle'></i>
-                    </div>
-                    <h5 class="fw-bold mb-3">ECU & Xăng Lửa</h5>
-                    <p class="text-muted small mb-4">Dynojet chuyên sâu, tối ưu công suất động cơ, giúp xe bốc và mượt hơn.</p>
-                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
-                        <span class="h5 fw-bold text-danger mb-0">800.000đ</span>
-                        <a href="/Service/Booking?serviceId=3" class="btn btn-danger rounded-pill px-4">Đặt lịch</a>
-                    </div>
-                </div>
+        <!-- 2. SERVICE LIST -->
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold mb-0">
+                    @(currentCatId.HasValue ? categories?.FirstOrDefault(c => c.CategoryId == currentCatId)?.CategoryName : "Tất cả dịch vụ")
+                </h4>
+                <div class="text-muted small">Tìm thấy <strong>@Model.Count()</strong> dịch vụ</div>
             </div>
-        </div>
 
-        <!-- Dịch vụ 4: Cứu hộ -->
-        <div class="col-md-6 col-lg-4 service-item" data-category="rescue">
-            <div class="card h-100 service-card">
-                <div class="card-body p-4 text-center">
-                    <div class="service-icon-box bg-red-light text-danger mb-3">
-                        <i class='bx bx-support'></i>
-                    </div>
-                    <span class="service-badge badge bg-danger">24/7</span>
-                    <h5 class="fw-bold mb-3">Cứu hộ tận nơi 24/7</h5>
-                    <p class="text-muted small mb-4">Hỗ trợ sửa chữa lưu động, chở xe về trung tâm khi gặp sự cố trên đường.</p>
-                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
-                        <span class="h5 fw-bold text-danger mb-0">Từ 200k</span>
-                        <a href="/Service/Booking?serviceId=4" class="btn btn-danger rounded-pill px-4">Đặt lịch</a>
-                    </div>
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class='bx bx-search-alt mb-3' style="font-size: 48px; color: #ddd;"></i>
+                    <p class="text-muted">Không tìm thấy dịch vụ nào trong danh mục này.</p>
                 </div>
-            </div>
-        </div>
-
-        <!-- Dịch vụ 5: Rửa xe -->
-        <div class="col-md-6 col-lg-4 service-item" data-category="washing">
-            <div class="card h-100 service-card">
-                <div class="card-body p-4 text-center">
-                    <div class="service-icon-box bg-green-light text-green mb-3">
-                        <i class='bx bx-water'></i>
-                    </div>
-                    <h5 class="fw-bold mb-3">Rửa xe Detail siêu sạch</h5>
-                    <p class="text-muted small mb-4">Rửa xe không chạm, vệ sinh chi tiết máy, dưỡng nhựa nhám và xịt nano bóng.</p>
-                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
-                        <span class="h5 fw-bold text-danger mb-0">120.000đ</span>
-                        <a href="/Service/Booking?serviceId=5" class="btn btn-danger rounded-pill px-4">Đặt lịch</a>
-                    </div>
+            }
+            else
+            {
+                <div class="row g-4">
+                    @foreach (var item in Model)
+                    {
+                        <div class="col-md-6 col-xl-4">
+                            <div class="service-card h-100 bg-white border rounded-4 overflow-hidden transition-all hover-shadow">
+                                <div class="position-relative overflow-hidden" style="height: 180px;">
+                                    <a href="/Service/Details?slug=@item.Slug">
+                                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/assets/img/elements/18.jpg" : item.ImageUrl)" class="w-100 h-100 object-fit-cover" alt="@item.ServiceName" onerror="this.src='/assets/img/elements/18.jpg'">
+                                    </a>
+                                    <div class="position-absolute top-0 end-0 p-3">
+                                        <span class="badge bg-white text-dark shadow-sm rounded-pill small fw-bold">~@item.Duration phút</span>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <div class="small text-danger fw-bold text-uppercase mb-1">@item.ServiceCategory?.CategoryName</div>
+                                    <h6 class="fw-bold mb-2">
+                                        <a href="/Service/Details?slug=@item.Slug" class="text-dark text-decoration-none">@item.ServiceName</a>
+                                    </h6>
+                                    <p class="text-muted small mb-3 text-truncate-2">@(item.ShortDescription ?? item.Description)</p>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-auto">
+                                        <div class="fw-bold text-danger fs-5">@item.Price.ToString("N0")đ</div>
+                                        <a href="/Service/Booking?serviceId=@item.ServiceId" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">ĐẶT LỊCH</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
-            </div>
+            }
         </div>
     </div>
-</section>
-
-<!-- 4. CTA + WHY SECTION -->
-<section class="bg-light py-5 mt-4">
-    <div class="container text-center">
-        <h2 class="fw-bold mb-5">Tại sao nên chọn MotoShop?</h2>
-        <div class="row g-4 mb-5">
-            <div class="col-md-3">
-                <div class="p-3">
-                    <i class='bx bx-medal fs-1 text-danger mb-3'></i>
-                    <h6 class="fw-bold">Kỹ thuật viên chuyên nghiệp</h6>
-                    <p class="text-muted small">Trên 10 năm kinh nghiệm trong ngành xe máy.</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="p-3">
-                    <i class='bx bx-check-shield fs-1 text-danger mb-3'></i>
-                    <h6 class="fw-bold">Linh kiện chính hãng</h6>
-                    <p class="text-muted small">100% linh kiện thay thế là hàng chính hãng cao cấp.</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="p-3">
-                    <i class='bx bx-show fs-1 text-danger mb-3'></i>
-                    <h6 class="fw-bold">Giá minh bạch</h6>
-                    <p class="text-muted small">Báo giá rõ ràng trước khi thực hiện, không phát sinh.</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="p-3">
-                    <i class='bx bx-timer fs-1 text-danger mb-3'></i>
-                    <h6 class="fw-bold">Hỗ trợ nhanh</h6>
-                    <p class="text-muted small">Tiết kiệm thời gian cho khách hàng bận rộn.</p>
-                </div>
-            </div>
-        </div>
-        <a href="#booking-anchor" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold py-3 shadow">
-            ĐẶT LỊCH NGAY <i class='bx bx-right-arrow-alt ms-2'></i>
-        </a>
-    </div>
-</section>
+</main>
 
 <style>
-    html {
-        scroll-behavior: smooth;
-    }
-    :root {
-        --primary-red: #dc3545;
-        --orange: #ff9800;
-        --blue: #2196f3;
-        --purple: #9c27b0;
-        --green: #4caf50;
-    }
-
-    /* Hero Banner */
-    .service-hero {
-        background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
-                    url('https://images.unsplash.com/photo-1558981403-c5f91cbba527?auto=format&fit=crop&q=80&w=2000');
-        background-size: cover;
-        background-position: center;
-        border-radius: 0 0 40px 40px;
-        position: relative;
-        overflow: hidden;
-        margin-top: -20px;
-    }
-
-    .hero-content {
-        animation: fadeInDown 0.8s ease;
-    }
-
-    .glow-effect {
-        box-shadow: 0 0 15px rgba(220, 53, 69, 0.4);
-    }
-
-    /* Filter Bar */
-    #service-filter-section {
-        scroll-margin-top: 20px;
-    }
-    .filter-wrapper {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        z-index: 1000;
-        top: 0;
-    }
-
-    .btn-pill {
-        border-radius: 50px;
-        padding: 8px 24px;
-        border: 1.5px solid #eee;
-        background: #fff;
-        color: #666;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-
-    .btn-pill:hover {
-        border-color: var(--primary-red);
-        color: var(--primary-red);
-    }
-
-    .btn-pill.active {
-        background: var(--primary-red);
-        border-color: var(--primary-red);
-        color: #fff;
-        box-shadow: 0 8px 15px rgba(220, 53, 69, 0.2);
-    }
-
-    /* Service Cards */
-    .service-card {
-        border: none;
-        border-radius: 20px;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        position: relative;
-    }
-
-    .service-card:hover {
-        transform: translateY(-12px);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-    }
-
-    .service-icon-box {
-        width: 70px;
-        height: 70px;
-        border-radius: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        margin: 0 auto;
-    }
-
-    .service-badge {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        padding: 6px 12px;
-        border-radius: 30px;
-    }
-
-    /* Color Palette */
-    .bg-orange-light { background: #fff3e0; } .text-orange { color: var(--orange); }
-    .bg-blue-light { background: #e3f2fd; } .text-blue { color: var(--blue); }
-    .bg-purple-light { background: #f3e5f5; } .text-purple { color: var(--purple); }
-    .bg-red-light { background: #ffebee; }
-    .bg-green-light { background: #e8f5e9; } .text-green { color: var(--green); }
-
-    .service-item {
-        transition: all 0.4s ease;
-    }
-
-    @@keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+    .service-card { transition: 0.3s; }
+    .service-card:hover { transform: translateY(-5px); }
+    .hover-shadow:hover { box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important; }
+    .text-truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 38px; }
+    
+    .service-category-list .list-group-item { transition: 0.2s; font-size: 14px; }
+    .service-category-list .list-group-item:hover { color: #E24B4A; background: #fff9f9; padding-left: 10px !important; }
+    .service-category-list .list-group-item.active { background: #fff9f9 !important; }
+    
+    .x-small { font-size: 11px; }
 </style>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // 1. Xử lý cuộn trang cho nút CTA cuối trang (Dùng Anchor giả để chính xác 100%)
-        const ctaButton = document.querySelector('a[href="#booking-anchor"]');
-        if (ctaButton) {
-            ctaButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                const target = document.getElementById('booking-anchor');
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        }
-
-        // 2. Xử lý Filter Services
-        const buttons = document.querySelectorAll('#filter-buttons .btn-pill');
-        const items = document.querySelectorAll('.service-item');
-
-        buttons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                buttons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-
-                const filter = btn.getAttribute('data-filter');
-
-                items.forEach(item => {
-                    const category = item.getAttribute('data-category');
-
-                    if (filter === 'all' || filter === category) {
-                        item.style.display = 'block';
-                        setTimeout(() => {
-                            item.style.opacity = '1';
-                            item.style.transform = 'scale(1)';
-                        }, 10);
-                    } else {
-                        item.style.opacity = '0';
-                        item.style.transform = 'scale(0.8)';
-                        setTimeout(() => {
-                            item.style.display = 'none';
-                        }, 300);
-                    }
-                });
-            });
-        });
-    });
-</script>

@@ -46,7 +46,7 @@ namespace MotoShop.Business.DTOs
         public string SKU { get; set; }
         public int StockQuantity { get; set; }
         public string ImageUrl { get; set; }
-        public List<VariantAttributeDto> AttributeValues { get; set; } = new List<VariantAttributeDto>();
+        public List<VariantAttributeDto> VariantAttributeValues { get; set; } = new List<VariantAttributeDto>();
     }
 
     public class VariantAttributeDto

@@ -12,5 +12,6 @@ namespace MotoShop.Business.Interfaces
         Task<List<string>> GetBookedSlotsAsync(DateTime date);
         Task<bool> ConfirmDepositAsync(int bookingId, string transferProof);
         Task CancelExpiredBookingsAsync();
+        Task<bool> CancelBookingAsync(int bookingId, string reason, int? customerId);
     }
 }

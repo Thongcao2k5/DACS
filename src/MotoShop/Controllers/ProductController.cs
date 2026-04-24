@@ -96,6 +96,52 @@ namespace MotoShop.Controllers
             var product = await _productService.GetProductBySlugAsync(slug);
             if (product == null) return NotFound();
 
+            // Nhóm thuộc tính từ danh sách VariantAttributeDto đã có trong ProductDto
+            ViewBag.AttributeGroups = product.Variants
+                .SelectMany(v => v.VariantAttributeValues)
+                .GroupBy(av => av.AttributeName ?? "Thuộc tính")
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(av => av.Value).Distinct().ToList()
+                );
+
+            // Variant mặc định (đầu tiên còn hàng)
+            ViewBag.DefaultVariant = product.Variants
+                .OrderByDescending(v => v.StockQuantity > 0)
+                .FirstOrDefault() ?? product.Variants.FirstOrDefault();
+
+            // Tồn kho tối đa cho input qty
+            ViewBag.MaxStock = product.Variants.Max(v => (int?)v.StockQuantity) ?? 0;
+
+            var userId = _userManager.GetUserId(User);
+            
+            // Kiểm tra trạng thái yêu thích
+            bool isWishlisted = false;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var customer = await _unitOfWork.Repository<Customer>().Find(c => c.UserId == userId).FirstOrDefaultAsync();
+                if (customer != null)
+                {
+                    isWishlisted = await _unitOfWork.Repository<WishlistNew>().Find(w => w.UserId == customer.CustomerId && w.ProductId == product.ProductId).AnyAsync();
+                }
+            }
+            ViewBag.IsWishlisted = isWishlisted;
+
+            // Kiểm tra đánh giá
+            bool canReview = !string.IsNullOrEmpty(userId) && await _productService.CanUserReviewProductAsync(userId, product.ProductId);
+            bool hasReviewed = false;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var customer = await _unitOfWork.Repository<Customer>().Find(c => c.UserId == userId).FirstOrDefaultAsync();
+                if (customer != null)
+                {
+                    hasReviewed = await _unitOfWork.Repository<ProductReview>().Find(r => r.CustomerId == customer.CustomerId && r.ProductId == product.ProductId).AnyAsync();
+                }
+            }
+            ViewBag.CanReview = canReview;
+            ViewBag.HasReviewed = hasReviewed;
+            ViewBag.IsLoggedIn = !string.IsNullOrEmpty(userId);
+
             var relatedProducts = await _productService.GetRelatedProductsAsync(
                 product.ProductId, 
                 product.CategoryId ?? 0, 
@@ -103,13 +149,9 @@ namespace MotoShop.Controllers
                 8);
 
             var vouchers = await _productService.GetVouchersForProductAsync(product.ProductId);
-            
-            var userId = _userManager.GetUserId(User);
-            var canReview = !string.IsNullOrEmpty(userId) && await _productService.CanUserReviewProductAsync(userId, product.ProductId);
 
             ViewBag.RelatedProducts = relatedProducts;
             ViewBag.Vouchers = vouchers;
-            ViewBag.CanReview = canReview;
 
             return View(product);
         }
@@ -117,8 +159,14 @@ namespace MotoShop.Controllers
         // Trang khuyến mãi
         public async Task<IActionResult> Promotion()
         {
-            var promotionProducts = await _productService.GetPromotionProductsAsync(12);
-            return View(promotionProducts);
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPromotionProductsJson(int count = 12)
+        {
+            var products = await _productService.GetPromotionProductsAsync(count);
+            return Json(products);
         }
     }
 }

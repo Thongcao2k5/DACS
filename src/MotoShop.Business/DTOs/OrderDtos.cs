@@ -18,6 +18,10 @@ namespace MotoShop.Business.DTOs
         public int? ShippingMethodId { get; set; }
         public int? CouponId { get; set; }
         public string? CouponCode { get; set; }
+
+        // Mua ngay
+        public int? DirectVariantId { get; set; }
+        public int DirectQuantity { get; set; } = 1;
     }
 
     public class OrderDto
