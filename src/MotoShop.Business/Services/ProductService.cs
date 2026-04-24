@@ -158,15 +158,26 @@ namespace MotoShop.Business.Services
 
         public async Task<IEnumerable<CouponDto>> GetVouchersForProductAsync(int productId)
         {
+            var product = await _uow.Repository<Product>().GetByIdAsync(productId);
+            if (product == null) return Enumerable.Empty<CouponDto>();
+
             // Lấy các mã giảm giá còn hạn và còn lượt dùng
-            var coupons = await _uow.Repository<Coupon>().Find(c => c.IsActive 
+            var allActiveCoupons = await _uow.Repository<Coupon>().Find(c => c.IsActive 
                 && c.ExpiryDate >= DateTime.Now 
                 && (c.UsageLimit == 0 || c.UsedCount < c.UsageLimit))
-                .OrderByDescending(c => c.DiscountValue)
-                .Take(3)
                 .ToListAsync();
 
-            return _mapper.Map<IEnumerable<CouponDto>>(coupons);
+            // Lọc tại bộ nhớ
+            var filteredCoupons = allActiveCoupons.Where(c => 
+                c.IsAllProducts == true || 
+                (!string.IsNullOrEmpty(c.AppliedProductIds) && c.AppliedProductIds.Split(',').Contains(productId.ToString())) ||
+                (product.CategoryId.HasValue && !string.IsNullOrEmpty(c.AppliedCategoryIds) && c.AppliedCategoryIds.Split(',').Contains(product.CategoryId.Value.ToString()))
+            )
+            .OrderByDescending(c => c.DiscountValue)
+            .Take(3)
+            .ToList();
+
+            return _mapper.Map<IEnumerable<CouponDto>>(filteredCoupons);
         }
 
         public async Task<bool> CanUserReviewProductAsync(string userId, int productId)

@@ -11,7 +11,6 @@ const API_CONFIG = {
 const MotoApi = {
     async fetchJson(endpoint, options = {}) {
         try {
-            // Thêm credentials: 'include' để gửi kèm Cookie (quan trọng cho Giỏ hàng/Đăng nhập)
             const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
                 ...options,
                 credentials: 'include' 
@@ -50,39 +49,38 @@ const MotoApi = {
 
 const UI = {
     showToast(message, type = 'success') {
-        let toastContainer = document.getElementById('toastContainer');
-        if (!toastContainer) {
-            toastContainer = document.createElement('div');
-            toastContainer.id = 'toastContainer';
-            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
-            toastContainer.style.zIndex = '9999';
-            document.body.appendChild(toastContainer);
+        if (typeof Swal === 'undefined') {
+            alert(message);
+            return;
         }
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+            },
+            showClass: {
+                popup: 'animate__animated animate__fadeInRight animate__faster'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutRight animate__faster'
+            }
+        });
 
-        const toastId = 'toast-' + Date.now();
-        const icon = type === 'success' ? 'bx-check-circle' : 'bx-info-circle';
-        const color = type === 'success' ? 'text-success' : 'text-danger';
-
-        const toastHtml = `
-            <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="toast-header">
-                    <i class='bx ${icon} ${color} fs-4 me-2'></i>
-                    <strong class="me-auto">Thông báo</strong>
-                    <small>Vừa xong</small>
-                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-                <div class="toast-body">
-                    ${message}
-                </div>
-            </div>`;
-
-        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
-        const toastElement = document.getElementById(toastId);
-        const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
-        toast.show();
-
-        toastElement.addEventListener('hidden.bs.toast', () => {
-            toastElement.remove();
+        Toast.fire({
+            icon: type,
+            title: `<span style="font-weight: 700; font-family: 'Public Sans', sans-serif;">${message}</span>`,
+            background: '#fff',
+            color: '#1a1a1a',
+            iconColor: type === 'success' ? '#dc3545' : '#ffc107',
+            customClass: {
+                popup: 'rounded-4 shadow-lg border-0',
+                timerProgressBar: 'bg-danger'
+            }
         });
     },
 
@@ -112,7 +110,7 @@ const UI = {
                         </div>
                     </div>
                     <div class="p-3 pt-0">
-                        <button class="btn btn-danger rounded-pill fw-bold w-100 btn-sm py-2" onclick="handleAddToCart(${p.defaultVariantId})">
+                        <button class="btn btn-danger rounded-pill fw-bold w-100 btn-sm py-2" onclick="handleAddToCart(${p.defaultVariantId || 0})">
                             <i class='bx bx-cart-add fs-5 me-1'></i> THÊM GIỎ
                         </button>
                     </div>
@@ -156,7 +154,6 @@ async function handleAddToCart(variantId) {
     
     if (result && result.success) {
         UI.showToast(result.message || 'Đã thêm vào giỏ hàng thành công!');
-        // Cập nhật số lượng giỏ hàng
         const cartData = await MotoApi.getCartCount();
         if (cartData) {
             UI.updateCartBadge(cartData.count);
@@ -175,39 +172,3 @@ async function handleBuyNow(variantId) {
         UI.showToast(result?.message || 'Có lỗi xảy ra!', 'error');
     }
 }
-
-// KHỞI TẠO TRANG
-document.addEventListener('DOMContentLoaded', async () => {
-    const isHome = window.location.pathname.includes('index.html') || window.location.pathname.endsWith('/');
-    const isPromo = window.location.pathname.includes('promotion.html');
-
-    // ... cập nhật header giữ nguyên ...
-
-    if (isPromo) {
-        const promoDiv = document.getElementById('promotionProducts');
-        if (promoDiv) {
-            // Hiển thị Skeleton Loading theo QUY TẮC THIẾT KẾ
-            promoDiv.innerHTML = UI.renderSkeleton(8);
-            
-            // Gọi API thực tế
-            const products = await MotoApi.getPromotionProducts();
-            
-            setTimeout(() => { // Tạo độ trễ nhẹ để thấy hiệu ứng skeleton
-                if (products && products.length > 0) {
-                    promoDiv.innerHTML = products.map(p => UI.renderProductCard(p, 'badge-promo', 'GIẢM SỐC')).join('');
-                } else {
-                    promoDiv.innerHTML = `
-                        <div class="col-12 text-center py-5">
-                            <i class='bx bx-purchase-tag-alt fs-1 text-muted mb-3 d-block'></i>
-                            <h5 class="text-muted">Hiện chưa có sản phẩm khuyến mãi nào.</h5>
-                            <p>Vui lòng quay lại sau bạn nhé!</p>
-                        </div>`;
-                }
-            }, 500);
-        }
-    }
-
-    if (isHome) {
-        // ... giữ nguyên ...
-    }
-});

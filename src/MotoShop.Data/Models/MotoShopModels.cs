@@ -676,13 +676,17 @@ namespace MotoShop.Data.Models
         [Required, StringLength(20)]
         public string DiscountType { get; set; } = string.Empty;
         [Column(TypeName = "decimal(18, 2)")]
-        public decimal? MinOrderValue { get; set; } 
-        public int UsageLimit { get; set; } = 0; 
+        public decimal? MinOrderValue { get; set; }
+        public int UsageLimit { get; set; } = 0;
         public int UsedCount { get; set; } = 0;
         public DateTime ExpiryDate { get; set; } = DateTime.Now.AddMonths(1);
         public bool IsActive { get; set; } = true;
-    }
 
+        // New fields for targeting
+        public bool? IsAllProducts { get; set; } = true;
+        public string? AppliedCategoryIds { get; set; } // Comma separated IDs
+        public string? AppliedProductIds { get; set; }  // Comma separated IDs
+    }
     public class ShippingMethod
     {
         [Key]

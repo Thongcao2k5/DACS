@@ -148,6 +148,26 @@ using (var scope = app.Services.CreateScope())
                 CONSTRAINT FK_ServiceComboItems_Services FOREIGN KEY (ServiceId) REFERENCES Services(ServiceId) ON DELETE CASCADE
             );
 
+            -- Tạo bảng OrderStatusHistory nếu chưa có
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'OrderStatusHistory')
+            CREATE TABLE OrderStatusHistory (
+                HistoryId INT IDENTITY PRIMARY KEY,
+                OrderId INT NOT NULL,
+                Status NVARCHAR(100) NOT NULL,
+                ChangedDate DATETIME DEFAULT GETDATE(),
+                Note NVARCHAR(MAX) NULL,
+                CONSTRAINT FK_OrderStatusHistory_Orders FOREIGN KEY (OrderId) REFERENCES Orders(OrderId) ON DELETE CASCADE
+            );
+            ELSE
+            BEGIN
+                -- Nếu lỡ tạo với tên cột 'Id', đổi tên thành 'HistoryId'
+                IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('OrderStatusHistory') AND name = 'Id')
+                    EXEC sp_rename 'OrderStatusHistory.Id', 'HistoryId', 'COLUMN';
+            END
+
+
+
+
             -- Sửa lỗi tên bảng Staff (cũ) thành Staffs (mới)
             IF EXISTS (SELECT * FROM sys.tables WHERE name = 'Staff') AND NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Staffs')
                 EXEC sp_rename 'Staff', 'Staffs';
@@ -195,6 +215,21 @@ using (var scope = app.Services.CreateScope())
             BEGIN
                 IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Blogs') AND name = 'IsPublished')
                     ALTER TABLE Blogs ADD IsPublished BIT DEFAULT 0;
+            END
+
+            -- Thêm các cột cho Coupons nếu thiếu
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'IsAllProducts')
+                ALTER TABLE Coupons ADD IsAllProducts BIT DEFAULT 1;
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'AppliedCategoryIds')
+                ALTER TABLE Coupons ADD AppliedCategoryIds NVARCHAR(MAX) NULL;
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'AppliedProductIds')
+                ALTER TABLE Coupons ADD AppliedProductIds NVARCHAR(MAX) NULL;
+
+            -- Đảm bảo Role 'Customer' tồn tại
+            IF NOT EXISTS (SELECT * FROM AspNetRoles WHERE Name = 'Customer')
+            BEGIN
+                INSERT INTO AspNetRoles (Id, Name, NormalizedName, ConcurrencyStamp) 
+                VALUES (NEWID(), 'Customer', 'CUSTOMER', NEWID());
             END
         ");
 

@@ -19,6 +19,10 @@
     </div>
 </div>
 
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+}
+
 <main class="auth-wrapper my-5">
     <div class="container">
         <div class="auth-card mx-auto shadow-lg p-5 rounded-4" style="max-width: 500px; background: #fff;">
@@ -27,24 +31,22 @@
                 <p class="text-muted small">Đăng nhập để theo dõi đơn hàng và nhận ưu đãi riêng biệt.</p>
             </div>
 
-            <form asp-action="Login" asp-route-returnUrl="@returnUrl" method="post">
-                <div asp-validation-summary="All" class="text-danger small mb-3"></div>
+            <form id="loginForm" asp-action="Login" asp-route-returnUrl="@returnUrl" method="post">
+                <div id="loginErrors" class="alert alert-danger d-none small py-2"></div>
 
                 <div class="mb-3">
                     <label asp-for="Email" class="form-label fw-bold small">Email *</label>
-                    <input asp-for="Email" class="form-control rounded-pill px-4 py-2" placeholder="Nhập email của bạn">
-                    <span asp-validation-for="Email" class="text-danger small"></span>
+                    <input asp-for="Email" class="form-control rounded-pill px-4 py-2" placeholder="Nhập email của bạn" required>
                 </div>
                 
                 <div class="mb-3">
                     <label asp-for="Password" class="form-label fw-bold small">Mật khẩu *</label>
                     <div class="input-group">
-                        <input asp-for="Password" id="passwordInput" class="form-control rounded-pill-start px-4 py-2" placeholder="Nhập mật khẩu">
+                        <input asp-for="Password" id="passwordInput" class="form-control rounded-pill-start px-4 py-2" placeholder="Nhập mật khẩu" required>
                         <button class="btn btn-outline-secondary rounded-pill-end px-3" type="button" onclick="togglePasswordVisibility()">
                             <i class='bx bx-hide' id="toggleIcon"></i>
                         </button>
                     </div>
-                    <span asp-validation-for="Password" class="text-danger small"></span>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mb-4 small">
@@ -55,7 +57,7 @@
                     <a href="/Account/ForgotPassword" class="text-danger text-decoration-none fw-bold">Quên mật khẩu?</a>
                 </div>
 
-                <button type="submit" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold mb-4 shadow-sm">ĐĂNG NHẬP</button>
+                <button type="submit" id="btnLogin" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold mb-4 shadow-sm">ĐĂNG NHẬP</button>
             </form>
 
             <div class="text-center">
@@ -84,6 +86,8 @@
 </main>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         function togglePasswordVisibility() {
             const input = document.getElementById('passwordInput');
@@ -96,5 +100,60 @@
                 icon.classList.replace('bx-show', 'bx-hide');
             }
         }
+
+        document.getElementById('loginForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('btnLogin');
+            const errorDiv = document.getElementById('loginErrors');
+            
+            // Lấy toàn bộ dữ liệu form bao gồm cả __RequestVerificationToken
+            const formData = new FormData(this);
+            const params = new URLSearchParams();
+            for (const pair of formData) {
+                params.append(pair[0], pair[1]);
+            }
+
+            errorDiv.classList.add('d-none');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> ĐANG KIỂM TRA...';
+
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: params,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        // Thêm header quan trọng cho ASP.NET MVC
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        title: '<span class="fw-bold text-success">Đăng nhập thành công!</span>',
+                        text: data.message,
+                        icon: 'success',
+                        showConfirmButton: false,
+                        timer: 1500,
+                        showClass: { popup: 'animate__animated animate__fadeInDown' }
+                    }).then(() => {
+                        window.location.href = data.redirectUrl;
+                    });
+                } else {
+                    errorDiv.innerText = data.message;
+                    errorDiv.classList.remove('d-none');
+                    btn.disabled = false;
+                    btn.innerHTML = 'ĐĂNG NHẬP';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                Swal.fire('Lỗi!', 'Không thể kết nối đến máy chủ.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = 'ĐĂNG NHẬP';
+            }
+        });
     </script>
 }

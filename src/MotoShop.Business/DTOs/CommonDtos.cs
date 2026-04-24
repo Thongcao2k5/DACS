@@ -29,4 +29,11 @@ namespace MotoShop.Business.DTOs
         public int? ParentId { get; set; }
         public string? ParentModelName { get; set; }
     }
+
+    public class BlogCategoryDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int BlogCount { get; set; }
+    }
 }

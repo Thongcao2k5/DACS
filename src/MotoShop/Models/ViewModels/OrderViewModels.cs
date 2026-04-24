@@ -23,6 +23,9 @@ namespace MotoShop.Models.ViewModels
         public string StatusLabel { get; set; } = string.Empty;   // "Đang giao hàng", "Đã hoàn thành"...
         public string StatusBadgeClass { get; set; } = string.Empty; // CSS class badge tương ứng
         public decimal TotalAmount { get; set; }
+        public string? PaymentStatus { get; set; }
+        public string? PaymentMethod { get; set; }
+        public string? Note { get; set; }
         public List<OrderItemViewModel> Items { get; set; } = new List<OrderItemViewModel>();
         public bool CanCancel { get; set; }       // chỉ true khi Status = DangXuLy
         public bool CanReorder { get; set; }      // chỉ true khi Status = DaHoanThanh

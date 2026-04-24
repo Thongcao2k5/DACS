@@ -1,11 +1,12 @@
-@model MotoShop.Data.Models.Order
+@model MotoShop.Models.ViewModels.OrderDetailViewModel
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 @inject MotoShop.Data.Interfaces.IUnitOfWork UnitOfWork
 @using Microsoft.EntityFrameworkCore
 @{
-    ViewData["Title"] = "Chi tiết đơn hàng " + Model.OrderCode;
+    var order = Model.OrderInfo;
+    ViewData["Title"] = "Chi tiết đơn hàng " + order.OrderCode;
     var user = await UserManager.GetUserAsync(User);
     var currentCustomer = await UnitOfWork.Repository<MotoShop.Data.Models.Customer>().Find(c => c.UserId == user.Id).FirstOrDefaultAsync();
 }
@@ -51,12 +52,12 @@
         <div class="col-lg-9">
             <div class="order-detail-header d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
                 <div>
-                    <h4 class="fw-bold text-uppercase mb-1">ĐƠN HÀNG #@Model.OrderCode</h4>
-                    <p class="text-muted small mb-0">Ngày đặt: @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+                    <h4 class="fw-bold text-uppercase mb-1">ĐƠN HÀNG #@order.OrderCode</h4>
+                    <p class="text-muted small mb-0">Ngày đặt: @order.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
                 </div>
-                <div class="status-indicator @(Model.Status == "Cancelled" ? "bg-light text-muted" : "status-shipping")">
-                    <i class='bx @(Model.Status == "Pending" ? "bx-time" : Model.Status == "Cancelled" ? "bx-x-circle" : "bx-truck")'></i> 
-                    @(Model.Status ?? "Chờ xử lý")
+                <div class="status-indicator @(order.Status == "Cancelled" ? "bg-light text-muted" : "status-shipping")">
+                    <i class='bx @(order.Status == "Pending" ? "bx-time" : order.Status == "Cancelled" ? "bx-x-circle" : "bx-truck")'></i> 
+                    @(order.StatusLabel ?? "Chờ xử lý")
                 </div>
             </div>
 
@@ -65,8 +66,8 @@
                 <div class="tracking-timeline-wrapper py-2">
                     <div class="tracking-timeline">
                         @{
-                            var progress = Model.Status == "Pending" ? 25 : Model.Status == "Processing" ? 50 : Model.Status == "Shipping" ? 75 : Model.Status == "Completed" ? 100 : 0;
-                            if (Model.Status == "Cancelled") progress = 0;
+                            var progress = order.Status == "Pending" || order.Status == "DangXuLy" ? 25 : order.Status == "Processing" ? 50 : order.Status == "Shipping" || order.Status == "DangGiao" ? 75 : order.Status == "Completed" || order.Status == "DaHoanThanh" ? 100 : 0;
+                            if (order.Status == "Cancelled" || order.Status == "DaHuy") progress = 0;
                         }
                         <div class="timeline-progress" style="width: @progress%;"></div>
                         <div class="timeline-step @(progress >= 25 ? "completed" : "")">
@@ -102,37 +103,23 @@
                                 <th>Đơn giá</th>
                                 <th>Số lượng</th>
                                 <th class="text-end">Thành tiền</th>
-                                @if (Model.Status == "Completed" || Model.Status == "DaHoanThanh")
-                                {
-                                    <th class="text-center">Hành động</th>
-                                }
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach(var item in Model.OrderItems)
+                            @foreach(var item in order.Items)
                             {
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center gap-3">
-                                            <img src="@(string.IsNullOrEmpty(item.ProductVariant?.ImageUrl) ? "/assets/img/elements/18.jpg" : item.ProductVariant.ImageUrl)" class="rounded-3 border" style="width: 50px; height: 50px; object-fit: cover;" alt="P">
+                                            <img src="@(string.IsNullOrEmpty(item.ProductImage) ? "/assets/img/elements/18.jpg" : item.ProductImage)" class="rounded-3 border" style="width: 50px; height: 50px; object-fit: cover;" alt="P">
                                             <div>
-                                                <a href="/Product/Details?slug=@item.ProductVariant?.Product?.Slug" class="text-dark fw-bold text-decoration-none small d-block">@item.ProductVariant?.Product?.ProductName</a>
-                                                <span class="text-muted" style="font-size: 11px;">Phân loại: @item.ProductVariant?.VariantName</span>
+                                                <span class="text-dark fw-bold small d-block">@item.ProductName</span>
                                             </div>
                                         </div>
                                     </td>
-                                    <td>@item.Price.ToString("N0")đ</td>
+                                    <td>@item.UnitPrice.ToString("N0")đ</td>
                                     <td>@item.Quantity.ToString("D2")</td>
-                                    <td class="text-end fw-bold">@((item.Price * item.Quantity).ToString("N0"))đ</td>
-                                    @if (Model.Status == "Completed" || Model.Status == "DaHoanThanh")
-                                    {
-                                        <td class="text-center">
-                                            <button onclick="openReviewModal(@item.ProductVariant?.ProductId, @item.ProductVariantId, '@item.ProductVariant?.Product?.ProductName', '@item.ProductVariant?.VariantName')" 
-                                                    class="btn btn-sm btn-outline-danger rounded-pill px-3">
-                                                Đánh giá
-                                            </button>
-                                        </td>
-                                    }
+                                    <td class="text-end fw-bold">@((item.UnitPrice * item.Quantity).ToString("N0"))đ</td>
                                 </tr>
                             }
                         </tbody>
@@ -146,11 +133,11 @@
                     <div class="profile-section-card h-100 shadow-sm">
                         <h6 class="info-card-title"><i class='bx bx-map-pin'></i> THÔNG TIN NHẬN HÀNG</h6>
                         <div class="info-card-content">
-                            <p class="fw-bold mb-1">@Model.Customer?.FullName</p>
-                            <p class="mb-1">@Model.Customer?.Phone</p>
+                            <p class="fw-bold mb-1">@currentCustomer?.FullName</p>
+                            <p class="mb-1">@currentCustomer?.Phone</p>
                             <p class="mb-3">@Model.ShippingAddress</p>
                             <p class="mb-0"><span class="text-muted">Trạng thái thanh toán:</span><br>
-                                <span class="badge @(Model.PaymentStatus == "Paid" ? "bg-success" : "bg-warning")">@(Model.PaymentStatus == "Paid" ? "Đã thanh toán" : "Chưa thanh toán")</span>
+                                <span class="badge @(order.PaymentStatus == "Paid" ? "bg-success" : "bg-warning")">@(order.PaymentStatus == "Paid" ? "Đã thanh toán" : "Chưa thanh toán")</span>
                             </p>
                         </div>
                     </div>
@@ -163,19 +150,26 @@
                         <div class="info-card-content">
                             <div class="payment-summary-row">
                                 <span class="text-muted">Tạm tính:</span>
-                                <span>@Model.TotalAmount.ToString("N0")đ</span>
+                                <span>@order.TotalAmount.ToString("N0")đ</span>
                             </div>
                             <div class="payment-summary-row">
                                 <span class="text-muted">Phí vận chuyển:</span>
                                 <span class="text-success">Miễn phí</span>
                             </div>
+                            @if (Model.Discount > 0)
+                            {
+                                <div class="payment-summary-row text-success">
+                                    <span>Mã giảm giá (@Model.VoucherCode):</span>
+                                    <span>-@Model.Discount.ToString("N0")đ</span>
+                                </div>
+                            }
                             <div class="payment-summary-row">
                                 <span class="text-muted">Phương thức:</span>
-                                <span class="fw-bold">@(Model.Payments?.FirstOrDefault()?.PaymentMethod ?? "Tiền mặt (COD)")</span>
+                                <span class="fw-bold">@(order.PaymentMethod ?? "Tiền mặt (COD)")</span>
                             </div>
                             <div class="payment-summary-total">
                                 <span>TỔNG CỘNG:</span>
-                                <span>@Model.TotalAmount.ToString("N0")đ</span>
+                                <span>@order.TotalAmount.ToString("N0")đ</span>
                             </div>
                         </div>
                     </div>
@@ -184,13 +178,13 @@
 
             <!-- ACTIONS -->
             <div class="d-flex gap-3 mt-4 flex-wrap">
-                @if (Model.Status == "Pending")
+                @if (order.CanCancel)
                 {
-                    <button onclick="cancelOrder(@Model.OrderId)" class="btn btn-outline-danger rounded-pill px-4 fw-bold">
+                    <button onclick="cancelOrder(@order.Id)" class="btn btn-outline-danger rounded-pill px-4 fw-bold">
                         <i class='bx bx-x-circle me-2'></i> HỦY ĐƠN HÀNG
                     </button>
                 }
-                <button onclick="reorder(@Model.OrderId)" class="btn btn-danger rounded-pill px-4 fw-bold">
+                <button onclick="reorder(@order.Id)" class="btn btn-danger rounded-pill px-4 fw-bold">
                     <i class='bx bx-refresh me-2'></i> MUA LẠI ĐƠN HÀNG
                 </button>
                 <a href="mailto:support@motoshop.vn" class="btn btn-outline-dark rounded-pill px-4 fw-bold">
@@ -198,10 +192,10 @@
                 </a>
             </div>
 
-            @if (!string.IsNullOrEmpty(Model.Note))
+            @if (!string.IsNullOrEmpty(order.Note))
             {
                 <div class="mt-4 p-3 bg-light rounded-3 border-start border-danger border-4">
-                    <p class="small mb-0"><strong>Ghi chú đơn hàng:</strong> @Model.Note</p>
+                    <p class="small mb-0"><strong>Ghi chú đơn hàng:</strong> @order.Note</p>
                 </div>
             }
         </div>

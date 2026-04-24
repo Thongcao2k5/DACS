@@ -72,7 +72,7 @@ namespace MotoShop.Controllers
                             await _context.SaveChangesAsync();
                         }
 
-                        // --- 1. ĐỒNG BỘ GIỎ HÀNG (Sync & Clear Guest) ---
+                        // --- 1. ĐỒNG BỘ GIỎ HÀNG ---
                         string? guestCartId = Request.Cookies["MotoShop_GuestId"];
                         if (!string.IsNullOrEmpty(guestCartId))
                         {
@@ -80,7 +80,7 @@ namespace MotoShop.Controllers
                             Response.Cookies.Delete("MotoShop_GuestId");
                         }
 
-                        // --- 2. ĐỒNG BỘ YÊU THÍCH (Sync & Clear Guest) ---
+                        // --- 2. ĐỒNG BỘ YÊU THÍCH ---
                         var wishlistCookie = Request.Cookies["MotoShop_Wishlist_Items"];
                         if (!string.IsNullOrEmpty(wishlistCookie))
                         {
@@ -99,17 +99,29 @@ namespace MotoShop.Controllers
                             Response.Cookies.Delete("MotoShop_Wishlist_Items");
                         }
 
-                        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)) return Redirect(returnUrl);
-                        return RedirectToAction("Index", "Home");
+                        string redirectUrl = (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)) ? returnUrl : Url.Action("Index", "Home") ?? "/";
+                        
+                        return Json(new { 
+                            success = true, 
+                            message = "Chào mừng bạn quay trở lại MotoShop!", 
+                            redirectUrl = redirectUrl 
+                        });
                     }
                 }
-                ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không chính xác.");
+                return Json(new { success = false, message = "Email hoặc mật khẩu không chính xác." });
             }
-            return View(model);
+            return Json(new { success = false, message = "Vui lòng nhập đầy đủ thông tin." });
         }
 
         [HttpGet]
         public IActionResult Register()
+        {
+            if (_signInManager.IsSignedIn(User)) return RedirectToAction("Index", "Home");
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
         {
             if (_signInManager.IsSignedIn(User)) return RedirectToAction("Index", "Home");
             return View();

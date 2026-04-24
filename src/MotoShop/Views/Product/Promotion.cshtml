@@ -64,13 +64,17 @@
                                     <div class="discount-badge-large">-@product.DiscountPercent%</div>
                                 }
                                 <div class="product-img-wrapper position-relative">
-                                    <img src="@primaryImg" alt="@product.ProductName" onerror="this.src='https://via.placeholder.com/400'" onclick="location.href='@Url.Action("Details", "Product", new { slug = product.Slug })'">
+                                    <a href="@Url.Action("Details", "Product", new { slug = product.Slug })" class="d-block w-100 h-100">
+                                        <img src="@primaryImg" alt="@product.ProductName" onerror="this.src='https://via.placeholder.com/400'">
+                                    </a>
                                     <button type="button" class="btn-wishlist-abs" onclick="addToWishlist(@product.ProductId)" title="Thêm vào yêu thích">
                                         <i class='bx bx-heart'></i>
                                     </button>
                                 </div>
                                 <div class="product-info flex-grow-1">
-                                    <h6 class="name text-truncate">@product.ProductName</h6>
+                                    <a href="@Url.Action("Details", "Product", new { slug = product.Slug })" class="text-decoration-none">
+                                        <h6 class="name text-truncate text-dark">@product.ProductName</h6>
+                                    </a>
                                     <div class="product-price">
                                         <span class="current">@price.ToString("N0")đ</span>
                                         @if (product.OldPrice > product.MinPrice)
@@ -122,17 +126,24 @@
                         <div class="product-card h-100 shadow-sm border-0">
                             <span class="product-badge badge-hot">HOT</span>
                             <div class="product-img-wrapper position-relative">
-                                <img src="@primaryImg" alt="@product.ProductName" onerror="this.src='https://via.placeholder.com/400'" onclick="location.href='@Url.Action("Details", "Product", new { slug = product.Slug })'">
+                                <a href="@Url.Action("Details", "Product", new { slug = product.Slug })" class="d-block w-100 h-100">
+                                    <img src="@primaryImg" alt="@product.ProductName" onerror="this.src='https://via.placeholder.com/400'">
+                                </a>
                                 <button type="button" class="btn-wishlist-abs" onclick="addToWishlist(@product.ProductId)" title="Thêm vào yêu thích">
                                     <i class='bx bx-heart'></i>
                                 </button>
                             </div>
                             <div class="product-info flex-grow-1">
-                                <span class="brand text-uppercase small text-muted">@product.BrandName</span>
-                                <h6 class="name text-truncate">@product.ProductName</h6>
+                                <span class="brand text-uppercase small text-muted">@(product.BrandName ?? "MotoShop")</span>
+                                <a href="@Url.Action("Details", "Product", new { slug = product.Slug })" class="text-decoration-none">
+                                    <h6 class="name text-truncate text-dark">@product.ProductName</h6>
+                                </a>
                                 <div class="product-price">
                                     <span class="current">@price.ToString("N0")đ</span>
-                                    <span class="old">@oldPrice.ToString("N0")đ</span>
+                                    @if (product.OldPrice > product.MinPrice)
+                                    {
+                                        <span class="old">@product.OldPrice?.ToString("N0")đ</span>
+                                    }
                                 </div>
                             </div>
                             <button class="btn btn-add-cart w-100 rounded-pill fw-bold mt-3" onclick="handleAddToCart(@product.DefaultVariantId)">THÊM VÀO GIỎ</button>

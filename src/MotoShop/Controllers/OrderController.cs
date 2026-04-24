@@ -101,6 +101,9 @@ namespace MotoShop.Controllers
                 OrderDate = o.OrderDate,
                 Status = o.Status ?? "DangXuLy",
                 TotalAmount = o.TotalAmount,
+                PaymentStatus = o.PaymentStatus,
+                PaymentMethod = o.Payments?.FirstOrDefault()?.PaymentMethod ?? "Tiền mặt (COD)",
+                Note = o.Note,
                 Items = o.OrderItems.Take(2).Select(oi => new OrderItemViewModel
                 {
                     ProductName = oi.ProductVariant?.VariantName ?? "Sản phẩm đã xóa",

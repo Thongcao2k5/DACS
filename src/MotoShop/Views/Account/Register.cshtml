@@ -105,11 +105,20 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // 1. Gửi OTP (Sử dụng đoạn logic bạn cung cấp)
+        // 1. Gửi OTP
         document.getElementById('btnSendOtp').addEventListener('click', async function () {
             const email = document.getElementById('emailInput').value;
-            if (!email) {
-                Swal.fire('Chú ý!', 'Vui lòng nhập Email!', 'warning');
+            const fullName = document.querySelector('input[name="FullName"]').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+            if (!email || !fullName || !password) {
+                Swal.fire('Chú ý!', 'Vui lòng điền đầy đủ thông tin!', 'warning');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                Swal.fire('Chú ý!', 'Mật khẩu xác nhận không khớp!', 'warning');
                 return;
             }
 
@@ -117,66 +126,84 @@
             this.disabled = true;
 
             try {
-                const response = await fetch('/Account/SendOtp', {
+                const response = await fetch('/api/AccountApi/register-step1', {
                     method: 'POST',
                     headers: { 
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ email: email })
+                    body: JSON.stringify({ 
+                        email: email,
+                        fullName: fullName,
+                        password: password
+                    })
                 });
                 const data = await response.json();
 
-                if (data.success) {
+                if (response.ok) {
                     document.getElementById('step1').style.display = 'none';
                     document.getElementById('step2').style.display = 'block';
                     startTimer();
                 } else {
-                    Swal.fire('Lỗi!', data.message, 'error');
+                    Swal.fire('Lỗi!', data.message || 'Không thể gửi mã xác nhận.', 'error');
                     this.innerHTML = 'TIẾP TỤC & GỬI MÃ XÁC NHẬN';
                     this.disabled = false;
                 }
             } catch (error) {
                 Swal.fire('Lỗi!', 'Không thể kết nối máy chủ', 'error');
                 this.disabled = false;
+                this.innerHTML = 'TIẾP TỤC & GỬI MÃ XÁC NHẬN';
             }
         });
 
-        // 2. Xử lý đăng ký cuối cùng
+        // 2. Xử lý đăng ký cuối cùng (Xác thực OTP và tạo tài khoản)
         document.getElementById('mainRegisterForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
-            const formData = new FormData(this);
+            const email = document.getElementById('emailInput').value;
+            const code = document.getElementById('otpInput').value;
+
+            if (!code) {
+                Swal.fire('Chú ý!', 'Vui lòng nhập mã xác nhận!', 'warning');
+                return;
+            }
+
             const btn = this.querySelector('button[type="submit"]');
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang tạo tài khoản...';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xác thực...';
             btn.disabled = true;
 
             try {
-                const response = await fetch(this.action, {
+                const response = await fetch('/api/AccountApi/verify-otp', {
                     method: 'POST',
-                    body: formData,
-                    headers: {
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    }
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        email: email,
+                        code: code
+                    })
                 });
 
                 const data = await response.json();
 
-                if (data.success) {
+                if (response.ok) {
                     Swal.fire({
-                        title: 'Đăng ký thành công!',
+                        title: '<span class="fw-bold text-success">Thành công!</span>',
                         text: data.message,
                         icon: 'success',
+                        showConfirmButton: false,
                         timer: 2000,
-                        showConfirmButton: false
+                        showClass: { popup: 'animate__animated animate__fadeInUp' }
                     }).then(() => {
-                        window.location.href = data.redirectUrl;
+                        window.location.href = '/Account/Login';
                     });
                 } else {
                     Swal.fire({
-                        title: 'Thất bại',
-                        html: data.message,
-                        icon: 'error'
+                        title: '<span class="fw-bold text-danger">Thất bại</span>',
+                        text: data.message || 'Mã xác nhận không chính xác.',
+                        icon: 'error',
+                        confirmButtonText: 'Thử lại',
+                        customClass: { confirmButton: 'btn btn-danger rounded-pill px-4' },
+                        buttonsStyling: false
                     });
                     btn.innerHTML = 'XÁC NHẬN & ĐĂNG KÝ';
                     btn.disabled = false;

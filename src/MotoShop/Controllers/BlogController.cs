@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
+using MotoShop.Business.DTOs;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -43,11 +44,11 @@ namespace MotoShop.Controllers
                 .Take(pageSize)
                 .ToListAsync();
 
-            // Tối ưu hóa lấy danh mục: chỉ lấy tên và ID, đếm số bài viết riêng
+            // Sử dụng DTO thay vì kiểu nặc danh
             ViewBag.Categories = await _context.BlogCategories
-                .Select(c => new { 
-                    c.Id, 
-                    c.Name, 
+                .Select(c => new BlogCategoryDto { 
+                    Id = c.Id, 
+                    Name = c.Name, 
                     BlogCount = c.Blogs.Count(b => b.IsPublished || b.Status == 1) 
                 })
                 .ToListAsync();
@@ -55,7 +56,6 @@ namespace MotoShop.Controllers
             ViewBag.RecentPosts = await _context.Blogs
                 .Where(b => b.IsPublished || b.Status == 1)
                 .OrderByDescending(b => b.CreatedDate)
-                .Select(b => new { b.Title, b.Slug, b.CreatedDate, b.Thumbnail })
                 .Take(5)
                 .ToListAsync();
 
@@ -86,10 +86,12 @@ namespace MotoShop.Controllers
 
             ViewBag.RelatedBlogs = relatedBlogs;
             ViewBag.RelatedPosts = relatedBlogs;
+            
+            // Sử dụng DTO thay vì kiểu nặc danh
             ViewBag.Categories = await _context.BlogCategories
-                .Select(c => new { 
-                    c.Id, 
-                    c.Name, 
+                .Select(c => new BlogCategoryDto { 
+                    Id = c.Id, 
+                    Name = c.Name, 
                     BlogCount = c.Blogs.Count(b => b.IsPublished || b.Status == 1) 
                 })
                 .ToListAsync();

@@ -1,0 +1,51 @@
+@{
+    ViewData["Title"] = "Kết quả thanh toán";
+}
+
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+                <li class="breadcrumb-item active">Kết quả thanh toán</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<main class="container my-5 py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 text-center">
+            <div class="auth-card shadow-lg p-5 rounded-4 border-0">
+                @if (ViewBag.Status == "success")
+                {
+                    <div class="mb-4 animate__animated animate__bounceIn">
+                        <i class='bx bx-check-circle text-success' style="font-size: 100px;"></i>
+                    </div>
+                    <h2 class="fw-bold text-success mb-3">THANH TOÁN THÀNH CÔNG!</h2>
+                    <p class="text-muted fs-5">@ViewBag.Message</p>
+                    <p class="small text-muted mb-5">Hệ thống đang chuẩn bị đơn hàng của bạn. Bạn có thể theo dõi tiến độ trong mục Hồ sơ cá nhân.</p>
+                    
+                    <div class="d-grid gap-3">
+                        <a href="/" class="btn btn-danger btn-lg rounded-pill fw-bold py-3 shadow">TIẾP TỤC MUA SẮM</a>
+                        <a href="/Order/Detail/@ViewBag.OrderId" class="btn btn-outline-dark btn-lg rounded-pill fw-bold py-3">XEM CHI TIẾT ĐƠN HÀNG</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="mb-4 animate__animated animate__shakeX">
+                        <i class='bx bx-error-circle text-danger' style="font-size: 100px;"></i>
+                    </div>
+                    <h2 class="fw-bold text-danger mb-3">GIAO DỊCH THẤT BẠI</h2>
+                    <p class="text-muted fs-5">@ViewBag.Message</p>
+                    <p class="small text-muted mb-5">Đừng lo lắng, tiền của bạn sẽ không bị trừ nếu giao dịch lỗi. Vui lòng thử lại phương thức khác hoặc liên hệ bộ phận hỗ trợ.</p>
+                    
+                    <div class="d-grid gap-3">
+                        <a href="/Cart" class="btn btn-danger btn-lg rounded-pill fw-bold py-3 shadow">THỬ LẠI GIỎ HÀNG</a>
+                        <a href="/" class="btn btn-outline-dark btn-lg rounded-pill fw-bold py-3">QUAY LẠI TRANG CHỦ</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</main>

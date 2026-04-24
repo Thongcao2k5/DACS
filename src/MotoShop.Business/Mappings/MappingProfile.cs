@@ -50,6 +50,21 @@ namespace MotoShop.Business.Mappings
             // MotorbikeModel Mapping
             CreateMap<MotorbikeModel, MotorbikeModelDto>()
                 .ForMember(dest => dest.ParentModelName, opt => opt.MapFrom(src => src.ParentModel != null ? src.ParentModel.ModelName : string.Empty));
+
+            // Coupon Mapping
+            CreateMap<Coupon, CouponDto>();
+
+            // Promotion Mapping
+            CreateMap<Promotion, PromotionDto>()
+                .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.StartDate.ToString("dd/MM/yyyy")))
+                .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.EndDate.ToString("dd/MM/yyyy")))
+                .ForMember(dest => dest.ProductCount, opt => opt.MapFrom(src => src.PromotionProducts != null ? src.PromotionProducts.Count : 0))
+                .ForMember(dest => dest.StatusText, opt => opt.MapFrom(src => src.EndDate < DateTime.Now ? "Đã kết thúc" : (src.StartDate > DateTime.Now ? "Sắp diễn ra" : "Đang diễn ra")))
+                .ForMember(dest => dest.StatusClass, opt => opt.MapFrom(src => src.EndDate < DateTime.Now ? "bg-danger" : (src.StartDate > DateTime.Now ? "bg-warning" : "bg-success")));
+
+            // Order Mapping
+            CreateMap<Order, OrderDto>()
+                .ForMember(dest => dest.Amount, opt => opt.MapFrom(src => (int)src.TotalAmount));
         }
     }
 }

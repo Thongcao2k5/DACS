@@ -141,6 +141,14 @@
                         <input type="radio" asp-for="PaymentMethod" value="BankTransfer" id="pay2">
                         <div class="method-info"><label for="pay2" class="name">Chuyển khoản</label></div>
                     </div>
+                    <div class="method-card mt-2" onclick="setPayment('VNPay', this)">
+                        <input type="radio" asp-for="PaymentMethod" value="VNPay" id="pay3">
+                        <div class="method-info">
+                            <label for="pay3" class="name d-flex align-items-center gap-2">
+                                Thanh toán qua VNPay <img src="https://sandbox.vnpayment.vn/paymentv2/Images/brands/logo-vnpay.png" height="20" alt="VNPay">
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -397,15 +405,43 @@
 
         document.getElementById('checkoutForm').onsubmit = async function(e) {
             e.preventDefault();
-            const btn = document.getElementById('btnPlaceOrder'); btn.disabled = true; btn.innerHTML = 'ĐANG XỬ LÝ...';
+            const btn = document.getElementById('btnPlaceOrder'); 
+            btn.disabled = true; 
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> ĐANG XỬ LÝ...';
+            
+            const formData = new FormData(this);
+            const paymentMethod = formData.get('PaymentMethod');
+
             try {
-                const res = await fetch('/Cart/Checkout', { method: 'POST', body: new FormData(this) });
+                const res = await fetch('/Cart/Checkout', { method: 'POST', body: formData });
                 const data = await res.json();
+                
                 if (data.success) {
-                    Swal.fire({ icon: 'success', title: 'Thành công!', text: data.message, timer: 2000, showConfirmButton: false })
-                        .then(() => window.location.href = '/Cart/Success/' + data.orderId);
-                } else { Swal.fire('Lỗi', data.message, 'error'); btn.disabled = false; btn.innerHTML = 'ĐẶT HÀNG NGAY'; }
-            } catch (e) { Swal.fire('Lỗi', 'Lỗi kết nối', 'error'); btn.disabled = false; btn.innerHTML = 'ĐẶT HÀNG NGAY'; }
+                    if (paymentMethod === 'VNPay') {
+                        // Chuyển hướng sang cổng VNPay
+                        window.location.href = '/Payment/CreatePayment?orderId=' + data.orderId;
+                    } else {
+                        // Hiển thị thông báo thành công cho COD/Chuyển khoản
+                        Swal.fire({ 
+                            icon: 'success', 
+                            title: 'Thành công!', 
+                            text: data.message, 
+                            timer: 2000, 
+                            showConfirmButton: false 
+                        }).then(() => {
+                            window.location.href = '/Cart/Success/' + data.orderId;
+                        });
+                    }
+                } else { 
+                    Swal.fire('Lỗi', data.message, 'error'); 
+                    btn.disabled = false; 
+                    btn.innerHTML = 'ĐẶT HÀNG NGAY'; 
+                }
+            } catch (e) { 
+                Swal.fire('Lỗi', 'Không thể kết nối với máy chủ.', 'error'); 
+                btn.disabled = false; 
+                btn.innerHTML = 'ĐẶT HÀNG NGAY'; 
+            }
         };
     </script>
 }
