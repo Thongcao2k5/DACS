@@ -9,11 +9,12 @@ namespace MotoShop.Data.Repositories
     public class UnitOfWork : IUnitOfWork
     {
         private readonly MotoShopDbContext _context;
-        private Hashtable _repositories;
+        private Hashtable? _repositories;
 
         public UnitOfWork(MotoShopDbContext context)
         {
             _context = context;
+            _repositories = new Hashtable();
         }
 
         public async Task<int> CompleteAsync()
@@ -37,10 +38,10 @@ namespace MotoShop.Data.Repositories
                 var repositoryType = typeof(GenericRepository<>);
                 var repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(TEntity)), _context);
 
-                _repositories.Add(type, repositoryInstance);
+                _repositories.Add(type, repositoryInstance!);
             }
 
-            return (IGenericRepository<TEntity>)_repositories[type];
+            return (IGenericRepository<TEntity>)_repositories[type]!;
         }
     }
 }

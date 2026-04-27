@@ -127,10 +127,18 @@ namespace MotoShop.Areas.Admin.Controllers
 
             try
             {
+                var baseSlug = GenerateSlug(model.ProductName);
+                var slug = baseSlug;
+                var counter = 1;
+                while (await _productRepository.Find(p => p.Slug == slug).AnyAsync())
+                {
+                    slug = $"{baseSlug}-{counter++}";
+                }
+
                 var product = new Product
                 {
                     ProductName = model.ProductName,
-                    Slug = model.ProductName.ToLower().Replace(" ", "-"),
+                    Slug = slug,
                     Description = model.Description,
                     CategoryId = model.CategoryId,
                     BrandId = model.BrandId,
@@ -224,7 +232,15 @@ namespace MotoShop.Areas.Admin.Controllers
                 existingProduct.Description = Description;
                 existingProduct.IsActive = IsActive;
                 existingProduct.IsFeatured = IsFeatured;
-                existingProduct.Slug = ProductName.ToLower().Replace(" ", "-");
+                
+                var baseSlug = GenerateSlug(ProductName);
+                var slug = baseSlug;
+                var counter = 1;
+                while (await _productRepository.Find(p => p.Slug == slug && p.ProductId != ProductId).AnyAsync())
+                {
+                    slug = $"{baseSlug}-{counter++}";
+                }
+                existingProduct.Slug = slug;
 
                 if (DeletedVariantIds != null && DeletedVariantIds.Any())
                 {
@@ -382,16 +398,10 @@ namespace MotoShop.Areas.Admin.Controllers
 
                 foreach (var product in products)
                 {
-                    if (product.Images != null)
-                    {
-                        foreach (var img in product.Images)
-                        {
-                            _fileService.DeleteFile(img.ImageUrl);
-                        }
-                    }
+                    // Soft Delete thay vì RemoveRange
+                    product.IsDeleted = true;
                 }
 
-                _productRepository.RemoveRange(products);
                 await _productRepository.SaveChangesAsync();
 
                 return Json(new { success = true, message = $"Đã xóa {products.Count} sản phẩm thành công" });
@@ -400,6 +410,25 @@ namespace MotoShop.Areas.Admin.Controllers
             {
                 return Json(new { success = false, message = "Lỗi khi xóa nhiều sản phẩm: " + ex.Message });
             }
+        }
+
+        private string GenerateSlug(string phrase)
+        {
+            string str = RemoveAccent(phrase).ToLower();
+            str = System.Text.RegularExpressions.Regex.Replace(str, @"[^a-z0-9\s-]", "");
+            str = System.Text.RegularExpressions.Regex.Replace(str, @"\s+", " ").Trim();
+            str = str.Substring(0, str.Length <= 45 ? str.Length : 45).Trim();
+            str = System.Text.RegularExpressions.Regex.Replace(str, @"\s", "-");
+            return str;
+        }
+
+        private string RemoveAccent(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return text;
+            text = text.Normalize(System.Text.NormalizationForm.FormD);
+            char[] chars = text.Where(c => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark).ToArray();
+            string result = new string(chars).Normalize(System.Text.NormalizationForm.FormC);
+            return result.Replace('đ', 'd').Replace('Đ', 'D');
         }
     }
 }

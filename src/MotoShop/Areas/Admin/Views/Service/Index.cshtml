@@ -102,7 +102,18 @@
                         <td class="text-end pe-4">
                             <div class="d-flex justify-content-end gap-1">
                                 <button class="btn btn-sm btn-icon btn-outline-primary rounded-circle btn-edit-service" 
-                                        data-service='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(item))'><i class="bx bx-edit-alt"></i></button>
+                                        data-service='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new { 
+                                            item.ServiceId, 
+                                            item.ServiceName, 
+                                            item.Price, 
+                                            item.Duration, 
+                                            item.WarrantyDays, 
+                                            item.CategoryId, 
+                                            item.IsActive, 
+                                            item.ShortDescription, 
+                                            item.Description, 
+                                            item.ImageUrl 
+                                        }))'><i class="bx bx-edit-alt"></i></button>
                                 <button class="btn btn-sm btn-icon btn-outline-danger rounded-circle btn-delete-service" 
                                         data-id="@item.ServiceId"><i class="bx bx-trash"></i></button>
                             </div>

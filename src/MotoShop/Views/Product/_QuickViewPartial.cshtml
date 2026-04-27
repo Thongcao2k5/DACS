@@ -1,0 +1,37 @@
+@model MotoShop.Business.DTOs.ProductDto
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="quickview-img-wrapper rounded-4 overflow-hidden border">
+            <img src="@(Model.PrimaryImageUrl ?? "/assets/img/elements/18.jpg")" class="w-100 h-100 object-fit-cover" alt="@Model.ProductName">
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="quickview-info">
+            <span class="text-danger fw-bold text-uppercase small">@Model.BrandName</span>
+            <h4 class="fw-bold mb-3">@Model.ProductName</h4>
+            
+            <div class="price-box mb-3">
+                @if (Model.MinPrice > 0)
+                {
+                    <h3 class="text-danger fw-bold mb-0">@Model.MinPrice.ToString("N0")đ</h3>
+                    @if (Model.MinOriginalPrice.HasValue && Model.MinOriginalPrice > Model.MinPrice)
+                    {
+                        <del class="text-muted">@Model.MinOriginalPrice.Value.ToString("N0")đ</del>
+                    }
+                }
+                else
+                {
+                    <h3 class="text-muted fw-bold mb-0">Liên hệ giá</h3>
+                }
+            </div>
+
+            <p class="text-muted small line-clamp-3 mb-4">@Model.Description</p>
+
+            <div class="quickview-actions d-grid gap-2">
+                <a asp-action="Details" asp-route-slug="@Model.Slug" class="btn btn-outline-danger rounded-pill fw-bold">XEM CHI TIẾT</a>
+                <button onclick="CartApi.addToCart(@Model.DefaultVariantId)" class="btn btn-danger rounded-pill fw-bold">THÊM VÀO GIỎ HÀNG</button>
+            </div>
+        </div>
+    </div>
+</div>

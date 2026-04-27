@@ -412,5 +412,13 @@
             const formData = $('#filterForm').serialize();
             window.location.href = '/Admin/Order/ExportExcel?' + formData;
         }
+
+        // Tự động làm mới trang mỗi 60 giây để cập nhật đơn hàng mới
+        setInterval(function() {
+            // Chỉ làm mới nếu không đang mở modal hoặc đang gõ vào ô tìm kiếm
+            if ($('.modal.show').length === 0 && !$('input:focus').length) {
+                location.reload();
+            }
+        }, 60000);
     </script>
 }

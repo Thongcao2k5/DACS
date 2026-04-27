@@ -136,7 +136,20 @@
                             <td><span class="badge @item.StatusClass status-badge-@item.PromotionId">@item.StatusText</span></td>
                             <td class="text-end px-4">
                                 <button class="btn btn-sm btn-icon btn-outline-warning" title="Gán sản phẩm" onclick="openAssignModal(@item.PromotionId, '@item.PromotionName')"><i class="bx bx-link"></i></button>
-                                <button class="btn btn-sm btn-icon btn-outline-primary btn-edit-promo" data-promo='@Json.Serialize(item)' title="Sửa"><i class="bx bx-edit-alt"></i></button>
+                                <button class="btn btn-sm btn-icon btn-outline-primary btn-edit-promo" 
+                                        data-promo='@Json.Serialize(new { 
+                                            item.PromotionId, 
+                                            item.PromotionName, 
+                                            item.Description, 
+                                            item.DiscountType, 
+                                            item.DiscountPercentage, 
+                                            item.DiscountAmount, 
+                                            item.MinOrderValue, 
+                                            item.MinQuantity, 
+                                            item.StartDate, 
+                                            item.EndDate, 
+                                            item.IsActive 
+                                        })' title="Sửa"><i class="bx bx-edit-alt"></i></button>
                                 <button class="btn btn-sm btn-icon btn-outline-danger" title="Xóa" onclick="confirmDelete(@item.PromotionId)"><i class="bx bx-trash"></i></button>
                             </td>
                         </tr>

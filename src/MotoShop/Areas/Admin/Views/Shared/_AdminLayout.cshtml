@@ -268,6 +268,38 @@
     <script src="/assets/js/ui-interactions.js"></script>
 
     <script>
+        // GLOBAL AJAX ANTI-FORGERY TOKEN SETUP
+        (function() {
+            function getAntiforgeryToken() {
+                return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            }
+            if (typeof $ !== 'undefined') {
+                $.ajaxSetup({
+                    beforeSend: function(xhr, settings) {
+                        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                            const token = getAntiforgeryToken();
+                            if (token) xhr.setRequestHeader("X-XSRF-TOKEN", token);
+                        }
+                    }
+                });
+            }
+            const originalFetch = window.fetch;
+            window.fetch = async function(resource, config) {
+                if (config && config.method && !/^(GET|HEAD|OPTIONS|TRACE)$/i.test(config.method)) {
+                    const token = getAntiforgeryToken();
+                    if (token) {
+                        config.headers = config.headers || {};
+                        if (config.headers instanceof Headers) {
+                            if (!config.headers.has('X-XSRF-TOKEN')) config.headers.append('X-XSRF-TOKEN', token);
+                        } else {
+                            if (!config.headers['X-XSRF-TOKEN']) config.headers['X-XSRF-TOKEN'] = token;
+                        }
+                    }
+                }
+                return originalFetch(resource, config);
+            };
+        })();
+
         function showLoader() { $('#adminLoader').addClass('active'); }
         function hideLoader() { $('#adminLoader').removeClass('active'); }
         

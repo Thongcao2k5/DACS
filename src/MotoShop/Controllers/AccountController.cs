@@ -65,7 +65,7 @@ namespace MotoShop.Controllers
                 var user = await _userManager.FindByEmailAsync(model.Email);
                 if (user != null)
                 {
-                    var result = await _signInManager.PasswordSignInAsync(user.UserName!, model.Password, model.RememberMe, lockoutOnFailure: false);
+                    var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: true);
                     if (result.Succeeded)
                     {
                         var currentCustomer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == user.Id);

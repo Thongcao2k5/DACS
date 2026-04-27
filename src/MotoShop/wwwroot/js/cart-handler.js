@@ -8,57 +8,69 @@ const CartUI = {
             toast: true,
             position: 'top-end',
             showConfirmButton: false,
-            timer: 2000,
+            timer: 2500,
             timerProgressBar: true,
             didOpen: (toast) => {
                 toast.addEventListener('mouseenter', Swal.stopTimer)
                 toast.addEventListener('mouseleave', Swal.resumeTimer)
-            },
-            showClass: {
-                popup: 'animate__animated animate__fadeInRight animate__faster'
-            },
-            hideClass: {
-                popup: 'animate__animated animate__fadeOutRight animate__faster'
             }
         });
 
         Toast.fire({
             icon: icon,
-            title: `<span style="font-weight: 700; font-family: 'Public Sans', sans-serif;">${message}</span>`,
-            background: '#fff',
-            color: '#1a1a1a',
-            iconColor: icon === 'success' ? '#dc3545' : '#ffc107', // Màu đỏ cho thành công (theo logo)
-            customClass: {
-                popup: 'rounded-4 shadow-lg border-0',
-                timerProgressBar: 'bg-danger'
-            }
+            title: message
         });
     }
 };
 
 const CartApi = {
+    // Helper để đảm bảo URL luôn đúng
+    getBaseUrl(path) {
+        const base = window.location.origin;
+        return path.startsWith('/') ? base + path : base + '/' + path;
+    },
+
     // Thêm vào giỏ hàng
     async addToCart(variantId, quantity = 1) {
-        try {
-            const formData = new FormData();
-            formData.append('variantId', variantId);
-            formData.append('quantity', quantity);
+        const url = this.getBaseUrl('/Cart/AddToCart');
+        const formData = new FormData();
+        formData.append('variantId', variantId);
+        formData.append('quantity', quantity);
 
-            const response = await fetch('/Cart/AddToCart', {
+        // Token sẽ tự động được thêm bởi Interceptor trong _Layout.cshtml
+        
+        try {
+            const response = await fetch(url, {
                 method: 'POST',
                 body: formData
+                // Headers (X-XSRF-TOKEN) được Interceptor tự động thêm
             });
+
+            if (response.status === 400) {
+                return { success: false, message: 'Lỗi xác thực bảo mật. Vui lòng F5 trang.' };
+            }
+            if (!response.ok) {
+                return { success: false, message: 'Lỗi máy chủ: ' + response.status };
+            }
 
             return await response.json();
         } catch (error) {
-            return { success: false, message: 'Không thể kết nối với máy chủ.' };
+            console.error('API Error:', error);
+            return { success: false, message: 'Không thể kết nối đến máy chủ.' };
         }
     },
 
     async updateCartBadge() {
-        if (typeof updateCartBadge === "function") {
-            updateCartBadge();
-        }
+        const url = this.getBaseUrl('/Cart/GetCartCount');
+        try {
+            const res = await fetch(url);
+            const count = await res.json();
+            const badge = document.getElementById('cartBadge');
+            if (badge) {
+                badge.textContent = count;
+                badge.style.display = count > 0 ? 'block' : 'none';
+            }
+        } catch (e) { }
     }
 };
 
@@ -67,22 +79,22 @@ const CartApi = {
  */
 async function handleAddToCart(variantId) {
     if (!variantId || variantId === 0) {
-        CartUI.showToast('Vui lòng chọn đầy đủ các tùy chọn sản phẩm!', 'error');
+        CartUI.showToast('Vui lòng chọn đầy đủ tùy chọn!', 'warning');
         return;
     }
 
+    const btn = event?.currentTarget;
+    if (btn) btn.disabled = true;
+
     const result = await CartApi.addToCart(variantId);
     
+    if (btn) btn.disabled = false;
+
     if (result.success) {
         await CartApi.updateCartBadge();
-        CartUI.showToast(result.message || 'Sản phẩm đã được thêm vào giỏ hàng.');
+        CartUI.showToast(result.message || 'Đã thêm vào giỏ hàng.');
     } else {
         CartUI.showToast(result.message || 'Có lỗi xảy ra!', 'error');
-        if (result.message && result.message.toLowerCase().includes('đăng nhập')) {
-            setTimeout(() => {
-                window.location.href = '/Account/Login?returnUrl=' + encodeURIComponent(window.location.pathname + window.location.search);
-            }, 2000);
-        }
     }
 }
 
@@ -90,18 +102,13 @@ async function handleAddToCart(variantId) {
  * Xử lý khi nhấn "Mua ngay"
  */
 async function handleBuyNow(variantId) {
-    if (!variantId || variantId === 0) {
-        return;
-    }
+    if (!variantId || variantId === 0) return;
 
     const result = await CartApi.addToCart(variantId);
-    
     if (result.success) {
         window.location.href = '/Cart/Checkout';
     } else {
-        if (typeof Swal !== 'undefined') {
-            Swal.fire('Thông báo', result.message || 'Có lỗi xảy ra!', 'info');
-        }
+        CartUI.showToast(result.message, 'error');
     }
 }
 

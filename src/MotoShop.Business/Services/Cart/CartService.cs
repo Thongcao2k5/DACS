@@ -172,9 +172,9 @@ namespace MotoShop.Business.Services
             return await _unitOfWork.CompleteAsync() > 0;
         }
 
-        public async Task SyncCartAsync(string guestId, string userId)
+        public async Task<bool> SyncCartAsync(string guestId, string userId)
         {
-            if (string.IsNullOrEmpty(guestId) || guestId == userId) return;
+            if (string.IsNullOrEmpty(guestId) || guestId == userId) return true;
 
             // 1. Lấy giỏ hàng khách
             var guestCart = await _unitOfWork.Repository<MotoShop.Data.Models.Cart>()
@@ -182,7 +182,7 @@ namespace MotoShop.Business.Services
                 .Include(c => c.CartItems)
                 .FirstOrDefaultAsync();
 
-            if (guestCart == null) return;
+            if (guestCart == null || !guestCart.CartItems.Any()) return true;
 
             // 2. Lấy hoặc tạo giỏ hàng User
             var userCart = await _unitOfWork.Repository<MotoShop.Data.Models.Cart>()
@@ -194,23 +194,21 @@ namespace MotoShop.Business.Services
             {
                 userCart = new MotoShop.Data.Models.Cart { UserId = userId, CreatedDate = DateTime.Now, CartItems = new List<CartItem>() };
                 await _unitOfWork.Repository<MotoShop.Data.Models.Cart>().AddAsync(userCart);
-                await _unitOfWork.CompleteAsync(); // Lưu để lấy CartId
+                await _unitOfWork.CompleteAsync(); 
             }
 
-            // 3. Sao chép items từ giỏ hàng khách sang giỏ hàng user
+            // 3. Sao chép items
             var guestItems = guestCart.CartItems.ToList();
             foreach (var guestItem in guestItems)
             {
                 var userItem = userCart.CartItems.FirstOrDefault(i => i.ProductVariantId == guestItem.ProductVariantId);
                 if (userItem != null)
                 {
-                    // Nếu user đã có sản phẩm này, cộng dồn số lượng
                     userItem.Quantity += guestItem.Quantity;
                     _unitOfWork.Repository<CartItem>().Update(userItem);
                 }
                 else
                 {
-                    // Nếu chưa có, tạo bản ghi mới hoàn toàn để tránh xung đột tracking
                     var newItem = new CartItem
                     {
                         CartId = userCart.CartId,
@@ -222,17 +220,16 @@ namespace MotoShop.Business.Services
                 }
             }
 
-            // 4. Xóa giỏ hàng khách (Items sẽ tự động bị xóa theo Cascade Delete)
+            // 4. Xóa giỏ hàng khách
             _unitOfWork.Repository<MotoShop.Data.Models.Cart>().Delete(guestCart);
             
             try
             {
-                await _unitOfWork.CompleteAsync();
+                return await _unitOfWork.CompleteAsync() > 0;
             }
             catch (DbUpdateConcurrencyException)
             {
-                // Nếu có lỗi tranh chấp (bản ghi đã bị xóa bởi request khác), ta có thể bỏ qua
-                // vì mục tiêu cuối cùng là dọn dẹp giỏ hàng khách đã hoàn thành.
+                return false;
             }
         }
 

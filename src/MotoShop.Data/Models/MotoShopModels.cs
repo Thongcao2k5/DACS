@@ -17,6 +17,8 @@ namespace MotoShop.Data.Models
         public string? Description { get; set; }
         [StringLength(500)]
         public string? ImageUrl { get; set; }
+        public string? Icon { get; set; }
+        public bool IsActive { get; set; } = true;
 
         [ForeignKey("ParentId")]
         public virtual Category? ParentCategory { get; set; }
@@ -213,6 +215,8 @@ namespace MotoShop.Data.Models
         public string? ShippingAddress { get; set; }
         [StringLength(100)]
         public string? PaymentStatus { get; set; }
+        [StringLength(100)]
+        public string? PaymentMethod { get; set; }
         public string? Note { get; set; }
 
         [ForeignKey("CustomerId")]

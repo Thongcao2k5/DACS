@@ -9,6 +9,8 @@ namespace MotoShop.Business.DTOs
         public string? ParentCategoryName { get; set; }
         public string? Description { get; set; }
         public string? ImageUrl { get; set; }
+        public string? Icon { get; set; }
+        public bool IsActive { get; set; }
         public int ProductCount { get; set; }
     }
 

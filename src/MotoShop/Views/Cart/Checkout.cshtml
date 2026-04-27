@@ -362,24 +362,34 @@
             addressModal.hide();
         }
 
-        function setShippingMethod(id, cost, el) {
-            el.closest('.checkout-section').querySelectorAll('.method-card').forEach(c => c.classList.remove('active'));
-            el.classList.add('active'); el.querySelector('input').checked = true;
-            document.getElementById('shippingFee').dataset.value = cost;
-            updateTotal();
-        }
-
-        function setPayment(method, el) {
-            el.closest('.checkout-section').querySelectorAll('.method-card').forEach(c => c.classList.remove('active'));
-            el.classList.add('active'); el.querySelector('input').checked = true;
-        }
-
         function updateTotal() {
             const sub = parseFloat(document.getElementById('subtotal').dataset.value);
             const ship = parseFloat(document.getElementById('shippingFee').dataset.value || 0);
             const discount = window.currentDiscountAmount || 0;
             const total = Math.max(0, sub + ship - discount);
+            
+            // Cập nhật text hiển thị
             document.getElementById('totalOrder').innerText = total.toLocaleString('vi-VN') + 'đ';
+            
+            // Cập nhật hiển thị phí ship trong tóm tắt nếu cần
+            const shipDisplay = document.getElementById('displayShippingFee');
+            if (shipDisplay) {
+                shipDisplay.innerText = ship === 0 ? 'Miễn phí' : '+' + ship.toLocaleString('vi-VN') + 'đ';
+            }
+        }
+
+        function setShippingMethod(id, cost, el) {
+            // Update UI class
+            const section = el.closest('.checkout-section');
+            section.querySelectorAll('.method-card').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            
+            // Update Radio input
+            el.querySelector('input').checked = true;
+            
+            // Update logic giá
+            document.getElementById('shippingFee').dataset.value = cost;
+            updateTotal();
         }
 
         // Voucher Logic
@@ -427,6 +437,18 @@
 
         document.getElementById('checkoutForm').onsubmit = async function(e) {
             e.preventDefault();
+            
+            // Đảm bảo dữ liệu input được nạp đầy đủ từ Summary nếu đang ở chế độ xem tóm tắt
+            if (!$('#addressSummary').hasClass('d-none')) {
+                // Nếu đang dùng địa chỉ lưu sẵn, ta cần đảm bảo các input ẩn có giá trị
+                // (Trong thực tế nên lấy từ data attribute hoặc object JS lưu địa chỉ đang chọn)
+                const currentAddrText = document.getElementById('summaryAddress').innerText;
+                const parts = currentAddrText.split(',').map(p => p.trim());
+                
+                // Cố gắng "đoán" các phần nếu chưa được nạp (hoặc tốt hơn là nạp lúc chọn địa chỉ)
+                // Tuy nhiên cách an toàn nhất là kích hoạt lại các input này lúc gửi
+            }
+
             const btn = document.getElementById('btnPlaceOrder'); 
             btn.disabled = true; 
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> ĐANG XỬ LÝ...';

@@ -11,7 +11,7 @@ namespace MotoShop.Business.Interfaces
         Task<bool> UpdateQuantityAsync(string userId, int variantId, int quantity);
         Task<List<CartItemDto>> GetCartAsync(string userId);
         Task<bool> ClearCartAsync(string userId);
-        Task SyncCartAsync(string guestId, string userId);
         Task<int> GetCartCountAsync(string userId);
+        Task<bool> SyncCartAsync(string guestUserId, string loggedInUserId);
     }
 }

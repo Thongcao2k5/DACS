@@ -86,6 +86,11 @@ namespace MotoShop.Areas.Admin.Controllers
 
                 if (imageFile != null)
                 {
+                    if (!string.IsNullOrEmpty(existing.ImageUrl))
+                    {
+                        string oldFilePath = Path.Combine(_env.WebRootPath, existing.ImageUrl.TrimStart('/'));
+                        if (System.IO.File.Exists(oldFilePath)) System.IO.File.Delete(oldFilePath);
+                    }
                     existing.ImageUrl = await UploadFile(imageFile, "services");
                 }
             }
@@ -112,6 +117,12 @@ namespace MotoShop.Areas.Admin.Controllers
         {
             var service = await _context.Services.FindAsync(id);
             if (service == null) return Json(new { success = false });
+
+            if (!string.IsNullOrEmpty(service.ImageUrl))
+            {
+                string filePath = Path.Combine(_env.WebRootPath, service.ImageUrl.TrimStart('/'));
+                if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
+            }
 
             _context.Services.Remove(service);
             await _context.SaveChangesAsync();

@@ -69,10 +69,17 @@
 
                 <div class="price-box mb-3">
                     <div class="d-flex align-items-baseline gap-2">
-                        <span id="displayPrice" class="text-danger display-6 fw-bold">@defaultVariant?.Price.ToString("N0")₫</span>
-                        @if (defaultVariant?.OriginalPrice > defaultVariant?.Price)
+                        @if (defaultVariant != null)
                         {
-                            <del id="displayOldPrice" class="text-muted h5">@defaultVariant.OriginalPrice.Value.ToString("N0")₫</del>
+                            <span id="displayPrice" class="text-danger display-6 fw-bold">@defaultVariant.Price.ToString("N0")₫</span>
+                            @if (defaultVariant.OriginalPrice.HasValue && defaultVariant.OriginalPrice > defaultVariant.Price)
+                            {
+                                <del id="displayOldPrice" class="text-muted h5">@defaultVariant.OriginalPrice.Value.ToString("N0")₫</del>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted italic">Liên hệ báo giá</span>
                         }
                     </div>
                 </div>
@@ -138,10 +145,10 @@
 
                     <div class="row g-2">
                         <div class="col-6">
-                            <button onclick="addToCart()" class="btn btn-outline-danger w-100 py-3 rounded-pill fw-bold">THÊM GIỎ HÀNG</button>
+                            <button onclick="handleAddToCart(currentVar?.Id)" class="btn btn-outline-danger w-100 py-3 rounded-pill fw-bold">THÊM GIỎ HÀNG</button>
                         </div>
                         <div class="col-6">
-                            <button onclick="buyNow()" class="btn btn-danger w-100 py-3 rounded-pill fw-bold">MUA NGAY</button>
+                            <button onclick="handleBuyNow(currentVar?.Id)" class="btn btn-danger w-100 py-3 rounded-pill fw-bold">MUA NGAY</button>
                         </div>
                     </div>
                 </div>

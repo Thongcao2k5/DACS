@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
+using MotoShop.Business.Interfaces;
+using MotoShop.Business.Services;
 using System.Linq;
 using System.Threading.Tasks;
 using ClosedXML.Excel;
@@ -13,10 +15,12 @@ namespace MotoShop.Areas.Admin.Controllers
     public class OrderController : Controller
     {
         private readonly MotoShopDbContext _context;
+        private readonly IOrderService _orderService;
 
-        public OrderController(MotoShopDbContext context)
+        public OrderController(MotoShopDbContext context, IOrderService orderService)
         {
             _context = context;
+            _orderService = orderService;
         }
 
         public async Task<IActionResult> Index(string? searchTerm, string? status, DateTime? fromDate, DateTime? toDate, string? paymentMethod, int page = 1, int pageSize = 10)
@@ -154,29 +158,46 @@ namespace MotoShop.Areas.Admin.Controllers
             return View(order);
         }
 
+        private static readonly Dictionary<string, List<string>> ValidTransitions = new()
+        {
+            { "Pending", new[] { "Confirmed", "Cancelled" }.ToList() },
+            { "Confirmed", new[] { "Shipping", "Cancelled" }.ToList() },
+            { "Shipping", new[] { "Completed", "Cancelled" }.ToList() },
+            { "Completed", new List<string>() },
+            { "Cancelled", new List<string>() }
+        };
+
         [HttpPost]
         public async Task<IActionResult> UpdateStatus(int id, string status)
         {
             var order = await _context.Orders.FindAsync(id);
-            if (order == null) return Json(new { success = false });
+            if (order == null) return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
 
-            order.Status = status;
-            await _context.SaveChangesAsync();
+            if (!ValidTransitions.ContainsKey(order.Status) || !ValidTransitions[order.Status].Contains(status))
+            {
+                return Json(new { success = false, message = $"Không thể chuyển từ {order.Status} sang {status}" });
+            }
+
+            if (status == "Cancelled")
+            {
+                // Sử dụng service để có logic hoàn tồn kho
+                var identityUserId = _context.Customers.FirstOrDefault(c => c.CustomerId == order.CustomerId)?.UserId ?? "";
+                var success = await _orderService.CancelOrderAsync(id, identityUserId);
+                if (!success) return Json(new { success = false, message = "Lỗi khi hoàn tồn kho" });
+            }
+            else
+            {
+                order.Status = status;
+                await _context.SaveChangesAsync();
+            }
+
             return Json(new { success = true });
         }
 
         [HttpPost]
         public async Task<IActionResult> Cancel(int id)
         {
-            var order = await _context.Orders.FindAsync(id);
-            if (order == null) return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
-
-            if (order.Status == "Completed")
-                return Json(new { success = false, message = "Không thể hủy đơn hàng đã hoàn thành" });
-
-            order.Status = "Cancelled";
-            await _context.SaveChangesAsync();
-            return Json(new { success = true, message = "Đã hủy đơn hàng thành công" });
+            return await UpdateStatus(id, "Cancelled");
         }
 
         [HttpPost]

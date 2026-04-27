@@ -23,13 +23,21 @@ namespace MotoShop.Business.Services
 
         public async Task<IEnumerable<CategoryDto>> GetAllAsync()
         {
-            // Nạp thêm danh sách sản phẩm để AutoMapper có thể đếm chính xác số lượng
             var categories = await _uow.Repository<Category>()
                 .Find(c => true)
-                .Include(c => c.Products)
+                .AsNoTracking()
+                .Select(c => new CategoryDto
+                {
+                    CategoryId = c.CategoryId,
+                    CategoryName = c.CategoryName,
+                    Slug = c.Slug,
+                    Icon = c.Icon,
+                    IsActive = c.IsActive,
+                    ProductCount = c.Products.Count
+                })
                 .ToListAsync();
                 
-            return _mapper.Map<IEnumerable<CategoryDto>>(categories);
+            return categories;
         }
 
         public async Task<CategoryDto?> GetByIdAsync(int id)

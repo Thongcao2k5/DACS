@@ -68,8 +68,8 @@ namespace MotoShop.Controllers
         }
 
         [HttpPost]
-        [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> AddToCart(int variantId, int quantity = 1)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddToCart([FromForm] int variantId, [FromForm] int quantity = 1)
         {
             var userId = GetCartUserId();
             try
@@ -166,9 +166,13 @@ namespace MotoShop.Controllers
             var userId = _userManager.GetUserId(User);
             if (string.IsNullOrEmpty(userId)) return Json(new { success = false, message = "Vui lòng đăng nhập." });
 
-            if (string.IsNullOrEmpty(model.FullName) || string.IsNullOrEmpty(model.Phone) || string.IsNullOrEmpty(model.Province))
+            // Nếu không có AddressId (tức là đang nhập mới) thì mới bắt buộc FullName, Phone, Province
+            if (!model.AddressId.HasValue)
             {
-                return Json(new { success = false, message = "Vui lòng điền đầy đủ thông tin giao hàng." });
+                if (string.IsNullOrEmpty(model.FullName) || string.IsNullOrEmpty(model.Phone) || string.IsNullOrEmpty(model.Province) || string.IsNullOrEmpty(model.Address))
+                {
+                    return Json(new { success = false, message = "Vui lòng điền đầy đủ thông tin giao hàng." });
+                }
             }
 
             var result = await _orderService.CreateOrderAsync(userId, model);
@@ -178,7 +182,7 @@ namespace MotoShop.Controllers
         }
 
         [HttpPost]
-        [IgnoreAntiforgeryToken]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateQuantity(int variantId, int quantity)
         {
             var userId = GetCartUserId();
@@ -187,7 +191,7 @@ namespace MotoShop.Controllers
         }
 
         [HttpPost]
-        [IgnoreAntiforgeryToken]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> RemoveFromCart(int variantId)
         {
             var userId = GetCartUserId();

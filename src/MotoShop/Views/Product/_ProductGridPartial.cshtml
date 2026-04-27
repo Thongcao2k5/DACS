@@ -1,0 +1,76 @@
+@model MotoShop.Business.Helpers.PagedList<MotoShop.Business.DTOs.ProductDto>
+
+<div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-4 @(Context.Request.Cookies["viewType"] == "list" ? "list-view" : "grid-view")" id="productGrid">
+    @foreach (var product in Model)
+    {
+        <div class="col product-item">
+            <div class="product-card h-100 d-flex flex-column border rounded-4 overflow-hidden shadow-sm hover-shadow transition">
+                <div class="product-img-wrapper position-relative overflow-hidden" style="aspect-ratio: 1/1;">
+                    <a asp-action="Details" asp-route-slug="@product.Slug" class="d-block h-100">
+                        <img src="@(string.IsNullOrEmpty(product.PrimaryImageUrl) ? "/assets/img/elements/18.jpg" : product.PrimaryImageUrl)" 
+                             alt="@product.ProductName" 
+                             class="w-100 h-100 object-fit-cover transition-scale" 
+                             onerror="this.src='/assets/img/elements/18.jpg'"
+                             loading="lazy">
+                    </a>
+                    
+                    <!-- Hover Actions -->
+                    <div class="product-hover-actions">
+                        <button type="button" class="btn-quick-view" onclick="quickView('@product.Slug')">
+                            <i class='bx bx-search'></i> Xem nhanh
+                        </button>
+                    </div>
+
+                    <button type="button" class="btn-wishlist-abs @(ViewBag.IsWishlisted == true ? "active" : "")" onclick="addToWishlist(@product.ProductId)" title="Thêm vào yêu thích">
+                        <i class='bx bx-heart'></i>
+                    </button>
+                    
+                    <button type="button" class="btn-compare-abs" onclick="addToCompare(@product.ProductId, '@product.ProductName', '@(product.PrimaryImageUrl ?? "/assets/img/elements/18.jpg")', @product.MinPrice)" title="So sánh">
+                        <i class='bx bx-git-compare'></i>
+                    </button>
+
+                    @if (product.MinPrice == 0)
+                    {
+                        <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2 rounded-pill">Liên hệ</span>
+                    }
+                    else if (product.MinOriginalPrice.HasValue && product.MinOriginalPrice > product.MinPrice)
+                    {
+                        var discount = (int)((1 - (double)product.MinPrice / (double)product.MinOriginalPrice.Value) * 100);
+                        <span class="badge bg-danger position-absolute top-0 start-0 m-2 rounded-pill">-@discount%</span>
+                    }
+                </div>
+                <div class="product-info p-3 flex-grow-1 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <span class="brand text-uppercase text-danger fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">@product.BrandName</span>
+                    </div>
+                    <h6 class="name mb-2 line-clamp-2" style="font-size: 0.95rem; line-height: 1.4; height: 2.8em;">
+                        <a asp-action="Details" asp-route-slug="@product.Slug" class="text-decoration-none text-dark hover-danger fw-semibold">
+                            @product.ProductName
+                        </a>
+                    </h6>
+                    <div class="product-price mt-auto">
+                        @if (product.MinPrice > 0)
+                        {
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span class="current text-danger fw-bolder fs-5">@product.MinPrice.ToString("N0")đ</span>
+                                @if (product.MinOriginalPrice.HasValue && product.MinOriginalPrice > product.MinPrice)
+                                {
+                                    <del class="text-muted small" style="font-size: 0.8rem;">@product.MinOriginalPrice.Value.ToString("N0")đ</del>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="current text-muted fw-bold">Liên hệ giá</span>
+                        }
+                    </div>
+                    <div class="product-actions mt-3 d-flex gap-2">
+                        <button type="button" onclick="handleAddToCart(@product.DefaultVariantId)" class="btn btn-danger btn-sm rounded-pill fw-bold flex-grow-1">
+                            <i class='bx bx-cart-add fs-5 me-1'></i> THÊM GIỎ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

@@ -37,9 +37,14 @@ namespace MotoShop.Business.Services
             int? brandId,
             string? sort,
             int page,
-            int pageSize)
+            int pageSize,
+            decimal? minPrice = null,
+            decimal? maxPrice = null,
+            bool? inStock = null,
+            bool? onSale = null)
         {
-            var query = _productRepository.Find(p => p.IsActive)
+            var query = _productRepository.Find(p => p.IsActive && !p.IsDeleted)
+                .AsNoTracking()
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
                 .Include(p => p.Images)
@@ -51,10 +56,13 @@ namespace MotoShop.Business.Services
             {
                 var search = searchTerm.Trim().ToLower();
                 query = query.Where(p => p.ProductName.ToLower().Contains(search) || 
-                                       (p.Description != null && p.Description.ToLower().Contains(search)));
+                                       (p.Description != null && p.Description.ToLower().Contains(search)) ||
+                                       (p.Brand != null && p.Brand.BrandName.ToLower().Contains(search)) ||
+                                       (p.Category != null && p.Category.CategoryName.ToLower().Contains(search)) ||
+                                       p.Variants.Any(v => v.SKU != null && v.SKU.ToLower().Contains(search)));
             }
 
-            // Lọc theo danh mục (chỉ lọc nếu id > 0)
+            // Lọc theo danh mục
             if (categoryId.HasValue && categoryId.Value > 0)
             {
                 query = query.Where(p => p.CategoryId == categoryId.Value);
@@ -64,6 +72,29 @@ namespace MotoShop.Business.Services
             if (brandId.HasValue && brandId.Value > 0)
             {
                 query = query.Where(p => p.BrandId == brandId.Value);
+            }
+
+            // Lọc theo giá
+            if (minPrice.HasValue)
+            {
+                query = query.Where(p => p.Variants.Any(v => v.Price >= minPrice.Value));
+            }
+            if (maxPrice.HasValue)
+            {
+                query = query.Where(p => p.Variants.Any(v => v.Price <= maxPrice.Value));
+            }
+
+            // Lọc còn hàng
+            if (inStock == true)
+            {
+                query = query.Where(p => p.Variants.Any(v => v.StockQuantity > 0));
+            }
+
+            // Lọc đang giảm giá (Giả sử có logic check promotion ở đây)
+            if (onSale == true)
+            {
+                // Tùy theo cấu trúc DB của bạn, ví dụ:
+                // query = query.Where(p => p.ProductPromotions.Any(pp => pp.Promotion.IsActive ...));
             }
 
             // Sắp xếp
@@ -77,9 +108,13 @@ namespace MotoShop.Business.Services
                 _ => query.OrderByDescending(p => p.CreatedDate)
             };
 
-            // Project sang DTO để tối ưu hiệu suất (chỉ lấy các trường cần thiết)
             var dtoQuery = query.ProjectTo<ProductDto>(_mapper.ConfigurationProvider);
             return await PagedList<ProductDto>.CreateAsync(dtoQuery, page, pageSize);
+        }
+
+        public async Task<decimal> GetMaxProductPriceAsync()
+        {
+            return await _uow.Repository<ProductVariant>().Find(v => true).MaxAsync(v => (decimal?)v.Price) ?? 10000000;
         }
 
         public async Task<IEnumerable<CategoryDto>> GetAllCategoriesAsync()
@@ -102,7 +137,6 @@ namespace MotoShop.Business.Services
 
         public async Task<IEnumerable<ProductDto>> GetPromotionProductsAsync(int count)
         {
-            // Tối ưu hóa truy vấn bằng ProjectTo để chỉ lấy dữ liệu cần thiết
             return await _productRepository.Find(p => p.IsActive && p.IsFeatured)
                 .OrderByDescending(p => p.CreatedDate)
                 .Take(count)
@@ -117,7 +151,7 @@ namespace MotoShop.Business.Services
                 .Include(p => p.Brand)
                 .Include(p => p.Images)
                 .Include(p => p.Variants)
-                .OrderBy(p => Guid.NewGuid()) // Sắp xếp ngẫu nhiên
+                .OrderBy(p => Guid.NewGuid())
                 .Take(count)
                 .ToListAsync();
 
@@ -161,13 +195,11 @@ namespace MotoShop.Business.Services
             var product = await _uow.Repository<Product>().GetByIdAsync(productId);
             if (product == null) return Enumerable.Empty<CouponDto>();
 
-            // Lấy các mã giảm giá còn hạn và còn lượt dùng
             var allActiveCoupons = await _uow.Repository<Coupon>().Find(c => c.IsActive 
                 && c.ExpiryDate >= DateTime.Now 
                 && (c.UsageLimit == 0 || c.UsedCount < c.UsageLimit))
                 .ToListAsync();
 
-            // Lọc tại bộ nhớ
             var filteredCoupons = allActiveCoupons.Where(c => 
                 c.IsAllProducts == true || 
                 (!string.IsNullOrEmpty(c.AppliedProductIds) && c.AppliedProductIds.Split(',').Contains(productId.ToString())) ||
@@ -184,7 +216,6 @@ namespace MotoShop.Business.Services
         {
             if (string.IsNullOrEmpty(userId)) return false;
 
-            // Kiểm tra cả hai trạng thái "Completed" và "DaHoanThanh" cho chắc chắn
             return await _uow.Repository<OrderItem>().Find(oi => 
                 oi.Order.Customer.UserId == userId && 
                 oi.ProductVariant.ProductId == productId &&

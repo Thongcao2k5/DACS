@@ -152,20 +152,27 @@ namespace MotoShop.Controllers
             return card;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Detail(int id)
+        private async Task<Order?> GetOrderByIdSafe(int orderId)
         {
-            int customerId = await GetCurrentCustomerIdAsync();
-            
-            var order = await _context.Orders
+            var identityUserId = _userManager.GetUserId(User);
+            var customer = await _context.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.UserId == identityUserId);
+            if (customer == null) return null;
+
+            return await _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.ProductVariant)
                         .ThenInclude(pv => pv.Product)
                 .Include(o => o.ShippingMethod)
                 .Include(o => o.Coupon)
                 .Include(o => o.StatusHistories)
-                .FirstOrDefaultAsync(o => o.OrderId == id && o.CustomerId == customerId);
+                .Include(o => o.Payments)
+                .FirstOrDefaultAsync(o => o.OrderId == orderId && o.CustomerId == customer.CustomerId);
+        }
 
+        [HttpGet]
+        public async Task<IActionResult> Detail(int id)
+        {
+            var order = await GetOrderByIdSafe(id);
             if (order == null) return NotFound();
 
             var model = new OrderDetailViewModel
@@ -204,10 +211,8 @@ namespace MotoShop.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id, string reason)
         {
-            int customerId = await GetCurrentCustomerIdAsync();
-            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == id && o.CustomerId == customerId);
-
-            if (order == null) return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
+            var order = await GetOrderByIdSafe(id);
+            if (order == null) return Json(new { success = false, message = "Không tìm thấy đơn hàng hoặc bạn không có quyền hủy đơn này" });
 
             if (order.Status != "Pending" && order.Status != "DangXuLy")
             {
@@ -227,11 +232,7 @@ namespace MotoShop.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reorder(int id)
         {
-            int customerId = await GetCurrentCustomerIdAsync();
-            var order = await _context.Orders
-                .Include(o => o.OrderItems)
-                .FirstOrDefaultAsync(o => o.OrderId == id && o.CustomerId == customerId);
-
+            var order = await GetOrderByIdSafe(id);
             if (order == null) return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
 
             string userId = GetUserId();
@@ -258,8 +259,12 @@ namespace MotoShop.Controllers
         }
 
         [HttpPost]
-        public IActionResult Tracking(int id)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Tracking(int id)
         {
+            var order = await GetOrderByIdSafe(id);
+            if (order == null) return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
+
             // Trả về thông tin theo dõi đơn hàng (PHẦN 3)
             return Json(new { success = true, message = "Đơn hàng đang trên đường giao. Dự kiến giao trong 2-3 ngày tới." });
         }

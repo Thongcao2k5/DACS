@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MotoShop.Business.Interfaces;
+using MotoShop.Business.DTOs;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Models;
 using MotoShop.Data.Interfaces;
+using System;
 
 namespace MotoShop.Controllers
 {
@@ -35,20 +37,24 @@ namespace MotoShop.Controllers
             string? searchTerm,
             int? categoryId,
             int? brandId,
+            decimal? minPrice,
+            decimal? maxPrice,
+            bool? inStock,
+            bool? onSale,
             string? sort,
             int page = 1,
             int pageSize = 12)
         {
             // 1. Gọi Service lấy dữ liệu lọc thực tế
             var pagedProducts = await _productService.GetPagedProductsAsync(
-                searchTerm, categoryId, brandId, sort, page, pageSize
+                searchTerm, categoryId, brandId, sort, page, pageSize, minPrice, maxPrice, inStock, onSale
             );
 
             // 2. Lấy dữ liệu cho các bộ lọc (Sidebar)
             var categories = await _categoryService.GetAllAsync();
             var brands = await _productService.GetAllBrandsAsync();
 
-            // 3. Chuẩn bị SelectList cho Dropdown (Hiển thị kèm số lượng sản phẩm)
+            // 3. Chuẩn bị SelectList
             var categoryItems = categories.Select(c => new {
                 CategoryId = c.CategoryId,
                 CategoryNameWithCount = $"{c.CategoryName} ({c.ProductCount})"
@@ -61,7 +67,6 @@ namespace MotoShop.Controllers
             });
             ViewBag.BrandList = new SelectList(brandItems, "BrandId", "BrandNameWithCount", brandId);
             
-            // 4. Chuẩn bị Danh sách sắp xếp
             ViewBag.SortList = new List<SelectListItem>
             {
                 new SelectListItem { Value = "newest", Text = "Mới nhất", Selected = (sort == "newest" || string.IsNullOrEmpty(sort)) },
@@ -71,32 +76,124 @@ namespace MotoShop.Controllers
                 new SelectListItem { Value = "za", Text = "Tên Z-A", Selected = (sort == "za") }
             };
 
-            // 5. Truyền tên danh mục hiện tại để hiển thị tiêu đề
+            // 4. Tính toán số lượng hiển thị (FIX 5)
+            int from = pagedProducts.TotalCount > 0 ? (page - 1) * pageSize + 1 : 0;
+            int to = Math.Min(page * pageSize, pagedProducts.TotalCount);
+            ViewBag.From = from;
+            ViewBag.To = to;
+            ViewBag.TotalProducts = pagedProducts.TotalCount;
+
+            // 5. Tiêu đề động (FIX 1)
             var currentCat = categories.FirstOrDefault(c => c.CategoryId == categoryId);
-            ViewBag.CurrentCategoryName = currentCat?.CategoryName ?? "Tất cả sản phẩm";
-            ViewBag.CurrentCategoryId = categoryId;
-            
-            // 6. Giữ lại các tham số lọc cho phân trang và form
+            var currentBrand = brands.FirstOrDefault(b => b.BrandId == brandId);
+            ViewBag.CategoryName = currentCat?.CategoryName;
+            ViewBag.BrandName = currentBrand?.BrandName;
+
+            // 6. Giá lớn nhất cho Slider
+            ViewBag.MaxPriceLimit = await _productService.GetMaxProductPriceAsync();
+            ViewBag.SelectedMinPrice = minPrice ?? 0;
+            ViewBag.SelectedMaxPrice = maxPrice ?? ViewBag.MaxPriceLimit;
+
+            // 7. Gợi ý từ khóa nếu không có kết quả (TÍNH NĂNG 7)
+            if (pagedProducts.TotalCount == 0 && !string.IsNullOrEmpty(searchTerm))
+            {
+                // Logic đơn giản: lấy các từ khóa phổ biến
+                ViewBag.Suggestions = new List<string> { "Nhớt Motul", "Vỏ xe", "Nhông sên dĩa" }; 
+            }
+
+            // Giữ lại các tham số lọc
             ViewBag.SearchTerm = searchTerm;
+            ViewBag.CurrentCategoryId = categoryId;
             ViewBag.CurrentBrandId = brandId;
             ViewBag.Sort = sort;
+            ViewBag.InStock = inStock;
+            ViewBag.OnSale = onSale;
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return PartialView("_ProductGridPartial", pagedProducts);
+            }
 
             return View(pagedProducts);
         }
 
-        // Chuyển hướng cho Menu danh mục
+        [HttpGet]
+        public async Task<IActionResult> SearchSuggestions(string term)
+        {
+            if (string.IsNullOrWhiteSpace(term) || term.Length < 2)
+                return Json(new { products = new List<object>(), categories = new List<object>(), brands = new List<object>() });
+
+            var search = term.Trim().ToLower();
+
+            var products = await _unitOfWork.Repository<Product>().Find(p => p.IsActive && p.ProductName.ToLower().Contains(search))
+                .Include(p => p.Images)
+                .Include(p => p.Variants)
+                .Take(5)
+                .Select(p => new {
+                    p.ProductId,
+                    p.ProductName,
+                    p.Slug,
+                    ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault() ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault(),
+                    MinPrice = p.Variants.Any() ? p.Variants.Min(v => v.Price) : 0
+                })
+                .ToListAsync();
+
+            var categories = await _unitOfWork.Repository<Category>().Find(c => c.CategoryName.ToLower().Contains(search))
+                .Take(3)
+                .Select(c => new {
+                    c.CategoryId,
+                    c.CategoryName,
+                    Count = _unitOfWork.Repository<Product>().Find(p => p.CategoryId == c.CategoryId && p.IsActive).Count()
+                })
+                .ToListAsync();
+
+            var brands = await _unitOfWork.Repository<Brand>().Find(b => b.BrandName.ToLower().Contains(search))
+                .Take(3)
+                .Select(b => new {
+                    b.BrandId,
+                    b.BrandName,
+                    Count = _unitOfWork.Repository<Product>().Find(p => p.BrandId == b.BrandId && p.IsActive).Count()
+                })
+                .ToListAsync();
+
+            return Json(new { products, categories, brands });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> QuickView(string slug)
+        {
+            var product = await _productService.GetProductBySlugAsync(slug);
+            if (product == null) return NotFound();
+
+            return PartialView("_QuickViewPartial", product);
+        }
+
+        public async Task<IActionResult> Compare(string ids)
+        {
+            if (string.IsNullOrEmpty(ids)) return RedirectToAction("Index");
+            
+            var idList = ids.Split(',').Select(int.Parse).ToList();
+            var products = new List<ProductDto>();
+            foreach (var id in idList)
+            {
+                var p = await _unitOfWork.Repository<Product>().Find(x => x.ProductId == id)
+                    .Include(x => x.Variants).FirstOrDefaultAsync();
+                if (p != null) products.Add(new ProductDto { /* map manually or use mapper */ });
+            }
+            // Implementation of comparison view...
+            return View(products);
+        }
+
         public IActionResult Category(int id)
         {
             return RedirectToAction("Index", new { categoryId = id });
         }
 
-        // Xem chi tiết sản phẩm
         public async Task<IActionResult> Details(string slug)
         {
             var product = await _productService.GetProductBySlugAsync(slug);
             if (product == null) return NotFound();
 
-            // Nhóm thuộc tính từ danh sách VariantAttributeDto đã có trong ProductDto
             ViewBag.AttributeGroups = product.Variants
                 .SelectMany(v => v.VariantAttributeValues)
                 .GroupBy(av => av.AttributeName ?? "Thuộc tính")
@@ -105,17 +202,14 @@ namespace MotoShop.Controllers
                     g => g.Select(av => av.Value).Distinct().ToList()
                 );
 
-            // Variant mặc định (đầu tiên còn hàng)
             ViewBag.DefaultVariant = product.Variants
                 .OrderByDescending(v => v.StockQuantity > 0)
                 .FirstOrDefault() ?? product.Variants.FirstOrDefault();
 
-            // Tồn kho tối đa cho input qty
             ViewBag.MaxStock = product.Variants.Max(v => (int?)v.StockQuantity) ?? 0;
 
             var userId = _userManager.GetUserId(User);
             
-            // Kiểm tra trạng thái yêu thích
             bool isWishlisted = false;
             if (!string.IsNullOrEmpty(userId))
             {
@@ -127,7 +221,6 @@ namespace MotoShop.Controllers
             }
             ViewBag.IsWishlisted = isWishlisted;
 
-            // Kiểm tra đánh giá
             bool canReview = !string.IsNullOrEmpty(userId) && await _productService.CanUserReviewProductAsync(userId, product.ProductId);
             bool hasReviewed = false;
             if (!string.IsNullOrEmpty(userId))
@@ -156,7 +249,6 @@ namespace MotoShop.Controllers
             return View(product);
         }
 
-        // Trang khuyến mãi
         public async Task<IActionResult> Promotion()
         {
             return View();

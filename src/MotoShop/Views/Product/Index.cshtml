@@ -2,82 +2,159 @@
 @model PagedList<MotoShop.Business.DTOs.ProductDto>
 
 @{
-    ViewData["Title"] = "Tất cả sản phẩm";
-    var searchTerm = Context.Request.Query["searchTerm"];
-    var categoryId = Context.Request.Query["categoryId"];
-    var brandId = Context.Request.Query["brandId"];
-    var sort = Context.Request.Query["sort"];
+    ViewData["Title"] = !string.IsNullOrEmpty(ViewBag.SearchTerm) ? "Tìm kiếm: " + ViewBag.SearchTerm : (ViewBag.CategoryName ?? "Tất cả sản phẩm");
+    var searchTerm = ViewBag.SearchTerm;
+    var categoryId = ViewBag.CurrentCategoryId;
+    var brandId = ViewBag.CurrentBrandId;
+    var sort = ViewBag.Sort;
+    var inStock = ViewBag.InStock;
+    var onSale = ViewBag.OnSale;
+    var minPrice = ViewBag.SelectedMinPrice;
+    var maxPrice = ViewBag.SelectedMaxPrice;
 }
 
-<div class="breadcrumb-wrapper">
+<!-- BREADCRUMB ĐỘNG -->
+<div class="breadcrumb-wrapper py-3 bg-light border-bottom mb-4">
     <div class="container">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Sản phẩm</li>
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none text-muted">Sản phẩm</a></li>
+                @if (!string.IsNullOrEmpty(searchTerm))
+                {
+                    <li class="breadcrumb-item active text-danger fw-500" aria-current="page">Tìm kiếm "@searchTerm"</li>
+                }
+                else if (ViewBag.CategoryName != null)
+                {
+                    <li class="breadcrumb-item active text-danger fw-500" aria-current="page">@ViewBag.CategoryName</li>
+                }
             </ol>
         </nav>
     </div>
 </div>
 
 <main class="container mb-5">
+    <!-- TIÊU ĐỀ ĐỘNG (FIX 1) -->
+    <div class="page-header mb-4">
+        @if (!string.IsNullOrEmpty(searchTerm))
+        {
+            <h1 class="fw-bold h3 mb-1">Kết quả tìm kiếm</h1>
+            <p class="text-muted small">Tìm thấy <strong class="text-danger">@ViewBag.TotalProducts</strong> sản phẩm cho từ khóa <strong class="text-dark">"@searchTerm"</strong></p>
+        }
+        else if (ViewBag.CategoryName != null)
+        {
+            <h1 class="fw-bold h3 mb-1">@ViewBag.CategoryName</h1>
+            <p class="text-muted small">@ViewBag.TotalProducts sản phẩm trong danh mục</p>
+        }
+        else if (ViewBag.BrandName != null)
+        {
+            <h1 class="fw-bold h3 mb-1">Thương hiệu @ViewBag.BrandName</h1>
+            <p class="text-muted small">@ViewBag.TotalProducts sản phẩm của @ViewBag.BrandName</p>
+        }
+        else
+        {
+            <h1 class="fw-bold h3 mb-1">Tất cả sản phẩm</h1>
+            <p class="text-muted small">Tổng số @ViewBag.TotalProducts sản phẩm</p>
+        }
+    </div>
+
     <form id="filterForm" method="get" asp-action="Index">
         <input type="hidden" name="searchTerm" value="@searchTerm" />
+        <input type="hidden" name="viewType" id="viewTypeInput" value="@Context.Request.Cookies["viewType"]" />
+
         <div class="row g-4">
             <!-- 1. LEFT SIDEBAR: FILTERS -->
             <aside class="col-lg-3">
                 <div class="filter-sidebar sticky-top" style="top: 100px;">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="fw-bold mb-0 text-uppercase">Bộ lọc</h5>
-                        @if (!string.IsNullOrEmpty(categoryId) || !string.IsNullOrEmpty(brandId) || !string.IsNullOrEmpty(searchTerm))
-                        {
-                            <a asp-action="Index" class="text-danger small fw-bold text-decoration-none">XÓA TẤT CẢ</a>
-                        }
+                        <h5 class="fw-bold mb-0 text-uppercase h6">Bộ lọc</h5>
+                        <a asp-action="Index" class="text-danger small fw-bold text-decoration-none">XÓA TẤT CẢ</a>
+                    </div>
+
+                    <!-- Price Slider (TÍNH NĂNG 2) -->
+                    <div class="filter-widget mb-4 pb-4 border-bottom">
+                        <h6 class="fw-bold mb-3 small">KHOẢNG GIÁ</h6>
+                        <div class="price-display d-flex justify-content-between mb-2 small fw-500">
+                            <span id="minPriceLabel">@minPrice.ToString("N0")đ</span>
+                            <span id="maxPriceLabel">@maxPrice.ToString("N0")đ</span>
+                        </div>
+                        <div class="range-slider-wrapper position-relative py-3">
+                            <input type="range" id="minPrice" name="minPrice" class="range-slider" min="0" max="@ViewBag.MaxPriceLimit" step="10000" value="@minPrice">
+                            <input type="range" id="maxPrice" name="maxPrice" class="range-slider" min="0" max="@ViewBag.MaxPriceLimit" step="10000" value="@maxPrice">
+                        </div>
                     </div>
 
                     <!-- Category Filter -->
                     <div class="filter-widget mb-4 pb-4 border-bottom">
-                        <h6 class="fw-bold mb-3">DANH MỤC</h6>
-                        <select name="categoryId" class="form-select rounded-pill filter-select" asp-items="ViewBag.Categories">
+                        <h6 class="fw-bold mb-3 small">DANH MỤC</h6>
+                        <select name="categoryId" class="form-select rounded-pill filter-select" asp-items="ViewBag.CategoryList">
                             <option value="">Tất cả danh mục</option>
                         </select>
                     </div>
 
                     <!-- Brand Filter -->
                     <div class="filter-widget mb-4 pb-4 border-bottom">
-                        <h6 class="fw-bold mb-3">THƯƠNG HIỆU</h6>
-                        <select name="brandId" class="form-select rounded-pill filter-select" asp-items="ViewBag.Brands">
+                        <h6 class="fw-bold mb-3 small">THƯƠNG HIỆU</h6>
+                        <select name="brandId" class="form-select rounded-pill filter-select" asp-items="ViewBag.BrandList">
                             <option value="">Tất cả thương hiệu</option>
                         </select>
                     </div>
 
-                    <button type="submit" id="applyBtn" class="btn btn-danger w-100 rounded-pill fw-bold mt-2">ÁP DỤNG</button>
+                    <!-- Quick Checkboxes -->
+                    <div class="filter-widget mb-4">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input filter-check" type="checkbox" name="inStock" value="true" id="checkInStock" @(inStock == true ? "checked" : "")>
+                            <label class="form-check-label small fw-500" for="checkInStock">Còn hàng</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input filter-check" type="checkbox" name="onSale" value="true" id="checkOnSale" @(onSale == true ? "checked" : "")>
+                            <label class="form-check-label small fw-500" for="checkOnSale">Đang giảm giá</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="applyBtn" class="btn btn-danger w-100 rounded-pill fw-bold mt-2">ÁP DỤNG BỘ LỌC</button>
                 </div>
             </aside>
 
             <!-- 2. MAIN CONTENT: PRODUCT GRID -->
             <div class="col-lg-9">
                 <!-- Toolbar -->
-                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                <div class="toolbar d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 bg-white p-3 rounded-4 shadow-sm border">
                     <div class="toolbar-info">
-                        @if (!string.IsNullOrEmpty(searchTerm))
-                        {
-                            <span class="text-muted small">Kết quả tìm kiếm cho: </span> <strong class="text-danger">"@searchTerm"</strong>
-                        }
-                        <h3 class="fw-bold mb-1 text-uppercase">@ViewBag.CurrentCategoryName</h3>
-                        <p class="text-muted mb-0 small">Hiển thị @Model.Count trên tổng số @Model.TotalCount sản phẩm</p>
+                        <!-- FIX 5: ĐẾM CHÍNH XÁC -->
+                        <p class="text-muted mb-0 small fw-500">Hiển thị <strong class="text-dark">@ViewBag.From–@ViewBag.To</strong> / <strong class="text-danger">@ViewBag.TotalProducts</strong> sản phẩm</p>
                     </div>
 
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="text-muted small flex-shrink-0">Sắp xếp:</span>
-                        <select name="sort" class="form-select rounded-pill border-secondary-subtle py-2 shadow-none small px-3 filter-select" style="min-width: 180px;" asp-items="ViewBag.SortList">
-                        </select>
+                    <div class="d-flex align-items-center gap-3">
+                        <!-- TOGGLE GRID/LIST (TÍNH NĂNG 6) -->
+                        <div class="view-toggle d-flex gap-1">
+                            <button type="button" class="btn-view @(Context.Request.Cookies["viewType"] != "list" ? "active" : "")" onclick="setView('grid')" title="Lưới">
+                                <i class='bx bx-grid-alt'></i>
+                            </button>
+                            <button type="button" class="btn-view @(Context.Request.Cookies["viewType"] == "list" ? "active" : "")" onclick="setView('list')" title="Danh sách">
+                                <i class='bx bx-list-ul'></i>
+                            </button>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small flex-shrink-0">Sắp xếp:</span>
+                            <select name="sort" class="form-select rounded-pill border-secondary-subtle py-1 shadow-none small filter-select" style="min-width: 160px;" asp-items="ViewBag.SortList">
+                            </select>
+                        </div>
                     </div>
+                </div>
+
+                <!-- Quick Filters (TÍNH NĂNG 8) -->
+                <div class="quick-filters d-flex gap-2 mb-4 flex-wrap overflow-auto pb-2 no-scrollbar">
+                    <a href="?searchTerm=@searchTerm&sort=newest" class="quick-filter-tag @(sort == "newest" ? "active" : "")">Mới nhất</a>
+                    <a href="?searchTerm=@searchTerm&onSale=true" class="quick-filter-tag @(onSale == true ? "active" : "")">Đang giảm giá</a>
+                    <a href="?searchTerm=@searchTerm&inStock=true" class="quick-filter-tag @(inStock == true ? "active" : "")">Còn hàng</a>
+                    <a href="?searchTerm=@searchTerm&sort=price_asc" class="quick-filter-tag @(sort == "price_asc" ? "active" : "")">Giá thấp nhất</a>
                 </div>
 
                 <!-- Product Grid Wrapper -->
                 <div class="position-relative" id="gridWrapper">
-                    <div id="loadingOverlay" class="position-absolute top-0 start-0 w-100 h-100 bg-white opacity-50 d-none justify-content-center align-items-start pt-5" style="z-index: 10;">
+                    <div id="loadingOverlay" class="position-absolute top-0 start-0 w-100 h-100 bg-white opacity-75 d-none justify-content-center align-items-start pt-5" style="z-index: 10;">
                         <div class="spinner-border text-danger" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
@@ -85,59 +162,8 @@
 
                     @if (Model.Any())
                     {
-                        <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-4" id="productGrid">
-                            @foreach (var product in Model)
-                            {
-                                <div class="col">
-                                    <div class="product-card h-100 d-flex flex-column border rounded-4 overflow-hidden shadow-sm hover-shadow transition">
-                                        <div class="product-img-wrapper position-relative overflow-hidden" style="aspect-ratio: 1/1;">
-                                            <a asp-action="Details" asp-route-slug="@product.Slug" class="d-block h-100">
-                                                <img src="@(string.IsNullOrEmpty(product.PrimaryImageUrl) ? "/assets/img/elements/18.jpg" : product.PrimaryImageUrl)" 
-                                                     alt="@product.ProductName" 
-                                                     class="w-100 h-100 object-fit-cover transition-scale" 
-                                                     onerror="this.src='/assets/img/elements/18.jpg'"
-                                                     loading="lazy">
-                                            </a>
-                                            <button type="button" class="btn-wishlist-abs" onclick="addToWishlist(@product.ProductId)" title="Thêm vào yêu thích">
-                                                <i class='bx bx-heart'></i>
-                                            </button>
-                                            @if (product.MinPrice == 0)
-                                            {
-                                                <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2 rounded-pill">Liên hệ</span>
-                                            }
-                                        </div>
-                                        <div class="product-info p-3 flex-grow-1 d-flex flex-column">
-                                            <div class="d-flex justify-content-between align-items-start mb-1">
-                                                <span class="brand text-uppercase text-danger fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">@product.BrandName</span>
-                                            </div>
-                                            <h6 class="name mb-2 line-clamp-2" style="font-size: 0.95rem; line-height: 1.4; height: 2.8em;">
-                                                <a asp-action="Details" asp-route-slug="@product.Slug" class="text-decoration-none text-dark hover-danger fw-semibold">
-                                                    @product.ProductName
-                                                </a>
-                                            </h6>
-                                            <div class="product-price mt-auto">
-                                                @if (product.MinPrice > 0)
-                                                {
-                                                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                        <span class="current text-danger fw-bolder fs-5">@product.MinPrice.ToString("N0")đ</span>
-                                                        @if (product.MinOriginalPrice.HasValue && product.MinOriginalPrice > product.MinPrice)
-                                                        {
-                                                            <del class="text-muted small" style="font-size: 0.8rem;">@product.MinOriginalPrice.Value.ToString("N0")đ</del>
-                                                        }
-                                                    </div>
-                                                }
-                                                else
-                                                {
-                                                    <span class="current text-muted fw-bold">Liên hệ giá</span>
-                                                }
-                                            </div>
-                                            <button type="button" onclick="CartApi.addToCart(@product.DefaultVariantId)" class="btn btn-danger btn-sm rounded-pill fw-bold mt-3">
-                                                <i class='bx bx-cart-add fs-5 me-1'></i> THÊM GIỎ
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
+                        <div id="partialContainer">
+                            @await Html.PartialAsync("_ProductGridPartial", Model)
                         </div>
 
                         <!-- Pagination -->
@@ -146,16 +172,16 @@
                             <nav aria-label="Page navigation" class="mt-5">
                                 <ul class="pagination justify-content-center">
                                     <li class="page-item @(Model.HasPrevious ? "" : "disabled")">
-                                        <a class="page-link rounded-circle mx-1 border-0 shadow-sm" href="@Url.Action("Index", new { page = Model.CurrentPage - 1, searchTerm, categoryId, brandId, sort })"><i class='bx bx-chevron-left'></i></a>
+                                        <a class="page-link rounded-circle mx-1 border-0 shadow-sm" href="@Url.Action("Index", new { page = Model.CurrentPage - 1, searchTerm, categoryId, brandId, sort, minPrice, maxPrice, inStock, onSale })"><i class='bx bx-chevron-left'></i></a>
                                     </li>
                                     @for (int i = 1; i <= Model.TotalPages; i++)
                                     {
                                         <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
-                                            <a class="page-link rounded-circle mx-1 border-0 shadow-sm" href="@Url.Action("Index", new { page = i, searchTerm, categoryId, brandId, sort })">@i</a>
+                                            <a class="page-link rounded-circle mx-1 border-0 shadow-sm" href="@Url.Action("Index", new { page = i, searchTerm, categoryId, brandId, sort, minPrice, maxPrice, inStock, onSale })">@i</a>
                                         </li>
                                     }
                                     <li class="page-item @(Model.HasNext ? "" : "disabled")">
-                                        <a class="page-link rounded-circle mx-1 border-0 shadow-sm" href="@Url.Action("Index", new { page = Model.CurrentPage + 1, searchTerm, categoryId, brandId, sort })"><i class='bx bx-chevron-right'></i></a>
+                                        <a class="page-link rounded-circle mx-1 border-0 shadow-sm" href="@Url.Action("Index", new { page = Model.CurrentPage + 1, searchTerm, categoryId, brandId, sort, minPrice, maxPrice, inStock, onSale })"><i class='bx bx-chevron-right'></i></a>
                                     </li>
                                 </ul>
                             </nav>
@@ -163,11 +189,32 @@
                     }
                     else
                     {
-                        <div class="text-center py-5">
-                            <img src="/assets/img/illustrations/empty-cart.png" alt="Empty" class="img-fluid mb-4" style="max-width: 250px;">
-                            <h5 class="fw-bold">Rất tiếc, không tìm thấy sản phẩm nào!</h5>
-                            <p class="text-muted mb-4">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm khác.</p>
-                            <a asp-action="Index" class="btn btn-danger rounded-pill px-4">XEM TẤT CẢ SẢN PHẨM</a>
+                        <!-- EMPTY STATE (FIX 3) -->
+                        <div class="empty-state text-center py-5 bg-white rounded-4 border">
+                            <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.2" class="mb-3">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="m21 21-4.35-4.35"/>
+                                <path d="M8 11h6"/>
+                            </svg>
+                            <h5 class="fw-bold">
+                                @if (!string.IsNullOrEmpty(searchTerm)) { <span>Không tìm thấy kết quả cho "@searchTerm"</span> }
+                                else { <span>Không có sản phẩm nào</span> }
+                            </h5>
+                            <p class="text-muted small mb-4">Thử thay đổi bộ lọc hoặc từ khóa khác để tìm thấy điều bạn cần.</p>
+                            
+                            @if (ViewBag.Suggestions != null)
+                            {
+                                <div class="mb-4">
+                                    <p class="small fw-500 mb-2">Gợi ý cho bạn:</p>
+                                    <div class="d-flex gap-2 justify-content-center flex-wrap">
+                                        @foreach (var s in ViewBag.Suggestions)
+                                        {
+                                            <a href="/Product?searchTerm=@s" class="badge bg-light text-dark border px-3 py-2 text-decoration-none hover-danger">@s</a>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            <a asp-action="Index" class="btn btn-danger rounded-pill px-5 fw-bold">XEM TẤT CẢ SẢN PHẨM</a>
                         </div>
                     }
                 </div>
@@ -176,22 +223,199 @@
     </form>
 </main>
 
+<!-- Compare Bar (TÍNH NĂNG 4) -->
+<div class="compare-bar" id="compareBar" style="display:none">
+    <div class="container d-flex align-items-center gap-3">
+        <span class="fw-bold small text-uppercase d-none d-md-block">So sánh:</span>
+        <div class="compare-items d-flex gap-2" id="compareItems"></div>
+        <div class="ms-auto d-flex gap-2">
+            <button class="btn btn-danger btn-sm rounded-pill px-3 fw-bold" onclick="goCompare()">SO SÁNH NGAY</button>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold" onclick="clearCompare()">XÓA HẾT</button>
+        </div>
+    </div>
+</div>
+
+<!-- Quick View Modal (TÍNH NĂNG 3) -->
+<div class="modal fade" id="quickViewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 overflow-hidden">
+            <div class="modal-header border-0 position-absolute end-0 top-0" style="z-index: 1;">
+                <button type="button" class="btn-close bg-white rounded-circle shadow-sm" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" id="quickViewContent">
+                <!-- Content via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
-    .hover-shadow:hover { box-shadow: 0 .5rem 1.5rem rgba(0,0,0,.1)!important; }
+    /* Custom Styles */
+    .fw-500 { font-weight: 500; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .hover-shadow:hover { box-shadow: 0 .5rem 2rem rgba(0,0,0,.08)!important; }
     .transition { transition: all 0.3s ease; }
     .transition-scale { transition: transform 0.5s ease; }
-    .product-img-wrapper:hover .transition-scale { transform: scale(1.1); }
+    .product-img-wrapper:hover .transition-scale { transform: scale(1.08); }
     .hover-danger:hover { color: #dc3545!important; }
     .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .page-link { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: #333; }
-    .page-item.active .page-link { background-color: #dc3545; color: white; }
+    .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* Price Range Slider */
+    .range-slider-wrapper { height: 5px; }
+    .range-slider { position: absolute; pointer-events: none; -webkit-appearance: none; appearance: none; height: 5px; width: 100%; background: none; z-index: 2; margin: 0; }
+    .range-slider::-webkit-slider-thumb { pointer-events: auto; -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #dc3545; cursor: pointer; border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+    .range-slider::-moz-range-thumb { pointer-events: auto; width: 18px; height: 18px; border-radius: 50%; background: #dc3545; cursor: pointer; border: 3px solid #fff; }
+
+    /* Quick View Hover */
+    .product-hover-actions { position: absolute; bottom: -50px; left: 0; right: 0; display: flex; justify-content: center; padding: 10px; background: rgba(0,0,0,0.4); transition: bottom 0.3s ease; }
+    .product-card:hover .product-hover-actions { bottom: 0; }
+    .btn-quick-view { background: white; border: none; border-radius: 20px; padding: 6px 15px; font-size: 11px; font-weight: bold; color: #333; transition: all 0.2s; }
+    .btn-quick-view:hover { background: #dc3545; color: white; }
+
+    /* Wishlist & Compare Buttons */
+    .btn-wishlist-abs, .btn-compare-abs { position: absolute; right: 10px; width: 34px; height: 34px; border-radius: 50%; border: none; background: white; color: #999; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; z-index: 2; }
+    .btn-wishlist-abs { top: 10px; }
+    .btn-compare-abs { top: 50px; }
+    .btn-wishlist-abs:hover, .btn-wishlist-abs.active { color: #dc3545; }
+    .btn-compare-abs:hover { color: #007bff; }
+
+    /* View Toggle */
+    .btn-view { width: 34px; height: 34px; border: 1px solid #eee; border-radius: 8px; background: white; color: #999; transition: all 0.2s; }
+    .btn-view.active { background: #dc3545; color: white; border-color: #dc3545; }
+
+    /* Quick Filter Tags */
+    .quick-filter-tag { padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid #eee; background: white; color: #666; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
+    .quick-filter-tag:hover, .quick-filter-tag.active { background: #dc3545; color: white; border-color: #dc3545; }
+
+    /* Compare Bar */
+    .compare-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 3px solid #dc3545; padding: 15px 0; z-index: 1050; box-shadow: 0 -4px 15px rgba(0,0,0,0.1); }
+    .compare-item { display: flex; align-items: center; gap: 8px; padding: 5px 12px; border: 1px solid #eee; border-radius: 30px; font-size: 11px; font-weight: 600; background: #f9f9f9; }
+    .btn-remove-compare { border: none; background: none; color: #999; font-size: 16px; line-height: 1; padding: 0 0 2px 0; }
+    .btn-remove-compare:hover { color: #dc3545; }
+
+    /* List View Styles */
+    .list-view .product-item { width: 100%!important; }
+    .list-view .product-card { flex-direction: row!important; height: auto!important; }
+    .list-view .product-img-wrapper { width: 220px!important; flex-shrink: 0!important; aspect-ratio: 1/1!important; }
+    .list-view .product-info { padding: 20px!important; justify-content: center; }
+
+    /* Skeleton Loading */
+    .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+    @@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    .skeleton-card .skeleton-img { height: 200px; border-radius: 12px; }
 </style>
 
 @section Scripts {
     <script src="~/js/cart-handler.js"></script>
     <script>
+        // Set View Type (Grid/List)
+        function setView(type) {
+            document.cookie = "viewType=" + type + ";path=/;max-age=" + (30*24*60*60);
+            $('#viewTypeInput').val(type);
+            location.reload();
+        }
+
+        // Quick View
+        async function quickView(slug) {
+            const modal = new bootstrap.Modal(document.getElementById('quickViewModal'));
+            modal.show();
+            $('#quickViewContent').html('<div class="text-center py-5"><div class="spinner-border text-danger"></div></div>');
+            
+            try {
+                const res = await fetch(`/Product/QuickView?slug=${slug}`);
+                const html = await res.text();
+                $('#quickViewContent').html(html);
+            } catch (e) {
+                $('#quickViewContent').html('<div class="alert alert-danger">Lỗi tải dữ liệu.</div>');
+            }
+        }
+
+        // Price Slider Logic
+        const minPrice = document.getElementById('minPrice');
+        const maxPrice = document.getElementById('maxPrice');
+        const minLabel = document.getElementById('minPriceLabel');
+        const maxLabel = document.getElementById('maxPriceLabel');
+
+        function updateSlider() {
+            if (parseInt(minPrice.value) > parseInt(maxPrice.value)) {
+                let temp = minPrice.value;
+                minPrice.value = maxPrice.value;
+                maxPrice.value = temp;
+            }
+            minLabel.innerText = parseInt(minPrice.value).toLocaleString('vi-VN') + 'đ';
+            maxLabel.innerText = parseInt(maxPrice.value).toLocaleString('vi-VN') + 'đ';
+        }
+
+        minPrice.addEventListener('input', updateSlider);
+        maxPrice.addEventListener('input', updateSlider);
+
+        // Compare Logic
+        let compareList = JSON.parse(localStorage.getItem('compareList') || '[]');
+        function addToCompare(id, name, img, price) {
+            if (compareList.length >= 3) {
+                alert('Chỉ so sánh tối đa 3 sản phẩm!');
+                return;
+            }
+            if (compareList.find(p => p.id === id)) {
+                alert('Sản phẩm đã có trong danh sách!');
+                return;
+            }
+            compareList.push({ id, name, img, price });
+            localStorage.setItem('compareList', JSON.stringify(compareList));
+            renderCompareBar();
+        }
+
+        function removeCompare(id) {
+            compareList = compareList.filter(p => p.id !== id);
+            localStorage.setItem('compareList', JSON.stringify(compareList));
+            renderCompareBar();
+        }
+
+        function renderCompareBar() {
+            const bar = $('#compareBar');
+            const items = $('#compareItems');
+            if (compareList.length === 0) {
+                bar.hide();
+                return;
+            }
+            bar.show();
+            items.html(compareList.map(p => `
+                <div class="compare-item">
+                    <img src="${p.img}" width="30" height="30" class="rounded-circle object-fit-cover">
+                    <span>${p.name.substring(0, 15)}...</span>
+                    <button onclick="removeCompare(${p.id})" class="btn-remove-compare">&times;</button>
+                </div>
+            `).join(''));
+        }
+
+        function clearCompare() {
+            compareList = [];
+            localStorage.setItem('compareList', '[]');
+            renderCompareBar();
+        }
+
+        function goCompare() {
+            const ids = compareList.map(p => p.id).join(',');
+            window.location.href = `/Product/Compare?ids=${ids}`;
+        }
+
         $(document).ready(function() {
-            $('.filter-select').on('change', function () { $('#filterForm').submit(); });
+            // FIX: Lưu filter khi click vào xem sản phẩm
+            $(document).on('click', '.product-card a, .quick-view-btn', function() {
+                sessionStorage.setItem('productListFilter', window.location.search);
+            });
+
+            // Khôi phục filter khi quay lại từ trang chi tiết
+            if (window.location.search === "" && document.referrer.includes('/Product/Details')) {
+                const savedFilter = sessionStorage.getItem('productListFilter');
+                if (savedFilter) {
+                    window.location.search = savedFilter;
+                }
+            }
+
+            renderCompareBar();
+            $('.filter-select, .filter-check').on('change', function () { $('#filterForm').submit(); });
             $('#filterForm').on('submit', function() {
                 $('#loadingOverlay').removeClass('d-none').addClass('d-flex');
                 $('#applyBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> ĐANG LỌC...');

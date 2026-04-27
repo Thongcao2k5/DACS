@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using System.Linq;
 
 namespace MotoShop.Business.Helpers
 {
@@ -34,23 +35,38 @@ namespace MotoShop.Business.Helpers
 
         public string CreateRequestUrl(string baseUrl, string vnp_HashSecret)
         {
-            var data = new StringBuilder();
-            foreach (var kv in _requestData)
+            StringBuilder data = new StringBuilder();
+            foreach (KeyValuePair<string, string> kv in _requestData)
             {
                 if (!string.IsNullOrEmpty(kv.Value))
                 {
                     data.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value) + "&");
                 }
             }
-            var querystring = data.ToString();
-            baseUrl += "?" + querystring;
-            var signData = querystring;
+            
+            string querystring = data.ToString();
+            if (querystring.Length > 0)
+            {
+                querystring = querystring.Remove(data.Length - 1, 1);
+            }
+
+            // Dữ liệu để ký (không Encode cho v2.1.0)
+            StringBuilder signDataBuilder = new StringBuilder();
+            foreach (KeyValuePair<string, string> kv in _requestData)
+            {
+                if (!string.IsNullOrEmpty(kv.Value))
+                {
+                    signDataBuilder.Append(kv.Key + "=" + kv.Value + "&");
+                }
+            }
+            string signData = signDataBuilder.ToString();
             if (signData.Length > 0)
             {
-                signData = signData.Remove(data.Length - 1, 1);
+                signData = signData.Remove(signData.Length - 1, 1);
             }
-            var vnp_SecureHash = HmacSHA512(vnp_HashSecret, signData);
-            baseUrl += "vnp_SecureHash=" + vnp_SecureHash;
+
+            string vnp_SecureHash = HmacSHA512(vnp_HashSecret, signData);
+            baseUrl += "?" + querystring + "&vnp_SecureHash=" + vnp_SecureHash;
 
             return baseUrl;
         }
@@ -73,11 +89,13 @@ namespace MotoShop.Business.Helpers
             {
                 _responseData.Remove("vnp_SecureHash");
             }
+
+            // Đối với VNPAY v2.1.0, không Encode khi tạo chuỗi hash response
             foreach (KeyValuePair<string, string> kv in _responseData)
             {
                 if (!string.IsNullOrEmpty(kv.Value))
                 {
-                    data.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value) + "&");
+                    data.Append(kv.Key + "=" + kv.Value + "&");
                 }
             }
             if (data.Length > 0)
