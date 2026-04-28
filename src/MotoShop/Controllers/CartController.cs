@@ -52,10 +52,12 @@ namespace MotoShop.Controllers
             string guestId = Guid.NewGuid().ToString();
             Response.Cookies.Append(guestCookieName, guestId, new Microsoft.AspNetCore.Http.CookieOptions
             {
-                Expires = DateTimeOffset.Now.AddYears(1),
+                // KHÔNG đặt Expires -> Sẽ bị xóa khi đóng trình duyệt
                 Path = "/",
                 HttpOnly = true,
-                IsEssential = true
+                IsEssential = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax
             });
             return guestId;
         }

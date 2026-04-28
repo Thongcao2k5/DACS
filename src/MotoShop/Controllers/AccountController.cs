@@ -256,7 +256,7 @@ namespace MotoShop.Controllers
             }
             else
             {
-                // NẾU CHƯA ĐĂNG NHẬP -> Lưu vào Cookie (Dữ liệu tạm)
+                // NẾU CHƯA ĐĂNG NHẬP -> Lưu vào Session Cookie (Tự xóa khi đóng trình duyệt)
                 var wishlistCookie = Request.Cookies["MotoShop_Wishlist_Items"];
                 List<int> productIds = new List<int>();
                 if (!string.IsNullOrEmpty(wishlistCookie))
@@ -274,7 +274,12 @@ namespace MotoShop.Controllers
                     added = true;
                 }
 
-                var cookieOptions = new CookieOptions { Expires = DateTime.Now.AddDays(7), HttpOnly = true, SameSite = SameSiteMode.Lax };
+                // KHÔNG đặt Expires -> Cookie này sẽ biến mất khi đóng trình duyệt
+                var cookieOptions = new CookieOptions { 
+                    HttpOnly = true, 
+                    SameSite = SameSiteMode.Lax,
+                    Secure = true 
+                };
                 Response.Cookies.Append("MotoShop_Wishlist_Items", JsonSerializer.Serialize(productIds), cookieOptions);
             }
 
