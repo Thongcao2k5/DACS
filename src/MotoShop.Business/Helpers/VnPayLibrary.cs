@@ -50,22 +50,8 @@ namespace MotoShop.Business.Helpers
                 querystring = querystring.Remove(data.Length - 1, 1);
             }
 
-            // Dữ liệu để ký (không Encode cho v2.1.0)
-            StringBuilder signDataBuilder = new StringBuilder();
-            foreach (KeyValuePair<string, string> kv in _requestData)
-            {
-                if (!string.IsNullOrEmpty(kv.Value))
-                {
-                    signDataBuilder.Append(kv.Key + "=" + kv.Value + "&");
-                }
-            }
-            string signData = signDataBuilder.ToString();
-            if (signData.Length > 0)
-            {
-                signData = signData.Remove(signData.Length - 1, 1);
-            }
-
-            string vnp_SecureHash = HmacSHA512(vnp_HashSecret, signData);
+            // Đối với VNPay 2.1.0, chuỗi ký chính là querystring (đã được Encode các giá trị)
+            string vnp_SecureHash = HmacSHA512(vnp_HashSecret, querystring);
             baseUrl += "?" + querystring + "&vnp_SecureHash=" + vnp_SecureHash;
 
             return baseUrl;
@@ -90,12 +76,12 @@ namespace MotoShop.Business.Helpers
                 _responseData.Remove("vnp_SecureHash");
             }
 
-            // Đối với VNPAY v2.1.0, không Encode khi tạo chuỗi hash response
+            // Đối với VNPAY v2.1.0, các giá trị trong chuỗi hash response cũng cần được URL Encode
             foreach (KeyValuePair<string, string> kv in _responseData)
             {
                 if (!string.IsNullOrEmpty(kv.Value))
                 {
-                    data.Append(kv.Key + "=" + kv.Value + "&");
+                    data.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value) + "&");
                 }
             }
             if (data.Length > 0)
