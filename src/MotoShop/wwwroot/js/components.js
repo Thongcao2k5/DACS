@@ -5,52 +5,56 @@
 
 window.UI = window.UI || {};
 Object.assign(window.UI, {
-    // Hiển thị thông báo Toast
+    // Hiển thị thông báo Toast (Đã thống nhất)
     showToast(message, type = 'success') {
-        let toastContainer = document.getElementById('toast-container');
-        if (!toastContainer) {
-            toastContainer = document.createElement('div');
-            toastContainer.id = 'toast-container';
-            toastContainer.className = 'toast-container';
-            document.body.appendChild(toastContainer);
-        }
-
+        const icons = {
+            success: '✓',
+            danger: '✗',
+            warning: '⚠',
+            info: 'ℹ'
+        };
         const toast = document.createElement('div');
-        toast.className = `custom-toast ${type}`;
-        
-        let icon = 'bx-check-circle';
-        let title = 'Thành công';
-        if (type === 'error') {
-            icon = 'bx-x-circle';
-            title = 'Lỗi';
-        } else if (type === 'warning') {
-            icon = 'bx-error';
-            title = 'Chú ý';
-        } else if (type === 'info') {
-            icon = 'bx-info-circle';
-            title = 'Thông báo';
-        }
-
+        toast.className = `toast-custom toast-${type}`;
         toast.innerHTML = `
-            <div class="toast-icon">
-                <i class='bx ${icon}'></i>
-            </div>
-            <div class="toast-content">
-                <div class="toast-title">${title}</div>
-                <p class="toast-message">${message}</p>
-            </div>
-            <div class="toast-close" onclick="this.parentElement.remove()">
-                <i class='bx bx-x'></i>
-            </div>
-        `;
+            <span class="toast-icon">
+                ${icons[type] || icons.info}
+            </span>
+            <span class="toast-message">
+                ${message}
+            </span>`;
+        
+        const container = document.getElementById('toastContainer');
+        if (container) {
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        } else {
+            // Fallback nếu không có container
+            console.log(`Toast (${type}): ${message}`);
+        }
+    },
 
-        toastContainer.appendChild(toast);
+    initCheckoutPayment() {
+        document.querySelectorAll('.payment-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // Bỏ selected tất cả
+                document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+                // Thêm selected vào cái được click
+                this.classList.add('selected');
+                // Check radio input bên trong
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) radio.checked = true;
 
-        // Tự động xóa sau 3.5s
-        setTimeout(() => {
-            toast.classList.add('hide');
-            setTimeout(() => toast.remove(), 400);
-        }, 3500);
+                // Hiện/ẩn thông tin phụ
+                const method = this.dataset.method;
+                document.querySelectorAll('.payment-detail').forEach(d => d.style.display = 'none');
+                const detail = document.getElementById(`detail-${method}`);
+                if (detail) detail.style.display = 'block';
+            });
+        });
     },
 
     toggleSearch() {

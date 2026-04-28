@@ -208,11 +208,23 @@ namespace MotoShop.Controllers
                 ViewBag.Customer = customer;
             }
 
-            ViewBag.Brands = await _uow.Repository<MotorbikeModel>()
-                .Find(m => m.Manufacturer != null)
-                .Select(m => m.Manufacturer)
+            ViewBag.Brands = await _context.MotorbikeModels
+                .Where(m => m.ParentId == null)
+                .Select(m => m.ModelName)
                 .Distinct()
+                .OrderBy(b => b)
                 .ToListAsync();
+
+            // Nếu DB chưa có Brand theo ParentId, fallback về Manufacturer
+            if (ViewBag.Brands.Count == 0)
+            {
+                ViewBag.Brands = await _context.MotorbikeModels
+                    .Where(m => m.Manufacturer != null)
+                    .Select(m => m.Manufacturer)
+                    .Distinct()
+                    .OrderBy(b => b)
+                    .ToListAsync();
+            }
 
             ViewBag.BookedSlots = await _bookingService.GetBookedSlotsAsync(DateTime.Today);
             ViewBag.DepositAmount = Math.Ceiling(service.Price * 0.3m / 1000) * 1000;
@@ -281,10 +293,29 @@ namespace MotoShop.Controllers
         [HttpGet]
         public async Task<IActionResult> GetModelsByBrand(string brand)
         {
-            var models = await _uow.Repository<MotorbikeModel>()
-                .Find(m => m.Manufacturer == brand)
-                .Select(m => new { modelId = m.ModelId, modelName = m.ModelName })
-                .ToListAsync();
+            // Tìm brandId trước
+            var brandEntity = await _context.MotorbikeModels
+                .FirstOrDefaultAsync(m => m.ModelName == brand && m.ParentId == null);
+
+            List<object> models;
+            if (brandEntity != null)
+            {
+                models = await _context.MotorbikeModels
+                    .Where(m => m.ParentId == brandEntity.ModelId)
+                    .Select(m => new { modelId = m.ModelId, modelName = m.ModelName })
+                    .Cast<object>()
+                    .ToListAsync();
+            }
+            else
+            {
+                // Fallback dùng Manufacturer
+                models = await _context.MotorbikeModels
+                    .Where(m => m.Manufacturer == brand)
+                    .Select(m => new { modelId = m.ModelId, modelName = m.ModelName })
+                    .Cast<object>()
+                    .ToListAsync();
+            }
+            
             return Json(models);
         }
 

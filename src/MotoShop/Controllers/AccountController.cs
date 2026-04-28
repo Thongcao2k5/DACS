@@ -154,6 +154,10 @@ namespace MotoShop.Controllers
 
         [Authorize]
         [HttpGet]
+        public IActionResult Index() => RedirectToAction("Profile");
+
+        [Authorize]
+        [HttpGet]
         public async Task<IActionResult> Profile()
         {
             var userId = _userManager.GetUserId(User);
@@ -164,9 +168,12 @@ namespace MotoShop.Controllers
             
             if (customer == null) return NotFound();
 
-            ViewBag.Pending = customer.Orders.Count(o => o.Status == "DangXuLy" || o.Status == "Pending");
+            // Thống kê đơn hàng chi tiết hơn
+            ViewBag.TotalOrders = customer.Orders.Count;
+            ViewBag.Pending = customer.Orders.Count(o => o.Status == "DangXuLy" || o.Status == "Pending" || o.Status == "Processing");
             ViewBag.Shipping = customer.Orders.Count(o => o.Status == "DangGiao" || o.Status == "Shipping");
             ViewBag.Completed = customer.Orders.Count(o => o.Status == "DaHoanThanh" || o.Status == "Completed");
+            ViewBag.TotalSpent = customer.Orders.Where(o => o.Status == "DaHoanThanh" || o.Status == "Completed").Sum(o => o.TotalAmount);
 
             return View(customer);
         }

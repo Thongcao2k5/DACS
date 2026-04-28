@@ -145,11 +145,28 @@
                 </div>
 
                 <!-- Quick Filters (TÍNH NĂNG 8) -->
+                @{
+                    string BuildQuery(string key, string? val)
+                    {
+                        var q = new Dictionary<string, string?> {
+                            { "searchTerm", searchTerm },
+                            { "categoryId", categoryId?.ToString() },
+                            { "brandId", brandId?.ToString() },
+                            { "minPrice", minPrice?.ToString() },
+                            { "maxPrice", maxPrice?.ToString() },
+                            { "sort", sort },
+                            { "inStock", inStock?.ToString() },
+                            { "onSale", onSale?.ToString() }
+                        };
+                        q[key] = (q.ContainsKey(key) && q[key] == val) ? null : val;
+                        return "?" + string.Join("&", q.Where(x => x.Value != null).Select(x => $"{x.Key}={x.Value}"));
+                    }
+                }
                 <div class="quick-filters d-flex gap-2 mb-4 flex-wrap overflow-auto pb-2 no-scrollbar">
-                    <a href="?searchTerm=@searchTerm&sort=newest" class="quick-filter-tag @(sort == "newest" ? "active" : "")">Mới nhất</a>
-                    <a href="?searchTerm=@searchTerm&onSale=true" class="quick-filter-tag @(onSale == true ? "active" : "")">Đang giảm giá</a>
-                    <a href="?searchTerm=@searchTerm&inStock=true" class="quick-filter-tag @(inStock == true ? "active" : "")">Còn hàng</a>
-                    <a href="?searchTerm=@searchTerm&sort=price_asc" class="quick-filter-tag @(sort == "price_asc" ? "active" : "")">Giá thấp nhất</a>
+                    <a href="@BuildQuery("sort", "newest")" class="quick-filter-tag @(sort == "newest" || string.IsNullOrEmpty(sort) ? "active" : "")">Mới nhất</a>
+                    <a href="@BuildQuery("onSale", "true")" class="quick-filter-tag @(onSale == true ? "active" : "")">Đang giảm giá</a>
+                    <a href="@BuildQuery("inStock", "true")" class="quick-filter-tag @(inStock == true ? "active" : "")">Còn hàng</a>
+                    <a href="@BuildQuery("sort", "price_asc")" class="quick-filter-tag @(sort == "price_asc" ? "active" : "")">Giá thấp nhất</a>
                 </div>
 
                 <!-- Product Grid Wrapper -->

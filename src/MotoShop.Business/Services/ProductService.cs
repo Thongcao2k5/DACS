@@ -90,11 +90,10 @@ namespace MotoShop.Business.Services
                 query = query.Where(p => p.Variants.Any(v => v.StockQuantity > 0));
             }
 
-            // Lọc đang giảm giá (Giả sử có logic check promotion ở đây)
+            // Lọc đang giảm giá (Giá hiện tại < Giá gốc)
             if (onSale == true)
             {
-                // Tùy theo cấu trúc DB của bạn, ví dụ:
-                // query = query.Where(p => p.ProductPromotions.Any(pp => pp.Promotion.IsActive ...));
+                query = query.Where(p => p.Variants.Any(v => v.OriginalPrice != null && v.OriginalPrice > v.Price));
             }
 
             // Sắp xếp
