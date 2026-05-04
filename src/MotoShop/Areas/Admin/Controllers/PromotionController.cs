@@ -15,10 +15,12 @@ namespace MotoShop.Areas.Admin.Controllers
     public class PromotionController : Controller
     {
         private readonly MotoShopDbContext _context;
+        private readonly MotoShop.Business.Interfaces.IEmailService _emailService;
 
-        public PromotionController(MotoShopDbContext context)
+        public PromotionController(MotoShopDbContext context, MotoShop.Business.Interfaces.IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         public async Task<IActionResult> Index(string? searchTerm, string? status, decimal? minDiscount, string? discountUnit, int page = 1, int pageSize = 10)
@@ -104,6 +106,8 @@ namespace MotoShop.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Save(Promotion promotion)
         {
+            bool isNew = promotion.PromotionId == 0;
+
             if (promotion.DiscountType == "Percentage")
             {
                 promotion.DiscountAmount = 0;
@@ -113,7 +117,7 @@ namespace MotoShop.Areas.Admin.Controllers
                 promotion.DiscountPercentage = 0;
             }
 
-            if (promotion.PromotionId == 0)
+            if (isNew)
             {
                 _context.Promotions.Add(promotion);
             }
@@ -135,7 +139,40 @@ namespace MotoShop.Areas.Admin.Controllers
             }
 
             await _context.SaveChangesAsync();
-            return Json(new { success = true, message = promotion.PromotionId == 0 ? "Thêm thành công" : "Cập nhật thành công" });
+
+            // TỰ ĐỘNG BÁO MAIL KHI CÓ KHUYẾN MÃI MỚI
+            if (isNew && promotion.IsActive)
+            {
+                System.Console.WriteLine($"[PROMOTION] Bắt đầu quét danh sách email để thông báo khuyến mãi: {promotion.PromotionName}");
+                
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        // Cách lấy email an toàn
+                        var subscribers = await _context.Database.SqlQueryRaw<string>("SELECT Email FROM NewsletterSubscriptions WHERE IsActive = 1").ToListAsync();
+                        
+                        System.Console.WriteLine($"[PROMOTION] Tìm thấy {subscribers.Count} email đăng ký.");
+
+                        foreach (var email in subscribers)
+                        {
+                            await _emailService.SendPromotionEmailAsync(
+                                email,
+                                promotion.PromotionName,
+                                promotion.Description ?? "Ưu đãi cực hot vừa ra mắt tại MotoShop!",
+                                promotion.StartDate.ToString("dd/MM/yyyy"),
+                                promotion.EndDate.ToString("dd/MM/yyyy")
+                            );
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        System.Console.WriteLine($"[PROMOTION ERROR] Lỗi trong quá trình chuẩn bị gửi mail: {ex.Message}");
+                    }
+                });
+            }
+
+            return Json(new { success = true, message = isNew ? "Thêm thành công" : "Cập nhật thành công" });
         }
 
         [HttpGet]

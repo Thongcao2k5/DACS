@@ -188,8 +188,12 @@
                 Swal.fire('Thông báo', 'Sản phẩm này hiện đang hết hàng.', 'info');
                 return;
             }
-            // Chuyển hướng thẳng tới trang thanh toán với duy nhất sản phẩm này
-            window.location.href = `/Cart/Checkout?variantId=${variantId}&quantity=1`;
+            // Sử dụng logic handleAddToCart trước để đảm bảo sản phẩm vào giỏ, sau đó mới redirect
+            handleAddToCart(variantId).then(() => {
+                setTimeout(() => {
+                    window.location.href = '/Cart/Checkout';
+                }, 800);
+            });
         }
 
         async function addToWishlist(productId) {

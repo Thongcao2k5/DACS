@@ -5,36 +5,29 @@
 
 window.UI = window.UI || {};
 Object.assign(window.UI, {
-    // Hiển thị thông báo Toast (Đã thống nhất)
+    // Hiển thị thông báo Toast (Sử dụng SweetAlert2 để đồng bộ với giỏ hàng)
     showToast(message, type = 'success') {
-        const icons = {
-            success: '✓',
-            danger: '✗',
-            warning: '⚠',
-            info: 'ℹ'
-        };
-        const toast = document.createElement('div');
-        toast.className = `toast-custom toast-${type}`;
-        toast.innerHTML = `
-            <span class="toast-icon">
-                ${icons[type] || icons.info}
-            </span>
-            <span class="toast-message">
-                ${message}
-            </span>`;
-        
-        const container = document.getElementById('toastContainer');
-        if (container) {
-            container.appendChild(toast);
-            setTimeout(() => toast.classList.add('show'), 10);
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 400);
-            }, 3000);
-        } else {
-            // Fallback nếu không có container
-            console.log(`Toast (${type}): ${message}`);
-        }
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            customClass: {
+                popup: 'ms-toast-popup animate__animated animate__fadeInRight',
+                title: 'ms-toast-title',
+                icon: 'ms-toast-icon'
+            },
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        Toast.fire({
+            icon: type,
+            title: message
+        });
     },
 
     initCheckoutPayment() {

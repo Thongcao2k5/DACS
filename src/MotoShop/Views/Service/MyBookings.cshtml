@@ -1,0 +1,134 @@
+@model IEnumerable<MotoShop.Data.Models.ServiceBooking>
+@{
+    ViewData["Title"] = "Lịch hẹn của tôi";
+}
+
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Account" asp-action="Profile">Tài khoản</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Lịch hẹn dịch vụ</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<main class="container mb-5">
+    <div class="row g-4">
+        <!-- SIDEBAR MENU -->
+        <aside class="col-lg-3">
+            <div class="account-sidebar">
+                @{
+                    var customer = ViewBag.Customer as MotoShop.Data.Models.Customer;
+                    var avatarUrl = customer?.AvatarUrl ?? "/assets/img/avatars/1.png";
+                    var fullName = customer?.FullName ?? "Tài khoản của tôi";
+                }
+                <div class="d-flex align-items-center gap-3 mb-4 pb-4 border-bottom">
+                    <div style="width: 50px; height: 50px;">
+                        <img src="@avatarUrl" class="rounded-circle w-100 h-100 object-fit-cover" alt="User">
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">@fullName</h6>
+                        <p class="text-muted small mb-0">Thành viên</p>
+                    </div>
+                </div>
+                <ul class="account-nav">
+                    <li class="account-nav-item"><a asp-controller="Account" asp-action="Profile" class="account-nav-link"><i class='bx bx-user'></i> Thông tin cá nhân</a></li>
+                    <li class="account-nav-item"><a asp-controller="Order" asp-action="Index" class="account-nav-link"><i class='bx bx-package'></i> Đơn hàng của tôi</a></li>
+                    <li class="account-nav-item"><a asp-controller="Service" asp-action="MyBookings" class="account-nav-link active"><i class='bx bx-calendar-check'></i> Lịch hẹn của tôi</a></li>
+                    <li class="account-nav-item"><a asp-controller="Account" asp-action="AddressBook" class="account-nav-link"><i class='bx bx-map'></i> Địa chỉ giao hàng</a></li>
+                    <li class="account-nav-item"><a asp-controller="Account" asp-action="Wishlist" class="account-nav-link"><i class='bx bx-heart'></i> Sản phẩm yêu thích</a></li>
+                    <li class="account-nav-item"><a asp-controller="Account" asp-action="ChangePassword" class="account-nav-link"><i class='bx bx-lock-alt'></i> Đổi mật khẩu</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <div class="col-lg-9">
+            <h4 class="fw-bold mb-4 text-uppercase">LỊCH HẸN DỊCH VỤ CỦA TÔI</h4>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5 bg-white rounded-4 shadow-sm">
+                    <i class='bx bx-calendar-x fs-1 text-muted mb-3'></i>
+                    <h5 class="fw-bold">Bạn chưa có lịch hẹn nào</h5>
+                    <p class="text-muted mb-4">Hãy đặt lịch bảo dưỡng để xe luôn vận hành tốt nhất nhé!</p>
+                    <a asp-controller="Service" asp-action="Index" class="btn btn-danger rounded-pill px-5 fw-bold">ĐẶT LỊCH NGAY</a>
+                </div>
+            }
+            else
+            {
+                @foreach (var booking in Model)
+                {
+                    <div class="order-item-card mb-4 bg-white shadow-sm border-0">
+                        <div class="order-card-header d-flex justify-content-between align-items-center p-3 border-bottom">
+                            <div>
+                                <span class="fw-bold me-2">Mã lịch: #@booking.BookingCode</span>
+                                <span class="text-muted small">| Đặt ngày: @booking.BookingDate.ToString("dd/MM/yyyy")</span>
+                            </div>
+                            <div>
+                                @switch (booking.Status)
+                                {
+                                    case "Pending":
+                                        <span class="badge bg-warning text-dark rounded-pill px-3">Chờ đặt cọc</span>
+                                        break;
+                                    case "Confirmed":
+                                        <span class="badge bg-primary rounded-pill px-3">Đã xác nhận</span>
+                                        break;
+                                    case "Completed":
+                                        <span class="badge bg-success rounded-pill px-3">Đã hoàn thành</span>
+                                        break;
+                                    case "Cancelled":
+                                        <span class="badge bg-danger rounded-pill px-3">Đã hủy</span>
+                                        break;
+                                    default:
+                                        <span class="badge bg-secondary rounded-pill px-3">@booking.Status</span>
+                                        break;
+                                }
+                            </div>
+                        </div>
+                        <div class="order-card-body p-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-light rounded-3 p-3 text-center" style="min-width: 80px;">
+                                    <i class='bx bx-wrench fs-1 text-danger'></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="fw-bold mb-1">@booking.Service?.ServiceName</h6>
+                                    <p class="text-muted small mb-0">
+                                        <i class='bx bx-calendar'></i> @booking.ServiceDate?.ToString("dd/MM/yyyy") 
+                                        <i class='bx bx-time ms-2'></i> @booking.ServiceDate?.ToString("HH:mm")
+                                    </p>
+                                    <p class="text-muted small mb-0">Xe: @booking.VehicleBrand @booking.VehicleModel (@booking.LicensePlate)</p>
+                                </div>
+                                <div class="text-end">
+                                    <span class="text-muted small d-block">Tiền cọc:</span>
+                                    <span class="fw-bold text-danger">@booking.DepositAmount.ToString("N0")đ</span>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top">
+                                @if (booking.Status == "Pending")
+                                {
+                                    <a asp-action="DepositPayment" asp-route-id="@booking.BookingId" class="btn btn-warning btn-sm rounded-pill px-4 fw-bold">Thanh toán cọc</a>
+                                }
+                                <a asp-action="BookingSuccess" asp-route-id="@booking.BookingId" class="btn btn-outline-danger btn-sm rounded-pill px-4 fw-bold">Chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</main>
+
+<style>
+    .order-item-card { border-radius: 16px; transition: all 0.3s; }
+    .order-item-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important; }
+    .account-sidebar { background: #fff; padding: 25px; border-radius: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+    .account-nav { list-style: none; padding: 0; margin: 0; }
+    .account-nav-link { display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: #555; text-decoration: none; border-radius: 10px; transition: 0.2s; font-weight: 500; }
+    .account-nav-link:hover { background: #f8f9fa; color: #E24B4A; }
+    .account-nav-link.active { background: #E24B4A; color: #fff; }
+</style>

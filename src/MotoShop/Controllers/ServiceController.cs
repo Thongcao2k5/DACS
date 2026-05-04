@@ -270,8 +270,27 @@ namespace MotoShop.Controllers
             return Json(new
             {
                 success = true,
-                redirectUrl = Url.Action("BookingSuccess", new { id = bookingId })
+                redirectUrl = Url.Action("DepositPayment", new { id = bookingId })
             });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DepositPayment(int id)
+        {
+            var booking = await _context.ServiceBookings
+                .Include(b => b.Service)
+                .FirstOrDefaultAsync(b => b.BookingId == id);
+
+            if (booking == null) return NotFound();
+            
+            // Nếu đã thanh toán rồi thì về trang thành công luôn
+            if (booking.DepositStatus == "Paid" || booking.DepositStatus == "Confirmed")
+            {
+                return RedirectToAction("BookingSuccess", new { id = booking.BookingId });
+            }
+
+            ViewBag.DepositAmount = booking.DepositAmount;
+            return View(booking);
         }
 
         [HttpGet]
@@ -293,30 +312,29 @@ namespace MotoShop.Controllers
         [HttpGet]
         public async Task<IActionResult> GetModelsByBrand(string brand)
         {
-            // Tìm brandId trước
+            if (string.IsNullOrEmpty(brand)) return Json(new List<object>());
+
+            // Tìm theo ParentId (Brand là tên của một Model có ParentId null)
             var brandEntity = await _context.MotorbikeModels
                 .FirstOrDefaultAsync(m => m.ModelName == brand && m.ParentId == null);
 
-            List<object> models;
             if (brandEntity != null)
             {
-                models = await _context.MotorbikeModels
+                var models = await _context.MotorbikeModels
                     .Where(m => m.ParentId == brandEntity.ModelId)
                     .Select(m => new { modelId = m.ModelId, modelName = m.ModelName })
-                    .Cast<object>()
                     .ToListAsync();
+                return Json(models);
             }
             else
             {
                 // Fallback dùng Manufacturer
-                models = await _context.MotorbikeModels
-                    .Where(m => m.Manufacturer == brand)
+                var models = await _context.MotorbikeModels
+                    .Where(m => m.Manufacturer == brand && m.ParentId != null)
                     .Select(m => new { modelId = m.ModelId, modelName = m.ModelName })
-                    .Cast<object>()
                     .ToListAsync();
+                return Json(models);
             }
-            
-            return Json(models);
         }
 
         [HttpPost]
@@ -351,6 +369,24 @@ namespace MotoShop.Controllers
                 success = true,
                 message = "Xác nhận cọc thành công! Admin sẽ duyệt trong 30 phút."
             });
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> MyBookings()
+        {
+            var userId = _userManager.GetUserId(User);
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
+            if (customer == null) return RedirectToAction("Login", "Account");
+
+            var bookings = await _context.ServiceBookings
+                .Include(b => b.Service)
+                .Where(b => b.CustomerId == customer.CustomerId)
+                .OrderByDescending(b => b.BookingDate)
+                .ToListAsync();
+
+            ViewBag.Customer = customer;
+            return View(bookings);
         }
 
         private int? GetCurrentCustomerId()

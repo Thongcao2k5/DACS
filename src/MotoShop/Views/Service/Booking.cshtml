@@ -230,6 +230,7 @@
 
         // 4. LOAD MODELS
         async function loadModels(brand) {
+            console.log("Loading models for brand:", brand);
             const sel = document.getElementById('modelSel');
             sel.disabled = true;
             sel.innerHTML = '<option>Đang tải...</option>';
@@ -242,16 +243,24 @@
             try {
                 const res = await fetch(`/Service/GetModelsByBrand?brand=${encodeURIComponent(brand)}`);
                 const models = await res.json();
+                console.log("Models received:", models);
                 
                 sel.innerHTML = '<option value="">-- Chọn dòng xe --</option>';
-                models.forEach(m => {
-                    const opt = document.createElement('option');
-                    opt.value = m.modelName;
-                    opt.textContent = m.modelName;
-                    sel.appendChild(opt);
-                });
-                sel.disabled = false;
+                if (models && models.length > 0) {
+                    models.forEach(m => {
+                        const opt = document.createElement('option');
+                        // Hỗ trợ cả ModelName (PascalCase) và modelName (camelCase)
+                        const name = m.modelName || m.ModelName;
+                        opt.value = name;
+                        opt.textContent = name;
+                        sel.appendChild(opt);
+                    });
+                    sel.disabled = false;
+                } else {
+                    sel.innerHTML = '<option value="">Không có dữ liệu dòng xe</option>';
+                }
             } catch (err) {
+                console.error("Error loading models:", err);
                 sel.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
             }
         }

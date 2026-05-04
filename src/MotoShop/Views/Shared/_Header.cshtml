@@ -125,18 +125,12 @@
                     <i class='bx bx-cart'></i>
                     <span class="badge rounded-pill bg-danger cart-badge-floating" id="cartBadge">0</span>
                 </a>
-                <div class="cart-success-toast" id="cartSuccessToast" role="status" aria-live="polite" aria-atomic="true">
-                    <i class='bx bxs-check-circle'></i>
-                    <span id="cartSuccessToastMessage">Đã thêm vào giỏ hàng thành công</span>
-                </div>
             </div>
         </div>
     </header>
 </div>
 
 <script>
-    let cartSuccessToastTimer;
-
     async function updateCartBadge() {
         try {
             const response = await fetch('/Cart/GetCartCount');
@@ -163,26 +157,6 @@
         } catch (error) {
             console.error('Error updating wishlist badge:', error);
         }
-    }
-
-    function showCartSuccessToast(message) {
-        const toast = document.getElementById('cartSuccessToast');
-        const toastMessage = document.getElementById('cartSuccessToastMessage');
-        const cartActionItem = document.getElementById('cartActionItem');
-
-        if (!toast || !toastMessage || !cartActionItem) {
-            return;
-        }
-
-        toastMessage.innerText = message || 'Đã thêm vào giỏ hàng thành công';
-        toast.classList.add('show');
-        cartActionItem.classList.add('cart-highlight');
-
-        window.clearTimeout(cartSuccessToastTimer);
-        cartSuccessToastTimer = window.setTimeout(() => {
-            toast.classList.remove('show');
-            cartActionItem.classList.remove('cart-highlight');
-        }, 2200);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -224,27 +198,27 @@
     }
     .cart-success-toast {
         position: absolute;
-        top: calc(100% + 12px);
-        right: -14px;
-        min-width: 240px;
-        max-width: 280px;
+        top: calc(100% + 15px);
+        right: -10px;
+        min-width: 260px;
+        max-width: 300px;
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 10px 14px;
+        gap: 12px;
+        padding: 12px 18px;
         background: #198754;
         color: #fff;
-        border-radius: 14px;
-        box-shadow: 0 16px 32px rgba(25, 135, 84, 0.25);
-        font-size: 0.85rem;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(25, 135, 84, 0.3);
+        font-size: 0.9rem;
         font-weight: 600;
         line-height: 1.4;
         opacity: 0;
         visibility: hidden;
-        transform: translateY(-8px) scale(0.96);
-        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
-        z-index: 1200;
-        pointer-events: none;
+        transform: translateY(10px) scale(0.95);
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        z-index: 999999; /* Đẩy lên mức tối đa */
+        pointer-events: auto;
     }
     .cart-success-toast::before {
         content: "";

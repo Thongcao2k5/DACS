@@ -1,4 +1,4 @@
-/* 
+﻿/* 
    MOTO-SHOP FRONTEND - CORE DESIGN SYSTEM
    Red Theme: #E60023
 */
@@ -27,7 +27,7 @@ body {
 .container { max-width: var(--container-width); margin: 0 auto; padding: 0 15px; }
 
 /* =========================================================
-   HEADER SYSTEM - CẤU TRÚC ỔN ĐỊNH
+   HEADER SYSTEM - Cáº¤U TRÃšC á»”N Äá»ŠNH
    ========================================================= */
 .main-header-wrapper {
     background: #fff;
@@ -71,7 +71,7 @@ body {
 .header-search { flex: 1; max-width: 500px; margin: 0 40px; }
 .header-actions { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
 
-/* 3. NAVIGATION (Dòng riêng ở Default) */
+/* 3. NAVIGATION (DÃ²ng riÃªng á»Ÿ Default) */
 .nav-header {
     background: #fff;
     border-top: 1px solid var(--border-color);
@@ -100,7 +100,7 @@ body {
 .nav-link-main:hover { color: var(--primary-color) !important; }
 
 /* --- MEGA MENU SYSTEM --- */
-.mega-menu-wrapper { position: static; } /* Để mega menu tràn toàn chiều rộng container */
+.mega-menu-wrapper { position: static; } /* Äá»ƒ mega menu trÃ n toÃ n chiá»u rá»™ng container */
 
 .mega-menu {
     position: absolute;
@@ -117,7 +117,7 @@ body {
     z-index: 1000;
 }
 
-/* Hiển thị Mega Menu khi hover trên Desktop */
+/* Hiá»ƒn thá»‹ Mega Menu khi hover trÃªn Desktop */
 @media (min-width: 992px) {
     .mega-menu-wrapper:hover .mega-menu {
         visibility: visible;
@@ -348,14 +348,14 @@ body {
     font-size: 0.86rem;
 }
 
-/* Thành phần Nav thu nhỏ - Mặc định ẩn */
+/* ThÃ nh pháº§n Nav thu nhá» - Máº·c Ä‘á»‹nh áº©n */
 .nav-shrink-wrapper { display: none; flex: 1; }
 
 /* =========================================================
-   SHRINK STATE LOGIC (Khi cuộn trang)
+   SHRINK STATE LOGIC (Khi cuá»™n trang)
    ========================================================= */
 
-/* Ẩn Top Header */
+/* áº¨n Top Header */
 .header-shrink .top-header {
     height: 0;
     padding: 0;
@@ -363,16 +363,16 @@ body {
     opacity: 0;
 }
 
-/* Biến Main Header thành dòng duy nhất chứa Logo - Menu - Icons */
+/* Biáº¿n Main Header thÃ nh dÃ²ng duy nháº¥t chá»©a Logo - Menu - Icons */
 .header-shrink .main-header {
     padding: 10px 0;
 }
 
 .header-shrink .header-search {
-    display: none !important; /* Ẩn search bar */
+    display: none !important; /* áº¨n search bar */
 }
 
-/* Hiển thị Menu ở giữa Logo và Icons khi cuộn */
+/* Hiá»ƒn thá»‹ Menu á»Ÿ giá»¯a Logo vÃ  Icons khi cuá»™n */
 .header-shrink .nav-shrink-wrapper {
     display: flex !important;
     justify-content: center;
@@ -381,15 +381,15 @@ body {
 
 .header-shrink .main-header {
     padding: 12px 0;
-    justify-content: space-between; /* Đảm bảo Logo bên trái, Icons bên phải */
+    justify-content: space-between; /* Äáº£m báº£o Logo bÃªn trÃ¡i, Icons bÃªn pháº£i */
 }
 
-/* Ẩn dòng Nav riêng biệt bên dưới */
+/* áº¨n dÃ²ng Nav riÃªng biá»‡t bÃªn dÆ°á»›i */
 .header-shrink .nav-header {
     display: none !important;
 }
 
-/* Hiện icon search thay thế */
+/* Hiá»‡n icon search thay tháº¿ */
 .shrink-search-toggle { display: none; cursor: pointer; font-size: 1.5rem; }
 .header-shrink .shrink-search-toggle { display: block; }
 
@@ -414,25 +414,25 @@ body {
     padding: 10px;
     display: none;
     z-index: 1000;
-    /* margin-top: 15px; <- Xóa cái này để tránh mất hover */
+    /* margin-top: 15px; <- XÃ³a cÃ¡i nÃ y Ä‘á»ƒ trÃ¡nh máº¥t hover */
     border: 1px solid rgba(0,0,0,0.05);
     transform-origin: top right;
     animation: fadeInUp 0.3s ease-out;
-    padding-top: 10px; /* Thêm padding thay vì margin */
+    padding-top: 10px; /* ThÃªm padding thay vÃ¬ margin */
 }
 
-/* Cầu nối trong suốt để giữ hover không bị mất khi di chuyển từ icon xuống menu */
+/* Cáº§u ná»‘i trong suá»‘t Ä‘á»ƒ giá»¯ hover khÃ´ng bá»‹ máº¥t khi di chuyá»ƒn tá»« icon xuá»‘ng menu */
 .dropdown-menu-custom::after {
     content: '';
     position: absolute;
-    top: -20px; /* Lấp đầy khoảng trống phía trên */
+    top: -20px; /* Láº¥p Ä‘áº§y khoáº£ng trá»‘ng phÃ­a trÃªn */
     left: 0;
     width: 100%;
     height: 20px;
     background: transparent;
 }
 
-/* Tạo mũi tên nhỏ trỏ lên */
+/* Táº¡o mÅ©i tÃªn nhá» trá» lÃªn */
 .dropdown-menu-custom::before {
     content: '';
     position: absolute;
@@ -462,7 +462,7 @@ body {
     justify-content: center;
 }
 
-.bg-light-primary { background: rgba(230, 0, 35, 0.1); } /* Màu đỏ thương hiệu mờ */
+.bg-light-primary { background: rgba(230, 0, 35, 0.1); } /* MÃ u Ä‘á» thÆ°Æ¡ng hiá»‡u má» */
 
 .dropdown-item-custom {
     display: flex;
@@ -517,7 +517,7 @@ body {
 }
 
 @media (max-width: 991px) {
-    /* Header cố định ngay từ đầu trên mobile để tránh giật khi cuộn */
+    /* Header cá»‘ Ä‘á»‹nh ngay tá»« Ä‘áº§u trÃªn mobile Ä‘á»ƒ trÃ¡nh giáº­t khi cuá»™n */
     .main-header-wrapper {
         position: sticky !important;
         top: 0 !important;
@@ -525,7 +525,7 @@ body {
         width: 100%;
         background: #fff;
         box-shadow: 0 2px 15px rgba(0,0,0,0.08);
-        z-index: 1020; /* Giảm z-index xuống để thấp hơn Offcanvas (1045+) */
+        z-index: 1020; /* Giáº£m z-index xuá»‘ng Ä‘á»ƒ tháº¥p hÆ¡n Offcanvas (1045+) */
         animation: none !important; 
         transition: none !important;
     }
@@ -571,7 +571,7 @@ body {
     .action-item i { font-size: 1.35rem; }
     .shrink-search-toggle { display: flex !important; }
 
-    /* Không hiện dropdown hover trên mobile */
+    /* KhÃ´ng hiá»‡n dropdown hover trÃªn mobile */
     .action-item:hover .dropdown-menu-custom { display: none !important; }
     
     .action-item a {
@@ -584,7 +584,7 @@ body {
         text-decoration: none;
     }
 
-    /* Fix Cart Badge trên mobile */
+    /* Fix Cart Badge trÃªn mobile */
     .cart-badge {
         top: 4px;
         right: 2px;
@@ -592,7 +592,7 @@ body {
         font-size: 9px;
     }
 
-    /* Đảm bảo Menu Mobile Hamburger luôn hiển thị rõ */
+    /* Äáº£m báº£o Menu Mobile Hamburger luÃ´n hiá»ƒn thá»‹ rÃµ */
     .action-item[data-bs-toggle="offcanvas"] {
         color: var(--primary-color);
         font-size: 1.6rem;
@@ -600,10 +600,10 @@ body {
 }
 
 @media (max-width: 360px) {
-    .header-logo span { display: none; } /* Trên màn hình cực nhỏ chỉ hiện icon logo */
+    .header-logo span { display: none; } /* TrÃªn mÃ n hÃ¬nh cá»±c nhá» chá»‰ hiá»‡n icon logo */
 }
 
-    /* Khi ở trạng thái shrink trên mobile, ta giữ nguyên kích thước để tránh giật */
+    /* Khi á»Ÿ tráº¡ng thÃ¡i shrink trÃªn mobile, ta giá»¯ nguyÃªn kÃ­ch thÆ°á»›c Ä‘á»ƒ trÃ¡nh giáº­t */
     .header-shrink .main-header {
         padding: 0;
     }
@@ -645,7 +645,7 @@ body {
     pointer-events: none;
 }
 
-/* Ẩn mặc định nếu không muốn dùng hiệu ứng này */
+/* áº¨n máº·c Ä‘á»‹nh náº¿u khÃ´ng muá»‘n dÃ¹ng hiá»‡u á»©ng nÃ y */
 .no-loader #pageLoader {
     display: none !important;
 }
@@ -707,7 +707,7 @@ section { padding: 60px 0; }
 .section-title.center::after { left: 50%; transform: translateX(-50%); }
 
 /* =========================================================
-   HOME PAGE COMPONENTS NÂNG CAO
+   HOME PAGE COMPONENTS NÃ‚NG CAO
    ========================================================= */
 
 /* 0. HERO SLIDER OPTIMIZATION */
@@ -738,7 +738,7 @@ section { padding: 60px 0; }
         height: 400px;
     }
     #heroSlider .carousel-caption {
-        background: rgba(0,0,0,0.4); /* Overlay tối hơn một chút trên mobile để dễ đọc chữ */
+        background: rgba(0,0,0,0.4); /* Overlay tá»‘i hÆ¡n má»™t chÃºt trÃªn mobile Ä‘á»ƒ dá»… Ä‘á»c chá»¯ */
         text-align: center !important;
         padding-left: 5%;
         padding-right: 5%;
@@ -763,7 +763,7 @@ section { padding: 60px 0; }
     }
 }
 
-/* 1. PRODUCT CARDS CHUYÊN NGHIỆP */
+/* 1. PRODUCT CARDS CHUYÃŠN NGHIá»†P */
 .product-card {
     background: #fff;
     border: 1px solid #f0f0f0;
@@ -804,7 +804,7 @@ section { padding: 60px 0; }
     transform: scale(1.1);
 }
 
-/* Nút Thêm vào giỏ - Tối ưu Mobile */
+/* NÃºt ThÃªm vÃ o giá» - Tá»‘i Æ°u Mobile */
 .btn-add-cart {
     background: var(--dark-color);
     color: #fff;
@@ -813,7 +813,7 @@ section { padding: 60px 0; }
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 45px; /* Mặc định là nút tròn/vuông trên mobile */
+    width: 45px; /* Máº·c Ä‘á»‹nh lÃ  nÃºt trÃ²n/vuÃ´ng trÃªn mobile */
     height: 45px;
     padding: 0;
     position: absolute;
@@ -2244,11 +2244,11 @@ section { padding: 60px 0; }
    ========================================================= */
 footer {
     background-color: #111 !important;
-    color: #eee !important; /* Màu chữ mặc định cho footer */
+    color: #eee !important; /* MÃ u chá»¯ máº·c Ä‘á»‹nh cho footer */
 }
 
 footer p, footer span {
-    color: #bbb; /* Màu chữ nhẹ hơn cho các đoạn văn và span */
+    color: #bbb; /* MÃ u chá»¯ nháº¹ hÆ¡n cho cÃ¡c Ä‘oáº¡n vÄƒn vÃ  span */
 }
 
 .footer-description {
@@ -2333,7 +2333,7 @@ footer h5 {
 }
 
     #filterForm > div {
-        min-width: 0; /* fix tràn */
+        min-width: 0; /* fix trÃ n */
     }
 .filter-item {
     min-width: 200px;
@@ -2392,12 +2392,12 @@ footer h5 {
 }
 .pagination-container {
     display: flex;
-    justify-content: space-between; /* 2 bên + giữa */
+    justify-content: space-between; /* 2 bÃªn + giá»¯a */
     align-items: center;
     padding: 12px 16px;
 }
 
-    /* 🎯 CĂN GIỮA pagination */
+    /* ðŸŽ¯ CÄ‚N GIá»®A pagination */
     .pagination-container nav {
         flex: 1;
         display: flex;
@@ -2419,7 +2419,7 @@ footer h5 {
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     box-shadow: 0 8px 30px rgba(0,0,0,0.12);
     background: #fff;
-    z-index: 10000;
+    z-index: 999999 !important;
 }
 .toast-custom.show {
     opacity: 1;
@@ -2444,6 +2444,43 @@ footer h5 {
 .toast-warning .toast-icon { background: #BA7517; color: #fff; }
 .toast-info { background: #E6F1FB; color: #185FA5; border-left: 5px solid #378ADD; }
 .toast-info .toast-icon { background: #378ADD; color: #fff; }
+
+/* CUSTOM BEAUTIFUL TOAST (FOR SWEETALERT2) */
+.ms-toast-popup {
+    border-radius: 16px !important;
+    padding: 10px 15px !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(226, 75, 74, 0.1) !important;
+    z-index: 999999 !important;
+}
+
+.ms-toast-title {
+    font-family: 'Public Sans', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #333 !important;
+    margin-left: 10px !important;
+}
+
+.ms-toast-icon {
+    margin: 0 !important;
+    font-size: 10px !important;
+}
+
+.swal2-timer-progress-bar {
+    background: #E24B4A !important;
+}
+
+.animate__fadeInRight {
+    animation: fadeInRight 0.5s;
+}
+
+@keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(50px); }
+    to { opacity: 1; transform: translateX(0); }
+}
 
 /* --- CHECKOUT PAYMENT OPTIONS --- */
 .payment-option input[type="radio"] {
@@ -2493,14 +2530,81 @@ footer h5 {
 }
 .payment-option-info { flex-grow: 1; }
 .payment-option-title { font-weight: 700; color: #222; margin-bottom: 2px; display: block; }
-.payment-option-desc { font-size: 0.85rem; color: #777; }
-.payment-detail { 
-    display: none; 
-    padding: 15px; 
-    background: #f8f9fa; 
-    border-radius: 8px; 
-    margin-top: -5px; 
-    margin-bottom: 15px; 
-    font-size: 0.9rem;
-    border: 1px dashed #ddd;
+
+/* --- UNIFIED TOAST SYSTEM --- */
+.toast-custom {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    min-width: 300px;
+    max-width: 400px;
+    opacity: 0;
+    transform: translateX(30px);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    background: #fff;
+    z-index: 999999 !important;
+}
+.toast-custom.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+.toast-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+.toast-success { background: #EAF3DE; color: #3B6D11; border-left: 5px solid #639922; }
+.toast-success .toast-icon { background: #639922; color: #fff; }
+.toast-danger { background: #FCEBEB; color: #A32D2D; border-left: 5px solid #E24B4A; }
+.toast-danger .toast-icon { background: #E24B4A; color: #fff; }
+.toast-warning { background: #FAEEDA; color: #854F0B; border-left: 5px solid #BA7517; }
+.toast-warning .toast-icon { background: #BA7517; color: #fff; }
+.toast-info { background: #E6F1FB; color: #185FA5; border-left: 5px solid #378ADD; }
+.toast-info .toast-icon { background: #378ADD; color: #fff; }
+
+/* CUSTOM BEAUTIFUL TOAST (FOR SWEETALERT2) */
+.ms-toast-popup {
+    border-radius: 16px !important;
+    padding: 10px 15px !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(226, 75, 74, 0.1) !important;
+    z-index: 999999 !important;
+}
+
+.ms-toast-title {
+    font-family: 'Public Sans', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #333 !important;
+    margin-left: 10px !important;
+}
+
+.ms-toast-icon {
+    margin: 0 !important;
+    font-size: 10px !important;
+}
+
+.swal2-timer-progress-bar {
+    background: #E24B4A !important;
+}
+
+.animate__fadeInRight {
+    animation: fadeInRight 0.5s;
+}
+
+@keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(50px); }
+    to { opacity: 1; transform: translateX(0); }
 }

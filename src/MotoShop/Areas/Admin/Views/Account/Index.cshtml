@@ -1,0 +1,60 @@
+@model MotoShop.Data.Models.Staff
+@{
+    ViewData["Title"] = "Tài khoản Admin";
+    Layout = "_AdminLayout";
+    var user = ViewBag.User as Microsoft.AspNetCore.Identity.IdentityUser;
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Cài đặt /</span> Tài khoản</h4>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <h5 class="card-header">Thông tin hồ sơ</h5>
+                <!-- Account -->
+                <div class="card-body">
+                    <div class="d-flex align-items-start align-items-sm-center gap-4">
+                        <img src="~/assets/img/avatars/1.png" alt="user-avatar" class="d-block rounded" height="100" width="100" id="uploadedAvatar" />
+                        <div class="button-wrapper">
+                            <h4 class="mb-1">@user?.UserName</h4>
+                            <p class="text-muted mb-0">@user?.Email</p>
+                            <span class="badge bg-label-primary mt-2">ADMINISTRATOR</span>
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-0" />
+                <div class="card-body">
+                    <form id="formAccountSettings" method="POST" onsubmit="return false">
+                        <div class="row">
+                            <div class="mb-3 col-md-6">
+                                <label for="firstName" class="form-label">Họ tên</label>
+                                <input class="form-control" type="text" id="firstName" name="firstName" value="@(Model?.Position ?? "Quản trị viên")" autofocus />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="email" class="form-label">E-mail</label>
+                                <input class="form-control" type="text" id="email" name="email" value="@user?.Email" placeholder="john.doe@example.com" disabled />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label class="form-label" for="phoneNumber">Số điện thoại</label>
+                                <div class="input-group input-group-merge">
+                                    <span class="input-group-text">VN (+84)</span>
+                                    <input type="text" id="phoneNumber" name="phoneNumber" class="form-control" value="@user?.PhoneNumber" placeholder="012 345 6789" />
+                                </div>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="address" class="form-label">Cửa hàng quản lý</label>
+                                <input type="text" class="form-control" id="address" name="address" value="@(Model?.Store?.StoreName ?? "Tổng kho MotoShop")" disabled />
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <button type="submit" class="btn btn-primary me-2">Lưu thay đổi</button>
+                            <button type="reset" class="btn btn-outline-secondary">Hủy</button>
+                        </div>
+                    </form>
+                </div>
+                <!-- /Account -->
+            </div>
+        </div>
+    </div>
+</div>

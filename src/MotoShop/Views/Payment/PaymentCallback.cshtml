@@ -28,7 +28,14 @@
                     
                     <div class="d-grid gap-3">
                         <a href="/" class="btn btn-danger btn-lg rounded-pill fw-bold py-3 shadow">TIẾP TỤC MUA SẮM</a>
-                        <a href="/Order/Detail/@ViewBag.OrderId" class="btn btn-outline-dark btn-lg rounded-pill fw-bold py-3">XEM CHI TIẾT ĐƠN HÀNG</a>
+                        @if (ViewBag.BookingId != null)
+                        {
+                            <a href="/Service/BookingSuccess/@ViewBag.BookingId" class="btn btn-outline-dark btn-lg rounded-pill fw-bold py-3">XEM CHI TIẾT LỊCH HẸN</a>
+                        }
+                        else
+                        {
+                            <a href="/Order/Detail/@ViewBag.OrderId" class="btn btn-outline-dark btn-lg rounded-pill fw-bold py-3">XEM CHI TIẾT ĐƠN HÀNG</a>
+                        }
                     </div>
                 }
                 else

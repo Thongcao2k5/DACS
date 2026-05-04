@@ -88,6 +88,7 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddHostedService<BookingExpiryService>();
 

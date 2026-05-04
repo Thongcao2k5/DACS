@@ -105,6 +105,12 @@ namespace MotoShop.Controllers
 
                         string redirectUrl = (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)) ? returnUrl : Url.Action("Index", "Home") ?? "/";
                         
+                        // Kiểm tra nếu là Admin thì đưa vào trang quản trị
+                        if (await _userManager.IsInRoleAsync(user, "Admin"))
+                        {
+                            redirectUrl = Url.Action("Index", "Home", new { area = "Admin" }) ?? "/Admin";
+                        }
+
                         return Json(new { 
                             success = true, 
                             message = "Chào mừng bạn quay trở lại MotoShop!", 

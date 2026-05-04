@@ -29,14 +29,13 @@ namespace MotoShop.Business.Services
             }
         }
         var querystring = data.ToString();
-        baseUrl += "?" + querystring;
-        var signData = querystring;
-        if (signData.Length > 0)
+        if (querystring.Length > 0)
         {
-            signData = signData.Remove(data.Length - 1, 1);
+            querystring = querystring.Remove(data.Length - 1, 1);
         }
-        var vnp_SecureHash = HmacSHA512(vnp_HashSecret, signData);
-        baseUrl += "vnp_SecureHash=" + vnp_SecureHash;
+        
+        var vnp_SecureHash = HmacSHA512(vnp_HashSecret, querystring);
+        baseUrl += "?" + querystring + "&vnp_SecureHash=" + vnp_SecureHash;
 
         return baseUrl;
     }
@@ -59,7 +58,7 @@ namespace MotoShop.Business.Services
         var data = new StringBuilder();
         foreach (var kv in _responseData)
         {
-            if (!string.IsNullOrEmpty(kv.Key) && kv.Key.StartsWith("vnp_") && kv.Key != "vnp_SecureHash")
+            if (!string.IsNullOrEmpty(kv.Key) && kv.Key.StartsWith("vnp_") && kv.Key != "vnp_SecureHash" && kv.Key != "vnp_SecureHashType")
             {
                 data.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value) + "&");
             }
@@ -95,7 +94,7 @@ namespace MotoShop.Business.Services
 // Class hỗ trợ sắp xếp key theo chuẩn VNPay
 public class VnPayCompare : IComparer<string>
 {
-    public int Compare(string x, string y)
+    public int Compare(string? x, string? y)
     {
         if (x == y) return 0;
         if (x == null) return -1;

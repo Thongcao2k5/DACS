@@ -8,8 +8,13 @@ const CartUI = {
             toast: true,
             position: 'top-end',
             showConfirmButton: false,
-            timer: 2500,
+            timer: 3000,
             timerProgressBar: true,
+            customClass: {
+                popup: 'ms-toast-popup animate__animated animate__fadeInRight',
+                title: 'ms-toast-title',
+                icon: 'ms-toast-icon'
+            },
             didOpen: (toast) => {
                 toast.addEventListener('mouseenter', Swal.stopTimer)
                 toast.addEventListener('mouseleave', Swal.resumeTimer)
@@ -79,22 +84,44 @@ const CartApi = {
  */
 async function handleAddToCart(variantId) {
     if (!variantId || variantId === 0) {
-        CartUI.showToast('Vui lòng chọn đầy đủ tùy chọn!', 'warning');
+        CartUI.showToast('Sản phẩm hiện chưa có tùy chọn phù hợp!', 'warning');
         return;
     }
 
     const btn = event?.currentTarget;
-    if (btn) btn.disabled = true;
+    const originalContent = btn ? btn.innerHTML : null;
+    
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>';
+    }
 
     const result = await CartApi.addToCart(variantId);
     
-    if (btn) btn.disabled = false;
+    if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+    }
 
     if (result.success) {
         await CartApi.updateCartBadge();
-        CartUI.showToast(result.message || 'Đã thêm vào giỏ hàng.');
+        CartUI.showToast(result.message || 'Đã thêm vào giỏ hàng thành công!');
     } else {
-        CartUI.showToast(result.message || 'Có lỗi xảy ra!', 'error');
+        if (result.message && result.message.toLowerCase().includes('đăng nhập')) {
+            Swal.fire({
+                title: 'Yêu cầu đăng nhập',
+                text: result.message,
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Đăng nhập ngay',
+                cancelButtonText: 'Để sau',
+                confirmButtonColor: '#E24B4A'
+            }).then((rs) => {
+                if (res.isConfirmed) window.location.href = '/Account/Login';
+            });
+        } else {
+            CartUI.showToast(result.message || 'Không thể thêm sản phẩm vào giỏ.', 'error');
+        }
     }
 }
 
