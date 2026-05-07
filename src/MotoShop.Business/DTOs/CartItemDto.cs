@@ -9,9 +9,9 @@ namespace MotoShop.Business.DTOs
     public class CartItemDto
     {
         public int ProductVariantId { get; set; }
-        public string ProductName { get; set; }
+        public string ProductName { get; set; } = string.Empty;
         public string? VariantName { get; set; }
-        public string ImageUrl { get; set; }
+        public string ImageUrl { get; set; } = string.Empty;
         public decimal Price { get; set; } // Đây là giá bán thực tế (đã giảm nếu có promotion)
         public decimal OriginalPrice { get; set; } // Giá gốc ban đầu
         public decimal PromotionDiscount => OriginalPrice - Price; // Số tiền giảm cho mỗi sản phẩm

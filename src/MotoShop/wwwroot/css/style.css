@@ -27,7 +27,7 @@ body {
 .container { max-width: var(--container-width); margin: 0 auto; padding: 0 15px; }
 
 /* =========================================================
-   HEADER SYSTEM - Cáº¤U TRÃšC á»”N Äá»ŠNH
+   HEADER SYSTEM - CẤU TRÚC ỔN ĐỊNH
    ========================================================= */
 .main-header-wrapper {
     background: #fff;
@@ -71,7 +71,7 @@ body {
 .header-search { flex: 1; max-width: 500px; margin: 0 40px; }
 .header-actions { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
 
-/* 3. NAVIGATION (DÃ²ng riÃªng á»Ÿ Default) */
+/* 3. NAVIGATION (Dòng riêng ở Default) */
 .nav-header {
     background: #fff;
     border-top: 1px solid var(--border-color);
@@ -100,7 +100,7 @@ body {
 .nav-link-main:hover { color: var(--primary-color) !important; }
 
 /* --- MEGA MENU SYSTEM --- */
-.mega-menu-wrapper { position: static; } /* Äá»ƒ mega menu trÃ n toÃ n chiá»u rá»™ng container */
+.mega-menu-wrapper { position: static; } /* Để mega menu tràn toàn chiều rộng container */
 
 .mega-menu {
     position: absolute;

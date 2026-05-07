@@ -27,7 +27,7 @@ namespace MotoShop.Areas.Admin.Controllers
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchTerm))
-                query = query.Where(b => b.BookingCode.Contains(searchTerm) || b.Customer.FullName.Contains(searchTerm));
+                query = query.Where(b => (b.BookingCode != null && b.BookingCode.Contains(searchTerm)) || (b.Customer != null && b.Customer.FullName != null && b.Customer.FullName.Contains(searchTerm)));
 
             if (!string.IsNullOrEmpty(status))
                 query = query.Where(b => b.Status == status);

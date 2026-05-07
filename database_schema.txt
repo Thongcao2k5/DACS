@@ -271,3 +271,12 @@ DANH SÁCH CÁC BẢNG DỮ LIỆU (DATABASE SCHEMA) - MOTOSHOP
     - AspNetUserLogins
     - AspNetUserTokens
     - AspNetRoleClaims
+
+36. ChatMessage (Tin nhắn hỗ trợ)
+    - Id (PK)
+    - SenderId (FK to AspNetUsers, optional)
+    - SessionId
+    - Message
+    - CreatedAt
+    - IsFromAdmin
+    - IsRead

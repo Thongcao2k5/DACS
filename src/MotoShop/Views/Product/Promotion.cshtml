@@ -3,12 +3,11 @@
     ViewData["Title"] = "Siêu Sale MotoShop - Ưu đãi khủng";
 }
 
-<!-- 1. BREADCRUMB -->
 <div class="breadcrumb-wrapper py-3 bg-light border-bottom mb-4">
     <div class="container">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none text-muted">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">Trang chủ</a></li>
                 <li class="breadcrumb-item active fw-bold" aria-current="page">Chương trình khuyến mãi</li>
             </ol>
         </nav>
@@ -16,326 +15,333 @@
 </div>
 
 <main class="container">
-    <!-- 2. HERO BANNER -->
+    <!-- HERO BANNER -->
     <section class="promo-hero mb-5">
         <div class="promo-banner-large rounded-4 overflow-hidden position-relative shadow-sm">
             <img src="/assets/img/backgrounds/promo-banner.jpg" onerror="this.src='https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1600&q=80'" class="w-100 h-100 object-fit-cover" style="min-height: 350px;" alt="Promo">
-            <div class="hero-overlay-gradient position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center">
+            <div class="hero-overlay-gradient position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="background: linear-gradient(to right, rgba(0,0,0,0.8), transparent);">
                 <div class="container p-5">
                     <div class="col-lg-6">
-                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3 animate__animated animate__fadeInDown">LIMITED OFFER</span>
-                        <h1 class="display-3 fw-bolder text-white mb-3 line-height-1 animate__animated animate__fadeInLeft">ĐẠI TIỆC<br><span class="text-danger">PHỤ TÙNG</span></h1>
-                        <p class="fs-5 text-white-50 mb-4 animate__animated animate__fadeInUp">Giảm giá lên đến 50% cho tất cả dòng xe Honda, Yamaha, Suzuki. Chỉ trong tuần này!</p>
-                        <a href="#discountGrid" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold shadow-lg transform-hover">SĂN DEAL NGAY</a>
+                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3">LIMITED OFFER</span>
+                        <h1 class="display-3 fw-bolder text-white mb-3">ĐẠI TIỆC<br><span class="text-danger">PHỤ TÙNG</span></h1>
+                        <p class="fs-5 text-white-50 mb-4">Giảm giá lên đến 50% cho tất cả sản phẩm chính hãng. Chỉ trong tuần này!</p>
+                        <a href="#discountGridSection" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold">SĂN DEAL NGAY</a>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- 4. FLASH SALE SECTION -->
+    <!-- FLASH SALE SECTION -->
     <section class="flash-sale-section mb-5 p-4 rounded-4 bg-white shadow-sm border border-danger border-opacity-25">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
             <div class="d-flex align-items-center gap-3">
-                <div class="flash-title">
+                <div class="flash-title d-flex align-items-center gap-2 text-danger">
                     <i class='bx bxs-zap fs-2'></i>
                     <h3 class="fw-bolder mb-0">FLASH SALE</h3>
                 </div>
                 <div class="countdown-wrapper d-flex align-items-center gap-2">
-                    <span class="fw-bold small text-muted text-uppercase d-none d-md-block">Kết thúc trong</span>
                     <div class="d-flex gap-1" id="countdown">
-                        <div class="time-box" id="hr">02</div>
-                        <span class="fw-bold">:</span>
-                        <div class="time-box" id="mn">45</div>
-                        <span class="fw-bold">:</span>
-                        <div class="time-box" id="sc">12</div>
+                        <div class="time-box" id="hr">00</div><span class="fw-bold">:</span>
+                        <div class="time-box" id="mn">00</div><span class="fw-bold">:</span>
+                        <div class="time-box" id="sc">00</div>
                     </div>
                 </div>
             </div>
-            <a href="#" class="text-danger fw-bold text-decoration-none hover-underline">Xem tất cả <i class='bx bx-chevron-right'></i></a>
         </div>
 
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" id="flashSaleList">
-            <!-- Rendered by JS -->
+        <div class="flash-sale-slider">
+            <div class="flash-sale-track" id="flashSaleTrack">
+                <!-- Rendered by JS -->
+            </div>
+            <button class="flash-nav flash-prev" onclick="slideFlash(-1)">‹</button>
+            <button class="flash-nav flash-next" onclick="slideFlash(1)">›</button>
         </div>
     </section>
 
-    <!-- 5. ALL PROMOTIONS -->
-    <section id="discountGrid" class="mb-5">
-        <div class="section-header d-flex justify-content-between align-items-end mb-4">
+    <!-- ALL PROMOTIONS -->
+    <section id="discountGridSection" class="mb-5 p-4 p-lg-5 rounded-4 bg-white shadow-sm border border-light-subtle" style="min-height: 600px;">
+        <div class="section-header d-flex justify-content-between align-items-end mb-5">
             <div>
-                <h3 class="fw-bolder mb-1 text-uppercase">Sản phẩm ưu đãi</h3>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class='bx bxs-hot fs-3 text-danger'></i>
+                    <h3 class="fw-bolder mb-0 text-uppercase">Sản phẩm ưu đãi</h3>
+                </div>
                 <p class="text-muted mb-0">Danh sách phụ tùng chính hãng đang giảm giá tốt nhất</p>
             </div>
-            <div class="filter-sort d-none d-md-block">
-                <select class="form-select rounded-pill border-0 bg-light px-4 shadow-sm">
-                    <option>Sắp xếp: Mới nhất</option>
-                    <option>Giá: Thấp đến cao</option>
-                    <option>Giảm giá nhiều nhất</option>
+            <div class="filter-sort">
+                <select class="form-select rounded-pill border-0 bg-light px-4" id="sortPromotion" style="min-width: 200px;">
+                    <option value="newest">Mới nhất</option>
+                    <option value="price_asc">Giá: Thấp đến cao</option>
+                    <option value="discount">Giảm giá nhiều nhất</option>
                 </select>
             </div>
         </div>
 
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4" id="promoGrid">
-            <!-- Rendered by JS -->
+        <div id="promoContainer" class="position-relative">
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4" id="promoGrid">
+                <!-- Rendered by JS -->
+            </div>
+
+            <!-- Skeleton Loader -->
+            <div id="promoLoading" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4 mt-1" style="display: none;">
+                @for(int i=0; i<10; i++) {
+                    <div class="col">
+                        <div class="skeleton-card">
+                            <div class="skeleton-img"></div>
+                            <div class="skeleton-text-brand"></div>
+                            <div class="skeleton-text-title"></div>
+                            <div class="skeleton-text-price"></div>
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
 
-        <!-- Skeleton Loader -->
-        <div id="promoLoading" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4 mt-1">
-            @for(int i=0; i<10; i++) {
-                <div class="col"><div class="skeleton-card"></div></div>
-            }
-        </div>
+        <!-- Pagination -->
+        <nav class="mt-5">
+            <ul class="pagination pagination-ms justify-content-center" id="promoPagination"></ul>
+        </nav>
     </section>
 </main>
 
-@section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="~/js/cart-handler.js"></script>
-    <script>
-        $(document).ready(function() {
-            loadPromotionData();
-            startCountdown();
-        });
-
-        async function loadPromotionData() {
-            try {
-                const response = await fetch('/Product/GetPromotionProductsJson?count=20');
-                const products = await response.json();
-
-                $('#flashSaleList').empty();
-                $('#promoGrid').empty();
-
-                if (products && products.length > 0) {
-                    // Render Flash Sale
-                    products.slice(0, 5).forEach(p => {
-                        $('#flashSaleList').append(renderModernProductCard(p, true));
-                    });
-
-                    // Render Main Grid
-                    products.forEach(p => {
-                        $('#promoGrid').append(renderModernProductCard(p, false));
-                    });
-                }
-            } catch (error) {
-                $('#promoGrid').html('<div class="col-12 text-center py-5 text-danger"><i class="bx bx-error-circle fs-1 mb-2"></i><p>Không thể tải dữ liệu. Vui lòng thử lại.</p></div>');
-            } finally {
-                $('#promoLoading').fadeOut();
-            }
-        }
-
-        function renderModernProductCard(p, isFlashSale) {
-            const formatPrice = (val) => new Intl.NumberFormat('vi-VN').format(val) + '₫';
-            const primaryImg = p.primaryImageUrl || '/assets/img/elements/1.jpg';
-            const discountPercent = p.discountPercent || 20; // fallback if null
-
-            return `
-                <div class="col">
-                    <div class="modern-product-card">
-                        <div class="card-img-container">
-                            <span class="badge-discount">-${discountPercent}%</span>
-                            <a href="/Product/Details?slug=${p.slug}">
-                                <img src="${primaryImg}" class="product-img" alt="${p.productName}" onerror="this.src='/assets/img/elements/18.jpg'">
-                            </a>
-                            <div class="card-actions">
-                                <button onclick="addToWishlist(${p.productId})" class="action-btn" title="Yêu thích"><i class='bx bx-heart'></i></button>
-                                <button onclick="quickView(${p.productId})" class="action-btn" title="Xem nhanh"><i class='bx bx-search'></i></button>
-                            </div>
-                        </div>
-                        <div class="card-body-content">
-                            <div class="product-brand">${p.brandName || 'MotoShop'}</div>
-                            <h6 class="product-name">
-                                <a href="/Product/Details?slug=${p.slug}">${p.productName}</a>
-                            </h6>
-                            <div class="price-group">
-                                <span class="price-current">${formatPrice(p.minPrice)}</span>
-                                <span class="price-old">${formatPrice(p.oldPrice || p.minPrice * 1.2)}</span>
-                            </div>
-                            ${isFlashSale ? `
-                                <div class="flash-progress-wrapper">
-                                    <div class="progress">
-                                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-danger" style="width: 65%"></div>
-                                    </div>
-                                    <span class="progress-text">Đã bán 18</span>
-                                </div>
-                                <button class="btn btn-danger w-100 rounded-pill btn-buy-now mt-2" onclick="handleBuyNow(${p.defaultVariantId})">MUA NGAY</button>
-                            ` : `
-                                <button class="btn btn-outline-danger w-100 rounded-pill btn-add-cart mt-2" onclick="handleAddToCart(${p.defaultVariantId})">
-                                    <i class='bx bx-cart-add'></i> THÊM GIỎ
-                                </button>
-                            `}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function startCountdown() {
-            let h = 2, m = 45, s = 12;
-            const timer = setInterval(() => {
-                s--;
-                if(s < 0) { s = 59; m--; }
-                if(m < 0) { m = 59; h--; }
-                if(h < 0) { clearInterval(timer); return; }
-                $('#hr').text(h.toString().padStart(2, '0'));
-                $('#mn').text(m.toString().padStart(2, '0'));
-                $('#sc').text(s.toString().padStart(2, '0'));
-            }, 1000);
-        }
-
-        function handleBuyNow(variantId) {
-            if (!variantId) {
-                Swal.fire('Thông báo', 'Sản phẩm này hiện đang hết hàng.', 'info');
-                return;
-            }
-            // Sử dụng logic handleAddToCart trước để đảm bảo sản phẩm vào giỏ, sau đó mới redirect
-            handleAddToCart(variantId).then(() => {
-                setTimeout(() => {
-                    window.location.href = '/Cart/Checkout';
-                }, 800);
-            });
-        }
-
-        async function addToWishlist(productId) {
-            try {
-                const res = await fetch('/Account/ToggleWishlist', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ productId: productId })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, 
-                               title: data.added ? 'Đã thêm vào yêu thích' : 'Đã xóa khỏi yêu thích', icon: 'success' });
-                }
-            } catch (e) {
-                console.error('Wishlist error:', e);
-            }
-        }
-    </script>
-
+@section Styles {
     <style>
-        :root {
-            --ms-red: #E24B4A;
-            --ms-dark: #111111;
-            --ms-gray: #666666;
-            --ms-light-bg: #f8f9fa;
-        }
-
-        .hero-overlay-gradient { background: linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%); }
-        .line-height-1 { line-height: 1.1; }
-        .transform-hover:hover { transform: scale(1.05); transition: 0.3s; }
-
-        /* Flash Sale Styles */
-        .flash-title { display: flex; align-items: center; gap: 8px; color: var(--ms-red); }
+        :root { --ms-red: #E24B4A; --ms-dark: #111111; }
         .time-box { background: var(--ms-dark); color: white; padding: 4px 8px; border-radius: 6px; font-family: monospace; font-size: 1.2rem; min-width: 40px; text-align: center; }
         
-        /* Modern Product Card */
-        .modern-product-card {
-            background: #fff;
-            border-radius: 16px;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            height: 100%;
-            border: 1px solid #f0f0f0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .modern-product-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
-            border-color: var(--ms-red);
-        }
-
-        .card-img-container {
-            position: relative;
-            aspect-ratio: 1/1;
-            overflow: hidden;
-            background: #fdfdfd;
-        }
-
-        .product-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-
-        .modern-product-card:hover .product-img {
-            transform: scale(1.1);
-        }
-
-        .badge-discount {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            background: var(--ms-red);
-            color: #fff;
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-weight: 800;
-            font-size: 0.85rem;
-            z-index: 2;
-            box-shadow: 0 4px 10px rgba(226, 75, 74, 0.4);
-        }
-
-        .card-actions {
-            position: absolute;
-            bottom: -50px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            padding: 15px;
-            background: rgba(255,255,255,0.9);
-            transition: bottom 0.3s ease;
-            backdrop-filter: blur(4px);
-        }
-
-        .modern-product-card:hover .card-actions { bottom: 0; }
-
-        .action-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 1px solid #eee;
-            background: white;
+        /* Flash Sale Slider */
+        .flash-sale-slider { position: relative; overflow: hidden; }
+        .flash-sale-track { display: flex; gap: 12px; transition: transform 0.3s ease; }
+        .flash-sale-card { flex: 0 0 calc(20% - 10px); border: 0.5px solid #eee; border-radius: 12px; overflow: hidden; background: white; position: relative; transition: all 0.2s; }
+        .flash-sale-card:hover { border-color: #E24B4A; transform: translateY(-2px); }
+        .flash-badge { position: absolute; top: 8px; left: 8px; background: #E24B4A; color: white; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; z-index: 1; }
+        .flash-img-wrap { aspect-ratio: 1/1; overflow: hidden; background: #f9f9f9; }
+        .flash-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        .flash-info { padding: 10px 12px; }
+        .flash-name { font-size: 13px; font-weight: 500; color: #111; text-decoration: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 36px; }
+        .flash-price { color: var(--ms-red); font-weight: 700; font-size: 15px; }
+        .flash-old-price { color: #aaa; text-decoration: line-through; font-size: 12px; margin-left: 5px; }
+        .flash-progress { height: 5px; background: #f0f0f0; border-radius: 3px; overflow: hidden; margin: 8px 0 4px; }
+        .flash-progress-bar { height: 100%; background: linear-gradient(90deg, #E24B4A, #ff6b6b); }
+        .flash-sold { font-size: 11px; color: #888; }
+        .flash-nav { 
+            position: absolute; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            width: 44px; 
+            height: 44px; 
+            border-radius: 50%; 
+            border: 1px solid #eee; 
+            background: white; 
+            z-index: 10; 
+            cursor: pointer; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: 0.2s;
-            color: var(--ms-dark);
+            font-size: 24px;
+            color: #333;
+            transition: all 0.25s ease;
+            line-height: 1;
+            padding-bottom: 4px; /* Centering the ‹ › characters better */
         }
-
-        .action-btn:hover { background: var(--ms-red); color: white; border-color: var(--ms-red); }
-
-        .card-body-content { padding: 16px; flex-grow: 1; display: flex; flex-direction: column; }
-        .product-brand { font-size: 0.75rem; font-weight: 600; color: var(--ms-gray); text-transform: uppercase; margin-bottom: 4px; }
-        .product-name { font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; height: 42px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .product-name a { color: var(--ms-dark); text-decoration: none; transition: 0.2s; }
-        .product-name a:hover { color: var(--ms-red); }
-
-        .price-group { display: flex; align-items: center; gap: 10px; margin-top: auto; }
-        .price-current { color: var(--ms-red); font-weight: 800; font-size: 1.15rem; }
-        .price-old { color: #aaa; text-decoration: line-through; font-size: 0.85rem; }
-
-        /* Progress Bar */
-        .flash-progress-wrapper { margin-top: 12px; }
-        .flash-progress-wrapper .progress { height: 8px; border-radius: 10px; margin-bottom: 4px; background: #eee; }
-        .progress-text { font-size: 0.75rem; color: var(--ms-gray); font-weight: 600; }
-
-        .btn-add-cart, .btn-buy-now { font-size: 0.85rem; font-weight: 700; padding: 10px; }
-
-        /* Skeleton */
-        .skeleton-card { height: 350px; background: linear-gradient(90deg, #f2f2f2 25%, #e6e6e6 50%, #f2f2f2 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite; border-radius: 16px; }
-        @@keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .flash-nav:hover {
+            background: var(--ms-red);
+            color: white;
+            border-color: var(--ms-red);
+            transform: translateY(-50%) scale(1.1);
+        }
+        .flash-nav:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+        .flash-prev { left: -10px; } .flash-next { right: -10px; }
 
         @@media (max-width: 768px) {
-            .hero-overlay-gradient { background: rgba(0,0,0,0.6); }
-            .display-3 { font-size: 2.5rem; }
-            .time-box { font-size: 1rem; min-width: 32px; }
+            .flash-nav { width: 36px; height: 36px; font-size: 20px; }
+            .flash-prev { left: -5px; } .flash-next { right: -5px; }
         }
+
+        /* Modern Card */
+        .card-modern { border: 1px solid #f0f0f0; border-radius: 15px; overflow: hidden; background: white; transition: all 0.3s; height: 100%; display: flex; flex-direction: column; position: relative; }
+        .card-modern:hover { transform: translateY(-8px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .card-img-box { aspect-ratio: 1/1; overflow: hidden; }
+        .card-img-box img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* Badges */
+        .product-badge { position: absolute; top: 10px; left: 10px; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 20px; z-index: 1; }
+        .badge-flash-sm { background: #E24B4A; color: white; }
+        .badge-sale-sm { background: #E24B4A; color: white; }
+        .badge-new-sm { background: #EAF3DE; color: #3B6D11; }
+
+        /* Skeleton Shimmer */
+        .skeleton-card { background: #fff; border-radius: 15px; padding: 15px; border: 1px solid #f0f0f0; height: 320px; }
+        .skeleton-img { width: 100%; aspect-ratio: 1/1; background: #f0f0f0; border-radius: 10px; margin-bottom: 15px; position: relative; overflow: hidden; }
+        .skeleton-text-brand { width: 40%; height: 10px; background: #f0f0f0; margin-bottom: 8px; }
+        .skeleton-text-title { width: 90%; height: 15px; background: #f0f0f0; margin-bottom: 12px; }
+        .skeleton-text-price { width: 60%; height: 20px; background: #f0f0f0; }
+        .skeleton-img::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent); animation: shimmer 1.5s infinite; }
+        @@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+        @@media (max-width: 992px) { .flash-sale-card { flex: 0 0 calc(33.33% - 8px); } }
+        @@media (max-width: 576px) { .flash-sale-card { flex: 0 0 calc(50% - 6px); } }
     </style>
+}
+
+@section Scripts {
+    <script>
+        const formatVND = (v) => new Intl.NumberFormat('vi-VN').format(v) + '₫';
+        let currentPromoPage = 1;
+
+        $(document).ready(function() {
+            loadFlashSale();
+            loadPromotionProducts(1);
+            $('#sortPromotion').on('change', () => loadPromotionProducts(1));
+        });
+
+        async function loadFlashSale() {
+            try {
+                const res = await fetch('/api/HomeApi/flash-sale');
+                const data = await res.json();
+                if (data && data.products && data.products.length > 0) {
+                    $('.flash-title h3').text(data.title || 'FLASH SALE');
+                    if (data.endDate) startCountdown(new Date(data.endDate));
+                    
+                    let html = '';
+                    data.products.forEach(p => {
+                        const fsPrice = p.flashSalePrice;
+                        const original = p.originalPrice;
+                        const discount = p.discountPercent;
+                        const soldPercent = p.soldPercent;
+
+                        html += `
+                        <div class="flash-sale-card">
+                            <div class="flash-badge">-${discount}%</div>
+                            <a href="/Product/Details?slug=${p.slug}"><div class="flash-img-wrap"><img src="${p.imageUrl || '/assets/img/elements/18.jpg'}" alt="${p.productName}" onerror="this.src='/assets/img/elements/18.jpg'"></div></a>
+                            <div class="flash-info">
+                                <a href="/Product/Details?slug=${p.slug}" class="flash-name" title="${p.productName}">${p.productName}</a>
+                                <div class="flash-price-row">
+                                    <span class="flash-price">${formatVND(fsPrice)}</span>
+                                    ${original > fsPrice ? `<del class="flash-old-price">${formatVND(original)}</del>` : ''}
+                                </div>
+                                <div class="flash-progress"><div class="flash-progress-bar" style="width: ${soldPercent}%"></div></div>
+                                <div class="flash-sold">Đã bán ${p.soldQuantity || 0}/${p.quantity || 0}</div>
+                            </div>
+                        </div>`;
+                    });
+                    $('#flashSaleTrack').html(html);
+                } else { $('.flash-sale-section').hide(); }
+            } catch (e) { console.error('Flash Sale Error:', e); $('.flash-sale-section').hide(); }
+        }
+
+        async function loadPromotionProducts(page) {
+            const $grid = $('#promoGrid');
+            const $loader = $('#promoLoading');
+            const $section = $('#discountGridSection');
+            const $container = $('#promoContainer');
+            
+            currentPromoPage = page;
+
+            try {
+                const oldHeight = $section.outerHeight();
+                $section.css({ 'height': oldHeight + 'px', 'overflow': 'hidden' });
+                
+                $container.css('opacity', '0.4');
+                $loader.fadeIn(200);
+                
+                const sort = $('#sortPromotion').val();
+                const res = await fetch(`/api/HomeApi/products/discount?pageNumber=${page}&pageSize=15&sort=${sort}`);
+                const data = await res.json();
+
+                await new Promise(r => setTimeout(r, 350));
+
+                $grid.empty();
+                if (data && data.items && data.items.length > 0) {
+                    data.items.forEach(p => {
+                        const discount = p.discountPercent;
+                        const promoType = p.promotionType;
+                        const isNew = p.createdDate && (new Date() - new Date(p.createdDate)) / (1000 * 60 * 60 * 24) <= 7;
+                        
+                        let badge = '';
+                        if (promoType === 'FlashSale') badge = '<span class="product-badge badge-flash-sm">⚡ Flash</span>';
+                        else if (discount > 0) badge = `<span class="product-badge badge-sale-sm">-${discount}%</span>`;
+                        else if (isNew) badge = '<span class="product-badge badge-new-sm">Mới</span>';
+
+                        $grid.append(`
+                        <div class="col">
+                            <div class="card-modern">
+                                ${badge}
+                                <div class="card-img-box"><a href="/Product/Details?slug=${p.slug}"><img src="${p.primaryImageUrl || '/assets/img/elements/1.jpg'}" alt="${p.productName}" onerror="this.src='/assets/img/elements/18.jpg'"></a></div>
+                                <div class="p-3 d-flex flex-column flex-grow-1">
+                                    <div class="text-muted x-small text-uppercase fw-bold mb-1" style="font-size:10px">${p.brandName || 'MotoShop'}</div>
+                                    <h6 class="fw-bold mb-3 small" style="min-height:38px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;"><a href="/Product/Details?slug=${p.slug}" class="text-dark text-decoration-none">${p.productName}</a></h6>
+                                    <div class="mt-auto">
+                                        <div class="mb-2">
+                                            <span class="text-danger fw-bold">${formatVND(p.minPrice)}</span>
+                                            ${(p.oldPrice && p.oldPrice > p.minPrice) ? `<del class="text-muted x-small ms-2" style="font-size:11px">${formatVND(p.oldPrice)}</del>` : ''}
+                                        </div>
+                                        <button class="btn btn-outline-danger w-100 rounded-pill btn-sm fw-bold" onclick="handleAddToCart(${p.defaultVariantId})">THÊM GIỎ HÀNG</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`);
+                    });
+                    renderPagination(data.pageCount, data.pageNumber);
+                } else {
+                    $grid.html('<div class="col-12 text-center py-5"><p class="text-muted">Hiện tại không có sản phẩm ưu đãi nào.</p></div>');
+                    $('#promoPagination').empty();
+                }
+
+                $loader.hide();
+                $section.css('height', 'auto');
+                const newHeight = $section.outerHeight();
+                $section.css('height', oldHeight + 'px');
+                
+                $section.stop().animate({ height: newHeight }, 500, 'swing', function() {
+                    $(this).css({ 'height': '', 'overflow': '', 'min-height': '600px' });
+                    $container.css('opacity', '1');
+                });
+                
+            } catch (e) { 
+                console.error('Load Promotion Error:', e); 
+                $loader.hide(); 
+                $section.css({ 'height': '', 'overflow': '', 'min-height': '600px' });
+                $container.css('opacity', '1');
+            }
+        }
+
+        function renderPagination(total, current) {
+            const $pg = $('#promoPagination').empty();
+            if (total <= 1) return;
+            $pg.append(`<li class="page-item ${current === 1 ? 'disabled' : ''}"><a class="page-link" href="javascript:void(0)" onclick="loadPromotionProducts(${current - 1})">‹</a></li>`);
+            for(let i=1; i<=total; i++) {
+                if (i===1 || i===total || (i>=current-1 && i<=current+1))
+                    $pg.append(`<li class="page-item ${current === i ? 'active' : ''}"><a class="page-link" href="javascript:void(0)" onclick="loadPromotionProducts(${i})">${i}</a></li>`);
+                else if (i===current-2 || i===current+2) $pg.append(`<li class="page-item disabled"><span class="page-link">...</span></li>`);
+            }
+            $pg.append(`<li class="page-item ${current === total ? 'disabled' : ''}"><a class="page-link" href="javascript:void(0)" onclick="loadPromotionProducts(${current + 1})">›</a></li>`);
+        }
+
+        function startCountdown(endTime) {
+            const timer = setInterval(() => {
+                const diff = endTime.getTime() - new Date().getTime();
+                if (diff <= 0) { clearInterval(timer); $('#countdown').html('<span class="text-danger fw-bold">HẾT HẠN</span>'); return; }
+                $('#hr').text(Math.floor(diff / 3600000).toString().padStart(2, '0'));
+                $('#mn').text(Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0'));
+                $('#sc').text(Math.floor((diff % 60000) / 1000).toString().padStart(2, '0'));
+            }, 1000);
+        }
+
+        let flashOffset = 0;
+        function slideFlash(dir) {
+            const track = document.getElementById('flashSaleTrack');
+            const cards = track.querySelectorAll('.flash-sale-card');
+            if (cards.length === 0) return;
+            const cardW = cards[0].offsetWidth + 12;
+            const visible = window.innerWidth > 992 ? 5 : window.innerWidth > 576 ? 3 : 2;
+            flashOffset += dir * -cardW;
+            flashOffset = Math.max(-((cards.length - visible) * cardW), Math.min(0, flashOffset));
+            track.style.transform = `translateX(${flashOffset}px)`;
+        }
+    </script>
 }

@@ -112,7 +112,11 @@ namespace MotoShop.Areas.Admin.Controllers
             return Json(new { success = true, message = "Thao tác hàng loạt thành công" });
         }
 
-        public class BulkActionModel { public int[] Ids { get; set; } public string Action { get; set; } }
+        public class BulkActionModel 
+        { 
+            public required int[] Ids { get; set; } 
+            public required string Action { get; set; } 
+        }
 
         public async Task<IActionResult> ExportExcel(string? searchTerm, string? status, int? stars)
         {

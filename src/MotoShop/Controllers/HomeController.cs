@@ -24,20 +24,31 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index()
     {
-        // Lấy tất cả danh mục và sắp xếp theo số lượng sản phẩm giảm dần, lấy top 5
+        // Thực hiện tuần tự để tránh lỗi DbContext concurrency (A second operation was started...)
         var categories = await _categoryService.GetAllAsync();
+        var featuredProducts = await _productService.GetRandomProductsAsync(8);
+        var bestSellingProducts = await _productService.GetRandomProductsAsync(4);
+        var newProducts = await _productService.GetPagedProductsAsync(null, null, null, "newest", 1, 4);
+        
+        // CÁC TÍNH NĂNG MỚI
+        var flashSale = await _productService.GetActiveFlashSaleAsync();
+        var brandProducts = await _productService.GetBrandWithProductsAsync(4, 6);
+        var categoryProducts = await _productService.GetCategoryWithProductsAsync(4, 4);
+
         var topCategories = categories
             .OrderByDescending(c => c.ProductCount)
             .Take(5)
             .ToList();
 
-        // Lấy sản phẩm mới nhất
-        var newProducts = await _productService.GetPagedProductsAsync(null, null, null, "newest", 1, 4);
+        // Gán dữ liệu cho ViewBag
+        ViewBag.FlashSale = flashSale;
+        ViewBag.BrandWithProducts = brandProducts;
+        ViewBag.CategoryWithProducts = categoryProducts;
 
         var model = new HomeViewModel
         {
-            FeaturedProducts = await _productService.GetRandomProductsAsync(8),
-            BestSellingProducts = await _productService.GetRandomProductsAsync(4),
+            FeaturedProducts = featuredProducts,
+            BestSellingProducts = bestSellingProducts,
             NewProducts = newProducts,
             TopCategories = topCategories
         };

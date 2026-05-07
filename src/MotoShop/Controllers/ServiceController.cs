@@ -38,7 +38,7 @@ namespace MotoShop.Controllers
             // 2. Lấy danh sách dịch vụ thực tế
             var query = _context.Services
                 .Include(s => s.ServiceCategory)
-                .Where(s => s.IsActive);
+                .Where(s => s.IsActive == true);
 
             // Lọc theo danh mục nếu có chọn
             if (categoryId.HasValue)
@@ -63,7 +63,7 @@ namespace MotoShop.Controllers
                 .Include(s => s.ServiceCategory)
                 .Include(s => s.Reviews.Where(r => r.IsApproved))
                     .ThenInclude(r => r.Customer)
-                .FirstOrDefaultAsync(s => s.Slug == slug && s.IsActive);
+                .FirstOrDefaultAsync(s => s.Slug == slug && s.IsActive == true);
 
             if (service == null && int.TryParse(slug, out int id))
             {
@@ -71,14 +71,14 @@ namespace MotoShop.Controllers
                     .Include(s => s.ServiceCategory)
                     .Include(s => s.Reviews.Where(r => r.IsApproved))
                         .ThenInclude(r => r.Customer)
-                    .FirstOrDefaultAsync(s => s.ServiceId == id && s.IsActive);
+                    .FirstOrDefaultAsync(s => s.ServiceId == id && s.IsActive == true);
             }
 
             if (service == null) return NotFound();
 
             // Dịch vụ liên quan (cùng danh mục)
             ViewBag.RelatedServices = await _context.Services
-                .Where(s => s.IsActive && s.ServiceId != service.ServiceId && s.CategoryId == service.CategoryId)
+                .Where(s => s.IsActive == true && s.ServiceId != service.ServiceId && s.CategoryId == service.CategoryId)
                 .Take(3)
                 .ToListAsync();
 
@@ -194,14 +194,14 @@ namespace MotoShop.Controllers
             ViewBag.HasService = true;
             ViewBag.Service = service;
             ViewBag.SelectedServiceId = service.ServiceId;
-            ViewBag.Services = await _uow.Repository<Service>().Find(s => s.IsActive).ToListAsync();
+            ViewBag.Services = await _uow.Repository<Service>().Find(s => s.IsActive == true).ToListAsync();
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var customer = await _uow.Repository<Customer>().Find(c => c.UserId == userId).FirstOrDefaultAsync();
             
             if (customer == null)
             {
-                ViewBag.Customer = new Customer { FullName = User.Identity.Name, Email = User.Identity.Name };
+                ViewBag.Customer = new Customer { FullName = User.Identity?.Name ?? "Guest", Email = User.Identity?.Name ?? "guest@example.com" };
             }
             else
             {
@@ -392,7 +392,7 @@ namespace MotoShop.Controllers
         private int? GetCurrentCustomerId()
         {
             var customerIdClaim = User.FindFirst("CustomerId")?.Value;
-            if (int.TryParse(customerIdClaim, out int customerId))
+            if (customerIdClaim != null && int.TryParse(customerIdClaim, out int customerId))
             {
                 return customerId;
             }

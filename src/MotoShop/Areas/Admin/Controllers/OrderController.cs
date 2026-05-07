@@ -60,8 +60,8 @@ namespace MotoShop.Areas.Admin.Controllers
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 query = query.Where(o => (o.OrderCode != null && o.OrderCode.Contains(searchTerm)) || 
-                                       (o.Customer != null && o.Customer.FullName.Contains(searchTerm)) ||
-                                       (o.Customer != null && o.Customer.Phone.Contains(searchTerm)));
+                                       (o.Customer != null && o.Customer.FullName != null && o.Customer.FullName.Contains(searchTerm)) ||
+                                       (o.Customer != null && o.Customer.Phone != null && o.Customer.Phone.Contains(searchTerm)));
             }
 
             // 2. Lọc theo trạng thái
@@ -149,8 +149,8 @@ namespace MotoShop.Areas.Admin.Controllers
             var order = await _context.Orders
                 .Include(o => o.Customer)
                 .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.ProductVariant)
-                        .ThenInclude(pv => pv.Product)
+                    .ThenInclude(oi => oi.ProductVariant!)
+                        .ThenInclude(pv => pv.Product!)
                 .FirstOrDefaultAsync(o => o.OrderId == id);
 
             if (order == null) return NotFound();
@@ -173,15 +173,17 @@ namespace MotoShop.Areas.Admin.Controllers
             var order = await _context.Orders.FindAsync(id);
             if (order == null) return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
 
-            if (!ValidTransitions.ContainsKey(order.Status) || !ValidTransitions[order.Status].Contains(status))
+            var currentStatus = order.Status ?? "Pending";
+            if (!ValidTransitions.ContainsKey(currentStatus) || !ValidTransitions[currentStatus].Contains(status))
             {
-                return Json(new { success = false, message = $"Không thể chuyển từ {order.Status} sang {status}" });
+                return Json(new { success = false, message = $"Không thể chuyển từ {currentStatus} sang {status}" });
             }
 
             if (status == "Cancelled")
             {
                 // Sử dụng service để có logic hoàn tồn kho
-                var identityUserId = _context.Customers.FirstOrDefault(c => c.CustomerId == order.CustomerId)?.UserId ?? "";
+                var customer = _context.Customers.FirstOrDefault(c => c.CustomerId == order.CustomerId);
+                var identityUserId = customer?.UserId ?? "";
                 var success = await _orderService.CancelOrderAsync(id, identityUserId);
                 if (!success) return Json(new { success = false, message = "Lỗi khi hoàn tồn kho" });
             }

@@ -8,7 +8,7 @@ namespace MotoShop.Data.Interfaces
     {
         Task<IEnumerable<Product>> GetFeaturedProductsAsync(int count);
         Task<IEnumerable<Product>> GetProductsByCategoryAsync(int categoryId);
-        Task<ProductImage> FindImageByIdAsync(int imageId);
+        Task<ProductImage?> FindImageByIdAsync(int imageId);
         void UpdateImage(ProductImage image);
     }
 }

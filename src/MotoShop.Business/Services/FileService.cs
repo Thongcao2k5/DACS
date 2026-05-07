@@ -22,7 +22,7 @@ namespace MotoShop.Business.Services
             _environment = environment;
         }
 
-        public async Task<string> SaveFileAsync(IFormFile file, string subFolder)
+        public async Task<string?> SaveFileAsync(IFormFile file, string subFolder)
         {
             if (file == null) return null;
 
@@ -47,7 +47,7 @@ namespace MotoShop.Business.Services
             return $"/uploads/{subFolder}/{fileName}";
         }
 
-        public async Task<Dictionary<string, string>> SaveProductImageAsync(IFormFile file, string subFolder)
+        public async Task<Dictionary<string, string>?> SaveProductImageAsync(IFormFile file, string subFolder)
         {
             if (file == null) return null;
 

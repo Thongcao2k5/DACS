@@ -6,8 +6,8 @@ namespace MotoShop.Business.Interfaces
 {
     public interface IFileService
     {
-        Task<string> SaveFileAsync(IFormFile file, string subFolder);
-        Task<Dictionary<string, string>> SaveProductImageAsync(IFormFile file, string subFolder);
+        Task<string?> SaveFileAsync(IFormFile file, string subFolder);
+        Task<Dictionary<string, string>?> SaveProductImageAsync(IFormFile file, string subFolder);
         void DeleteFile(string fileName);
     }
 }

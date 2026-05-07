@@ -27,7 +27,7 @@ namespace MotoShop.Services
                     {
                         await bookingService.CancelExpiredBookingsAsync();
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         // Log error if needed
                     }

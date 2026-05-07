@@ -58,8 +58,8 @@ namespace MotoShop.Controllers
             var query = _context.Orders
                 .Where(o => o.CustomerId == customerId)
                 .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.ProductVariant)
-                        .ThenInclude(pv => pv.Product)
+                    .ThenInclude(oi => oi.ProductVariant!)
+                        .ThenInclude(pv => pv.Product!)
                 .OrderByDescending(o => o.OrderDate)
                 .AsQueryable();
 
@@ -108,7 +108,7 @@ namespace MotoShop.Controllers
                 PaymentStatus = o.PaymentStatus,
                 PaymentMethod = o.Payments?.FirstOrDefault()?.PaymentMethod ?? "Tiền mặt (COD)",
                 Note = o.Note,
-                Items = o.OrderItems.Take(2).Select(oi => new OrderItemViewModel
+                Items = (o.OrderItems ?? new List<OrderItem>()).Take(2).Select(oi => new OrderItemViewModel
                 {
                     ProductName = oi.ProductVariant?.VariantName ?? "Sản phẩm đã xóa",
                     ProductImage = oi.ProductVariant?.ImageUrl ?? "/assets/img/elements/18.jpg",
@@ -160,8 +160,8 @@ namespace MotoShop.Controllers
 
             return await _context.Orders
                 .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.ProductVariant)
-                        .ThenInclude(pv => pv.Product)
+                    .ThenInclude(oi => oi.ProductVariant!)
+                        .ThenInclude(pv => pv.Product!)
                 .Include(o => o.ShippingMethod)
                 .Include(o => o.Coupon)
                 .Include(o => o.StatusHistories)

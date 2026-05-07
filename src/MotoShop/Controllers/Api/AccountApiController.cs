@@ -31,6 +31,12 @@ namespace MotoShop.Controllers.Api
             _context = context;
         }
 
+        private class RegistrationCache
+        {
+            public required RegisterInitialDto Model { get; set; }
+            public required string Code { get; set; }
+        }
+
         [HttpPost("register-step1")]
         public async Task<IActionResult> RegisterStep1([FromBody] RegisterInitialDto model)
         {
@@ -45,7 +51,7 @@ namespace MotoShop.Controllers.Api
 
             // Lưu thông tin đăng ký và mã OTP vào Cache (hết hạn sau 10 phút)
             var cacheKey = $"Reg_{model.Email}";
-            _cache.Set(cacheKey, new { Model = model, Code = otpCode }, TimeSpan.FromMinutes(10));
+            _cache.Set(cacheKey, new RegistrationCache { Model = model, Code = otpCode }, TimeSpan.FromMinutes(10));
 
             // Gửi Email
             string subject = "Mã xác nhận đăng ký tài khoản MotoShop";
@@ -85,7 +91,7 @@ namespace MotoShop.Controllers.Api
         public async Task<IActionResult> VerifyOtp([FromBody] VerifyRegisterDto model)
         {
             var cacheKey = $"Reg_{model.Email}";
-            if (!_cache.TryGetValue(cacheKey, out dynamic cachedData))
+            if (!_cache.TryGetValue(cacheKey, out RegistrationCache? cachedData) || cachedData == null)
             {
                 return BadRequest(new { message = "Phiên làm việc đã hết hạn hoặc không tồn tại. Vui lòng thực hiện lại bước đăng ký." });
             }
@@ -167,8 +173,9 @@ namespace MotoShop.Controllers.Api
         [HttpPost("verify-forgot-otp")]
         public async Task<IActionResult> VerifyForgotOtp([FromBody] VerifyRegisterDto model)
         {
+            await Task.CompletedTask;
             var cacheKey = $"Forgot_{model.Email}";
-            if (!_cache.TryGetValue(cacheKey, out string savedCode) || savedCode != model.Code)
+            if (!_cache.TryGetValue(cacheKey, out string? savedCode) || savedCode != model.Code)
                 return BadRequest(new { message = "Mã xác nhận không chính xác hoặc đã hết hạn." });
 
             return Ok(new { success = true });
@@ -178,7 +185,7 @@ namespace MotoShop.Controllers.Api
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto model)
         {
             var cacheKey = $"Forgot_{model.Email}";
-            if (!_cache.TryGetValue(cacheKey, out string savedCode) || savedCode != model.Code)
+            if (!_cache.TryGetValue(cacheKey, out string? savedCode) || savedCode != model.Code)
                 return BadRequest(new { message = "Phiên làm việc đã hết hạn. Vui lòng thực hiện lại từ đầu." });
 
             var user = await _userManager.FindByEmailAsync(model.Email);

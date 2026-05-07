@@ -35,7 +35,7 @@ namespace MotoShop.Controllers
             var order = await _orderService.GetOrderDetailsAsync(orderId, userId);
             if (order == null) return NotFound();
 
-            return await GenerateVnPayUrl(order.OrderId.ToString(), order.TotalAmount, "Thanh toan don hang: " + order.OrderId);
+            return GenerateVnPayUrl(order.OrderId.ToString(), order.TotalAmount, "Thanh toan don hang: " + order.OrderId);
         }
 
         // Bước 1b: Tạo URL và Redirect sang VNPay cho Cọc dịch vụ
@@ -45,10 +45,10 @@ namespace MotoShop.Controllers
             if (booking == null) return NotFound();
 
             // Sử dụng prefix SB_ để phân biệt với Order
-            return await GenerateVnPayUrl("SB_" + booking.BookingId, booking.DepositAmount, "Thanh toan coc dich vu: " + booking.BookingId);
+            return GenerateVnPayUrl("SB_" + booking.BookingId, booking.DepositAmount, "Thanh toan coc dich vu: " + booking.BookingId);
         }
 
-        private async Task<IActionResult> GenerateVnPayUrl(string txnRef, decimal amount, string orderInfo)
+        private IActionResult GenerateVnPayUrl(string txnRef, decimal amount, string orderInfo)
         {
             string vnp_Returnurl = Url.Action("PaymentCallback", "Payment", null, Request.Scheme) ?? "";
             string vnp_Url = _configuration["Payment:VnPay:BaseUrl"] ?? "";

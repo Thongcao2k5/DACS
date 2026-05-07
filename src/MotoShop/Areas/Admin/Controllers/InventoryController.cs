@@ -24,7 +24,7 @@ namespace MotoShop.Areas.Admin.Controllers
             var stock = await _context.ProductVariants
                 .Include(pv => pv.Product)
                 .Include(pv => pv.BaseUnit)
-                .Where(pv => !pv.Product.IsDeleted)
+                .Where(pv => pv.Product != null && !pv.Product.IsDeleted)
                 .ToListAsync();
             return View(stock);
         }
@@ -34,7 +34,7 @@ namespace MotoShop.Areas.Admin.Controllers
         {
             var history = await _context.InventoryTransactions
                 .Include(t => t.ProductVariant)
-                    .ThenInclude(pv => pv.Product)
+                    .ThenInclude(pv => pv != null ? pv.Product : null)
                 .OrderByDescending(t => t.TransactionDate)
                 .ToListAsync();
             return View(history);

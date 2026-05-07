@@ -111,18 +111,49 @@ namespace MotoShop.Controllers
 
                 if (variant == null) return RedirectToAction("Index");
 
-                // Tính toán giá gốc nếu database bị thiếu (giả lập 125%)
-                decimal originalPrice = variant.OriginalPrice ?? (variant.Price * 1.25m);
+                // TÍNH TOÁN GIÁ KHUYẾN MÃI THỰC TẾ
+                var now = DateTime.Now;
+                decimal displayPrice = variant.Price;
+                decimal originalPrice = variant.OriginalPrice ?? variant.Price;
+
+                // 1. Check Flash Sale
+                var flashSale = await _context.FlashSaleProducts.AsNoTracking()
+                    .Include(fsp => fsp.FlashSale)
+                    .FirstOrDefaultAsync(fsp => fsp.ProductId == variant.ProductId && fsp.FlashSale != null && fsp.FlashSale.IsActive && fsp.FlashSale.StartDate <= now && fsp.FlashSale.EndDate >= now && fsp.Quantity > fsp.SoldQuantity);
+
+                if (flashSale != null)
+                {
+                    displayPrice = flashSale.FlashSalePrice;
+                    originalPrice = variant.Price;
+                }
+                else
+                {
+                    // 2. Check Promotion
+                    var promotion = await _context.PromotionProducts.AsNoTracking()
+                        .Include(pp => pp.Promotion)
+                        .Where(pp => pp.ProductId == variant.ProductId && pp.Promotion != null && pp.Promotion.IsActive && pp.Promotion.StartDate <= now && pp.Promotion.EndDate >= now)
+                        .Select(pp => pp.Promotion)
+                        .FirstOrDefaultAsync();
+
+                    if (promotion != null)
+                    {
+                        originalPrice = variant.Price;
+                        if (promotion.DiscountType == "Percentage")
+                            displayPrice = variant.Price * (1 - (promotion.DiscountPercentage / 100));
+                        else
+                            displayPrice = Math.Max(0, variant.Price - promotion.DiscountAmount);
+                    }
+                }
 
                 finalItems = new List<CartItemDto> {
                     new CartItemDto {
                         ProductVariantId = variant.ProductVariantId,
                         ProductName = variant.Product?.ProductName ?? "Sản phẩm",
                         VariantName = variant.VariantName,
-                        Price = variant.Price,
+                        Price = displayPrice,
                         OriginalPrice = originalPrice,
                         Quantity = quantity,
-                        ImageUrl = variant.ImageUrl ?? (variant.Product?.Images?.FirstOrDefault()?.ImageUrl ?? "")
+                        ImageUrl = variant.ImageUrl ?? ""
                     }
                 };
                 ViewBag.IsDirectCheckout = true;
@@ -143,7 +174,7 @@ namespace MotoShop.Controllers
                 ViewBag.IsDirectCheckout = false;
             }
 
-            var shippingMethods = await _unitOfWork.Repository<ShippingMethod>().Find(s => s.IsActive).ToListAsync();
+            var shippingMethods = await _unitOfWork.Repository<ShippingMethod>().Find(s => s.IsActive == true).ToListAsync();
 
             ViewBag.CartItems = finalItems;
             ViewBag.TotalAmount = finalItems.Sum(i => i.Total);
@@ -153,9 +184,12 @@ namespace MotoShop.Controllers
             var model = new CheckoutDto();
             var defaultAddr = savedAddresses.FirstOrDefault(a => a.IsDefault) ?? savedAddresses.FirstOrDefault();
             if (defaultAddr != null) {
-                model.FullName = defaultAddr.FullName; model.Phone = defaultAddr.Phone;
-                model.Province = defaultAddr.Province; model.District = defaultAddr.District;
-                model.Ward = defaultAddr.Ward; model.Address = defaultAddr.Street; 
+                model.FullName = defaultAddr.FullName ?? "";
+                model.Phone = defaultAddr.Phone ?? "";
+                model.Province = defaultAddr.Province ?? "";
+                model.District = defaultAddr.District ?? "";
+                model.Ward = defaultAddr.Ward ?? "";
+                model.Address = defaultAddr.Street ?? "";
             }
 
             return View(model);
@@ -237,14 +271,45 @@ namespace MotoShop.Controllers
             var order = await _unitOfWork.Repository<Order>()
                 .Find(o => o.OrderId == id)
                 .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.ProductVariant)
-                        .ThenInclude(pv => pv.Product)
+                    .ThenInclude(oi => oi.ProductVariant!)
+                        .ThenInclude(pv => pv.Product!)
                 .Include(o => o.ShippingMethod)
                 .Include(o => o.Coupon)
                 .FirstOrDefaultAsync();
 
             if (order == null) return NotFound();
             return View(order);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddQuick([FromBody] AddQuickRequest request)
+        {
+            // Lấy variant đầu tiên còn hàng
+            var variant = await _context.ProductVariants
+                .Where(v => v.ProductId == request.ProductId && v.StockQuantity > 0)
+                .OrderByDescending(v => v.StockQuantity)
+                .FirstOrDefaultAsync();
+
+            if (variant == null)
+                return Json(new { success = false, message = "Sản phẩm đã hết hàng" });
+
+            // Gọi CartService thêm vào giỏ
+            var userId = GetCartUserId();
+            var success = await _cartService.AddToCartAsync(userId, variant.ProductVariantId, request.Quantity);
+
+            if (!success)
+                return Json(new { success = false, message = "Không thể thêm sản phẩm." });
+
+            // Lấy tổng số lượng giỏ hàng
+            var cartCount = await _cartService.GetCartCountAsync(userId);
+
+            return Json(new { success = true, cartCount, message = "Đã thêm vào giỏ hàng!" });
+        }
+
+        public class AddQuickRequest
+        {
+            public int ProductId { get; set; }
+            public int Quantity { get; set; } = 1;
         }
     }
 }

@@ -1,8 +1,12 @@
-        using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using MotoShop.Business.Interfaces;
+using MotoShop.Data.Data;
+using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using System.Linq;
+using System;
+using System.Collections.Generic;
 
 namespace MotoShop.Controllers.Api
 {
@@ -13,30 +17,58 @@ namespace MotoShop.Controllers.Api
         private readonly IProductService _productService;
         private readonly ICategoryService _categoryService;
         private readonly ICartService _cartService;
+        private readonly IFlashSaleService _flashSaleService;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly MotoShopDbContext _context;
 
         public HomeApiController(
             IProductService productService, 
             ICategoryService categoryService,
             ICartService cartService,
-            UserManager<IdentityUser> userManager)
+            IFlashSaleService flashSaleService,
+            UserManager<IdentityUser> userManager,
+            MotoShopDbContext context)
         {
             _productService = productService;
             _categoryService = categoryService;
             _cartService = cartService;
+            _flashSaleService = flashSaleService;
             _userManager = userManager;
+            _context = context;
         }
 
         [HttpGet("featured")]
         public async Task<IActionResult> GetFeaturedProducts()
         {
             var products = await _productService.GetFeaturedProductsAsync(8);
-            if (products == null || !System.Linq.Enumerable.Any(products))
-            {
-                var allProducts = await _productService.GetPagedProductsAsync(1, 8);
-                products = allProducts; 
-            }
             return Ok(products);
+        }
+
+        [HttpGet("flash-sale")]
+        public async Task<IActionResult> GetFlashSale()
+        {
+            var mainSale = await _productService.GetActiveFlashSaleAsync();
+            return Ok(mainSale);
+        }
+
+        [HttpGet("products/discount")]
+        public async Task<IActionResult> GetDiscountProducts(int pageNumber = 1, int pageSize = 12, string sort = "newest")
+        {
+            var pagedResult = await _productService.GetPagedDiscountProductsAsync(pageNumber, pageSize, sort);
+
+            return Ok(new {
+                items = pagedResult,
+                pageNumber = pagedResult.CurrentPage,
+                pageCount = pagedResult.TotalPages,
+                totalCount = pagedResult.TotalCount
+            });
+        }
+
+        [HttpGet("promotions")]
+        public async Task<IActionResult> GetPromotionProducts()
+        {
+            var activeSales = await _flashSaleService.GetActiveFlashSalesAsync();
+            return Ok(activeSales);
         }
 
         [HttpGet("categories")]
@@ -59,13 +91,6 @@ namespace MotoShop.Controllers.Api
 
             var cart = await _cartService.GetCartAsync(userId);
             return Ok(new { count = cart.Sum(i => i.Quantity) });
-        }
-
-        [HttpGet("promotions")]
-        public async Task<IActionResult> GetPromotionProducts()
-        {
-            var products = await _productService.GetFeaturedProductsAsync(12); 
-            return Ok(products);
         }
     }
 }

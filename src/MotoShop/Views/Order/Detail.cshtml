@@ -8,7 +8,7 @@
     var order = Model.OrderInfo;
     ViewData["Title"] = "Chi tiết đơn hàng " + order.OrderCode;
     var user = await UserManager.GetUserAsync(User);
-    var currentCustomer = await UnitOfWork.Repository<MotoShop.Data.Models.Customer>().Find(c => c.UserId == user.Id).FirstOrDefaultAsync();
+    var currentCustomer = user != null ? await UnitOfWork.Repository<MotoShop.Data.Models.Customer>().Find(c => c.UserId == user.Id).FirstOrDefaultAsync() : null;
 }
 
 <div class="breadcrumb-wrapper">

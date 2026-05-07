@@ -155,7 +155,10 @@ namespace MotoShop.Areas.Admin.Controllers
                     foreach (var file in model.Images)
                     {
                         var paths = await _fileService.SaveProductImageAsync(file, "products");
-                        product.Images.Add(new ProductImage { ImageUrl = paths["Full"], IsPrimary = (order == 1), DisplayOrder = order++ });
+                        if (paths != null && paths.ContainsKey("Full"))
+                        {
+                            product.Images.Add(new ProductImage { ImageUrl = paths["Full"], IsPrimary = (order == 1), DisplayOrder = order++ });
+                        }
                     }
                 }
 

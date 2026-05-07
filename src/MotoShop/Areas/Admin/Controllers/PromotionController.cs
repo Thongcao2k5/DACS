@@ -235,6 +235,19 @@ namespace MotoShop.Areas.Admin.Controllers
             return Json(new { success = true, message = $"Đã xóa {promos.Count} chương trình" });
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Deactivate(int id)
+        {
+            var promo = await _context.Promotions.FindAsync(id);
+            if (promo != null && promo.IsActive)
+            {
+                promo.IsActive = false;
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            return Json(new { success = false });
+        }
+
         public async Task<IActionResult> ExportExcel(string? searchTerm, string? status, decimal? minDiscount, string? discountUnit)
         {
             var promotions = await GetFilteredPromotionsQuery(searchTerm, status, minDiscount, discountUnit)

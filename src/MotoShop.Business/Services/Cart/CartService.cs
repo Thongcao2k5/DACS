@@ -31,24 +31,42 @@ namespace MotoShop.Business.Services
 
             // TÍNH GIÁ KHUYẾN MÃI (NẾU CÓ)
             decimal finalPrice = variant.Price;
-            var activePromotion = await _unitOfWork.Repository<PromotionProduct>()
-                .Find(pp => pp.ProductId == variant.ProductId && pp.Promotion.IsActive && pp.Promotion.StartDate <= DateTime.Now && pp.Promotion.EndDate >= DateTime.Now)
-                .Include(pp => pp.Promotion)
-                .Select(pp => pp.Promotion)
+            var now = DateTime.Now;
+
+            // 1. Kiểm tra Flash Sale (Ưu tiên cao nhất)
+            var flashSaleProduct = await _unitOfWork.Repository<FlashSaleProduct>()
+                .Find(fsp => fsp.ProductId == variant.ProductId && fsp.FlashSale != null && fsp.FlashSale.IsActive && fsp.FlashSale.StartDate <= now && fsp.FlashSale.EndDate >= now && fsp.Quantity > fsp.SoldQuantity)
                 .FirstOrDefaultAsync();
 
-            if (activePromotion != null)
+            if (flashSaleProduct != null)
             {
-                if (activePromotion.DiscountType == "Percentage")
-                {
-                    finalPrice = variant.Price * (1 - (activePromotion.DiscountPercentage / 100));
-                }
-                else if (activePromotion.DiscountType == "FixedAmount")
-                {
-                    finalPrice = variant.Price - activePromotion.DiscountAmount;
-                }
-                if (finalPrice < 0) finalPrice = 0;
+                finalPrice = flashSaleProduct.FlashSalePrice;
             }
+            else
+            {
+                // 2. Kiểm tra Khuyến mãi thường (Nếu không có Flash Sale)
+                var activePromotion = await _unitOfWork.Repository<PromotionProduct>()
+                    .Find(pp => pp.ProductId == variant.ProductId && pp.Promotion != null && pp.Promotion.IsActive && pp.Promotion.StartDate <= now && pp.Promotion.EndDate >= now)
+                    .Include(pp => pp.Promotion)
+                    .Select(pp => pp.Promotion)
+                    .FirstOrDefaultAsync();
+
+                if (activePromotion != null)
+                {
+                    if (activePromotion.DiscountType == "Percentage")
+                    {
+                        finalPrice = variant.Price * (1 - (activePromotion.DiscountPercentage / 100));
+                    }
+                    else if (activePromotion.DiscountType == "FixedAmount")
+                    {
+                        finalPrice = variant.Price - activePromotion.DiscountAmount;
+                    }
+                }
+            }
+
+            if (finalPrice < 0) finalPrice = 0;
+            // Chỉ áp dụng giá khuyến mãi nếu nó thấp hơn giá gốc hiện tại
+            if (finalPrice > variant.Price) finalPrice = variant.Price;
 
             var cart = await _unitOfWork.Repository<MotoShop.Data.Models.Cart>()
                 .Find(c => c.UserId == userId)
@@ -93,15 +111,17 @@ namespace MotoShop.Business.Services
                 .Find(c => c.UserId == userId)
                 .Include(c => c.CartItems)
                     .ThenInclude(ci => ci.ProductVariant)
-                        .ThenInclude(pv => pv.Product)
+                        .ThenInclude(pv => pv != null ? pv.Product : null)
                 .FirstOrDefaultAsync();
 
             if (cart == null) return new List<CartItemDto>();
 
-            return cart.CartItems.Select(ci => new CartItemDto
+            return cart.CartItems
+                .Where(ci => ci.ProductVariant != null && ci.ProductVariant.Product != null)
+                .Select(ci => new CartItemDto
             {
                 ProductVariantId = ci.ProductVariantId,
-                ProductName = ci.ProductVariant.Product.ProductName,
+                ProductName = ci.ProductVariant!.Product!.ProductName,
                 VariantName = ci.ProductVariant.VariantName,
                 ImageUrl = ci.ProductVariant.ImageUrl ?? "",
                 Price = ci.Price, // Giá đã lưu trong giỏ hàng (có thể là giá khuyến mãi)

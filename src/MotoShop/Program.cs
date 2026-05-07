@@ -88,6 +88,7 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<IFlashSaleService, FlashSaleService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddHostedService<BookingExpiryService>();
@@ -146,6 +147,12 @@ using (var scope = app.Services.CreateScope())
             IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Services') AND name = 'IsActive')
                 ALTER TABLE Services ADD IsActive BIT DEFAULT 1;
 
+            -- Đảm bảo dữ liệu cũ không bị NULL gây lỗi SqlNullValueException
+            EXEC('UPDATE Services SET Duration = 30 WHERE Duration IS NULL');
+            EXEC('UPDATE Services SET TotalBookings = 0 WHERE TotalBookings IS NULL');
+            EXEC('UPDATE Services SET IsActive = 1 WHERE IsActive IS NULL');
+            EXEC('UPDATE Services SET WarrantyDays = 30 WHERE WarrantyDays IS NULL');
+
             IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Custom_Wishlists')
                 CREATE TABLE Custom_Wishlists (Id INT IDENTITY PRIMARY KEY, UserId INT NOT NULL, ProductId INT NOT NULL, CreatedAt DATETIME DEFAULT GETDATE());
             IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'WishlistsNew')
@@ -180,23 +187,37 @@ using (var scope = app.Services.CreateScope())
             
             IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'PaymentMethod')
                 ALTER TABLE Orders ADD PaymentMethod NVARCHAR(100) NULL;
+
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'IsAllProducts')
+                ALTER TABLE Coupons ADD IsAllProducts BIT DEFAULT 1;
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'AppliedCategoryIds')
+                ALTER TABLE Coupons ADD AppliedCategoryIds NVARCHAR(MAX) NULL;
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'AppliedProductIds')
+                ALTER TABLE Coupons ADD AppliedProductIds NVARCHAR(MAX) NULL;
+
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'FlashSales')
+                CREATE TABLE FlashSales (FlashSaleId INT IDENTITY PRIMARY KEY, Title NVARCHAR(255) NOT NULL, Description NVARCHAR(MAX), StartDate DATETIME NOT NULL, EndDate DATETIME NOT NULL, IsActive BIT DEFAULT 1);
+            
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'FlashSaleProducts')
+                CREATE TABLE FlashSaleProducts (Id INT IDENTITY PRIMARY KEY, FlashSaleId INT NOT NULL, ProductId INT NOT NULL, FlashSalePrice DECIMAL(18,2) NOT NULL, Quantity INT NOT NULL, SoldQuantity INT DEFAULT 0);
         ");
 
         await context.Database.ExecuteSqlRawAsync(@"
             UPDATE Blogs SET IsPublished = 0 WHERE IsPublished IS NULL;
             UPDATE Banners SET DisplayOrder = 0 WHERE DisplayOrder IS NULL;
+            UPDATE ServiceBookings SET DepositAmount = 0 WHERE DepositAmount IS NULL;
         ");
 
         Log.Information("Seeding Data...");
         await context.Database.ExecuteSqlRawAsync(@"
             IF EXISTS (SELECT * FROM sys.tables WHERE name = 'ServiceCategories') AND NOT EXISTS (SELECT * FROM ServiceCategories)
             BEGIN
-                INSERT INTO ServiceCategories (CategoryName, Slug, Icon) VALUES 
-                (N'Bảo dưỡng', 'bao-duong', 'bx-wrench'),
-                (N'Phụ tùng', 'phu-tung', 'bx-cog'),
-                (N'Độ xe', 'do-xe', 'bx-tachometer'),
-                (N'Cứu hộ', 'cuu-ho', 'bx-unite'),
-                (N'Rửa xe', 'rua-xe', 'bx-water');
+                INSERT INTO ServiceCategories (CategoryName, Slug, Icon, IsActive) VALUES 
+                (N'Bảo dưỡng', 'bao-duong', 'bx-wrench', 1),
+                (N'Phụ tùng', 'phu-tung', 'bx-cog', 1),
+                (N'Độ xe', 'do-xe', 'bx-tachometer', 1),
+                (N'Cứu hộ', 'cuu-ho', 'bx-unite', 1),
+                (N'Rửa xe', 'rua-xe', 'bx-water', 1);
             END
         ");
 

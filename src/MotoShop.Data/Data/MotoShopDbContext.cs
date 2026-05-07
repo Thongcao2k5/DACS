@@ -29,6 +29,8 @@ namespace MotoShop.Data.Data
         public DbSet<ProductReview> ProductReviews { get; set; }
         public DbSet<Promotion> Promotions { get; set; }
         public DbSet<PromotionProduct> PromotionProducts { get; set; }
+        public DbSet<FlashSale> FlashSales { get; set; }
+        public DbSet<FlashSaleProduct> FlashSaleProducts { get; set; }
         public DbSet<Store> Stores { get; set; }
         public DbSet<Staff> Staffs { get; set; }
         public DbSet<Banner> Banners { get; set; }
@@ -52,6 +54,10 @@ namespace MotoShop.Data.Data
         public DbSet<ShippingMethod> ShippingMethods { get; set; }
         public DbSet<ServiceReview> ServiceReviews { get; set; }
         public DbSet<ServiceCategory> ServiceCategories { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<VariantImage> VariantImages { get; set; }
+        public DbSet<ProductSpecification> ProductSpecifications { get; set; }
+        public DbSet<ProductTag> ProductTags { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -72,6 +78,19 @@ namespace MotoShop.Data.Data
             builder.Entity<ServiceBooking>()
                 .Property(b => b.BookingCode)
                 .HasComputedColumnSql("'DV'+right('000000'+CONVERT([nvarchar],[BookingId]),(6))", stored: true);
+
+            // Bổ sung ràng buộc Restrict để bảo vệ dữ liệu (Shopee Standard)
+            builder.Entity<Product>()
+                .HasOne(p => p.Category)
+                .WithMany(c => c.Products)
+                .HasForeignKey(p => p.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Product>()
+                .HasOne(p => p.Brand)
+                .WithMany(b => b.Products)
+                .HasForeignKey(p => p.BrandId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

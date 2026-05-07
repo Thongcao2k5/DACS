@@ -58,9 +58,15 @@
                             <label class="form-label fw-bold small">DANH MỤC TIN TỨC</label>
                             <select asp-for="CategoryId" class="form-select border-2" required>
                                 <option value="">-- Chọn danh mục --</option>
-                                @foreach (var cat in ViewBag.Categories as IEnumerable<MotoShop.Data.Models.BlogCategory>)
+                                @{
+                                    var blogCategories = ViewBag.Categories as IEnumerable<MotoShop.Data.Models.BlogCategory>;
+                                }
+                                @if (blogCategories != null)
                                 {
-                                    <option value="@cat.Id">@cat.Name</option>
+                                    @foreach (var cat in blogCategories)
+                                    {
+                                        <option value="@cat.Id">@cat.Name</option>
+                                    }
                                 }
                             </select>
                         </div>

@@ -7,7 +7,7 @@
 
 @{
     var user = await UserManager.GetUserAsync(User);
-    var customer = user != null ? await _motoDb.Customers.FirstOrDefaultAsync(c => c.UserId == user.Id) : null;
+    var customer = user != null ? await _motoDb.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.UserId == user.Id) : null;
     var avatarUrl = !string.IsNullOrEmpty(customer?.AvatarUrl) ? customer.AvatarUrl : "/assets/img/avatars/1.png";
 }
 

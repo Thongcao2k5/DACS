@@ -13,6 +13,20 @@
                              onerror="this.src='/assets/img/elements/18.jpg'"
                              loading="lazy">
                     </a>
+
+                    @* Badge Logic *@
+                    @if (product.IsFlashSale)
+                    {
+                        <span class="product-badge badge-flash-sm">⚡ Flash</span>
+                    }
+                    else if (product.CalculatedDiscountPercent > 0)
+                    {
+                        <span class="product-badge badge-sale-sm">-@product.CalculatedDiscountPercent%</span>
+                    }
+                    else if ((DateTime.Now - product.CreatedDate).TotalDays <= 7)
+                    {
+                        <span class="product-badge badge-new-sm">Mới</span>
+                    }
                     
                     <!-- Hover Actions -->
                     <div class="product-hover-actions">
@@ -28,16 +42,6 @@
                     <button type="button" class="btn-compare-abs" onclick="addToCompare(@product.ProductId, '@product.ProductName', '@(product.PrimaryImageUrl ?? "/assets/img/elements/18.jpg")', @product.MinPrice)" title="So sánh">
                         <i class='bx bx-git-compare'></i>
                     </button>
-
-                    @if (product.MinPrice == 0)
-                    {
-                        <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2 rounded-pill">Liên hệ</span>
-                    }
-                    else if (product.MinOriginalPrice.HasValue && product.MinOriginalPrice > product.MinPrice)
-                    {
-                        var discount = (int)((1 - (double)product.MinPrice / (double)product.MinOriginalPrice.Value) * 100);
-                        <span class="badge bg-danger position-absolute top-0 start-0 m-2 rounded-pill">-@discount%</span>
-                    }
                 </div>
                 <div class="product-info p-3 flex-grow-1 d-flex flex-column">
                     <div class="d-flex justify-content-between align-items-start mb-1">

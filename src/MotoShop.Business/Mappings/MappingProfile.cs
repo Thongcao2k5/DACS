@@ -13,15 +13,15 @@ namespace MotoShop.Business.Mappings
             CreateMap<Product, ProductDto>()
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.CategoryName : string.Empty))
                 .ForMember(dest => dest.BrandName, opt => opt.MapFrom(src => src.Brand != null ? src.Brand.BrandName : string.Empty))
-                .ForMember(dest => dest.MinPrice, opt => opt.MapFrom(src => src.Variants.Any() ? src.Variants.Min(v => v.Price) : 0))
-                .ForMember(dest => dest.OldPrice, opt => opt.MapFrom(src => src.Variants.Any() ? (src.Variants.OrderBy(v => v.Price).FirstOrDefault().OriginalPrice ?? src.Variants.Min(v => v.Price) * 1.25m) : 0))
-                .ForMember(dest => dest.DiscountPercent, opt => opt.MapFrom(src => src.Variants.Any() ? 
-                    (int)Math.Round((double)((src.Variants.OrderBy(v => v.Price).FirstOrDefault().OriginalPrice ?? src.Variants.Min(v => v.Price) * 1.25m) - src.Variants.Min(v => v.Price)) * 100 / (double)(src.Variants.OrderBy(v => v.Price).FirstOrDefault().OriginalPrice ?? src.Variants.Min(v => v.Price) * 1.25m)) : 0))
-                .ForMember(dest => dest.DefaultVariantId, opt => opt.MapFrom(src => src.Variants.Any() ? src.Variants.FirstOrDefault().ProductVariantId : 0))
-                .ForMember(dest => dest.PrimaryImageUrl, opt => opt.MapFrom(src => src.Images.FirstOrDefault(i => i.IsPrimary) != null ? src.Images.FirstOrDefault(i => i.IsPrimary).ImageUrl : (src.Images.Any() ? src.Images.First().ImageUrl : string.Empty)))
-                .ForMember(dest => dest.Variants, opt => opt.MapFrom(src => src.Variants))
-                .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images))
-                .ForMember(dest => dest.Reviews, opt => opt.MapFrom(src => src.Reviews));
+                .ForMember(dest => dest.BrandLogoUrl, opt => opt.MapFrom(src => src.Brand != null ? src.Brand.LogoUrl : string.Empty))
+                .ForMember(dest => dest.MinPrice, opt => opt.MapFrom(src => src.Variants.Select(v => v.Price).OrderBy(p => p).FirstOrDefault()))
+                .ForMember(dest => dest.MinOriginalPrice, opt => opt.MapFrom(src => src.Variants.OrderBy(v => v.Price).Select(v => v.OriginalPrice).FirstOrDefault()))
+                .ForMember(dest => dest.OldPrice, opt => opt.MapFrom(src => src.Variants.OrderBy(v => v.Price).Select(v => v.OriginalPrice).FirstOrDefault()))
+                .ForMember(dest => dest.DiscountPercent, opt => opt.MapFrom(src => 0)) // Calculated in DTO property
+                .ForMember(dest => dest.DefaultVariantId, opt => opt.MapFrom(src => src.Variants.OrderBy(v => v.Price).Select(v => v.ProductVariantId).FirstOrDefault()))
+                .ForMember(dest => dest.PrimaryImageUrl, opt => opt.MapFrom(src => src.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault() ?? src.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? string.Empty))
+                .ForMember(dest => dest.IsFlashSale, opt => opt.MapFrom(src => src.FlashSaleProducts.Any(fsp => fsp.FlashSale != null && fsp.FlashSale.IsActive && fsp.FlashSale.StartDate <= DateTime.Now && fsp.FlashSale.EndDate >= DateTime.Now && fsp.Quantity > fsp.SoldQuantity)))
+                .ForMember(dest => dest.FlashSalePrice, opt => opt.MapFrom(src => src.FlashSaleProducts.Where(fsp => fsp.FlashSale != null && fsp.FlashSale.IsActive && fsp.FlashSale.StartDate <= DateTime.Now && fsp.FlashSale.EndDate >= DateTime.Now && fsp.Quantity > fsp.SoldQuantity).Select(fsp => (decimal?)fsp.FlashSalePrice).FirstOrDefault()));
 
             // ProductReview Mapping
             CreateMap<ProductReview, ProductReviewDto>()
@@ -29,11 +29,12 @@ namespace MotoShop.Business.Mappings
                 .ForMember(dest => dest.IsApproved, opt => opt.MapFrom(src => src.Status == "Approved"));
 
             // ProductVariant Mapping
-            CreateMap<ProductVariant, ProductVariantDto>()
-                .ForMember(dest => dest.VariantAttributeValues, opt => opt.MapFrom(src => src.VariantAttributeValues.Select(vav => new VariantAttributeDto {
-                    AttributeName = vav.AttributeValue.ProductAttribute != null ? vav.AttributeValue.ProductAttribute.AttributeName : "Thuộc tính",
-                    Value = vav.AttributeValue != null ? vav.AttributeValue.Value : string.Empty
-                }).ToList()));
+            CreateMap<ProductVariant, ProductVariantDto>();
+
+            // ProductVariantAttributeValue Mapping
+            CreateMap<ProductVariantAttributeValue, VariantAttributeDto>()
+                .ForMember(dest => dest.AttributeName, opt => opt.MapFrom(src => src.AttributeValue != null && src.AttributeValue.ProductAttribute != null ? src.AttributeValue.ProductAttribute.AttributeName : "Thuộc tính"))
+                .ForMember(dest => dest.Value, opt => opt.MapFrom(src => src.AttributeValue != null ? src.AttributeValue.Value : string.Empty));
 
             // ProductImage Mapping
             CreateMap<ProductImage, ProductImageDto>();
@@ -61,6 +62,17 @@ namespace MotoShop.Business.Mappings
                 .ForMember(dest => dest.ProductCount, opt => opt.MapFrom(src => src.PromotionProducts != null ? src.PromotionProducts.Count : 0))
                 .ForMember(dest => dest.StatusText, opt => opt.MapFrom(src => src.EndDate < DateTime.Now ? "Đã kết thúc" : (src.StartDate > DateTime.Now ? "Sắp diễn ra" : "Đang diễn ra")))
                 .ForMember(dest => dest.StatusClass, opt => opt.MapFrom(src => src.EndDate < DateTime.Now ? "bg-danger" : (src.StartDate > DateTime.Now ? "bg-warning" : "bg-success")));
+
+            // FlashSale Mapping
+            CreateMap<FlashSale, FlashSaleDto>()
+                .ForMember(dest => dest.ProductCount, opt => opt.MapFrom(src => src.FlashSaleProducts != null ? src.FlashSaleProducts.Count : 0))
+                .ForMember(dest => dest.StatusText, opt => opt.MapFrom(src => !src.IsActive ? "Tạm dừng" : (src.EndDate < DateTime.Now ? "Đã kết thúc" : (src.StartDate > DateTime.Now ? "Sắp diễn ra" : "Đang diễn ra"))))
+                .ForMember(dest => dest.StatusClass, opt => opt.MapFrom(src => !src.IsActive ? "bg-secondary" : (src.EndDate < DateTime.Now ? "bg-danger" : (src.StartDate > DateTime.Now ? "bg-warning" : "bg-success"))));
+
+            CreateMap<FlashSaleProduct, FlashSaleProductDto>()
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product != null ? src.Product.ProductName : string.Empty))
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.Product != null && src.Product.Images != null && src.Product.Images.Any(i => i.IsPrimary) ? src.Product.Images.First(i => i.IsPrimary).ImageUrl : (src.Product != null && src.Product.Images != null && src.Product.Images.Any() ? src.Product.Images.First().ImageUrl : string.Empty)))
+                .ForMember(dest => dest.OriginalPrice, opt => opt.MapFrom(src => src.Product != null && src.Product.Variants != null && src.Product.Variants.Any() ? src.Product.Variants.Min(v => v.Price) : 0));
 
             // Order Mapping
             CreateMap<Order, OrderDto>()

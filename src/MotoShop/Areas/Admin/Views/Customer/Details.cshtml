@@ -145,13 +145,17 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach (var booking in serviceHistory) {
-                                            <tr>
-                                                <td class="ps-4 fw-bold">@booking.Service?.ServiceName</td>
-                                                <td>@booking.BookingDate.ToString("dd/MM/yyyy")</td>
-                                                <td>@(booking.ServiceDate?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa xếp lịch")</td>
-                                                <td><span class="badge bg-label-warning">@booking.Status</span></td>
-                                            </tr>
+                                        @if (serviceHistory != null)
+                                        {
+                                            @foreach (var booking in serviceHistory)
+                                            {
+                                                <tr>
+                                                    <td class="ps-4 fw-bold">@booking.Service?.ServiceName</td>
+                                                    <td>@booking.BookingDate.ToString("dd/MM/yyyy")</td>
+                                                    <td>@(booking.ServiceDate?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa xếp lịch")</td>
+                                                    <td><span class="badge bg-label-warning">@booking.Status</span></td>
+                                                </tr>
+                                            }
                                         }
                                     </tbody>
                                 </table>

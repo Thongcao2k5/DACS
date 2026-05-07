@@ -25,7 +25,14 @@ namespace MotoShop.Controllers
             // Logic thêm mới vào database mà không dùng Model cũ (để tránh conflict)
             // Sử dụng execute sql raw để cực kỳ an toàn cho code hiện tại
             string sql = "INSERT INTO Consultations (CustomerName, Phone, Message, ProductId, CreatedAt) VALUES ({0}, {1}, {2}, {3}, {4})";
-            await _context.Database.ExecuteSqlRawAsync(sql, request.Name ?? "Khách hàng", request.Phone, request.Message ?? "", request.ProductId, DateTime.Now);
+            
+            object name = request.Name ?? "Khách hàng";
+            object phone = request.Phone ?? "";
+            object message = request.Message ?? "";
+            object productId = (object?)request.ProductId ?? DBNull.Value;
+            object createdAt = DateTime.Now;
+
+            await _context.Database.ExecuteSqlRawAsync(sql, name, phone, message, productId, createdAt);
 
             return Json(new { success = true, message = "Cảm ơn bạn! Chúng tôi sẽ liên hệ tư vấn sớm nhất." });
         }

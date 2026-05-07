@@ -5,7 +5,7 @@
     decimal promotionSavings = Model.OrderItems?.Sum(i => ((i.ProductVariant?.Price ?? i.Price) - i.Price) * i.Quantity) ?? 0;
     
     // Phân tách địa chỉ để đưa vào form sửa
-    var addressParts = Model.ShippingAddress.Split('|');
+    var addressParts = Model.ShippingAddress?.Split('|') ?? new string[0];
     var currentName = addressParts.Length > 0 ? addressParts[0].Trim() : "";
     var currentPhone = addressParts.Length > 1 ? addressParts[1].Trim() : "";
     var currentAddress = addressParts.Length > 2 ? addressParts[2].Trim() : "";

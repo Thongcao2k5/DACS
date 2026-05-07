@@ -47,7 +47,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="info-label">Trạng thái hiện tại</label>
-                        <span class="badge bg-label-info px-3 py-2">@Model.Status.ToUpper()</span>
+                        <span class="badge bg-label-info px-3 py-2">@(Model.Status?.ToUpper() ?? "UNKNOWN")</span>
                     </div>
                     <div class="col-md-4">
                         <label class="info-label">Khách hàng</label>
@@ -75,20 +75,23 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in Model.OrderItems)
+                        @if (Model.OrderItems != null)
                         {
-                            <tr>
-                                <td>
-                                    <img src="@(item.ProductVariant?.ImageUrl ?? "/assets/img/elements/no-image.png")" class="product-thumb">
-                                </td>
-                                <td>
-                                    <div class="fw-bold text-dark">@(item.ProductVariant?.Product?.ProductName ?? "Sản phẩm đã xóa")</div>
-                                </td>
-                                <td><span class="badge bg-label-secondary">@item.ProductVariant?.VariantName</span></td>
-                                <td class="text-end">@item.Price.ToString("N0")đ</td>
-                                <td class="text-center fw-bold">@item.Quantity.ToString("D2")</td>
-                                <td class="text-end fw-bold text-dark">@((item.Price * item.Quantity).ToString("N0"))đ</td>
-                            </tr>
+                            @foreach (var item in Model.OrderItems)
+                            {
+                                <tr>
+                                    <td>
+                                        <img src="@(item.ProductVariant?.ImageUrl ?? "/assets/img/elements/no-image.png")" class="product-thumb">
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark">@(item.ProductVariant?.Product?.ProductName ?? "Sản phẩm đã xóa")</div>
+                                    </td>
+                                    <td><span class="badge bg-label-secondary">@item.ProductVariant?.VariantName</span></td>
+                                    <td class="text-end">@item.Price.ToString("N0")đ</td>
+                                    <td class="text-center fw-bold">@item.Quantity.ToString("D2")</td>
+                                    <td class="text-end fw-bold text-dark">@((item.Price * item.Quantity).ToString("N0"))đ</td>
+                                </tr>
+                            }
                         }
                     </tbody>
                 </table>

@@ -84,7 +84,7 @@ namespace MotoShop.Business.Services
             return (true, "Đặt lịch thành công!", booking.BookingId);
         }
 
-        public async Task<BookingSuccessViewModel> GetBookingSuccessAsync(int bookingId)
+        public async Task<BookingSuccessViewModel?> GetBookingSuccessAsync(int bookingId)
         {
             var booking = await _uow.Repository<ServiceBooking>()
                 .Find(b => b.BookingId == bookingId)
@@ -129,7 +129,7 @@ namespace MotoShop.Business.Services
             // Lấy danh sách khung giờ đã đạt tối đa số lượng phục vụ
             var bookedSlots = await _uow.Repository<ServiceBooking>()
                 .Find(b => b.ServiceDate.HasValue && b.ServiceDate.Value.Date == date.Date && b.Status != "Cancelled")
-                .GroupBy(b => b.ServiceDate.Value)
+                .GroupBy(b => b.ServiceDate!.Value)
                 .Where(g => g.Count() >= maxConcurrent)
                 .Select(g => g.Key.ToString("HH:mm"))
                 .ToListAsync();

@@ -47,12 +47,14 @@ namespace MotoShop.Business.Services
                         if (variant == null || variant.StockQuantity < checkoutData.DirectQuantity)
                             return (false, "Sản phẩm không đủ tồn kho.", 0);
                         
+                        decimal directPrice = await GetDiscountedPrice(variant);
+
                         orderItemsToCreate.Add(new OrderItem {
                             ProductVariantId = variant.ProductVariantId,
                             Quantity = checkoutData.DirectQuantity,
-                            Price = variant.Price
+                            Price = directPrice
                         });
-                        subTotal = variant.Price * checkoutData.DirectQuantity;
+                        subTotal = directPrice * checkoutData.DirectQuantity;
                     }
                     else
                     {
@@ -65,12 +67,13 @@ namespace MotoShop.Business.Services
                             if (variant == null || variant.StockQuantity < item.Quantity)
                                 return (false, $"Sản phẩm '{item.ProductVariant?.VariantName}' không đủ tồn kho.", 0);
 
+                            // SỬ DỤNG GIÁ ĐÃ LƯU TRONG GIỎ HÀNG (GIÁ KHUYẾN MÃI TẠI THỜI ĐIỂM THÊM)
                             orderItemsToCreate.Add(new OrderItem {
                                 ProductVariantId = item.ProductVariantId,
                                 Quantity = item.Quantity,
-                                Price = variant.Price
+                                Price = item.Price
                             });
-                            subTotal += variant.Price * item.Quantity;
+                            subTotal += item.Price * item.Quantity;
                         }
                     }
 
@@ -171,18 +174,36 @@ namespace MotoShop.Business.Services
 
         public async Task<List<OrderDto>> GetUserOrdersAsync(string userId)
         {
-            var orders = await _unitOfWork.Repository<Order>().GetAllAsync();
+            var orders = await _context.Orders
+                .Include(o => o.Customer)
+                .Where(o => o.Customer != null && o.Customer.UserId == userId)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+
             return orders.Select(o => new OrderDto
             {
-                OrderId = o.OrderId, OrderCode = o.OrderCode, OrderDate = o.OrderDate,
-                TotalAmount = o.TotalAmount, Status = o.Status, PaymentStatus = o.PaymentStatus, ShippingAddress = o.ShippingAddress
-            }).OrderByDescending(o => o.OrderDate).ToList();
+                OrderId = o.OrderId, 
+                OrderCode = o.OrderCode ?? string.Empty, 
+                OrderDate = o.OrderDate,
+                TotalAmount = o.TotalAmount, 
+                Status = o.Status ?? string.Empty, 
+                PaymentStatus = o.PaymentStatus ?? string.Empty, 
+                ShippingAddress = o.ShippingAddress ?? string.Empty
+            }).ToList();
         }
 
         public async Task<OrderDto> GetOrderDetailsAsync(int orderId, string userId)
         {
-            var o = await _unitOfWork.Repository<Order>().GetByIdAsync(orderId);
-            return o == null ? null! : new OrderDto { OrderId = o.OrderId, OrderCode = o.OrderCode, TotalAmount = o.TotalAmount, Status = o.Status };
+            var o = await _context.Orders
+                .Include(o => o.Customer)
+                .FirstOrDefaultAsync(o => o.OrderId == orderId && o.Customer != null && o.Customer.UserId == userId);
+                
+            return o == null ? null! : new OrderDto { 
+                OrderId = o.OrderId, 
+                OrderCode = o.OrderCode ?? string.Empty, 
+                TotalAmount = o.TotalAmount, 
+                Status = o.Status ?? string.Empty 
+            };
         }
 
         public async Task<bool> CancelOrderAsync(int orderId, string userId)
@@ -235,6 +256,44 @@ namespace MotoShop.Business.Services
             if (status == "Paid") order.Status = "Processing";
             _unitOfWork.Repository<Order>().Update(order);
             return await _unitOfWork.CompleteAsync() > 0;
+        }
+
+        private async Task<decimal> GetDiscountedPrice(ProductVariant variant)
+        {
+            decimal finalPrice = variant.Price;
+            var now = DateTime.Now;
+
+            // 1. Kiểm tra Flash Sale
+            var flashSaleProduct = await _context.FlashSaleProducts.AsNoTracking()
+                .Include(fsp => fsp.FlashSale)
+                .FirstOrDefaultAsync(fsp => fsp.ProductId == variant.ProductId && fsp.FlashSale != null && fsp.FlashSale.IsActive && fsp.FlashSale.StartDate <= now && fsp.FlashSale.EndDate >= now && fsp.Quantity > fsp.SoldQuantity);
+
+            if (flashSaleProduct != null)
+            {
+                finalPrice = flashSaleProduct.FlashSalePrice;
+            }
+            else
+            {
+                // 2. Kiểm tra Khuyến mãi thường
+                var activePromotion = await _context.PromotionProducts.AsNoTracking()
+                    .Include(pp => pp.Promotion)
+                    .Where(pp => pp.ProductId == variant.ProductId && pp.Promotion != null && pp.Promotion.IsActive && pp.Promotion.StartDate <= now && pp.Promotion.EndDate >= now)
+                    .Select(pp => pp.Promotion)
+                    .FirstOrDefaultAsync();
+
+                if (activePromotion != null)
+                {
+                    if (activePromotion.DiscountType == "Percentage")
+                        finalPrice = variant.Price * (1 - (activePromotion.DiscountPercentage / 100));
+                    else if (activePromotion.DiscountType == "FixedAmount")
+                        finalPrice = variant.Price - activePromotion.DiscountAmount;
+                }
+            }
+
+            if (finalPrice < 0) finalPrice = 0;
+            if (finalPrice > variant.Price) finalPrice = variant.Price;
+
+            return finalPrice;
         }
     }
 }

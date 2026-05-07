@@ -6,9 +6,9 @@ namespace MotoShop.Business.DTOs
 {
     public class ProductDetailsViewModel
     {
-        public Product Product { get; set; }
-        public List<Promotion> Vouchers { get; set; }
-        public List<Product> RelatedProducts { get; set; }
+        public required Product Product { get; set; }
+        public List<Promotion> Vouchers { get; set; } = new List<Promotion>();
+        public List<Product> RelatedProducts { get; set; } = new List<Product>();
         public bool CanReview { get; set; }
         public double AverageRating { get; set; }
         public int TotalReviews { get; set; }

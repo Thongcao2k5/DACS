@@ -34,7 +34,7 @@ namespace MotoShop.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<ProductImage> FindImageByIdAsync(int imageId)
+        public async Task<ProductImage?> FindImageByIdAsync(int imageId)
         {
             return await _context.Set<ProductImage>().FindAsync(imageId);
         }

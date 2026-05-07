@@ -37,12 +37,11 @@ namespace MotoShop.Areas.Admin.Controllers
 
         public async Task<IActionResult> Upsert(int? id)
         {
-            Blog blog = new Blog();
             ViewBag.Categories = await _context.BlogCategories.ToListAsync();
 
-            if (id == null || id == 0) return View(blog);
+            if (id == null || id == 0) return View(new Blog());
 
-            blog = await _context.Blogs.FindAsync(id);
+            var blog = await _context.Blogs.FindAsync(id);
             if (blog == null) return NotFound();
             return View(blog);
         }

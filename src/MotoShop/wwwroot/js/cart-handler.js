@@ -82,13 +82,13 @@ const CartApi = {
 /**
  * Xử lý khi nhấn "Thêm vào giỏ"
  */
-async function handleAddToCart(variantId) {
+async function handleAddToCart(variantId, quantity = 1) {
     if (!variantId || variantId === 0) {
-        CartUI.showToast('Sản phẩm hiện chưa có tùy chọn phù hợp!', 'warning');
+        CartUI.showToast('Vui lòng chọn đầy đủ thuộc tính sản phẩm!', 'warning');
         return;
     }
 
-    const btn = event?.currentTarget;
+    const btn = window.event?.currentTarget;
     const originalContent = btn ? btn.innerHTML : null;
     
     if (btn) {
@@ -96,7 +96,7 @@ async function handleAddToCart(variantId) {
         btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>';
     }
 
-    const result = await CartApi.addToCart(variantId);
+    const result = await CartApi.addToCart(variantId, quantity);
     
     if (btn) {
         btn.disabled = false;
@@ -117,7 +117,7 @@ async function handleAddToCart(variantId) {
                 cancelButtonText: 'Để sau',
                 confirmButtonColor: '#E24B4A'
             }).then((rs) => {
-                if (res.isConfirmed) window.location.href = '/Account/Login';
+                if (rs.isConfirmed) window.location.href = '/Account/Login?returnUrl=' + encodeURIComponent(window.location.pathname + window.location.search);
             });
         } else {
             CartUI.showToast(result.message || 'Không thể thêm sản phẩm vào giỏ.', 'error');
@@ -128,15 +128,14 @@ async function handleAddToCart(variantId) {
 /**
  * Xử lý khi nhấn "Mua ngay"
  */
-async function handleBuyNow(variantId) {
-    if (!variantId || variantId === 0) return;
-
-    const result = await CartApi.addToCart(variantId);
-    if (result.success) {
-        window.location.href = '/Cart/Checkout';
-    } else {
-        CartUI.showToast(result.message, 'error');
+async function handleBuyNow(variantId, quantity = 1) {
+    if (!variantId || variantId === 0) {
+        CartUI.showToast('Vui lòng chọn đầy đủ thuộc tính sản phẩm!', 'warning');
+        return;
     }
+
+    // Với "Mua ngay", ta chuyển thẳng đến trang Checkout kèm thông tin variant
+    window.location.href = `/Cart/Checkout?variantId=${variantId}&quantity=${quantity}`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {

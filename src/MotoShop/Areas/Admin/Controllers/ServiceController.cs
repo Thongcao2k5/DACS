@@ -37,7 +37,7 @@ namespace MotoShop.Areas.Admin.Controllers
             if (!string.IsNullOrEmpty(status))
             {
                 bool isActive = status == "Active";
-                query = query.Where(s => s.IsActive == isActive);
+                query = query.Where(s => s.IsActive == true == isActive);
             }
 
             var totalItems = await query.CountAsync();
@@ -148,7 +148,7 @@ namespace MotoShop.Areas.Admin.Controllers
                 {
                     ws.Cell(row, 1).Value = s.ServiceName;
                     ws.Cell(row, 2).Value = s.Price;
-                    ws.Cell(row, 3).Value = s.IsActive ? "Đang cung cấp" : "Tạm ngừng";
+                    ws.Cell(row, 3).Value = s.IsActive == true ? "Đang cung cấp" : "Tạm ngừng";
                     row++;
                 }
                 ws.Columns().AdjustToContents();

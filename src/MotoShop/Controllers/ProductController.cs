@@ -17,22 +17,24 @@ namespace MotoShop.Controllers
     {
         private readonly IProductService _productService;
         private readonly ICategoryService _categoryService;
+        private readonly IFlashSaleService _flashSaleService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
 
         public ProductController(
             IProductService productService, 
             ICategoryService categoryService,
+            IFlashSaleService flashSaleService,
             IUnitOfWork unitOfWork,
             UserManager<IdentityUser> userManager)
         {
             _productService = productService;
             _categoryService = categoryService;
+            _flashSaleService = flashSaleService;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
         }
 
-        // Danh sách sản phẩm (Trang cửa hàng chính)
         public async Task<IActionResult> Index(
             string? searchTerm,
             int? categoryId,
@@ -45,25 +47,34 @@ namespace MotoShop.Controllers
             int page = 1,
             int pageSize = 12)
         {
-            // 1. Gọi Service lấy dữ liệu lọc thực tế
+            // Chạy tuần tự để tránh lỗi "A second operation was started on this context..."
+            
+            // 1. Lấy dữ liệu phân trang
             var pagedProducts = await _productService.GetPagedProductsAsync(
                 searchTerm, categoryId, brandId, sort, page, pageSize, minPrice, maxPrice, inStock, onSale
             );
 
-            // 2. Lấy dữ liệu cho các bộ lọc (Sidebar)
+            // 2. Lấy danh mục và thương hiệu
             var categories = await _categoryService.GetAllAsync();
             var brands = await _productService.GetAllBrandsAsync();
+            
+            // 3. Lấy số lượng sản phẩm (TÍNH NĂNG MỚI)
+            ViewBag.CategoryProductCount = await _productService.GetProductCountByCategoryAsync();
+            ViewBag.BrandProductCount = await _productService.GetProductCountByBrandAsync();
 
-            // 3. Chuẩn bị SelectList
+            // 4. Chuẩn bị SelectList và ListItems cho Sidebar
+            ViewBag.CategoryListItems = categories.ToList();
+            ViewBag.BrandListItems = brands.ToList();
+
             var categoryItems = categories.Select(c => new {
                 CategoryId = c.CategoryId,
-                CategoryNameWithCount = $"{c.CategoryName} ({c.ProductCount})"
+                CategoryNameWithCount = $"{c.CategoryName} ({((Dictionary<int, int>)ViewBag.CategoryProductCount).GetValueOrDefault(c.CategoryId, 0)})"
             });
             ViewBag.CategoryList = new SelectList(categoryItems, "CategoryId", "CategoryNameWithCount", categoryId);
             
             var brandItems = brands.Select(b => new {
                 BrandId = b.BrandId,
-                BrandNameWithCount = $"{b.BrandName} ({b.ProductCount})"
+                BrandNameWithCount = $"{b.BrandName} ({((Dictionary<int, int>)ViewBag.BrandProductCount).GetValueOrDefault(b.BrandId, 0)})"
             });
             ViewBag.BrandList = new SelectList(brandItems, "BrandId", "BrandNameWithCount", brandId);
             
@@ -76,25 +87,25 @@ namespace MotoShop.Controllers
                 new SelectListItem { Value = "za", Text = "Tên Z-A", Selected = (sort == "za") }
             };
 
-            // 4. Tính toán số lượng hiển thị (FIX 5)
+            // 5. Tính toán số lượng hiển thị (FIX 5)
             int from = pagedProducts.TotalCount > 0 ? (page - 1) * pageSize + 1 : 0;
             int to = Math.Min(page * pageSize, pagedProducts.TotalCount);
             ViewBag.From = from;
             ViewBag.To = to;
             ViewBag.TotalProducts = pagedProducts.TotalCount;
 
-            // 5. Tiêu đề động (FIX 1)
+            // 6. Tiêu đề động (FIX 1)
             var currentCat = categories.FirstOrDefault(c => c.CategoryId == categoryId);
             var currentBrand = brands.FirstOrDefault(b => b.BrandId == brandId);
             ViewBag.CategoryName = currentCat?.CategoryName;
             ViewBag.BrandName = currentBrand?.BrandName;
 
-            // 6. Giá lớn nhất cho Slider
+            // 7. Giá lớn nhất cho Slider
             ViewBag.MaxPriceLimit = await _productService.GetMaxProductPriceAsync();
             ViewBag.SelectedMinPrice = minPrice ?? 0;
             ViewBag.SelectedMaxPrice = maxPrice ?? ViewBag.MaxPriceLimit;
 
-            // 7. Gợi ý từ khóa nếu không có kết quả (TÍNH NĂNG 7)
+            // 8. Gợi ý từ khóa nếu không có kết quả (TÍNH NĂNG 7)
             if (pagedProducts.TotalCount == 0 && !string.IsNullOrEmpty(searchTerm))
             {
                 // Logic đơn giản: lấy các từ khóa phổ biến
@@ -180,7 +191,6 @@ namespace MotoShop.Controllers
                     .Include(x => x.Variants).FirstOrDefaultAsync();
                 if (p != null) products.Add(new ProductDto { /* map manually or use mapper */ });
             }
-            // Implementation of comparison view...
             return View(products);
         }
 
@@ -236,9 +246,9 @@ namespace MotoShop.Controllers
             ViewBag.IsLoggedIn = !string.IsNullOrEmpty(userId);
 
             var relatedProducts = await _productService.GetRelatedProductsAsync(
-                product.ProductId, 
-                product.CategoryId ?? 0, 
-                product.BrandId ?? 0, 
+                product.ProductId,
+                product.CategoryId ?? 0,
+                product.BrandId ?? 0,
                 8);
 
             var vouchers = await _productService.GetVouchersForProductAsync(product.ProductId);
@@ -249,7 +259,7 @@ namespace MotoShop.Controllers
             return View(product);
         }
 
-        public async Task<IActionResult> Promotion()
+        public IActionResult Promotion()
         {
             return View();
         }
@@ -257,7 +267,13 @@ namespace MotoShop.Controllers
         [HttpGet]
         public async Task<IActionResult> GetPromotionProductsJson(int count = 12)
         {
-            var products = await _productService.GetPromotionProductsAsync(count);
+            var activeSales = await _flashSaleService.GetActiveFlashSalesAsync();
+            if (activeSales == null || !activeSales.Any())
+            {
+                return Json(new List<ProductDto>());
+            }
+            
+            var products = activeSales.SelectMany(s => s.Products).Take(count).ToList();
             return Json(products);
         }
     }

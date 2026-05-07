@@ -87,16 +87,34 @@
                     <!-- Category Filter -->
                     <div class="filter-widget mb-4 pb-4 border-bottom">
                         <h6 class="fw-bold mb-3 small">DANH MỤC</h6>
-                        <select name="categoryId" class="form-select rounded-pill filter-select" asp-items="ViewBag.CategoryList">
+                        @{
+                            var catCount = ViewBag.CategoryProductCount as Dictionary<int, int> ?? new Dictionary<int, int>();
+                            var brandCount = ViewBag.BrandProductCount as Dictionary<int, int> ?? new Dictionary<int, int>();
+                        }
+                        <select name="categoryId" class="form-select rounded-pill filter-select">
                             <option value="">Tất cả danh mục</option>
+                            @foreach (var cat in ViewBag.CategoryListItems as List<CategoryDto> ?? new List<CategoryDto>())
+                            {
+                                var count = catCount.GetValueOrDefault(cat.CategoryId, 0);
+                                <option value="@cat.CategoryId" selected="@(ViewBag.CurrentCategoryId?.ToString() == cat.CategoryId.ToString())">
+                                    @cat.CategoryName @(count > 0 ? $"({count})" : "")
+                                </option>
+                            }
                         </select>
                     </div>
 
                     <!-- Brand Filter -->
                     <div class="filter-widget mb-4 pb-4 border-bottom">
                         <h6 class="fw-bold mb-3 small">THƯƠNG HIỆU</h6>
-                        <select name="brandId" class="form-select rounded-pill filter-select" asp-items="ViewBag.BrandList">
+                        <select name="brandId" class="form-select rounded-pill filter-select">
                             <option value="">Tất cả thương hiệu</option>
+                            @foreach (var brand in ViewBag.BrandListItems as List<BrandDto> ?? new List<BrandDto>())
+                            {
+                                var count = brandCount.GetValueOrDefault(brand.BrandId, 0);
+                                <option value="@brand.BrandId" selected="@(ViewBag.CurrentBrandId?.ToString() == brand.BrandId.ToString())">
+                                    @brand.BrandName @(count > 0 ? $"({count})" : "")
+                                </option>
+                            }
                         </select>
                     </div>
 
@@ -283,6 +301,29 @@
     .range-slider { position: absolute; pointer-events: none; -webkit-appearance: none; appearance: none; height: 5px; width: 100%; background: none; z-index: 2; margin: 0; }
     .range-slider::-webkit-slider-thumb { pointer-events: auto; -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #dc3545; cursor: pointer; border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
     .range-slider::-moz-range-thumb { pointer-events: auto; width: 18px; height: 18px; border-radius: 50%; background: #dc3545; cursor: pointer; border: 3px solid #fff; }
+
+    /* Badge Styles */
+    .product-badge {
+        position: absolute;
+        top: 8px; left: 8px;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 20px;
+        z-index: 1;
+    }
+    .badge-flash-sm {
+        background: #E24B4A;
+        color: white;
+    }
+    .badge-sale-sm {
+        background: #E24B4A;
+        color: white;
+    }
+    .badge-new-sm {
+        background: #EAF3DE;
+        color: #3B6D11;
+    }
 
     /* Quick View Hover */
     .product-hover-actions { position: absolute; bottom: -50px; left: 0; right: 0; display: flex; justify-content: center; padding: 10px; background: rgba(0,0,0,0.4); transition: bottom 0.3s ease; }

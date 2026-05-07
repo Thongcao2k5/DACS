@@ -108,10 +108,10 @@ IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AddressesNew')
 -- 8. Seed dữ liệu cho ServiceCategories
 IF EXISTS (SELECT * FROM sys.tables WHERE name = 'ServiceCategories') AND NOT EXISTS (SELECT * FROM ServiceCategories)
 BEGIN
-    INSERT INTO ServiceCategories (CategoryName, Slug, Icon) VALUES 
-    (N'Bảo dưỡng', 'bao-duong', 'bx-wrench'),
-    (N'Phụ tùng', 'phu-tung', 'bx-cog'),
-    (N'Độ xe', 'do-xe', 'bx-tachometer'),
-    (N'Cứu hộ', 'cuu-ho', 'bx-unite'),
-    (N'Rửa xe', 'rua-xe', 'bx-water');
+    INSERT INTO ServiceCategories (CategoryName, Slug, Icon, IsActive) VALUES
+    (N'Bảo dưỡng', 'bao-duong', 'bx-wrench', 1),
+    (N'Phụ tùng', 'phu-tung', 'bx-cog', 1),
+    (N'Độ xe', 'do-xe', 'bx-tachometer', 1),
+    (N'Cứu hộ', 'cuu-ho', 'bx-unite', 1),
+    (N'Rửa xe', 'rua-xe', 'bx-water', 1);
 END

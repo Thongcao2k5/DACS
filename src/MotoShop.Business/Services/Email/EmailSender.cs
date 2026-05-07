@@ -18,10 +18,11 @@ namespace MotoShop.Business.Services
         public Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
             // Lấy thông tin cấu hình từ appsettings.json
-            var mail = _configuration.GetSection("SmtpSettings")["User"];
-            var pw = _configuration.GetSection("SmtpSettings")["Pass"];
-            var host = _configuration.GetSection("SmtpSettings")["Host"];
-            var port = int.Parse(_configuration.GetSection("SmtpSettings")["Port"]);
+            var mail = _configuration.GetSection("SmtpSettings")["User"] ?? string.Empty;
+            var pw = _configuration.GetSection("SmtpSettings")["Pass"] ?? string.Empty;
+            var host = _configuration.GetSection("SmtpSettings")["Host"] ?? "smtp.gmail.com";
+            var portString = _configuration.GetSection("SmtpSettings")["Port"];
+            int port = int.TryParse(portString, out int p) ? p : 587;
 
             var client = new SmtpClient(host, port)
             {
