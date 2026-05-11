@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 namespace MotoShop.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class InventoryController : Controller
     {
         private readonly MotoShopDbContext _context;
@@ -34,7 +35,7 @@ namespace MotoShop.Areas.Admin.Controllers
         {
             var history = await _context.InventoryTransactions
                 .Include(t => t.ProductVariant)
-                    .ThenInclude(pv => pv != null ? pv.Product : null)
+                    .ThenInclude(pv => pv!.Product)
                 .OrderByDescending(t => t.TransactionDate)
                 .ToListAsync();
             return View(history);
@@ -67,3 +68,4 @@ namespace MotoShop.Areas.Admin.Controllers
         }
     }
 }
+

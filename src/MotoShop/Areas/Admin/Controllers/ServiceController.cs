@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
+using MotoShop.Business.Interfaces;
 using System.Linq;
 using System.Threading.Tasks;
 using ClosedXML.Excel;
 using System.IO;
-using Microsoft.AspNetCore.Hosting;
 
 namespace MotoShop.Areas.Admin.Controllers
 {
@@ -16,12 +16,12 @@ namespace MotoShop.Areas.Admin.Controllers
     public class ServiceController : Controller
     {
         private readonly MotoShopDbContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileService _fileService;
 
-        public ServiceController(MotoShopDbContext context, IWebHostEnvironment env)
+        public ServiceController(MotoShopDbContext context, IFileService fileService)
         {
             _context = context;
-            _env = env;
+            _fileService = fileService;
         }
 
         public async Task<IActionResult> Index(string? searchTerm, int? categoryId, string? status, int page = 1, int pageSize = 10)
@@ -63,7 +63,8 @@ namespace MotoShop.Areas.Admin.Controllers
             {
                 if (imageFile != null)
                 {
-                    service.ImageUrl = await UploadFile(imageFile, "services");
+                    try { service.ImageUrl = await _fileService.SaveFileAsync(imageFile, "services"); }
+                    catch (Exception ex) { return Json(new { success = false, message = ex.Message }); }
                 }
                 
                 if (string.IsNullOrEmpty(service.Slug)) 
@@ -86,30 +87,17 @@ namespace MotoShop.Areas.Admin.Controllers
 
                 if (imageFile != null)
                 {
-                    if (!string.IsNullOrEmpty(existing.ImageUrl))
+                    try 
                     {
-                        string oldFilePath = Path.Combine(_env.WebRootPath, existing.ImageUrl.TrimStart('/'));
-                        if (System.IO.File.Exists(oldFilePath)) System.IO.File.Delete(oldFilePath);
+                        if (!string.IsNullOrEmpty(existing.ImageUrl)) _fileService.DeleteFile(existing.ImageUrl);
+                        existing.ImageUrl = await _fileService.SaveFileAsync(imageFile, "services");
                     }
-                    existing.ImageUrl = await UploadFile(imageFile, "services");
+                    catch (Exception ex) { return Json(new { success = false, message = ex.Message }); }
                 }
             }
 
             await _context.SaveChangesAsync();
             return Json(new { success = true, message = "Lưu dịch vụ thành công" });
-        }
-
-        private async Task<string> UploadFile(IFormFile file, string folder)
-        {
-            string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads/" + folder);
-            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-            string uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
-            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(fileStream);
-            }
-            return "/uploads/" + folder + "/" + uniqueFileName;
         }
 
         [HttpPost]
@@ -120,8 +108,7 @@ namespace MotoShop.Areas.Admin.Controllers
 
             if (!string.IsNullOrEmpty(service.ImageUrl))
             {
-                string filePath = Path.Combine(_env.WebRootPath, service.ImageUrl.TrimStart('/'));
-                if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
+                _fileService.DeleteFile(service.ImageUrl);
             }
 
             _context.Services.Remove(service);

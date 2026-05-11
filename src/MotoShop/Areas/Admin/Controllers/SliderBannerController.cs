@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
+using MotoShop.Business.Interfaces;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
 
 namespace MotoShop.Areas.Admin.Controllers
 {
@@ -16,12 +16,12 @@ namespace MotoShop.Areas.Admin.Controllers
     public class SliderBannerController : Controller
     {
         private readonly MotoShopDbContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileService _fileService;
 
-        public SliderBannerController(MotoShopDbContext context, IWebHostEnvironment env)
+        public SliderBannerController(MotoShopDbContext context, IFileService fileService)
         {
             _context = context;
-            _env = env;
+            _fileService = fileService;
         }
 
         [Route("")]
@@ -43,7 +43,8 @@ namespace MotoShop.Areas.Admin.Controllers
             {
                 if (imageFile != null)
                 {
-                    slider.ImageUrl = await UploadFile(imageFile, "sliders");
+                    try { slider.ImageUrl = await _fileService.SaveFileAsync(imageFile, "sliders"); }
+                    catch (Exception ex) { return Json(new { success = false, message = ex.Message }); }
                 }
                 _context.Sliders.Add(slider);
             }
@@ -57,7 +58,12 @@ namespace MotoShop.Areas.Admin.Controllers
                 existing.IsActive = slider.IsActive;
                 if (imageFile != null)
                 {
-                    existing.ImageUrl = await UploadFile(imageFile, "sliders");
+                    try 
+                    {
+                        if (!string.IsNullOrEmpty(existing.ImageUrl)) _fileService.DeleteFile(existing.ImageUrl);
+                        existing.ImageUrl = await _fileService.SaveFileAsync(imageFile, "sliders");
+                    }
+                    catch (Exception ex) { return Json(new { success = false, message = ex.Message }); }
                 }
             }
 
@@ -93,6 +99,7 @@ namespace MotoShop.Areas.Admin.Controllers
         {
             var slider = await _context.Sliders.FindAsync(id);
             if (slider == null) return Json(new { success = false });
+            if (!string.IsNullOrEmpty(slider.ImageUrl)) _fileService.DeleteFile(slider.ImageUrl);
             _context.Sliders.Remove(slider);
             await _context.SaveChangesAsync();
             return Json(new { success = true, message = "Đã xóa Slider" });
@@ -107,7 +114,8 @@ namespace MotoShop.Areas.Admin.Controllers
             {
                 if (imageFile != null)
                 {
-                    banner.ImageUrl = await UploadFile(imageFile, "banners");
+                    try { banner.ImageUrl = await _fileService.SaveFileAsync(imageFile, "banners"); }
+                    catch (Exception ex) { return Json(new { success = false, message = ex.Message }); }
                 }
                 _context.Banners.Add(banner);
             }
@@ -121,7 +129,12 @@ namespace MotoShop.Areas.Admin.Controllers
                 existing.IsActive = banner.IsActive;
                 if (imageFile != null)
                 {
-                    existing.ImageUrl = await UploadFile(imageFile, "banners");
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(existing.ImageUrl)) _fileService.DeleteFile(existing.ImageUrl);
+                        existing.ImageUrl = await _fileService.SaveFileAsync(imageFile, "banners");
+                    }
+                    catch (Exception ex) { return Json(new { success = false, message = ex.Message }); }
                 }
             }
 
@@ -144,23 +157,11 @@ namespace MotoShop.Areas.Admin.Controllers
         {
             var banner = await _context.Banners.FindAsync(id);
             if (banner == null) return Json(new { success = false });
+            if (!string.IsNullOrEmpty(banner.ImageUrl)) _fileService.DeleteFile(banner.ImageUrl);
             _context.Banners.Remove(banner);
             await _context.SaveChangesAsync();
             return Json(new { success = true, message = "Đã xóa Banner" });
         }
         #endregion
-
-        private async Task<string> UploadFile(IFormFile file, string folder)
-        {
-            string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads/" + folder);
-            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-            string uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
-            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(fileStream);
-            }
-            return "/uploads/" + folder + "/" + uniqueFileName;
-        }
     }
 }

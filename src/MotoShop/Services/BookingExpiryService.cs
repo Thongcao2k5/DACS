@@ -33,8 +33,14 @@ namespace MotoShop.Services
                     }
                 }
 
-                // Chạy mỗi 5 phút
-                await Task.Delay(TimeSpan.FromMinutes(5), ct);
+                try
+                {
+                    await Task.Delay(TimeSpan.FromMinutes(5), ct);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
             }
         }
     }

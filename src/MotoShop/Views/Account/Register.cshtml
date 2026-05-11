@@ -66,6 +66,10 @@
                         <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
                     </div>
 
+                    <div class="mb-3">
+                        <small class="text-muted"><i class='bx bx-info-circle me-1'></i>Mật khẩu cần: tối thiểu 8 ký tự, có ít nhất 1 chữ số và 1 chữ thường.</small>
+                    </div>
+
                     <button type="button" id="btnSendOtp" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold mb-3 py-3">
                         TIẾP TỤC & GỬI MÃ XÁC NHẬN
                     </button>
@@ -119,6 +123,20 @@
 
             if (password !== confirmPassword) {
                 Swal.fire('Chú ý!', 'Mật khẩu xác nhận không khớp!', 'warning');
+                return;
+            }
+
+            // Validate password theo đúng Identity requirements
+            if (password.length < 8) {
+                Swal.fire('Chú ý!', 'Mật khẩu phải có ít nhất 8 ký tự!', 'warning');
+                return;
+            }
+            if (!/[0-9]/.test(password)) {
+                Swal.fire('Chú ý!', 'Mật khẩu phải chứa ít nhất 1 chữ số (0-9)!', 'warning');
+                return;
+            }
+            if (!/[a-z]/.test(password)) {
+                Swal.fire('Chú ý!', 'Mật khẩu phải chứa ít nhất 1 chữ thường (a-z)!', 'warning');
                 return;
             }
 
@@ -198,8 +216,8 @@
                     });
                 } else {
                     Swal.fire({
-                        title: '<span class="fw-bold text-danger">Thất bại</span>',
-                        text: data.message || 'Mã xác nhận không chính xác.',
+                        title: '<span class="fw-bold text-danger">Đăng ký thất bại</span>',
+                        html: `<p class="text-muted">${data.message || 'Mã xác nhận không chính xác.'}</p>`,
                         icon: 'error',
                         confirmButtonText: 'Thử lại',
                         customClass: { confirmButton: 'btn btn-danger rounded-pill px-4' },

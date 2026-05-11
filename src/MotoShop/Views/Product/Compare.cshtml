@@ -1,0 +1,196 @@
+@model IEnumerable<MotoShop.Business.DTOs.ProductDto>
+@{
+    ViewData["Title"] = "So sánh sản phẩm";
+    var products = Model.ToList();
+    var specNames = ViewBag.SpecNames as List<string> ?? new List<string>();
+    var specsMap = ViewBag.SpecsMap as Dictionary<int, Dictionary<string, string>> ?? new Dictionary<int, Dictionary<string, string>>();
+    int colCount = products.Count;
+}
+
+<div class="breadcrumb-wrapper">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb py-3 mb-0">
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="/Product" class="text-decoration-none text-muted">Sản phẩm</a></li>
+                <li class="breadcrumb-item active text-dark fw-bold">So sánh sản phẩm</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <h3 class="fw-bold mb-0"><i class='bx bx-transfer me-2 text-danger'></i>So sánh sản phẩm</h3>
+        <a href="/Product" class="btn btn-outline-secondary btn-sm rounded-pill ms-auto">
+            <i class='bx bx-arrow-back me-1'></i> Quay lại
+        </a>
+    </div>
+
+    @if (!products.Any())
+    {
+        <div class="text-center py-5">
+            <i class='bx bx-transfer display-3 text-muted d-block mb-3'></i>
+            <h5 class="text-muted">Không có sản phẩm nào để so sánh.</h5>
+            <a href="/Product" class="btn btn-danger rounded-pill px-4 mt-3">Chọn sản phẩm</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive shadow-sm rounded-4 border">
+            <table class="table table-bordered mb-0 text-center align-middle compare-table">
+
+                <!-- ẢNH + TÊN -->
+                <thead class="bg-light">
+                    <tr>
+                        <th class="compare-label bg-white border-end" style="min-width:140px"></th>
+                        @foreach (var p in products)
+                        {
+                            <th class="p-3" style="min-width:220px">
+                                <a href="/Product/Details?slug=@p.Slug" class="d-block">
+                                    <img src="@(string.IsNullOrEmpty(p.PrimaryImageUrl) ? "/assets/img/elements/18.jpg" : p.PrimaryImageUrl)"
+                                         onerror="this.src='/assets/img/elements/18.jpg'"
+                                         style="height:160px;object-fit:contain;width:100%" alt="@p.ProductName">
+                                </a>
+                                <div class="text-danger fw-bold small text-uppercase mt-2">@p.BrandName</div>
+                                <a href="/Product/Details?slug=@p.Slug"
+                                   class="fw-bold text-dark text-decoration-none d-block mt-1"
+                                   style="font-size:14px;line-height:1.4">@p.ProductName</a>
+                            </th>
+                        }
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <!-- GIÁ -->
+                    <tr>
+                        <td class="compare-label">Giá bán</td>
+                        @foreach (var p in products)
+                        {
+                            <td>
+                                <span class="text-danger fw-bold fs-5">@p.MinPrice.ToString("N0")₫</span>
+                                @if (p.MinOriginalPrice.HasValue && p.MinOriginalPrice > p.MinPrice)
+                                {
+                                    <br><del class="text-muted small">@p.MinOriginalPrice.Value.ToString("N0")₫</del>
+                                    <span class="badge bg-danger ms-1" style="font-size:11px">-@p.CalculatedDiscountPercent%</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+
+                    <!-- DANH MỤC -->
+                    <tr>
+                        <td class="compare-label">Danh mục</td>
+                        @foreach (var p in products)
+                        {
+                            <td>@p.CategoryName</td>
+                        }
+                    </tr>
+
+                    <!-- THƯƠNG HIỆU -->
+                    <tr>
+                        <td class="compare-label">Thương hiệu</td>
+                        @foreach (var p in products)
+                        {
+                            <td>
+                                @if (!string.IsNullOrEmpty(p.BrandLogoUrl))
+                                {
+                                    <img src="@p.BrandLogoUrl" alt="@p.BrandName" style="height:24px;object-fit:contain">
+                                    <span class="ms-1">@p.BrandName</span>
+                                }
+                                else
+                                {
+                                    @p.BrandName
+                                }
+                            </td>
+                        }
+                    </tr>
+
+                    <!-- TÌNH TRẠNG -->
+                    <tr>
+                        <td class="compare-label">Tình trạng</td>
+                        @foreach (var p in products)
+                        {
+                            <td>
+                                @if (p.IsInStock)
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">
+                                        <i class='bx bxs-check-circle me-1'></i>Còn hàng (@p.StockCount)
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">
+                                        <i class='bx bxs-x-circle me-1'></i>Hết hàng
+                                    </span>
+                                }
+                            </td>
+                        }
+                    </tr>
+
+                    <!-- ĐÃ BÁN -->
+                    <tr>
+                        <td class="compare-label">Đã bán</td>
+                        @foreach (var p in products)
+                        {
+                            <td>@p.SoldCount.ToString("N0")</td>
+                        }
+                    </tr>
+
+                    <!-- THÔNG SỐ KỸ THUẬT -->
+                    @if (specNames.Any())
+                    {
+                        <tr class="table-light">
+                            <td colspan="@(colCount + 1)" class="fw-bold text-uppercase small text-muted text-start ps-3 py-2">
+                                <i class='bx bx-list-ul me-1'></i> Thông số kỹ thuật
+                            </td>
+                        </tr>
+                        @foreach (var specName in specNames)
+                        {
+                            <tr>
+                                <td class="compare-label">@specName</td>
+                                @foreach (var p in products)
+                                {
+                                    var val = specsMap.ContainsKey(p.ProductId) && specsMap[p.ProductId].ContainsKey(specName)
+                                        ? specsMap[p.ProductId][specName]
+                                        : "—";
+                                    <td class="@(val == "—" ? "text-muted" : "")">@val</td>
+                                }
+                            </tr>
+                        }
+                    }
+
+                    <!-- NÚT MUA -->
+                    <tr class="bg-light">
+                        <td class="compare-label"></td>
+                        @foreach (var p in products)
+                        {
+                            <td class="py-3">
+                                <a href="/Product/Details?slug=@p.Slug"
+                                   class="btn btn-danger rounded-pill px-4 fw-bold d-block mx-auto"
+                                   style="max-width:180px">
+                                    <i class='bx bx-cart-add me-1'></i> Xem & Mua
+                                </a>
+                            </td>
+                        }
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<style>
+    .compare-label {
+        background: #f8f9fa;
+        font-weight: 600;
+        font-size: 13px;
+        text-align: left;
+        padding: 12px 16px;
+        color: #555;
+        vertical-align: middle;
+        border-right: 2px solid #dee2e6;
+    }
+    .compare-table td, .compare-table th { vertical-align: middle; }
+    .breadcrumb-wrapper { background: #f8f9fa; border-bottom: 1px solid #eee; }
+</style>

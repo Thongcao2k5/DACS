@@ -33,11 +33,16 @@
                             <td>
                                 @if (!string.IsNullOrEmpty(item.LogoUrl))
                                 {
-                                    <img src="@item.LogoUrl" alt="@item.BrandName" class="rounded" style="width: 40px; height: 40px; object-fit: contain; border: 1px solid #eee;">
+                                    <img src="@item.LogoUrl" alt="@item.BrandName"
+                                         class="rounded" style="width: 48px; height: 48px; object-fit: contain; border: 1px solid #eee; padding: 4px;"
+                                         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                                    <div class="rounded bg-light text-muted d-none align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                        <i class='bx bx-image-alt'></i>
+                                    </div>
                                 }
                                 else
                                 {
-                                    <div class="rounded bg-light text-muted d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <div class="rounded bg-light text-muted d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
                                         <i class='bx bx-image-alt'></i>
                                     </div>
                                 }
@@ -71,29 +76,58 @@
 <div class="modal fade" id="brandModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg border-0">
-            <form id="brandForm" onsubmit="handleFormSubmit(event)">
+            <form id="brandForm" onsubmit="handleFormSubmit(event)" enctype="multipart/form-data">
                 <div class="modal-header border-bottom p-4">
                     <h5 class="modal-title fw-bold" id="modalTitle">Thêm thương hiệu mới</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
                     <input type="hidden" id="BrandId" name="BrandId">
+
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-uppercase">Tên thương hiệu <span class="text-danger">*</span></label>
-                        <input type="text" id="BrandName" name="BrandName" class="form-control border-primary" placeholder="Nhập tên thương hiệu (VD: Honda, Yamaha...)" required>
+                        <input type="text" id="BrandName" name="BrandName" class="form-control border-primary"
+                               placeholder="Nhập tên thương hiệu (VD: Honda, Yamaha...)" required>
                     </div>
+
+                    <!-- Logo: upload file hoặc nhập URL -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold small text-uppercase">Đường dẫn Logo (URL)</label>
-                        <input type="url" id="LogoUrl" name="LogoUrl" class="form-control" placeholder="https://example.com/logo.png">
+                        <label class="form-label fw-bold small text-uppercase">Logo thương hiệu</label>
+
+                        <!-- Preview -->
+                        <div id="logoPreviewWrap" class="mb-2" style="display:none;">
+                            <img id="logoPreview" src="" alt="preview"
+                                 style="width: 80px; height: 80px; object-fit: contain; border: 1px solid #ddd; border-radius: 8px; padding: 6px;">
+                        </div>
+
+                        <!-- Upload file -->
+                        <div class="input-group mb-2">
+                            <span class="input-group-text bg-primary text-white"><i class="bx bx-upload"></i></span>
+                            <input type="file" id="logoFile" name="logoFile" class="form-control"
+                                   accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                                   onchange="previewLogo(this)">
+                        </div>
+                        <div class="text-muted small mb-2">— hoặc nhập URL bên ngoài —</div>
+
+                        <!-- URL input -->
+                        <input type="text" id="LogoUrl" name="LogoUrl" class="form-control"
+                               placeholder="https://example.com/logo.png  hoặc  /uploads/brands/honda.png"
+                               oninput="previewLogoUrl(this.value)">
+                        <div class="form-text">Upload file sẽ được ưu tiên hơn URL nếu chọn cả hai.</div>
                     </div>
+
                     <div class="mb-0">
                         <label class="form-label fw-bold small text-uppercase">Mô tả ngắn</label>
-                        <textarea id="Description" name="Description" class="form-control" rows="3" placeholder="Nhập vài dòng giới thiệu về thương hiệu này..."></textarea>
+                        <textarea id="Description" name="Description" class="form-control" rows="3"
+                                  placeholder="Nhập vài dòng giới thiệu về thương hiệu này..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-top p-3 px-4">
                     <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-primary px-4 rounded-pill fw-bold">LƯU THƯƠNG HIỆU</button>
+                    <button type="submit" class="btn btn-primary px-4 rounded-pill fw-bold">
+                        <span class="spinner-border spinner-border-sm d-none me-1" id="saveSpinner"></span>
+                        LƯU THƯƠNG HIỆU
+                    </button>
                 </div>
             </form>
         </div>
@@ -103,46 +137,56 @@
 @section Scripts {
     <script>
         const brandModal = new bootstrap.Modal(document.getElementById('brandModal'));
-        const brandForm = document.getElementById('brandForm');
+        const brandForm  = document.getElementById('brandForm');
 
         function openCreateModal() {
             brandForm.reset();
-            document.getElementById('BrandId').value = "";
-            document.getElementById('modalTitle').innerText = "Thêm thương hiệu mới";
+            document.getElementById('BrandId').value = '';
+            document.getElementById('modalTitle').innerText = 'Thêm thương hiệu mới';
+            hideLogo();
             brandModal.show();
         }
 
         function openEditModal(id) {
             brandForm.reset();
+            hideLogo();
             $.get('/Admin/Brand/GetBrand/' + id, function (data) {
-                document.getElementById('BrandId').value = data.brandId;
-                document.getElementById('BrandName').value = data.brandName;
-                document.getElementById('LogoUrl').value = data.logoUrl || "";
-                document.getElementById('Description').value = data.description || "";
-                document.getElementById('modalTitle').innerText = "Cập nhật thương hiệu";
+                document.getElementById('BrandId').value      = data.brandId;
+                document.getElementById('BrandName').value    = data.brandName;
+                document.getElementById('LogoUrl').value      = data.logoUrl || '';
+                document.getElementById('Description').value  = data.description || '';
+                document.getElementById('modalTitle').innerText = 'Cập nhật thương hiệu';
+                if (data.logoUrl) showPreview(data.logoUrl);
                 brandModal.show();
             });
         }
 
         function handleFormSubmit(e) {
             e.preventDefault();
-            const id = document.getElementById('BrandId').value;
+            const id  = document.getElementById('BrandId').value;
             const url = id ? '/Admin/Brand/Edit' : '/Admin/Brand/Create';
-            const formData = new FormData(brandForm);
-            
-            const data = {};
-            formData.forEach((value, key) => data[key] = value);
 
-            showLoader();
-            $.post(url, data, function (res) {
-                hideLoader();
-                if (res.success) {
-                    brandModal.hide();
-                    location.reload();
-                } else {
-                    alert(res.message);
-                }
-            });
+            const spinner = document.getElementById('saveSpinner');
+            spinner.classList.remove('d-none');
+
+            // Dùng FormData để gửi cả file lẫn text
+            const formData = new FormData(brandForm);
+
+            fetch(url, { method: 'POST', body: formData })
+                .then(r => r.json())
+                .then(res => {
+                    spinner.classList.add('d-none');
+                    if (res.success) {
+                        brandModal.hide();
+                        location.reload();
+                    } else {
+                        alert(res.message);
+                    }
+                })
+                .catch(() => {
+                    spinner.classList.add('d-none');
+                    alert('Lỗi kết nối máy chủ!');
+                });
         }
 
         function handleDelete(id, name) {
@@ -150,13 +194,34 @@
                 showLoader();
                 $.post('/Admin/Brand/Delete/' + id, function (res) {
                     hideLoader();
-                    if (res.success) {
-                        location.reload();
-                    } else {
-                        alert(res.message);
-                    }
+                    if (res.success) location.reload();
+                    else alert(res.message);
                 });
             }
+        }
+
+        // --- Preview helpers ---
+        function previewLogo(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => showPreview(e.target.result);
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function previewLogoUrl(url) {
+            if (url) showPreview(url);
+            else hideLogo();
+        }
+
+        function showPreview(src) {
+            document.getElementById('logoPreview').src = src;
+            document.getElementById('logoPreviewWrap').style.display = 'block';
+        }
+
+        function hideLogo() {
+            document.getElementById('logoPreviewWrap').style.display = 'none';
+            document.getElementById('logoPreview').src = '';
         }
     </script>
 }

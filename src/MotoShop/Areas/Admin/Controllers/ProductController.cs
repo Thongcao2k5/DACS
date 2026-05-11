@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Identity;
 using MotoShop.Business.Interfaces;
 using MotoShop.Data.Interfaces;
 using MotoShop.Data.Models;
@@ -14,23 +15,30 @@ using Microsoft.AspNetCore.Http;
 namespace MotoShop.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class ProductController : Controller
     {
         private readonly IProductRepository _productRepository;
         private readonly IFileService _fileService;
         private readonly IGenericRepository<Category> _categoryRepository;
         private readonly IGenericRepository<Brand> _brandRepository;
+        private readonly IAuditLogService _auditLogService;
+        private readonly UserManager<IdentityUser> _userManager;
 
         public ProductController(
             IProductRepository productRepository, 
             IFileService fileService,
             IGenericRepository<Category> categoryRepository,
-            IGenericRepository<Brand> brandRepository)
+            IGenericRepository<Brand> brandRepository,
+            IAuditLogService auditLogService,
+            UserManager<IdentityUser> userManager)
         {
             _productRepository = productRepository;
             _fileService = fileService;
             _categoryRepository = categoryRepository;
             _brandRepository = brandRepository;
+            _auditLogService = auditLogService;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index(string? searchTerm, int? categoryId, int? brandId, string? status, string? sort, int page = 1, int pageSize = 10)
@@ -378,6 +386,9 @@ namespace MotoShop.Areas.Admin.Controllers
                 _productRepository.Update(product);
                 await _productRepository.SaveChangesAsync();
 
+                var userId = _userManager.GetUserId(User);
+                await _auditLogService.LogActionAsync(userId, "Delete", "Product", id.ToString(), null, $"Đã xóa mềm sản phẩm: {product.ProductName}", HttpContext.Connection.RemoteIpAddress?.ToString());
+
                 return Json(new { success = true, message = "Đã xóa sản phẩm thành công" });
             }
             catch (Exception ex)
@@ -435,3 +446,4 @@ namespace MotoShop.Areas.Admin.Controllers
         }
     }
 }
+

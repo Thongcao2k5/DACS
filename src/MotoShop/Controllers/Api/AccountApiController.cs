@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using MotoShop.Business.DTOs;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MotoShop.Controllers.Api
@@ -18,17 +20,20 @@ namespace MotoShop.Controllers.Api
         private readonly IEmailSender _emailSender;
         private readonly IMemoryCache _cache;
         private readonly MotoShopDbContext _context;
+        private readonly ILogger<AccountApiController> _logger;
 
         public AccountApiController(
             UserManager<IdentityUser> userManager,
             IEmailSender emailSender,
             IMemoryCache cache,
-            MotoShopDbContext context)
+            MotoShopDbContext context,
+            ILogger<AccountApiController> logger)
         {
             _userManager = userManager;
             _emailSender = emailSender;
             _cache = cache;
             _context = context;
+            _logger = logger;
         }
 
         private class RegistrationCache
@@ -83,6 +88,7 @@ namespace MotoShop.Controllers.Api
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "RegisterStep1: Failed to send OTP to {Email}. Cause: {Error}", model.Email, ex.Message);
                 return StatusCode(500, new { message = "Không thể gửi email. Vui lòng kiểm tra lại địa chỉ email hoặc thử lại sau.", error = ex.Message });
             }
         }
@@ -103,44 +109,67 @@ namespace MotoShop.Controllers.Api
 
             // Dữ liệu đúng, tiến hành tạo User
             RegisterInitialDto regModel = cachedData.Model;
-            
-            // Bắt đầu Transaction để đảm bảo tính toàn vẹn dữ liệu
-            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            // Dùng CreateExecutionStrategy vì DbContext được cấu hình EnableRetryOnFailure
+            // (SqlServerRetryingExecutionStrategy không cho phép BeginTransaction trực tiếp)
+            string? resultMessage = null;
+            bool succeeded = false;
+
+            var strategy = _context.Database.CreateExecutionStrategy();
             try
             {
-                var user = new IdentityUser { UserName = regModel.Email, Email = regModel.Email };
-                var result = await _userManager.CreateAsync(user, regModel.Password);
-
-                if (result.Succeeded)
-                {
-                    // Thêm Role mặc định là Customer
-                    await _userManager.AddToRoleAsync(user, "Customer");
-
-                    // Tạo thông tin khách hàng
-                    var customer = new Customer
+                await strategy.ExecuteAsync(
+                    state: 0,
+                    operation: async (dbContext, state, ct) =>
                     {
-                        UserId = user.Id,
-                        FullName = regModel.FullName,
-                        Email = regModel.Email,
-                        CreatedDate = DateTime.Now
-                    };
+                        using var transaction = await _context.Database.BeginTransactionAsync(ct);
+                        try
+                        {
+                            var user = new IdentityUser { UserName = regModel.Email, Email = regModel.Email };
+                            var result = await _userManager.CreateAsync(user, regModel.Password);
 
-                    _context.Customers.Add(customer);
-                    await _context.SaveChangesAsync();
+                            if (!result.Succeeded)
+                            {
+                                resultMessage = string.Join(" ", result.Errors.Select(e => e.Description));
+                                _logger.LogWarning("VerifyOtp: CreateUser failed for {Email}: {Errors}", regModel.Email, resultMessage);
+                                await transaction.RollbackAsync();
+                                return false;
+                            }
 
-                    await transaction.CommitAsync();
-                    _cache.Remove(cacheKey);
+                            await _userManager.AddToRoleAsync(user, "Customer");
 
-                    return Ok(new { success = true, message = "Đăng ký tài khoản thành công! Bạn có thể đăng nhập ngay bây giờ." });
-                }
+                            _context.Customers.Add(new Customer
+                            {
+                                UserId      = user.Id,
+                                FullName    = regModel.FullName,
+                                Email       = regModel.Email,
+                                CreatedDate = DateTime.Now
+                            });
+                            await _context.SaveChangesAsync(ct);
+                            await transaction.CommitAsync(ct);
 
-                return BadRequest(new { message = "Đăng ký không thành công.", errors = result.Errors });
+                            succeeded = true;
+                            return true;
+                        }
+                        catch
+                        {
+                            await transaction.RollbackAsync();
+                            throw;
+                        }
+                    },
+                    verifySucceeded: null);
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
+                _logger.LogError(ex, "VerifyOtp: Unexpected error for {Email}: {Error}", regModel.Email, ex.Message);
                 return StatusCode(500, new { message = "Có lỗi xảy ra trong quá trình xử lý.", error = ex.Message });
             }
+
+            if (!succeeded)
+                return BadRequest(new { message = resultMessage ?? "Đăng ký không thành công." });
+
+            _cache.Remove(cacheKey);
+            return Ok(new { success = true, message = "Đăng ký tài khoản thành công! Bạn có thể đăng nhập ngay bây giờ." });
         }
 
         [HttpPost("forgot-password-step1")]
@@ -166,8 +195,16 @@ namespace MotoShop.Controllers.Api
                     <p>Mã này có hiệu lực trong 10 phút. Nếu bạn không thực hiện yêu cầu này, hãy bỏ qua email này.</p>
                 </div>";
 
-            await _emailSender.SendEmailAsync(model.Email, subject, message);
-            return Ok(new { success = true, message = "Mã xác nhận đã được gửi đến email." });
+            try
+            {
+                await _emailSender.SendEmailAsync(model.Email, subject, message);
+                return Ok(new { success = true, message = "Mã xác nhận đã được gửi đến email." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "ForgotPasswordStep1: Failed to send OTP to {Email}. Cause: {Error}", model.Email, ex.Message);
+                return StatusCode(500, new { message = "Không thể gửi email. Vui lòng thử lại sau.", error = ex.Message });
+            }
         }
 
         [HttpPost("verify-forgot-otp")]

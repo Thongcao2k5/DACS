@@ -3,42 +3,75 @@
     ViewData["Title"] = "Trang chủ";
 }
 
-<!-- 1. HERO BANNER / SLIDER -->
-<section class="hero-section p-0">
-    <div id="heroSlider" class="carousel slide carousel-fade" data-bs-ride="carousel">
+<!-- 1. HERO SLIDER -->
+<section class="hero-slider-section p-0">
+    <div id="heroSlider" class="carousel slide carousel-fade"
+         data-bs-ride="carousel" data-bs-pause="hover" data-bs-interval="4000">
+
         <div class="carousel-indicators">
-            <button type="button" data-bs-target="#heroSlider" data-bs-slide-to="0" class="active"></button>
+            <button type="button" data-bs-target="#heroSlider" data-bs-slide-to="0" class="active" aria-current="true"></button>
             <button type="button" data-bs-target="#heroSlider" data-bs-slide-to="1"></button>
+            <button type="button" data-bs-target="#heroSlider" data-bs-slide-to="2"></button>
         </div>
+
         <div class="carousel-inner">
-            <div class="carousel-item active" data-bs-interval="5000">
-                <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1600&q=80" class="d-block w-100" style="height: 600px; object-fit: cover;" alt="Banner 1">
-                <div class="carousel-caption d-flex align-items-center h-100 text-start" style="left: 10%; right: 10%; bottom: 0;">
-                    <div class="col-lg-6">
-                        <span class="badge bg-danger mb-3 px-3 py-2 animate__animated animate__fadeInDown">NEW ARRIVAL 2026</span>
-                        <h1 class="display-3 fw-bolder text-white mb-3 animate__animated animate__fadeInLeft">PHỤ TÙNG XE MÁY<br><span class="text-danger">CHÍNH HÃNG</span></h1>
-                        <p class="fs-5 mb-4 text-white-50 animate__animated animate__fadeInLeft animate__delay-1s">Chất lượng vượt trội cho xế yêu của bạn. Nhập khẩu trực tiếp từ Nhật Bản, Ý và Thái Lan.</p>
-                        <a asp-controller="Product" asp-action="Index" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold animate__animated animate__fadeInUp animate__delay-1s">MUA NGAY</a>
+            <div class="carousel-item active">
+                <div class="hero-slide-bg" style="background-image:url('https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1600&q=80')">
+                    <div class="hero-slide-overlay"></div>
+                    <div class="container h-100 d-flex align-items-center">
+                        <div class="hero-slide-content">
+                            <span class="hero-slide-badge">NEW ARRIVAL 2026</span>
+                            <h1 class="hero-slide-title">PHỤ TÙNG XE MÁY<br><span class="hero-slide-accent">CHÍNH HÃNG</span></h1>
+                            <p class="hero-slide-desc">Chất lượng vượt trội cho xế yêu của bạn. Nhập khẩu trực tiếp từ Nhật Bản, Ý và Thái Lan.</p>
+                            <div class="hero-slide-ctas">
+                                <a asp-controller="Product" asp-action="Index" class="btn-hero-slide-primary">MUA NGAY</a>
+                                <a asp-controller="Product" asp-action="Index" class="btn-hero-slide-outline">XEM DANH MỤC</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="carousel-item" data-bs-interval="5000">
-                <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=1600&q=80" class="d-block w-100" style="height: 600px; object-fit: cover;" alt="Banner 2">
-                <div class="carousel-caption d-flex align-items-center h-100 text-start" style="left: 10%; right: 10%; bottom: 0;">
-                    <div class="col-lg-6">
-                        <span class="badge bg-warning mb-3 px-3 py-2">SIÊU ƯU ĐÃI</span>
-                        <h1 class="display-3 fw-bolder text-white mb-3">BẢO DƯỠNG TRỌN GÓI<br><span class="text-warning">TIẾT KIỆM 30%</span></h1>
-                        <p class="fs-5 mb-4 text-white-50">Combo phụ tùng nồi - lọc gió - bugi cho mọi dòng xe tay ga. Duy nhất trong tháng này.</p>
-                        <a asp-controller="Product" asp-action="Index" class="btn btn-warning btn-lg rounded-pill px-5 fw-bold">XEM SẢN PHẨM</a>
+            <div class="carousel-item">
+                <div class="hero-slide-bg" style="background-image:url('https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=1600&q=80')">
+                    <div class="hero-slide-overlay"></div>
+                    <div class="container h-100 d-flex align-items-center">
+                        <div class="hero-slide-content">
+                            <span class="hero-slide-badge">SIÊU ƯU ĐÃI</span>
+                            <h1 class="hero-slide-title">BẢO DƯỠNG TRỌN GÓI<br><span class="hero-slide-accent">TIẾT KIỆM 30%</span></h1>
+                            <p class="hero-slide-desc">Combo phụ tùng nồi – lọc gió – bugi cho mọi dòng xe tay ga. Duy nhất trong tháng.</p>
+                            <div class="hero-slide-ctas">
+                                <a asp-controller="Product" asp-action="Index" class="btn-hero-slide-primary">XEM SẢN PHẨM</a>
+                                <a asp-controller="Service" asp-action="Index" class="btn-hero-slide-outline">ĐẶT LỊCH BẢO DƯỠNG</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <div class="hero-slide-bg" style="background-image:url('/assets/img/elements/18.jpg');background-color:#1a202c;">
+                    <div class="hero-slide-overlay"></div>
+                    <div class="container h-100 d-flex align-items-center">
+                        <div class="hero-slide-content">
+                            <span class="hero-slide-badge">FLASH SALE</span>
+                            <h1 class="hero-slide-title">GIÁ TỐT NHẤT<br><span class="hero-slide-accent">MỖI NGÀY</span></h1>
+                            <p class="hero-slide-desc">Hàng ngàn sản phẩm chính hãng giảm giá sâu mỗi ngày. Đừng bỏ lỡ!</p>
+                            <div class="hero-slide-ctas">
+                                <a asp-controller="Product" asp-action="Index" asp-route-sortBy="sale" class="btn-hero-slide-primary">XEM FLASH SALE</a>
+                                <a asp-controller="Product" asp-action="Index" class="btn-hero-slide-outline">TẤT CẢ SẢN PHẨM</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
         <button class="carousel-control-prev" type="button" data-bs-target="#heroSlider" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon"></span>
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
         </button>
         <button class="carousel-control-next" type="button" data-bs-target="#heroSlider" data-bs-slide="next">
-            <span class="carousel-control-next-icon"></span>
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
         </button>
     </div>
 </section>
@@ -49,57 +82,71 @@
         <div class="section-title-wrapper text-center">
             <h2 class="section-title center text-uppercase">Danh mục nổi bật</h2>
         </div>
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-3">
+        <div class="cat-row">
             @if (Model.TopCategories != null)
             {
                 foreach (var cat in Model.TopCategories)
                 {
-                    string iconClass = "bxs-component";
-                    if (cat.CategoryName.ToUpper().Contains("MÁY")) iconClass = "bxs-component";
-                    else if (cat.CategoryName.ToUpper().Contains("CHÂN")) iconClass = "bxs-wrench";
-                    else if (cat.CategoryName.ToUpper().Contains("NHỚT")) iconClass = "bxs-droplet";
-                    else if (cat.CategoryName.ToUpper().Contains("ĐỒ CHƠI")) iconClass = "bxs-bolt";
-                    else if (cat.CategoryName.ToUpper().Contains("LỐP") || cat.CategoryName.ToUpper().Contains("VỎ")) iconClass = "bxs-shield";
-
-                    <div class="col">
-                        <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@cat.CategoryId" class="cat-quick-card">
-                            <div class="cat-img-circle"><i class='bx @iconClass fs-1 text-danger'></i></div>
-                            <span class="fw-bold">@cat.CategoryName</span>
-                            <small class="text-muted d-block" style="font-size: 0.7rem;">(@cat.ProductCount sản phẩm)</small>
-                        </a>
-                    </div>
+                    string catName = cat.CategoryName.ToUpper();
+                    string iconClass = catName.Contains("NHỚT") || catName.Contains("DẦU") ? "bxs-droplet"
+                                     : catName.Contains("PHANH") || catName.Contains("CHÂN") ? "bxs-stop-circle"
+                                     : catName.Contains("LỐP") || catName.Contains("VỎ") ? "bxs-rotate-right"
+                                     : catName.Contains("ẮC QUY") || catName.Contains("BÌNH") ? "bxs-battery-charging"
+                                     : catName.Contains("ĐỒ CHƠI") || catName.Contains("ĐÈN") ? "bxs-bolt"
+                                     : catName.Contains("GIẢM XÓC") ? "bxs-equalizer"
+                                     : catName.Contains("ĐIỆN") ? "bxs-plug"
+                                     : catName.Contains("BẢO DƯỠNG") ? "bxs-wrench"
+                                     : "bxs-cog";
+                    string gradient = catName.Contains("NHỚT") || catName.Contains("DẦU")
+                                     ? "linear-gradient(135deg,#ff6b6b,#e53e3e)"
+                                     : catName.Contains("LỐP") || catName.Contains("VỎ")
+                                     ? "linear-gradient(135deg,#51cf66,#16a34a)"
+                                     : catName.Contains("PHANH") || catName.Contains("CHÂN")
+                                     ? "linear-gradient(135deg,#339af0,#1d4ed8)"
+                                     : catName.Contains("ẮC QUY") || catName.Contains("BÌNH")
+                                     ? "linear-gradient(135deg,#cc5de8,#7c3aed)"
+                                     : catName.Contains("BẢO DƯỠNG")
+                                     ? "linear-gradient(135deg,#ffa94d,#f59e0b)"
+                                     : "linear-gradient(135deg,#868e96,#495057)";
+                    <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@cat.CategoryId"
+                       class="cat-item text-decoration-none">
+                        <div class="cat-circle" style="background:@gradient;">
+                            <i class='bx @iconClass'></i>
+                        </div>
+                        <div class="cat-name">@cat.CategoryName</div>
+                        <div class="cat-count">@cat.ProductCount sản phẩm</div>
+                    </a>
                 }
             }
-            <div class="col">
-                <a asp-controller="Product" asp-action="Index" class="cat-quick-card">
-                    <div class="cat-img-circle"><i class='bx bxs-grid fs-1 text-danger'></i></div>
-                    <span class="fw-bold">Tất cả</span>
-                </a>
-            </div>
+            <a asp-controller="Product" asp-action="Index" class="cat-item text-decoration-none">
+                <div class="cat-circle" style="background:linear-gradient(135deg,#868e96,#495057);">
+                    <i class='bx bxs-grid'></i>
+                </div>
+                <div class="cat-name">Tất cả</div>
+                <div class="cat-count">Xem thêm</div>
+            </a>
         </div>
     </div>
 </section>
 
-<!-- 3. HOT PROMOTIONS -->
-<section class="promo-section">
+<!-- 3. PROMO BANNERS — Pure CSS, no images -->
+<section class="py-4 bg-light">
     <div class="container">
         <div class="row g-4">
             <div class="col-md-6">
-                <div class="promo-banner" style="background-image: linear-gradient(rgba(230,0,35,0.7), rgba(230,0,35,0.7)), url('https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800');">
-                    <div class="promo-content">
-                        <h2>ƯU ĐÃI THÁNG 3</h2>
-                        <p>Giảm ngay 200k cho đơn hàng bảo dưỡng trọn gói.</p>
-                        <a asp-controller="Product" asp-action="Promotion" class="btn-promo-action text-decoration-none">NHẬN ƯU ĐÃI</a>
-                    </div>
+                <div class="promo-card-v2 promo-red-v2">
+                    <span class="promo-tag-v2">ƯU ĐÃI HOT</span>
+                    <h3>ƯU ĐÃI THÁNG 5</h3>
+                    <p>Giảm ngay 200k cho đơn hàng bảo dưỡng trọn gói. Áp dụng đến hết tháng.</p>
+                    <a asp-controller="Product" asp-action="Promotion" class="btn-promo-white">NHẬN ƯU ĐÃI</a>
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="promo-banner" style="background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=800');">
-                    <div class="promo-content text-white">
-                        <h2>MIỄN PHÍ VẬN CHUYỂN</h2>
-                        <p>Áp dụng cho mọi đơn hàng phụ tùng trên 500k.</p>
-                        <a asp-controller="Info" asp-action="ShippingPolicy" class="btn-promo-action text-decoration-none">XEM CHI TIẾT</a>
-                    </div>
+                <div class="promo-card-v2 promo-dark-v2">
+                    <span class="promo-tag-v2">MIỄN PHÍ</span>
+                    <h3>FREE SHIPPING</h3>
+                    <p>Miễn phí vận chuyển toàn quốc cho mọi đơn hàng phụ tùng trên 500k.</p>
+                    <a asp-controller="Info" asp-action="ShippingPolicy" class="btn-promo-white">XEM CHI TIẾT</a>
                 </div>
             </div>
         </div>
@@ -115,36 +162,12 @@
             </div>
             <a asp-controller="Product" asp-action="Index" class="text-danger fw-bold text-decoration-none">Xem thêm <i class='bx bx-right-arrow-alt'></i></a>
         </div>
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="featuredProducts">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3" id="featuredProducts">
             @if (Model.FeaturedProducts != null && Model.FeaturedProducts.Any())
             {
                 foreach (var product in Model.FeaturedProducts)
                 {
-                    <div class="col">
-                        <div class="product-card">
-                            <span class="product-badge badge-featured">Featured</span>
-                            <div class="product-img-wrapper">
-                                <a asp-controller="Product" asp-action="Details" asp-route-slug="@product.Slug">
-                                    <img src="@(string.IsNullOrEmpty(product.PrimaryImageUrl) ? "https://via.placeholder.com/400x400?text=No+Image" : product.PrimaryImageUrl)" 
-                                         alt="@product.ProductName" loading="lazy">
-                                </a>
-                            </div>
-                            <div class="product-info flex-grow-1">
-                                <span class="brand">@product.BrandName</span>
-                                <h6 class="name">
-                                    <a asp-controller="Product" asp-action="Details" asp-route-slug="@product.Slug" class="text-decoration-none text-dark">
-                                        @product.ProductName
-                                    </a>
-                                </h6>
-                                <div class="product-price">
-                                    <span class="current">@product.MinPrice.ToString("N0")đ</span>
-                                </div>
-                            </div>
-                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3" onclick="handleAddToCart(@product.DefaultVariantId)">
-                                <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
-                            </button>
-                        </div>
-                    </div>
+                    <div class="col">@await Html.PartialAsync("_ProductCard", product)</div>
                 }
             }
         </div>
@@ -160,32 +183,12 @@
             </div>
             <a asp-controller="Product" asp-action="Index" class="text-danger fw-bold text-decoration-none">Xem thêm <i class='bx bx-right-arrow-alt'></i></a>
         </div>
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="bestSellingProducts">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3" id="bestSellingProducts">
             @if (Model.BestSellingProducts != null && Model.BestSellingProducts.Any())
             {
                 foreach (var product in Model.BestSellingProducts)
                 {
-                    <div class="col">
-                        <div class="product-card">
-                            <span class="product-badge badge-hot">Best Seller</span>
-                            <div class="product-img-wrapper">
-                                <a asp-controller="Product" asp-action="Details" asp-route-slug="@product.Slug">
-                                    <img src="@(string.IsNullOrEmpty(product.PrimaryImageUrl) ? "https://via.placeholder.com/400x400?text=No+Image" : product.PrimaryImageUrl)" 
-                                         alt="@product.ProductName" loading="lazy">
-                                </a>
-                            </div>
-                            <div class="product-info flex-grow-1">
-                                <span class="brand">@product.BrandName</span>
-                                <h6 class="name">@product.ProductName</h6>
-                                <div class="product-price">
-                                    <span class="current">@product.MinPrice.ToString("N0")đ</span>
-                                </div>
-                            </div>
-                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3" onclick="handleAddToCart(@product.DefaultVariantId)">
-                                <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
-                            </button>
-                        </div>
-                    </div>
+                    <div class="col">@await Html.PartialAsync("_ProductCard", product)</div>
                 }
             }
         </div>
@@ -193,7 +196,7 @@
 </section>
 
 <!-- 6. BRAND SHOWCASE -->
-<section class="bg-white">
+<section class="bg-white brand-section">
     <div class="container">
         <div class="section-title-wrapper text-center">
             <h5 class="text-muted text-uppercase mb-4">Thương hiệu đồng hành</h5>
@@ -222,18 +225,30 @@
 </section>
 
 <style>
+    /* Brand section layout */
+    .brand-section { padding-top: 24px !important; padding-bottom: 24px !important; }
+    .brand-section h5 {
+        font-size: 13px;
+        letter-spacing: 2px;
+        color: #9ca3af;
+        text-align: center;
+        margin-bottom: 20px !important;
+        font-weight: 600;
+    }
+    /* Logo — trạng thái bình thường */
     .brand-logo-img {
         max-width: 100%;
         max-height: 70px;
         object-fit: contain;
-        filter: grayscale(100%);
-        opacity: 0.6;
-        transition: all 0.3s ease;
+        filter: grayscale(30%);
+        opacity: 0.75;
+        transition: filter 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
     }
+    /* Logo — hover */
     .brand-item:hover .brand-logo-img {
         filter: grayscale(0%);
         opacity: 1;
-        transform: scale(1.2);
+        transform: scale(1.05);
     }
 </style>
 
@@ -246,76 +261,48 @@
             </div>
             <a asp-controller="Product" asp-action="Index" class="text-danger fw-bold text-decoration-none">Xem thêm <i class='bx bx-right-arrow-alt'></i></a>
         </div>
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="newProducts">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3" id="newProducts">
             @if (Model.NewProducts != null && Model.NewProducts.Any())
             {
                 foreach (var product in Model.NewProducts)
                 {
-                    <div class="col">
-                        <div class="product-card">
-                            <span class="product-badge badge-new">New</span>
-                            <div class="product-img-wrapper">
-                                <a asp-controller="Product" asp-action="Details" asp-route-slug="@product.Slug">
-                                    <img src="@(string.IsNullOrEmpty(product.PrimaryImageUrl) ? "https://via.placeholder.com/400x400?text=No+Image" : product.PrimaryImageUrl)" 
-                                         alt="@product.ProductName" loading="lazy">
-                                </a>
-                            </div>
-                            <div class="product-info flex-grow-1">
-                                <span class="brand">@product.BrandName</span>
-                                <h6 class="name">@product.ProductName</h6>
-                                <div class="product-price">
-                                    <span class="current">@product.MinPrice.ToString("N0")đ</span>
-                                </div>
-                            </div>
-                            <button class="btn btn-add-cart rounded-pill fw-bold mt-3" onclick="handleAddToCart(@product.DefaultVariantId)">
-                                <i class='bx bx-cart-add fs-4'></i> <span class="d-none d-md-inline ms-2">THÊM VÀO GIỎ</span>
-                            </button>
-                        </div>
-                    </div>
+                    <div class="col">@await Html.PartialAsync("_ProductCard", product)</div>
                 }
             }
         </div>
     </div>
 </section>
 
-<!-- 8. ADVANTAGES / WHY CHOOSE US -->
-<section class="bg-white">
+<!-- 8. USP BAR -->
+<section class="usp-section-v2">
     <div class="container">
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-3">
-                <div class="advantage-box">
-                    <div class="advantage-icon"><i class='bx bx-timer'></i></div>
-                    <div class="advantage-info">
-                        <h6>GIAO HÀNG NHANH</h6>
-                        <p>Nội thành TP.HCM trong 2h</p>
-                    </div>
+        <div class="usp-grid-v2">
+            <div class="usp-item-v2">
+                <div class="usp-icon-v2"><i class='bx bx-timer'></i></div>
+                <div class="usp-text-v2">
+                    <h6>Giao hàng nhanh</h6>
+                    <p>Nội thành TP.HCM trong 2h</p>
                 </div>
             </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="advantage-box">
-                    <div class="advantage-icon"><i class='bx bxs-check-shield'></i></div>
-                    <div class="advantage-info">
-                        <h6>HÀNG CHÍNH HÃNG</h6>
-                        <p>Cam kết chất lượng 100%</p>
-                    </div>
+            <div class="usp-item-v2">
+                <div class="usp-icon-v2"><i class='bx bxs-check-shield'></i></div>
+                <div class="usp-text-v2">
+                    <h6>Hàng chính hãng</h6>
+                    <p>Cam kết chất lượng 100%</p>
                 </div>
             </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="advantage-box">
-                    <div class="advantage-icon"><i class='bx bx-badge-check'></i></div>
-                    <div class="advantage-info">
-                        <h6>GIÁ TỐT NHẤT</h6>
-                        <p>Luôn có ưu đãi hấp dẫn</p>
-                    </div>
+            <div class="usp-item-v2">
+                <div class="usp-icon-v2"><i class='bx bx-badge-check'></i></div>
+                <div class="usp-text-v2">
+                    <h6>Giá tốt nhất</h6>
+                    <p>Luôn có ưu đãi hấp dẫn</p>
                 </div>
             </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="advantage-box">
-                    <div class="advantage-icon"><i class='bx bx-headphone'></i></div>
-                    <div class="advantage-info">
-                        <h6>HỖ TRỢ 24/7</h6>
-                        <p>Tư vấn kỹ thuật chuyên sâu</p>
-                    </div>
+            <div class="usp-item-v2">
+                <div class="usp-icon-v2"><i class='bx bx-headphone'></i></div>
+                <div class="usp-text-v2">
+                    <h6>Hỗ trợ 24/7</h6>
+                    <p>Tư vấn kỹ thuật chuyên sâu</p>
                 </div>
             </div>
         </div>

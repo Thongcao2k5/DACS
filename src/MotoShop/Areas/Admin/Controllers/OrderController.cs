@@ -12,6 +12,7 @@ using System.IO;
 namespace MotoShop.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class OrderController : Controller
     {
         private readonly MotoShopDbContext _context;
@@ -216,3 +217,4 @@ namespace MotoShop.Areas.Admin.Controllers
         }
     }
 }
+

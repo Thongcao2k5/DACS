@@ -31,9 +31,18 @@ namespace MotoShop.Controllers
             // 1. Lấy danh sách danh mục để hiển thị bộ lọc (Sidebar)
             var categories = await _context.ServiceCategories
                 .Where(c => c.IsActive)
-                .OrderBy(c => c.CategoryName)
+                .OrderBy(c => c.DisplayOrder)
+                .ThenBy(c => c.CategoryName)
                 .ToListAsync();
             ViewBag.ServiceCategories = categories;
+
+            // Đếm dịch vụ active theo từng danh mục (tránh dùng nav property chưa Include)
+            var serviceCounts = await _context.Services
+                .Where(s => s.IsActive == true && s.CategoryId.HasValue)
+                .GroupBy(s => s.CategoryId!.Value)
+                .Select(g => new { CategoryId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.CategoryId, x => x.Count);
+            ViewBag.ServiceCounts = serviceCounts;
 
             // 2. Lấy danh sách dịch vụ thực tế
             var query = _context.Services

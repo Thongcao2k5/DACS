@@ -53,10 +53,12 @@ namespace MotoShop.Business.DTOs
     {
         public int ReviewId { get; set; }
         public string CustomerName { get; set; } = string.Empty;
+        public string? AvatarUrl { get; set; }
         public int Rating { get; set; }
         public string Comment { get; set; } = string.Empty;
         public DateTime CreatedDate { get; set; }
         public bool IsApproved { get; set; }
+        public List<string> ReviewImages { get; set; } = new List<string>();
     }
 
     public class ProductVariantDto

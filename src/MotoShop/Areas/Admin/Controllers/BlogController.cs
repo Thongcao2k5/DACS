@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
+using MotoShop.Business.Interfaces;
 using System.Text.RegularExpressions;
 using System.Text;
 
@@ -14,12 +15,12 @@ namespace MotoShop.Areas.Admin.Controllers
     public class BlogController : Controller
     {
         private readonly MotoShopDbContext _context;
-        private readonly IWebHostEnvironment _hostEnvironment;
+        private readonly IFileService _fileService;
 
-        public BlogController(MotoShopDbContext context, IWebHostEnvironment hostEnvironment)
+        public BlogController(MotoShopDbContext context, IFileService fileService)
         {
             _context = context;
-            _hostEnvironment = hostEnvironment;
+            _fileService = fileService;
         }
 
         public async Task<IActionResult> Index(string? searchTerm, int? categoryId, bool? isPublished)
@@ -67,8 +68,17 @@ namespace MotoShop.Areas.Admin.Controllers
 
                 if (thumbFile != null)
                 {
-                    if (!string.IsNullOrEmpty(blog.Thumbnail)) DeleteImage(blog.Thumbnail);
-                    blog.Thumbnail = await SaveImage(thumbFile);
+                    try 
+                    {
+                        if (!string.IsNullOrEmpty(blog.Thumbnail)) _fileService.DeleteFile(blog.Thumbnail);
+                        blog.Thumbnail = await _fileService.SaveFileAsync(thumbFile, "blog");
+                    }
+                    catch (Exception ex)
+                    {
+                        ModelState.AddModelError("Thumbnail", ex.Message);
+                        ViewBag.Categories = await _context.BlogCategories.ToListAsync();
+                        return View(blog);
+                    }
                 }
 
                 if (blog.Id == 0)
@@ -93,33 +103,10 @@ namespace MotoShop.Areas.Admin.Controllers
         {
             var blog = await _context.Blogs.FindAsync(id);
             if (blog == null) return Json(new { success = false, message = "Không tìm thấy bài viết" });
-            if (!string.IsNullOrEmpty(blog.Thumbnail)) DeleteImage(blog.Thumbnail);
+            if (!string.IsNullOrEmpty(blog.Thumbnail)) _fileService.DeleteFile(blog.Thumbnail);
             _context.Blogs.Remove(blog);
             await _context.SaveChangesAsync();
             return Json(new { success = true, message = "Xóa bài viết thành công" });
-        }
-
-        private async Task<string> SaveImage(IFormFile file)
-        {
-            string wwwRootPath = _hostEnvironment.WebRootPath;
-            string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-            string uploadDir = Path.Combine(wwwRootPath, "uploads", "blog");
-
-            if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
-
-            string filePath = Path.Combine(uploadDir, fileName);
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(fileStream);
-            }
-            return "/uploads/blog/" + fileName;
-        }
-
-        private void DeleteImage(string imagePath)
-        {
-            if (string.IsNullOrEmpty(imagePath) || imagePath.StartsWith("http")) return;
-            string fullPath = Path.Combine(_hostEnvironment.WebRootPath, imagePath.TrimStart('/'));
-            if (System.IO.File.Exists(fullPath)) System.IO.File.Delete(fullPath);
         }
 
         private string GenerateSlug(string phrase)

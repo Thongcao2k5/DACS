@@ -1,0 +1,104 @@
+@model MotoShop.Business.DTOs.ProductDto
+@{
+    var discPct  = Model.CalculatedDiscountPercent > 0 ? Model.CalculatedDiscountPercent : Model.DiscountPercent;
+    var outOfStock = !Model.IsInStock;
+    var avgRating = Model.Reviews.Any(r => r.IsApproved)
+        ? Model.Reviews.Where(r => r.IsApproved).Average(r => r.Rating)
+        : 0.0;
+    var reviewCount = Model.Reviews.Count(r => r.IsApproved);
+}
+
+<div class="row g-3">
+    @* Ảnh bên trái *@
+    <div class="col-md-5">
+        <div class="qv-img-wrap">
+            <img src="@(string.IsNullOrEmpty(Model.PrimaryImageUrl) ? "/assets/img/elements/18.jpg" : Model.PrimaryImageUrl)"
+                 alt="@Model.ProductName"
+                 onerror="this.src='/assets/img/elements/18.jpg'">
+        </div>
+    </div>
+
+    @* Thông tin bên phải *@
+    <div class="col-md-7 d-flex flex-column">
+        @if (!string.IsNullOrEmpty(Model.BrandName))
+        {
+            <span class="qv-brand">@Model.BrandName</span>
+        }
+
+        <h5 class="qv-name">@Model.ProductName</h5>
+
+        @* Rating *@
+        @if (avgRating > 0)
+        {
+            <div class="d-flex align-items-center gap-1 mb-2" style="font-size:0.8rem">
+                @for (int s = 1; s <= 5; s++)
+                {
+                    <i class='bx @(s <= Math.Round(avgRating) ? "bxs-star" : "bx-star")' style="color:#f59e0b"></i>
+                }
+                <span class="text-muted ms-1">(@reviewCount đánh giá)</span>
+            </div>
+        }
+
+        @* Giá *@
+        <div class="mb-2">
+            @if (Model.IsFlashSale && Model.FlashSalePrice.HasValue)
+            {
+                <span class="qv-price">@Model.FlashSalePrice.Value.ToString("N0")đ</span>
+                <span class="qv-old-price">@Model.MinPrice.ToString("N0")đ</span>
+                <span class="badge bg-danger ms-2" style="font-size:0.7rem">Flash Sale</span>
+            }
+            else
+            {
+                <span class="qv-price">@(Model.MinPrice > 0 ? Model.MinPrice.ToString("N0") + "đ" : "Liên hệ")</span>
+                @if (Model.MinOriginalPrice.HasValue && Model.MinOriginalPrice > Model.MinPrice)
+                {
+                    <span class="qv-old-price">@Model.MinOriginalPrice.Value.ToString("N0")đ</span>
+                    <span class="badge bg-danger ms-2" style="font-size:0.7rem">-@discPct%</span>
+                }
+            }
+        </div>
+
+        @* Mô tả ngắn *@
+        @if (!string.IsNullOrWhiteSpace(Model.Description))
+        {
+            <p class="qv-desc flex-grow-1">@(Model.Description.Length > 200 ? Model.Description.Substring(0, 200) + "…" : Model.Description)</p>
+        }
+
+        @* Tình trạng *@
+        @if (outOfStock)
+        {
+            <div class="mb-2">
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2">Hết hàng</span>
+            </div>
+        }
+        else
+        {
+            <div class="mb-2">
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
+                    Còn hàng @(Model.StockCount > 0 ? $"({Model.StockCount} sp)" : "")
+                </span>
+            </div>
+        }
+
+        @* Nút hành động *@
+        <div class="qv-btn-row">
+            <button type="button" class="qv-btn-cart"
+                    onclick="handleAddToCart(@Model.DefaultVariantId)"
+                    @(outOfStock ? "disabled" : "")>
+                <i class='bx bx-cart-add'></i> Thêm vào giỏ
+            </button>
+            <button type="button" class="qv-btn-buy"
+                    onclick="handleBuyNow(@Model.DefaultVariantId)"
+                    @(outOfStock ? "disabled" : "")>
+                <i class='bx bxs-zap'></i> Mua ngay
+            </button>
+        </div>
+
+        <div class="mt-2">
+            <a asp-controller="Product" asp-action="Details" asp-route-slug="@Model.Slug"
+               class="qv-link-detail">
+                Xem chi tiết sản phẩm <i class='bx bx-right-arrow-alt'></i>
+            </a>
+        </div>
+    </div>
+</div>

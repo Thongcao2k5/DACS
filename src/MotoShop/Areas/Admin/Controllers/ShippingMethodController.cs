@@ -10,6 +10,7 @@ namespace MotoShop.Areas.Admin.Controllers
     [Area("Admin")]
     [Route("Admin/[controller]/[action]")]
     [Route("Admin/Shipping")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class ShippingMethodController : Controller
     {
         private readonly MotoShopDbContext _context;
@@ -65,3 +66,4 @@ namespace MotoShop.Areas.Admin.Controllers
         }
     }
 }
+

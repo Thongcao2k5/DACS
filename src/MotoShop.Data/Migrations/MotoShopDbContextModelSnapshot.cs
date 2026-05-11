@@ -281,6 +281,49 @@ namespace MotoShop.Data.Migrations
                     b.ToTable("AttributeValues");
                 });
 
+            modelBuilder.Entity("MotoShop.Data.Models.AuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EntityId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("EntityName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AuditLogs");
+                });
+
             modelBuilder.Entity("MotoShop.Data.Models.Banner", b =>
                 {
                     b.Property<int>("BannerId")
@@ -1127,6 +1170,29 @@ namespace MotoShop.Data.Migrations
                     b.ToTable("ProductReviews");
                 });
 
+            modelBuilder.Entity("MotoShop.Data.Models.ProductReviewImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ReviewId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewId");
+
+                    b.ToTable("ProductReviewImages");
+                });
+
             modelBuilder.Entity("MotoShop.Data.Models.ProductSpecification", b =>
                 {
                     b.Property<int>("SpecId")
@@ -1341,6 +1407,9 @@ namespace MotoShop.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ServiceId"));
 
+                    b.Property<decimal>("AverageRating")
+                        .HasColumnType("decimal(3, 1)");
+
                     b.Property<int?>("CategoryId")
                         .HasColumnType("int");
 
@@ -1357,6 +1426,12 @@ namespace MotoShop.Data.Migrations
                     b.Property<bool?>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsPopular")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal?>("OriginalPrice")
+                        .HasColumnType("decimal(18, 2)");
+
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18, 2)");
 
@@ -1371,7 +1446,13 @@ namespace MotoShop.Data.Migrations
                     b.Property<string>("Slug")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Tags")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("TotalBookings")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalReviews")
                         .HasColumnType("int");
 
                     b.Property<int?>("WarrantyDays")
@@ -1500,6 +1581,9 @@ namespace MotoShop.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
                     b.Property<string>("Icon")
                         .HasColumnType("nvarchar(max)");
 
@@ -1569,6 +1653,32 @@ namespace MotoShop.Data.Migrations
                     b.HasIndex("ServiceId");
 
                     b.ToTable("ServiceComboItems");
+                });
+
+            modelBuilder.Entity("MotoShop.Data.Models.ServiceImage", b =>
+                {
+                    b.Property<int>("ImageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ImageId"));
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ImageId");
+
+                    b.HasIndex("ServiceId");
+
+                    b.ToTable("ServiceImages");
                 });
 
             modelBuilder.Entity("MotoShop.Data.Models.ServiceReview", b =>
@@ -2168,6 +2278,17 @@ namespace MotoShop.Data.Migrations
                     b.Navigation("ProductVariant");
                 });
 
+            modelBuilder.Entity("MotoShop.Data.Models.ProductReviewImage", b =>
+                {
+                    b.HasOne("MotoShop.Data.Models.ProductReview", "Review")
+                        .WithMany("Images")
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Review");
+                });
+
             modelBuilder.Entity("MotoShop.Data.Models.ProductSpecification", b =>
                 {
                     b.HasOne("MotoShop.Data.Models.Product", "Product")
@@ -2306,6 +2427,17 @@ namespace MotoShop.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Combo");
+
+                    b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("MotoShop.Data.Models.ServiceImage", b =>
+                {
+                    b.HasOne("MotoShop.Data.Models.Service", "Service")
+                        .WithMany("Images")
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Service");
                 });
@@ -2458,6 +2590,11 @@ namespace MotoShop.Data.Migrations
                     b.Navigation("AttributeValues");
                 });
 
+            modelBuilder.Entity("MotoShop.Data.Models.ProductReview", b =>
+                {
+                    b.Navigation("Images");
+                });
+
             modelBuilder.Entity("MotoShop.Data.Models.ProductVariant", b =>
                 {
                     b.Navigation("CartItems");
@@ -2481,6 +2618,8 @@ namespace MotoShop.Data.Migrations
                     b.Navigation("Bookings");
 
                     b.Navigation("ComboItems");
+
+                    b.Navigation("Images");
 
                     b.Navigation("Reviews");
                 });

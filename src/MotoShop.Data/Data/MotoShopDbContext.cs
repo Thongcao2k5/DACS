@@ -17,6 +17,7 @@ namespace MotoShop.Data.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<Unit> Units { get; set; }
         public DbSet<ProductVariant> ProductVariants { get; set; }
+        public DbSet<ProductVariantAttributeValue> ProductVariantAttributeValues { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<CustomerAddress> CustomerAddresses { get; set; }
@@ -54,10 +55,13 @@ namespace MotoShop.Data.Data
         public DbSet<ShippingMethod> ShippingMethods { get; set; }
         public DbSet<ServiceReview> ServiceReviews { get; set; }
         public DbSet<ServiceCategory> ServiceCategories { get; set; }
+        public DbSet<ServiceImage> ServiceImages { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<VariantImage> VariantImages { get; set; }
         public DbSet<ProductSpecification> ProductSpecifications { get; set; }
         public DbSet<ProductTag> ProductTags { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<ProductReviewImage> ProductReviewImages { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

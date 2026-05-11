@@ -130,6 +130,7 @@ namespace MotoShop.Data.Models
         public virtual ICollection<VariantImage> VariantImages { get; set; } = new List<VariantImage>();
     }
 
+    [Table("ProductVariantAttributeValue")]
     public class ProductVariantAttributeValue
     {
         [Key]
@@ -308,8 +309,9 @@ namespace MotoShop.Data.Models
         [Required, StringLength(100)]
         public string CategoryName { get; set; } = string.Empty;
         public string? Slug { get; set; }
-        public string? Icon { get; set; } // Class Boxicons (vd: bx-wrench)
+        public string? Icon { get; set; }
         public bool IsActive { get; set; } = true;
+        public int DisplayOrder { get; set; } = 0;
 
         public virtual ICollection<Service> Services { get; set; } = new List<Service>();
     }
@@ -322,14 +324,21 @@ namespace MotoShop.Data.Models
         public string ServiceName { get; set; } = string.Empty;
         [Column(TypeName = "decimal(18, 2)")]
         public decimal Price { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal? OriginalPrice { get; set; }
         public int? Duration { get; set; } = 30;
-        
+
         public string? Slug { get; set; }
         public string? ShortDescription { get; set; }
         public string? Description { get; set; }
         public int? WarrantyDays { get; set; }
         public int? TotalBookings { get; set; } = 0;
-        
+        public bool IsPopular { get; set; } = false;
+        public string? Tags { get; set; }
+        [Column(TypeName = "decimal(3, 1)")]
+        public decimal AverageRating { get; set; } = 0;
+        public int TotalReviews { get; set; } = 0;
+
         public int? CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         public virtual ServiceCategory? ServiceCategory { get; set; }
@@ -341,6 +350,20 @@ namespace MotoShop.Data.Models
         public virtual ICollection<ServiceBooking> Bookings { get; set; } = new List<ServiceBooking>();
         public virtual ICollection<ServiceComboItem> ComboItems { get; set; } = new List<ServiceComboItem>();
         public virtual ICollection<ServiceReview> Reviews { get; set; } = new List<ServiceReview>();
+        public virtual ICollection<ServiceImage> Images { get; set; } = new List<ServiceImage>();
+    }
+
+    public class ServiceImage
+    {
+        [Key]
+        public int ImageId { get; set; }
+        public int ServiceId { get; set; }
+        [Required, StringLength(500)]
+        public string ImageUrl { get; set; } = string.Empty;
+        public int DisplayOrder { get; set; } = 0;
+
+        [ForeignKey("ServiceId")]
+        public virtual Service? Service { get; set; }
     }
 
     public class ServiceReview
@@ -468,6 +491,19 @@ namespace MotoShop.Data.Models
         public virtual ProductVariant? ProductVariant { get; set; }
         [ForeignKey("CustomerId")]
         public virtual Customer? Customer { get; set; }
+        public virtual ICollection<ProductReviewImage> Images { get; set; } = new List<ProductReviewImage>();
+    }
+
+    public class ProductReviewImage
+    {
+        [Key]
+        public int Id { get; set; }
+        public int ReviewId { get; set; }
+        [Required, StringLength(500)]
+        public string ImageUrl { get; set; } = string.Empty;
+
+        [ForeignKey("ReviewId")]
+        public virtual ProductReview? Review { get; set; }
     }
 
     public class Promotion
@@ -877,5 +913,23 @@ namespace MotoShop.Data.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public bool IsFromAdmin { get; set; } = false;
         public bool IsRead { get; set; } = false;
+    }
+
+    public class AuditLog
+    {
+        [Key]
+        public int Id { get; set; }
+        public string? UserId { get; set; }
+        [Required, StringLength(255)]
+        public string Action { get; set; } = string.Empty;
+        [Required, StringLength(255)]
+        public string EntityName { get; set; } = string.Empty;
+        [StringLength(100)]
+        public string? EntityId { get; set; }
+        public string? OldValues { get; set; }
+        public string? NewValues { get; set; }
+        [StringLength(50)]
+        public string? IpAddress { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 }

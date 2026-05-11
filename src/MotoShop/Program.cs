@@ -9,6 +9,7 @@ using MotoShop.Business.Services;
 using MotoShop.Services;
 using Serilog;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,11 +18,15 @@ Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
     .WriteTo.Console()
+    .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7)
     .CreateLogger();
 
 builder.Host.UseSerilog();
 
-builder.Services.AddControllersWithViews()
+builder.Services.AddControllersWithViews(options => 
+    {
+        options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+    })
     .AddJsonOptions(options => {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
@@ -47,6 +52,16 @@ builder.Services.AddDbContext<MotoShopDbContext>(options =>
         maxRetryCount: 3,
         maxRetryDelay: TimeSpan.FromSeconds(5),
         errorNumbersToAdd: null)));
+
+builder.Services.AddMemoryCache();
+builder.Services.AddResponseCompression(opts =>
+{
+    opts.EnableForHttps = true;
+    opts.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
+    opts.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
+});
+builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProviderOptions>(o => o.Level = System.IO.Compression.CompressionLevel.Fastest);
+builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProviderOptions>(o => o.Level = System.IO.Compression.CompressionLevel.Fastest);
 
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-XSRF-TOKEN");
 builder.Services.AddHealthChecks();
@@ -87,6 +102,7 @@ builder.Services.AddScoped<IMotorbikeModelService, MotorbikeModelService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IFlashSaleService, FlashSaleService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -102,8 +118,10 @@ using (var scope = app.Services.CreateScope())
     var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-    try 
+    try
     {
+        // Tăng timeout lên 5 phút cho toàn bộ startup SQL
+        context.Database.SetCommandTimeout(300);
         Log.Information("Updating Database Schema...");
         
         await context.Database.ExecuteSqlRawAsync(@"
@@ -200,12 +218,58 @@ using (var scope = app.Services.CreateScope())
             
             IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'FlashSaleProducts')
                 CREATE TABLE FlashSaleProducts (Id INT IDENTITY PRIMARY KEY, FlashSaleId INT NOT NULL, ProductId INT NOT NULL, FlashSalePrice DECIMAL(18,2) NOT NULL, Quantity INT NOT NULL, SoldQuantity INT DEFAULT 0);
+            
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AuditLogs')
+                CREATE TABLE AuditLogs (Id INT IDENTITY PRIMARY KEY, UserId NVARCHAR(450) NULL, Action NVARCHAR(255) NOT NULL, EntityName NVARCHAR(255) NOT NULL, EntityId NVARCHAR(100) NULL, OldValues NVARCHAR(MAX) NULL, NewValues NVARCHAR(MAX) NULL, IpAddress NVARCHAR(50) NULL, CreatedAt DATETIME DEFAULT GETDATE());
+            
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ProductReviewImages')
+                CREATE TABLE ProductReviewImages (Id INT IDENTITY PRIMARY KEY, ReviewId INT NOT NULL, ImageUrl NVARCHAR(500) NOT NULL);
+        ");
+
+        await context.Database.ExecuteSqlRawAsync(@"
+            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Categories_CategoryName' AND object_id = OBJECT_ID('Categories'))
+                CREATE UNIQUE INDEX IX_Categories_CategoryName ON Categories (CategoryName);
         ");
 
         await context.Database.ExecuteSqlRawAsync(@"
             UPDATE Blogs SET IsPublished = 0 WHERE IsPublished IS NULL;
             UPDATE Banners SET DisplayOrder = 0 WHERE DisplayOrder IS NULL;
             UPDATE ServiceBookings SET DepositAmount = 0 WHERE DepositAmount IS NULL;
+        ");
+
+        // Cập nhật logo thương hiệu — map chính xác theo nội dung ảnh thực tế
+        await context.Database.ExecuteSqlRawAsync(@"
+            UPDATE Brands SET LogoUrl = '/uploads/brands/honda.svg'        WHERE BrandName = N'Honda';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/yamaha.svg'       WHERE BrandName = N'Yamaha';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/michelin.svg'     WHERE BrandName = N'Michelin';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/castrol.svg'      WHERE BrandName = N'Castrol';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/yuasa.svg'        WHERE BrandName = N'Yuasa';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/agv.svg'          WHERE BrandName = N'AGV';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/brembo.svg'       WHERE BrandName = N'Brembo';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/liquimoly.svg'    WHERE BrandName = N'Liqui Moly';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/motul.svg'        WHERE BrandName = N'Motul';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/ngk.svg'          WHERE BrandName = N'NGK';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/ohlins.svg'       WHERE BrandName = N'Ohlins';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/yss.png'          WHERE BrandName = N'YSS';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/motobatt.png'     WHERE BrandName = N'Motobatt';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/mtx.png'          WHERE BrandName = N'MTX';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/crg.png'          WHERE BrandName = N'CRG';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/fkr.png'          WHERE BrandName = N'FKR';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/fmf.png'          WHERE BrandName = N'FMF';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/faito.png'        WHERE BrandName = N'Faito';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/kozi.png'         WHERE BrandName = N'Kozi';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/orange.png'       WHERE BrandName = N'Orange';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/rgv.png'          WHERE BrandName = N'RGV';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/apido.png'        WHERE BrandName = N'Apido';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/senarc.png'       WHERE BrandName = N'Senarc';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/yaguso.png'       WHERE BrandName = N'Yaguso';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/malossi.png'      WHERE BrandName = N'Malossi';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/tan_lan.png'      WHERE BrandName = N'Tân Lân';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/tan_lan.png'      WHERE BrandName = N'Tan Lan';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/tr_tiller.png'    WHERE BrandName = N'Tilier';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/tr_tiller.png'    WHERE BrandName = N'TR Tilier';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/ct_cytracing.png' WHERE BrandName = N'CYT Racing';
+            UPDATE Brands SET LogoUrl = '/uploads/brands/ct_cytracing.png' WHERE BrandName = N'CYT RACING';
         ");
 
         Log.Information("Seeding Data...");
@@ -221,9 +285,7 @@ using (var scope = app.Services.CreateScope())
             END
         ");
 
-        if (!context.Categories.Any()) {
-            await DbSeeder.SeedAsync(context, userManager, roleManager);
-        }
+        await DbSeeder.SeedAsync(context, userManager, roleManager);
     }
     catch (Exception ex) { Log.Error("Startup Error: {Message}", ex.Message); }
 }
@@ -235,8 +297,15 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseStatusCodePagesWithReExecute("/Home/Error/{0}");
 
+app.UseResponseCompression();
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers["Cache-Control"] = "public,max-age=31536000";
+    }
+});
 app.UseRouting();
 app.UseCors("AllowAll");
 app.UseAuthentication();

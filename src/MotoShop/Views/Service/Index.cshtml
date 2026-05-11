@@ -1,8 +1,14 @@
 @model IEnumerable<MotoShop.Data.Models.Service>
 @{
-    ViewData["Title"] = "Dịch vụ MotoShop";
-    var categories = ViewBag.ServiceCategories as List<MotoShop.Data.Models.ServiceCategory>;
-    var currentCatId = ViewBag.CurrentCategoryId as int?;
+    ViewData["Title"] = "Dịch vụ sửa chữa & bảo dưỡng xe máy";
+    var categories    = ViewBag.ServiceCategories as List<MotoShop.Data.Models.ServiceCategory>;
+    var currentCatId  = ViewBag.CurrentCategoryId as int?;
+    var svcCounts     = ViewBag.ServiceCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
+    var allSvc  = Model.ToList();
+    var heroSvc = allSvc.Take(3).ToList();
+    var now     = DateTime.Now;
+    var isOpen  = (now.DayOfWeek != DayOfWeek.Sunday && now.Hour >= 7 && now.Hour < 18)
+               || (now.DayOfWeek == DayOfWeek.Sunday && now.Hour >= 8 && now.Hour < 12);
 }
 
 <div class="breadcrumb-wrapper">
@@ -16,79 +22,332 @@
     </div>
 </div>
 
-<main class="container py-5">
-    <div class="row g-4">
-        <!-- 1. SIDEBAR FILTER -->
-        <aside class="col-lg-3">
-            <div class="card border-0 shadow-sm rounded-4 p-4 sticky-top" style="top: 100px;">
-                <h6 class="fw-bold mb-3 text-uppercase">Danh mục dịch vụ</h6>
-                <div class="list-group list-group-flush service-category-list">
-                    <a href="/Service" class="list-group-item list-group-item-action border-0 px-0 d-flex justify-content-between align-items-center @(currentCatId == null ? "active text-danger fw-bold" : "")">
-                        <span><i class='bx bx-grid-alt me-2'></i> Tất cả dịch vụ</span>
+@* ── 1. HERO ── *@
+<section class="svc-hero">
+    <div class="svc-hero-circle svc-hero-c1"></div>
+    <div class="svc-hero-circle svc-hero-c2"></div>
+    <div class="container position-relative">
+        <div class="row align-items-center g-4">
+
+            @* Left *@
+            <div class="col-lg-6">
+                <span class="svc-hero-badge">
+                    <i class='bx bxs-star me-1'></i>Dịch vụ chuyên nghiệp
+                </span>
+                <h1 class="svc-hero-title">
+                    Sửa chữa &amp;<br><span class="svc-hero-accent">Bảo dưỡng xe máy</span>
+                </h1>
+                <p class="svc-hero-desc">
+                    Đội ngũ kỹ thuật viên trên 5 năm kinh nghiệm. Phụ tùng 100% chính hãng.
+                    Bảo hành dịch vụ lên đến 30 ngày.
+                </p>
+                <div class="d-flex gap-3 flex-wrap mb-4">
+                    <a asp-controller="Service" asp-action="Booking" class="btn-svc-primary">
+                        <i class='bx bxs-calendar me-2'></i>Đặt lịch ngay
                     </a>
-                    @if (categories != null)
+                    <a href="#svc-grid" class="btn-svc-outline">
+                        Xem tất cả <i class='bx bx-right-arrow-alt ms-1'></i>
+                    </a>
+                </div>
+                <div class="svc-hero-stats">
+                    <div class="svc-stat">
+                        <div class="svc-stat-num">5.000+</div>
+                        <div class="svc-stat-lbl">Xe đã sửa</div>
+                    </div>
+                    <div class="svc-stat-divider"></div>
+                    <div class="svc-stat">
+                        <div class="svc-stat-num">4.9 <i class='bx bxs-star' style="color:#f59e0b;font-size:13px;vertical-align:middle;"></i></div>
+                        <div class="svc-stat-lbl">Đánh giá TB</div>
+                    </div>
+                    <div class="svc-stat-divider"></div>
+                    <div class="svc-stat">
+                        <div class="svc-stat-num">~45 phút</div>
+                        <div class="svc-stat-lbl">Thời gian TB</div>
+                    </div>
+                </div>
+            </div>
+
+            @* Right — 3 mini cards, ẩn trên mobile *@
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="svc-hero-cards">
+                    @if (heroSvc.Any())
                     {
-                        foreach (var cat in categories)
+                        foreach (var hs in heroSvc)
                         {
-                            <a href="/Service?categoryId=@cat.CategoryId" class="list-group-item list-group-item-action border-0 px-0 d-flex justify-content-between align-items-center @(currentCatId == cat.CategoryId ? "active text-danger fw-bold" : "")">
-                                <span><i class='bx @(cat.Icon ?? "bx-wrench") me-2'></i> @cat.CategoryName</span>
-                                <span class="badge bg-light text-muted rounded-pill small">@cat.Services.Count</span>
-                            </a>
+                            var kw = (hs.ServiceCategory?.CategoryName ?? hs.ServiceName ?? "").ToLower();
+                            var hIcon = kw.Contains("nhớt") || kw.Contains("dầu") ? "bxs-droplet"
+                                      : kw.Contains("lốp")                        ? "bx-rotate-right"
+                                      : kw.Contains("phanh")                      ? "bxs-stop-circle"
+                                      : kw.Contains("điện") || kw.Contains("ắc quy") ? "bx-bolt-circle"
+                                      : "bx-wrench";
+                            <div class="svc-hero-mini-card">
+                                <div class="svc-hero-mini-icon"><i class='bx @hIcon'></i></div>
+                                <div class="svc-hero-mini-body">
+                                    <div class="svc-hero-mini-name">@hs.ServiceName</div>
+                                    <div class="svc-hero-mini-price">@hs.Price.ToString("N0")đ</div>
+                                </div>
+                                <a asp-controller="Service" asp-action="Details" asp-route-slug="@(hs.Slug ?? hs.ServiceId.ToString())"
+                                   class="svc-hero-mini-arrow" title="Xem chi tiết">
+                                    <i class='bx bx-right-arrow-alt'></i>
+                                </a>
+                            </div>
                         }
                     }
+                    else
+                    {
+                        <div class="svc-hero-mini-card">
+                            <div class="svc-hero-mini-icon"><i class='bx bx-wrench'></i></div>
+                            <div class="svc-hero-mini-body">
+                                <div class="svc-hero-mini-name">Dịch vụ bảo dưỡng</div>
+                                <div class="svc-hero-mini-price">Liên hệ để biết giá</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ── 2. STATS BAR ── *@
+<section class="svc-stats-bar">
+    <div class="container">
+        <div class="row g-0">
+            <div class="col-6 col-md-3 svc-stats-item">
+                <div class="svc-stats-icon text-danger"><i class='bx bxs-category'></i></div>
+                <div>
+                    <div class="svc-stats-num">@(categories?.Count ?? 0)+</div>
+                    <div class="svc-stats-lbl">Danh mục dịch vụ</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 svc-stats-item">
+                <div class="svc-stats-icon text-success"><i class='bx bx-headphone'></i></div>
+                <div>
+                    <div class="svc-stats-num">24/7</div>
+                    <div class="svc-stats-lbl">Hỗ trợ kỹ thuật</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 svc-stats-item">
+                <div class="svc-stats-icon" style="color:#3b82f6;"><i class='bx bx-shield-quarter'></i></div>
+                <div>
+                    <div class="svc-stats-num">30 ngày</div>
+                    <div class="svc-stats-lbl">Bảo hành dịch vụ</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 svc-stats-item svc-stats-last">
+                <div class="svc-stats-icon" style="color:#f59e0b;"><i class='bx bxs-badge-check'></i></div>
+                <div>
+                    <div class="svc-stats-num">100%</div>
+                    <div class="svc-stats-lbl">Phụ tùng chính hãng</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ── 3. MAIN: SIDEBAR + GRID ── *@
+<main class="container py-4" id="svc-grid">
+
+    @* Mobile dropdown filter *@
+    <div class="d-lg-none mb-3">
+        <select class="form-select form-select-sm"
+                onchange="location.href=this.value===''?'/Service':'/Service?categoryId='+this.value">
+            <option value="" selected="@(currentCatId == null ? "selected" : null)">— Tất cả dịch vụ —</option>
+            @if (categories != null)
+            {
+                foreach (var cat in categories)
+                {
+                    <option value="@cat.CategoryId" selected="@(currentCatId == cat.CategoryId ? "selected" : null)">
+                        @cat.CategoryName
+                    </option>
+                }
+            }
+        </select>
+    </div>
+
+    <div class="row g-4">
+
+        @* SIDEBAR *@
+        <aside class="col-lg-3 d-none d-lg-block">
+            <div class="sticky-top" style="top:90px;">
+
+                @* Category list *@
+                <div class="card border-0 shadow-sm rounded-3 p-3 mb-3">
+                    <h6 class="svc-sidebar-title mb-3">
+                        <i class='bx bxs-category me-1 text-danger'></i>DANH MỤC
+                    </h6>
+                    <div class="list-group list-group-flush service-category-list">
+                        <a href="/Service"
+                           class="list-group-item list-group-item-action border-0 px-2 rounded d-flex justify-content-between align-items-center @(currentCatId == null ? "active-cat" : "")">
+                            <span><i class='bx bx-grid-alt me-2'></i>Tất cả dịch vụ</span>
+                            <span class="badge @(currentCatId == null ? "bg-danger" : "bg-light text-muted") rounded-pill">
+                                @allSvc.Count
+                            </span>
+                        </a>
+                        @if (categories != null)
+                        {
+                            foreach (var cat in categories)
+                            {
+                                <a href="/Service?categoryId=@cat.CategoryId"
+                                   class="list-group-item list-group-item-action border-0 px-2 rounded d-flex justify-content-between align-items-center @(currentCatId == cat.CategoryId ? "active-cat" : "")">
+                                    <span><i class='bx @(cat.Icon ?? "bx-wrench") me-2'></i>@cat.CategoryName</span>
+                                    <span class="badge @(currentCatId == cat.CategoryId ? "bg-danger" : "bg-light text-muted") rounded-pill">
+                                        @svcCounts.GetValueOrDefault(cat.CategoryId, 0)
+                                    </span>
+                                </a>
+                            }
+                        }
+                    </div>
                 </div>
 
-                <div class="mt-5 p-3 bg-dark rounded-4 text-white">
-                    <h6 class="fw-bold mb-2 text-danger">Hỗ trợ 24/7</h6>
-                    <p class="x-small mb-3 text-white-50">Liên hệ ngay để được tư vấn kỹ thuật miễn phí.</p>
-                    <a href="tel:0123456789" class="btn btn-danger w-100 rounded-pill btn-sm fw-bold">GỌI NGAY</a>
+                @* Working hours *@
+                <div class="card border-0 shadow-sm rounded-3 p-3 mb-3">
+                    <h6 class="svc-sidebar-title mb-3">
+                        <i class='bx bx-time me-1 text-danger'></i>GIỜ LÀM VIỆC
+                    </h6>
+                    <div class="svc-hours-list">
+                        <div class="svc-hours-row">
+                            <span class="svc-hours-day">Thứ 2 – Thứ 6</span>
+                            <span class="svc-hours-time text-success fw-semibold">7:30 – 18:00</span>
+                        </div>
+                        <div class="svc-hours-row">
+                            <span class="svc-hours-day">Thứ 7</span>
+                            <span class="svc-hours-time text-success fw-semibold">8:00 – 17:00</span>
+                        </div>
+                        <div class="svc-hours-row">
+                            <span class="svc-hours-day">Chủ nhật</span>
+                            <span class="svc-hours-time text-muted">8:00 – 12:00</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 d-flex align-items-center gap-2">
+                        <span class="svc-open-dot @(!isOpen ? "svc-closed-dot" : "")"></span>
+                        <small class="fw-semibold @(isOpen ? "text-success" : "text-muted")">
+                            @(isOpen ? "Đang mở cửa" : "Ngoài giờ làm việc")
+                        </small>
+                    </div>
+                </div>
+
+                @* CTA box *@
+                <div class="svc-cta-box">
+                    <div class="svc-cta-icon"><i class='bx bxs-phone-call'></i></div>
+                    <div class="svc-cta-text">Cần tư vấn kỹ thuật?</div>
+                    <div class="svc-cta-phone">0123.456.789</div>
+                    <a href="tel:0123456789" class="btn btn-danger w-100 rounded-pill btn-sm fw-bold mt-2">
+                        <i class='bx bx-phone me-1'></i>GỌI NGAY
+                    </a>
+                    <a href="https://zalo.me/0123456789" target="_blank" rel="noopener" class="svc-cta-zalo mt-2">
+                        <i class='bx bx-chat me-1'></i>Chat Zalo <i class='bx bx-right-arrow-alt ms-1'></i>
+                    </a>
                 </div>
             </div>
         </aside>
 
-        <!-- 2. SERVICE LIST -->
+        @* SERVICE GRID *@
         <div class="col-lg-9">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="fw-bold mb-0">
-                    @(currentCatId.HasValue ? categories?.FirstOrDefault(c => c.CategoryId == currentCatId)?.CategoryName : "Tất cả dịch vụ")
-                </h4>
-                <div class="text-muted small">Tìm thấy <strong>@Model.Count()</strong> dịch vụ</div>
+                <h5 class="fw-bold mb-0">
+                    @(currentCatId.HasValue
+                        ? (categories?.FirstOrDefault(c => c.CategoryId == currentCatId)?.CategoryName ?? "Dịch vụ")
+                        : "Tất cả dịch vụ")
+                </h5>
+                <div class="text-muted small">
+                    Tìm thấy <strong class="text-dark">@allSvc.Count</strong> dịch vụ
+                </div>
             </div>
 
-            @if (!Model.Any())
+            @if (!allSvc.Any())
             {
                 <div class="text-center py-5">
-                    <i class='bx bx-search-alt mb-3' style="font-size: 48px; color: #ddd;"></i>
+                    <i class='bx bx-search-alt mb-3' style="font-size:48px;color:#ddd;"></i>
                     <p class="text-muted">Không tìm thấy dịch vụ nào trong danh mục này.</p>
+                    <a href="/Service" class="btn btn-outline-danger btn-sm rounded-pill px-4">Xem tất cả dịch vụ</a>
                 </div>
             }
             else
             {
                 <div class="row g-4">
-                    @foreach (var item in Model)
+                    @foreach (var item in allSvc)
                     {
+                        var kw = (item.ServiceCategory?.CategoryName ?? item.ServiceName ?? "").ToLower();
+                        var gradient = kw.Contains("nhớt") || kw.Contains("dầu") || kw.Contains("bảo dưỡng")
+                                     ? "linear-gradient(135deg,#fff1f2,#ffe4e6)"
+                                     : kw.Contains("lốp") || kw.Contains("bánh")
+                                     ? "linear-gradient(135deg,#fffbeb,#fef3c7)"
+                                     : kw.Contains("phanh")
+                                     ? "linear-gradient(135deg,#eff6ff,#dbeafe)"
+                                     : kw.Contains("điện") || kw.Contains("ắc quy")
+                                     ? "linear-gradient(135deg,#f5f3ff,#ede9fe)"
+                                     : kw.Contains("rửa") || kw.Contains("vệ sinh")
+                                     ? "linear-gradient(135deg,#ecfdf5,#d1fae5)"
+                                     : "linear-gradient(135deg,#f8f9fb,#f1f5f9)";
+                        var icon = kw.Contains("nhớt") || kw.Contains("dầu") ? "bxs-droplet"
+                                 : kw.Contains("lốp")                        ? "bx-rotate-right"
+                                 : kw.Contains("phanh")                      ? "bxs-stop-circle"
+                                 : kw.Contains("điện") || kw.Contains("ắc quy") ? "bx-bolt-circle"
+                                 : kw.Contains("rửa") || kw.Contains("vệ sinh") ? "bx-water"
+                                 : "bx-wrench";
+                        var popular = (item.TotalBookings ?? 0) > 0;
+
                         <div class="col-md-6 col-xl-4">
-                            <div class="service-card h-100 bg-white border rounded-4 overflow-hidden transition-all hover-shadow">
-                                <div class="position-relative overflow-hidden" style="height: 180px;">
-                                    <a href="/Service/Details?slug=@item.Slug">
-                                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/assets/img/elements/18.jpg" : item.ImageUrl)" class="w-100 h-100 object-fit-cover" alt="@item.ServiceName" onerror="this.src='/assets/img/elements/18.jpg'">
+                            <div class="svc-card h-100">
+
+                                @* Image / icon area *@
+                                <div class="svc-img-area" style="background:@gradient;">
+                                    @if (popular)
+                                    {
+                                        <span class="svc-badge-popular"><i class='bx bxs-hot me-1'></i>Phổ biến</span>
+                                    }
+                                    <span class="svc-badge-duration">
+                                        <i class='bx bx-time-five me-1'></i>@(item.Duration ?? 30) phút
+                                    </span>
+                                    <a asp-controller="Service" asp-action="Details" asp-route-slug="@(item.Slug ?? item.ServiceId.ToString())" class="svc-img-link">
+                                        @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                        {
+                                            <img src="@item.ImageUrl" alt="@item.ServiceName" class="svc-img"
+                                                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                            <div class="svc-icon-fallback" style="display:none;"><i class='bx @icon'></i></div>
+                                        }
+                                        else
+                                        {
+                                            <div class="svc-icon-fallback"><i class='bx @icon'></i></div>
+                                        }
                                     </a>
-                                    <div class="position-absolute top-0 end-0 p-3">
-                                        <span class="badge bg-white text-dark shadow-sm rounded-pill small fw-bold">~@item.Duration phút</span>
-                                    </div>
                                 </div>
-                                <div class="p-4">
-                                    <div class="small text-danger fw-bold text-uppercase mb-1">@item.ServiceCategory?.CategoryName</div>
-                                    <h6 class="fw-bold mb-2">
-                                        <a href="/Service/Details?slug=@item.Slug" class="text-dark text-decoration-none">@item.ServiceName</a>
+
+                                @* Body *@
+                                <div class="svc-body">
+                                    @if (!string.IsNullOrEmpty(item.ServiceCategory?.CategoryName))
+                                    {
+                                        <div class="svc-cat-label">@item.ServiceCategory!.CategoryName</div>
+                                    }
+                                    <h6 class="svc-name">
+                                        <a asp-controller="Service" asp-action="Details" asp-route-slug="@(item.Slug ?? item.ServiceId.ToString())" class="svc-name-link">
+                                            @item.ServiceName
+                                        </a>
                                     </h6>
-                                    <p class="text-muted small mb-3 text-truncate-2">@(item.ShortDescription ?? item.Description)</p>
-                                    
-                                    <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-auto">
-                                        <div class="fw-bold text-danger fs-5">@item.Price.ToString("N0")đ</div>
-                                        <a href="/Service/Booking?serviceId=@item.ServiceId" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">ĐẶT LỊCH</a>
+                                    <p class="svc-desc">@(item.ShortDescription ?? item.Description ?? "")</p>
+                                    <div class="svc-meta-row">
+                                        <span><i class='bx bx-time-five'></i> @(item.Duration ?? 30) phút</span>
+                                        @if ((item.WarrantyDays ?? 0) > 0)
+                                        {
+                                            <span><i class='bx bx-shield-quarter'></i> BH @item.WarrantyDays ngày</span>
+                                        }
+                                        else
+                                        {
+                                            <span><i class='bx bx-shield-quarter'></i> BH 30 ngày</span>
+                                        }
                                     </div>
                                 </div>
+
+                                @* Footer *@
+                                <div class="svc-footer">
+                                    <div class="svc-price">@item.Price.ToString("N0")đ</div>
+                                    <a asp-controller="Service" asp-action="Booking" asp-route-serviceId="@item.ServiceId"
+                                       class="btn-svc-book">
+                                        <i class='bx bxs-calendar me-1'></i>Đặt lịch
+                                    </a>
+                                </div>
+
                             </div>
                         </div>
                     }
@@ -98,15 +357,93 @@
     </div>
 </main>
 
-<style>
-    .service-card { transition: 0.3s; }
-    .service-card:hover { transform: translateY(-5px); }
-    .hover-shadow:hover { box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important; }
-    .text-truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 38px; }
-    
-    .service-category-list .list-group-item { transition: 0.2s; font-size: 14px; }
-    .service-category-list .list-group-item:hover { color: #E24B4A; background: #fff9f9; padding-left: 10px !important; }
-    .service-category-list .list-group-item.active { background: #fff9f9 !important; }
-    
-    .x-small { font-size: 11px; }
-</style>
+@* ── 4. PROCESS STEPS ── *@
+<section class="svc-process-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Quy trình đặt dịch vụ</h2>
+            <p class="text-muted small">Đơn giản · Nhanh chóng · Minh bạch</p>
+        </div>
+        <div class="svc-steps">
+            <div class="svc-step">
+                <div class="svc-step-num">1</div>
+                <div class="svc-step-connector"></div>
+                <div class="svc-step-icon"><i class='bx bxs-wrench'></i></div>
+                <h6 class="svc-step-title">Chọn dịch vụ</h6>
+                <p class="svc-step-desc">Chọn loại dịch vụ phù hợp với xe và nhu cầu của bạn</p>
+            </div>
+            <div class="svc-step">
+                <div class="svc-step-num">2</div>
+                <div class="svc-step-connector"></div>
+                <div class="svc-step-icon"><i class='bx bxs-calendar'></i></div>
+                <h6 class="svc-step-title">Đặt lịch hẹn</h6>
+                <p class="svc-step-desc">Điền thông tin và chọn khung giờ thuận tiện nhất</p>
+            </div>
+            <div class="svc-step">
+                <div class="svc-step-num">3</div>
+                <div class="svc-step-connector"></div>
+                <div class="svc-step-icon"><i class='bx bxs-bell-ring'></i></div>
+                <h6 class="svc-step-title">Xác nhận SMS</h6>
+                <p class="svc-step-desc">Nhận xác nhận và nhắc nhở lịch hẹn qua SMS</p>
+            </div>
+            <div class="svc-step">
+                <div class="svc-step-num">4</div>
+                <div class="svc-step-connector"></div>
+                <div class="svc-step-icon svc-step-done"><i class='bx bxs-check-circle'></i></div>
+                <h6 class="svc-step-title">Hoàn thành</h6>
+                <p class="svc-step-desc">Nhận xe và đánh giá chất lượng dịch vụ</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ── 5. REVIEWS (hardcoded) ── *@
+<section class="svc-reviews-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Khách hàng nói gì?</h2>
+            <p class="text-muted small">Hơn 5.000 đánh giá thực từ khách hàng</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="svc-review-card">
+                    <div class="svc-review-stars">★★★★★</div>
+                    <p class="svc-review-quote">"Thay nhớt nhanh, kỹ thuật viên tận tình giải thích tình trạng xe. Giá hợp lý, sẽ quay lại lần sau."</p>
+                    <div class="svc-review-author">
+                        <div class="svc-review-avatar">TM</div>
+                        <div>
+                            <div class="svc-review-name">Trần Minh Khoa</div>
+                            <div class="svc-review-svc"><i class='bx bxs-droplet me-1'></i>Thay nhớt máy</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="svc-review-card">
+                    <div class="svc-review-stars">★★★★★</div>
+                    <p class="svc-review-quote">"Lốp mới bám đường rất tốt, shop cân bằng bằng máy chuyên dụng. Winner X chạy ổn định hơn hẳn sau khi thay."</p>
+                    <div class="svc-review-author">
+                        <div class="svc-review-avatar">NL</div>
+                        <div>
+                            <div class="svc-review-name">Nguyễn Thị Lan</div>
+                            <div class="svc-review-svc"><i class='bx bx-rotate-right me-1'></i>Thay lốp xe</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="svc-review-card">
+                    <div class="svc-review-stars">★★★★☆</div>
+                    <p class="svc-review-quote">"Bảo dưỡng 3.000km check kỹ từng hạng mục. Xe sau bảo dưỡng chạy êm và bốc hơn trước nhiều. Sẽ ủng hộ."</p>
+                    <div class="svc-review-author">
+                        <div class="svc-review-avatar">PH</div>
+                        <div>
+                            <div class="svc-review-name">Phạm Hoàng Anh</div>
+                            <div class="svc-review-svc"><i class='bx bx-wrench me-1'></i>Bảo dưỡng 3.000km</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

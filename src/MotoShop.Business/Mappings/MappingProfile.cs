@@ -21,11 +21,16 @@ namespace MotoShop.Business.Mappings
                 .ForMember(dest => dest.DefaultVariantId, opt => opt.MapFrom(src => src.Variants.OrderBy(v => v.Price).Select(v => v.ProductVariantId).FirstOrDefault()))
                 .ForMember(dest => dest.PrimaryImageUrl, opt => opt.MapFrom(src => src.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault() ?? src.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? string.Empty))
                 .ForMember(dest => dest.IsFlashSale, opt => opt.MapFrom(src => src.FlashSaleProducts.Any(fsp => fsp.FlashSale != null && fsp.FlashSale.IsActive && fsp.FlashSale.StartDate <= DateTime.Now && fsp.FlashSale.EndDate >= DateTime.Now && fsp.Quantity > fsp.SoldQuantity)))
-                .ForMember(dest => dest.FlashSalePrice, opt => opt.MapFrom(src => src.FlashSaleProducts.Where(fsp => fsp.FlashSale != null && fsp.FlashSale.IsActive && fsp.FlashSale.StartDate <= DateTime.Now && fsp.FlashSale.EndDate >= DateTime.Now && fsp.Quantity > fsp.SoldQuantity).Select(fsp => (decimal?)fsp.FlashSalePrice).FirstOrDefault()));
+                .ForMember(dest => dest.FlashSalePrice, opt => opt.MapFrom(src => src.FlashSaleProducts.Where(fsp => fsp.FlashSale != null && fsp.FlashSale.IsActive && fsp.FlashSale.StartDate <= DateTime.Now && fsp.FlashSale.EndDate >= DateTime.Now && fsp.Quantity > fsp.SoldQuantity).Select(fsp => (decimal?)fsp.FlashSalePrice).FirstOrDefault()))
+                .ForMember(dest => dest.FlashSaleEndDate, opt => opt.MapFrom(src => src.FlashSaleProducts.Where(fsp => fsp.FlashSale != null && fsp.FlashSale.IsActive && fsp.FlashSale.StartDate <= DateTime.Now && fsp.FlashSale.EndDate >= DateTime.Now && fsp.Quantity > fsp.SoldQuantity).Select(fsp => (DateTime?)fsp.FlashSale.EndDate).FirstOrDefault()))
+                .ForMember(dest => dest.StockCount, opt => opt.MapFrom(src => src.Variants.Sum(v => v.StockQuantity)))
+                .ForMember(dest => dest.IsInStock,  opt => opt.MapFrom(src => src.Variants.Any(v => v.StockQuantity > 0)));
 
             // ProductReview Mapping
             CreateMap<ProductReview, ProductReviewDto>()
                 .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.Customer != null ? src.Customer.FullName : "Khách hàng"))
+                .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.Customer != null ? src.Customer.AvatarUrl : string.Empty))
+                .ForMember(dest => dest.ReviewImages, opt => opt.MapFrom(src => src.Images.Select(i => i.ImageUrl).ToList()))
                 .ForMember(dest => dest.IsApproved, opt => opt.MapFrom(src => src.Status == "Approved"));
 
             // ProductVariant Mapping

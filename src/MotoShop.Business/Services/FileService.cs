@@ -16,6 +16,7 @@ namespace MotoShop.Business.Services
     {
         private readonly IWebHostEnvironment _environment;
         private readonly string[] _allowedExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
+        private readonly string[] _allowedMimeTypes = { "image/jpeg", "image/png", "image/webp" };
 
         public FileService(IWebHostEnvironment environment)
         {
@@ -26,9 +27,18 @@ namespace MotoShop.Business.Services
         {
             if (file == null) return null;
 
+            // 1. Validate Extension
             var extension = Path.GetExtension(file.FileName).ToLower();
             if (!_allowedExtensions.Contains(extension))
                 throw new InvalidOperationException("Invalid file type.");
+
+            // 2. Validate MIME Type
+            if (!_allowedMimeTypes.Contains(file.ContentType.ToLower()))
+                throw new InvalidOperationException("Invalid MIME type.");
+
+            // 3. Validate File Size (Max 5MB)
+            if (file.Length > 5 * 1024 * 1024)
+                throw new InvalidOperationException("File size exceeds 5MB limit.");
 
             var wwwrootPath = _environment.WebRootPath;
             var folderPath = Path.Combine(wwwrootPath, "uploads", subFolder);
@@ -39,9 +49,19 @@ namespace MotoShop.Business.Services
             var fileName = $"{Guid.NewGuid()}{extension}";
             var fullPath = Path.Combine(folderPath, fileName);
 
-            using (var stream = new FileStream(fullPath, FileMode.Create))
+            // 4. Validate Magic Bytes (File Signature)
+            using (var ms = new MemoryStream())
             {
-                await file.CopyToAsync(stream);
+                await file.CopyToAsync(ms);
+                var bytes = ms.ToArray();
+                if (!IsValidImage(bytes))
+                    throw new InvalidOperationException("Invalid image content.");
+
+                ms.Position = 0;
+                using (var stream = new FileStream(fullPath, FileMode.Create))
+                {
+                    await ms.CopyToAsync(stream);
+                }
             }
 
             return $"/uploads/{subFolder}/{fileName}";
@@ -53,13 +73,11 @@ namespace MotoShop.Business.Services
 
             // 1. Validate Extension
             var extension = Path.GetExtension(file.FileName).ToLower();
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
-            if (!allowedExtensions.Contains(extension))
+            if (!_allowedExtensions.Contains(extension))
                 throw new InvalidOperationException("Định dạng file không được hỗ trợ.");
 
             // 2. Validate MIME Type
-            var allowedMimeTypes = new[] { "image/jpeg", "image/png", "image/webp", "image/gif" };
-            if (!allowedMimeTypes.Contains(file.ContentType.ToLower()))
+            if (!_allowedMimeTypes.Contains(file.ContentType.ToLower()))
                 throw new InvalidOperationException("Loại MIME không hợp lệ.");
 
             // 3. Validate File Size (Max 5MB)
@@ -125,9 +143,6 @@ namespace MotoShop.Business.Services
                 return true;
             // WEBP: 52 49 46 46 (RIFF)
             if (bytes[0] == 0x52 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x46)
-                return true;
-            // GIF: 47 49 46 38
-            if (bytes[0] == 0x47 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x38)
                 return true;
 
             return false;

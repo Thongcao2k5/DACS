@@ -23,7 +23,7 @@
 </div>
 
 <main class="container py-5">
-    <div class="row g-4">
+    <div class="row g-4 service-detail-layout">
         <!-- 1. LEFT COLUMN -->
         <div class="col-lg-8">
             <!-- HERO SECTION -->
@@ -83,7 +83,7 @@
 
             <!-- TABS -->
             <div class="service-tabs">
-                <div class="d-flex gap-2 mb-4 border-bottom">
+                <div class="tab-nav">
                     <button class="tab-btn active" data-tab="tab-desc">Mô tả chi tiết</button>
                     <button class="tab-btn" data-tab="tab-process">Quy trình thực hiện</button>
                     <button class="tab-btn" data-tab="tab-review">Đánh giá khách hàng</button>
@@ -109,31 +109,56 @@
 
                     <!-- TAB 2: PROCESS -->
                     <div class="tab-pane" id="tab-process">
-                        <div class="timeline">
-                            <div class="timeline-step">
-                                <div class="timeline-dot"></div>
-                                <h6 class="fw-bold mb-1">Bước 1: Tiếp nhận xe</h6>
-                                <p class="text-muted small">Kỹ thuật viên kiểm tra sơ bộ tình trạng xe, ghi nhận các yêu cầu đặc biệt từ khách hàng và xác nhận dịch vụ cần thực hiện.</p>
+                        <div class="process-steps">
+                            <div class="process-step">
+                                <div class="step-left">
+                                    <div class="step-number">1</div>
+                                    <div class="step-line"></div>
+                                </div>
+                                <div class="step-right">
+                                    <h4>Tiếp nhận xe</h4>
+                                    <p>Kỹ thuật viên kiểm tra sơ bộ tình trạng xe, ghi nhận các yêu cầu đặc biệt từ khách hàng và xác nhận dịch vụ cần thực hiện.</p>
+                                </div>
                             </div>
-                            <div class="timeline-step">
-                                <div class="timeline-dot"></div>
-                                <h6 class="fw-bold mb-1">Bước 2: Chuẩn bị</h6>
-                                <p class="text-muted small">Chuẩn bị đầy đủ dụng cụ chuyên dụng, phụ tùng và các loại hóa chất/nhớt theo đúng tiêu chuẩn kỹ thuật.</p>
+                            <div class="process-step">
+                                <div class="step-left">
+                                    <div class="step-number">2</div>
+                                    <div class="step-line"></div>
+                                </div>
+                                <div class="step-right">
+                                    <h4>Chuẩn bị dụng cụ & phụ tùng</h4>
+                                    <p>Chuẩn bị đầy đủ dụng cụ chuyên dụng, phụ tùng và các loại hóa chất/nhớt theo đúng tiêu chuẩn kỹ thuật.</p>
+                                </div>
                             </div>
-                            <div class="timeline-step">
-                                <div class="timeline-dot"></div>
-                                <h6 class="fw-bold mb-1">Bước 3: Thực hiện</h6>
-                                <p class="text-muted small">Tiến hành bảo dưỡng hoặc sửa chữa theo quy trình chuẩn của nhà sản xuất, đảm bảo tính tỉ mỉ và an toàn.</p>
+                            <div class="process-step">
+                                <div class="step-left">
+                                    <div class="step-number">3</div>
+                                    <div class="step-line"></div>
+                                </div>
+                                <div class="step-right">
+                                    <h4>Thực hiện dịch vụ</h4>
+                                    <p>Tiến hành bảo dưỡng hoặc sửa chữa theo quy trình chuẩn của nhà sản xuất, đảm bảo tính tỉ mỉ và an toàn.</p>
+                                </div>
                             </div>
-                            <div class="timeline-step">
-                                <div class="timeline-dot"></div>
-                                <h6 class="fw-bold mb-1">Bước 4: Kiểm tra & Chạy thử</h6>
-                                <p class="text-muted small">Kiểm tra lại toàn bộ các chi tiết vừa xử lý, tiến hành chạy thử xe để đảm bảo mọi bộ phận hoạt động hoàn hảo.</p>
+                            <div class="process-step">
+                                <div class="step-left">
+                                    <div class="step-number">4</div>
+                                    <div class="step-line"></div>
+                                </div>
+                                <div class="step-right">
+                                    <h4>Kiểm tra & Chạy thử</h4>
+                                    <p>Kiểm tra lại toàn bộ các chi tiết vừa xử lý, tiến hành chạy thử xe để đảm bảo mọi bộ phận hoạt động hoàn hảo.</p>
+                                </div>
                             </div>
-                            <div class="timeline-step">
-                                <div class="timeline-dot"></div>
-                                <h6 class="fw-bold mb-1">Bước 5: Bàn giao xe</h6>
-                                <p class="text-muted small">Vệ sinh xe, bàn giao cho khách hàng kèm phiếu bảo hành và hướng dẫn lịch bảo dưỡng định kỳ tiếp theo.</p>
+                            <div class="process-step">
+                                <div class="step-left">
+                                    <div class="step-number">5</div>
+                                    <div class="step-line"></div>
+                                </div>
+                                <div class="step-right">
+                                    <h4>Bàn giao xe</h4>
+                                    <p>Vệ sinh xe, bàn giao cho khách hàng kèm phiếu bảo hành và hướng dẫn lịch bảo dưỡng định kỳ tiếp theo.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -312,34 +337,86 @@
 </main>
 
 <style>
+    /* ── Hero ── */
     .service-hero-detail { height: 400px; }
     .hero-overlay { background: linear-gradient(transparent, rgba(0,0,0,0.9)); }
-    
-    .tab-btn { border: none; background: none; padding: 10px 20px; font-size: 14px; color: #666; border-bottom: 2px solid transparent; cursor: pointer; transition: 0.2s; }
-    .tab-btn.active { color: #E24B4A; border-bottom-color: #E24B4A; font-weight: 700; }
+
+    /* ── 2-column layout override ── */
+    @@media (min-width: 992px) {
+        .service-detail-layout {
+            display: grid !important;
+            grid-template-columns: 1fr 320px;
+            gap: 24px;
+            align-items: start;
+        }
+        .service-detail-layout > [class*="col-"] {
+            width: auto !important;
+            max-width: none !important;
+            flex: unset !important;
+            padding-left: 0;
+            padding-right: 0;
+        }
+    }
+
+    /* ── Tab nav ── */
+    .tab-nav {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid #f3f4f6;
+        margin-bottom: 20px;
+    }
+    .tab-btn {
+        padding: 10px 20px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #6b7280;
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        cursor: pointer;
+        transition: color .15s, border-color .15s;
+    }
+    .tab-btn.active {
+        color: #e53e3e;
+        border-bottom-color: #e53e3e;
+    }
     .tab-pane { display: none; }
     .tab-pane.active { display: block; animation: fadeIn 0.3s; }
 
-    .timeline { position: relative; padding-left: 32px; }
-    .timeline::before { content: ''; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; background: #eee; }
-    .timeline-step { position: relative; margin-bottom: 24px; }
-    .timeline-dot { position: absolute; left: -31px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: #E24B4A; border: 2px solid #fff; box-shadow: 0 0 0 2px #E24B4A; }
+    /* ── Process steps ── */
+    .process-steps { display: flex; flex-direction: column; gap: 0; }
+    .process-step  { display: flex; gap: 16px; }
+    .step-left     { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+    .step-number   {
+        width: 32px; height: 32px; border-radius: 50%;
+        background: #e53e3e; color: #fff;
+        font-size: 13px; font-weight: 800;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .step-line {
+        width: 2px; flex: 1;
+        background: #fee2e2;
+        margin: 4px 0; min-height: 20px;
+    }
+    .process-step:last-child .step-line { display: none; }
+    .step-right    { padding-bottom: 24px; flex: 1; min-width: 0; }
+    .step-right h4 { font-size: 14px; font-weight: 700; color: #111; margin-bottom: 4px; }
+    .step-right p  { font-size: 13px; color: #6b7280; line-height: 1.6; margin: 0; }
 
+    /* ── Misc ── */
     .star-btn { font-size: 28px; color: #ddd; cursor: pointer; background: none; border: none; transition: color 0.1s; }
     .star-btn.active { color: #FFA500; }
-    
     .avatar-circle { width: 40px; height: 40px; border-radius: 50%; background: #FCEBEB; color: #E24B4A; display: flex; align-items: center; justify-content: center; font-weight: 700; }
     .related-svc-item { text-decoration: none; transition: 0.2s; }
     .related-svc-item:hover { background: #fafafa; border-radius: 8px; }
     .related-svc-item:last-child { border-bottom: none !important; }
-
-    .slot-badge-green { color: #3B6D11; }
+    .slot-badge-green  { color: #3B6D11; }
     .slot-badge-orange { color: #BA7517; }
-    .slot-badge-red { color: #E24B4A; }
-
+    .slot-badge-red    { color: #E24B4A; }
     #descContent.collapsed { max-height: 300px; overflow: hidden; position: relative; }
     #descContent.collapsed::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(transparent, white); }
-    
     @@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .x-small { font-size: 11px; }
 </style>

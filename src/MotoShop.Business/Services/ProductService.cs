@@ -62,12 +62,13 @@ namespace MotoShop.Business.Services
             // Lọc theo từ khóa
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                var search = searchTerm.Trim().ToLower();
-                query = query.Where(p => p.ProductName.ToLower().Contains(search) || 
-                                       (p.Description != null && p.Description.ToLower().Contains(search)) ||
-                                       (p.Brand != null && p.Brand.BrandName.ToLower().Contains(search)) ||
-                                       (p.Category != null && p.Category.CategoryName.ToLower().Contains(search)) ||
-                                       p.Variants.Any(v => v.SKU != null && v.SKU.ToLower().Contains(search)));
+                var search = MotoShop.Business.Helpers.VietnameseStringHelper.NormalizeKeyword(searchTerm);
+                query = query.Where(p => 
+                    EF.Functions.Collate(p.ProductName, "SQL_Latin1_General_CP1_CI_AI").Contains(search) || p.ProductName.ToLower().Contains(search) || 
+                    (p.Description != null && (EF.Functions.Collate(p.Description, "SQL_Latin1_General_CP1_CI_AI").Contains(search) || p.Description.ToLower().Contains(search))) ||
+                    (p.Brand != null && (EF.Functions.Collate(p.Brand.BrandName, "SQL_Latin1_General_CP1_CI_AI").Contains(search) || p.Brand.BrandName.ToLower().Contains(search))) ||
+                    (p.Category != null && (EF.Functions.Collate(p.Category.CategoryName, "SQL_Latin1_General_CP1_CI_AI").Contains(search) || p.Category.CategoryName.ToLower().Contains(search))) ||
+                    p.Variants.Any(v => v.SKU != null && v.SKU.ToLower().Contains(search)));
             }
 
             // Lọc theo danh mục
@@ -168,7 +169,7 @@ namespace MotoShop.Business.Services
         {
             return await _productRepository.Find(p => p.IsActive)
                 .AsNoTracking()
-                .OrderBy(p => p.ProductId) 
+                .OrderBy(p => EF.Functions.Random())
                 .Take(count)
                 .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
@@ -306,6 +307,7 @@ namespace MotoShop.Business.Services
                 fs.StartDate <= now &&
                 fs.EndDate >= now)
                 .AsNoTracking()
+                .AsSplitQuery()
                 .Include(fs => fs.FlashSaleProducts)
                     .ThenInclude(fsp => fsp.Product)
                         .ThenInclude(p => p!.Variants)
@@ -333,7 +335,9 @@ namespace MotoShop.Business.Services
                                    ?? fsp.Product.Images.Select(i => i.ImageUrl).FirstOrDefault(),
                         FlashSalePrice = fsp.FlashSalePrice,
                         OriginalPrice = fsp.Product.Variants.Any() ? fsp.Product.Variants.Min(v => v.Price) : 0,
-                        DiscountPercent = (int)Math.Round((1 - fsp.FlashSalePrice / (fsp.Product.Variants.Any() ? fsp.Product.Variants.Min(v => v.Price) : 1)) * 100),
+                        DiscountPercent = (fsp.Product.Variants.Any() && fsp.Product.Variants.Min(v => v.Price) > 0)
+                            ? (int)Math.Round((1 - fsp.FlashSalePrice / fsp.Product.Variants.Min(v => v.Price)) * 100)
+                            : 0,
                         Quantity = fsp.Quantity,
                         SoldQuantity = fsp.SoldQuantity,
                         SoldPercent = fsp.Quantity > 0 ? (int)Math.Round((decimal)fsp.SoldQuantity / fsp.Quantity * 100) : 0
@@ -421,28 +425,33 @@ namespace MotoShop.Business.Services
                 .AsNoTracking()
                 .OrderByDescending(b => b.Products.Count(p => p.IsActive && !p.IsDeleted))
                 .Take(brandsCount)
+                .Select(b => new { b.BrandId, b.BrandName, b.LogoUrl })
                 .ToListAsync();
 
-            var result = new List<BrandWithProductsDto>();
-            foreach (var brand in topBrands)
-            {
-                var products = await _productRepository.Find(p => p.IsActive && !p.IsDeleted && p.BrandId == brand.BrandId)
-                    .AsNoTracking()
-                    .OrderByDescending(p => p.IsFeatured)
-                    .Take(productsPerBrand)
-                    .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
-                    .ToListAsync();
+            var brandIds = topBrands.Select(b => b.BrandId).ToList();
 
-                result.Add(new BrandWithProductsDto
-                {
-                    BrandId = brand.BrandId,
-                    BrandName = brand.BrandName,
-                    LogoUrl = brand.LogoUrl,
-                    Products = products,
-                    TotalCount = await _productRepository.Find(p => p.IsActive && !p.IsDeleted && p.BrandId == brand.BrandId).AsNoTracking().CountAsync()
-                });
-            }
-            return result;
+            // Lấy tất cả sản phẩm của các brand trong 1 query, rồi group trong memory
+            var allProducts = await _productRepository
+                .Find(p => p.IsActive && !p.IsDeleted && brandIds.Contains(p.BrandId ?? 0))
+                .AsNoTracking()
+                .OrderByDescending(p => p.IsFeatured)
+                .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            var productsByBrand = allProducts
+                .GroupBy(p => p.BrandId)
+                .ToDictionary(g => g.Key ?? 0, g => g.ToList());
+
+            return topBrands.Select(brand => new BrandWithProductsDto
+            {
+                BrandId   = brand.BrandId,
+                BrandName = brand.BrandName,
+                LogoUrl   = brand.LogoUrl,
+                Products  = productsByBrand.TryGetValue(brand.BrandId, out var list)
+                                ? list.Take(productsPerBrand).ToList()
+                                : new List<ProductDto>(),
+                TotalCount = productsByBrand.TryGetValue(brand.BrandId, out var all) ? all.Count : 0
+            }).ToList();
         }
 
         public async Task<List<CategoryWithProductsDto>> GetCategoryWithProductsAsync(int categoriesCount = 4, int productsPerCategory = 4)
@@ -451,28 +460,48 @@ namespace MotoShop.Business.Services
                 .AsNoTracking()
                 .OrderByDescending(c => c.Products.Count(p => p.IsActive && !p.IsDeleted))
                 .Take(categoriesCount)
+                .Select(c => new { c.CategoryId, c.CategoryName, c.Slug })
                 .ToListAsync();
 
-            var result = new List<CategoryWithProductsDto>();
-            foreach (var cat in topCats)
-            {
-                var products = await _productRepository.Find(p => p.IsActive && !p.IsDeleted && (p.CategoryId == cat.CategoryId || p.Category!.ParentId == cat.CategoryId))
-                    .AsNoTracking()
-                    .OrderByDescending(p => p.IsFeatured)
-                    .Take(productsPerCategory)
-                    .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
-                    .ToListAsync();
+            var catIds = topCats.Select(c => c.CategoryId).ToList();
 
-                result.Add(new CategoryWithProductsDto
-                {
-                    CategoryId = cat.CategoryId,
-                    CategoryName = cat.CategoryName,
-                    Slug = cat.Slug,
-                    Products = products,
-                    TotalCount = await _productRepository.Find(p => p.IsActive && !p.IsDeleted && (p.CategoryId == cat.CategoryId || p.Category!.ParentId == cat.CategoryId)).AsNoTracking().CountAsync()
-                });
+            // Map sub-category → parent (1 query)
+            var subCatMap = await _uow.Repository<Category>()
+                .Find(c => c.ParentId != null && catIds.Contains(c.ParentId.Value))
+                .AsNoTracking()
+                .Select(c => new { c.CategoryId, ParentId = c.ParentId!.Value })
+                .ToDictionaryAsync(c => c.CategoryId, c => c.ParentId);
+
+            var allCatIds = catIds.Concat(subCatMap.Keys).ToList();
+
+            // Lấy tất cả sản phẩm trong 1 query
+            var allProducts = await _productRepository
+                .Find(p => p.IsActive && !p.IsDeleted && allCatIds.Contains(p.CategoryId ?? 0))
+                .AsNoTracking()
+                .OrderByDescending(p => p.IsFeatured)
+                .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            // Group theo parent category trong memory
+            var productsByCat = new Dictionary<int, List<ProductDto>>();
+            foreach (var p in allProducts)
+            {
+                var cid = p.CategoryId ?? 0;
+                var parentId = subCatMap.TryGetValue(cid, out var pid) ? pid : cid;
+                if (!productsByCat.ContainsKey(parentId)) productsByCat[parentId] = new();
+                productsByCat[parentId].Add(p);
             }
-            return result;
+
+            return topCats.Select(cat => new CategoryWithProductsDto
+            {
+                CategoryId   = cat.CategoryId,
+                CategoryName = cat.CategoryName,
+                Slug         = cat.Slug,
+                Products     = productsByCat.TryGetValue(cat.CategoryId, out var list)
+                                   ? list.Take(productsPerCategory).ToList()
+                                   : new List<ProductDto>(),
+                TotalCount   = productsByCat.TryGetValue(cat.CategoryId, out var all) ? all.Count : 0
+            }).ToList();
         }
     }
 }

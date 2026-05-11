@@ -103,19 +103,45 @@
                         </select>
                     </div>
 
-                    <!-- Brand Filter -->
+                    <!-- Brand Filter Slider -->
                     <div class="filter-widget mb-4 pb-4 border-bottom">
-                        <h6 class="fw-bold mb-3 small">THƯƠNG HIỆU</h6>
-                        <select name="brandId" class="form-select rounded-pill filter-select">
-                            <option value="">Tất cả thương hiệu</option>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold mb-0 small">THƯƠNG HIỆU</h6>
+                            <div class="d-flex gap-1">
+                                <button type="button" class="brand-arr" onclick="slideBrand(-1)">‹</button>
+                                <button type="button" class="brand-arr" onclick="slideBrand(1)">›</button>
+                            </div>
+                        </div>
+                        <input type="hidden" name="brandId" id="brandIdInput" value="@(ViewBag.CurrentBrandId?.ToString() ?? "")">
+                        <div class="brand-slider-track" id="brandSliderTrack">
+                            <div class="brand-slide-item @(ViewBag.CurrentBrandId == null ? "active" : "")"
+                                 onclick="selectBrand('')" title="Tất cả">
+                                <div class="brand-slide-logo">
+                                    <i class='bx bx-store'></i>
+                                </div>
+                                <span class="brand-slide-name">Tất cả</span>
+                            </div>
                             @foreach (var brand in ViewBag.BrandListItems as List<BrandDto> ?? new List<BrandDto>())
                             {
-                                var count = brandCount.GetValueOrDefault(brand.BrandId, 0);
-                                <option value="@brand.BrandId" selected="@(ViewBag.CurrentBrandId?.ToString() == brand.BrandId.ToString())">
-                                    @brand.BrandName @(count > 0 ? $"({count})" : "")
-                                </option>
+                                <div class="brand-slide-item @(ViewBag.CurrentBrandId?.ToString() == brand.BrandId.ToString() ? "active" : "")"
+                                     onclick="selectBrand('@brand.BrandId')"
+                                     title="@brand.BrandName">
+                                    <div class="brand-slide-logo">
+                                        @if (!string.IsNullOrEmpty(brand.LogoUrl))
+                                        {
+                                            <img src="@brand.LogoUrl" alt="@brand.BrandName"
+                                                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                            <span class="brand-slide-fb" style="display:none;">@brand.BrandName.Substring(0,Math.Min(3,brand.BrandName.Length))</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="brand-slide-fb">@brand.BrandName.Substring(0,Math.Min(3,brand.BrandName.Length))</span>
+                                        }
+                                    </div>
+                                    <span class="brand-slide-name">@brand.BrandName</span>
+                                </div>
                             }
-                        </select>
+                        </div>
                     </div>
 
                     <!-- Quick Checkboxes -->
@@ -361,12 +387,56 @@
     /* Skeleton Loading */
     .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
     @@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+    /* Brand Slider */
+    .brand-slider-track {
+        display: flex; gap: 6px;
+        overflow-x: auto; scroll-behavior: smooth;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 4px;
+        -ms-overflow-style: none; scrollbar-width: none;
+    }
+    .brand-slider-track::-webkit-scrollbar { display: none; }
+    .brand-slide-item {
+        flex: 0 0 56px; width: 56px;
+        display: flex; flex-direction: column; align-items: center;
+        gap: 4px; padding: 6px 4px;
+        border: 1.5px solid #eee; border-radius: 10px;
+        cursor: pointer; transition: all 0.15s;
+        scroll-snap-align: start; background: #fff;
+    }
+    .brand-slide-item:hover { border-color: #fca5a5; background: #fff5f5; }
+    .brand-slide-item.active { border-color: #dc3545; background: #fff0f0; }
+    .brand-slide-logo {
+        width: 40px; height: 28px;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .brand-slide-logo img { max-width: 38px; max-height: 26px; object-fit: contain; }
+    .brand-slide-logo i { font-size: 17px; color: #aaa; }
+    .brand-slide-fb { font-size: 8px; font-weight: 800; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+    .brand-slide-name { font-size: 8.5px; font-weight: 600; text-align: center; color: #555; line-height: 1.2; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 54px; }
+    .brand-slide-item.active .brand-slide-name { color: #dc3545; }
+    .brand-arr { width: 22px; height: 22px; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #666; font-size: 14px; line-height: 1; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .brand-arr:hover { background: #dc3545; color: #fff; border-color: #dc3545; }
+
+    /* Skeleton Loading */
     .skeleton-card .skeleton-img { height: 200px; border-radius: 12px; }
+
 </style>
 
 @section Scripts {
     <script src="~/js/cart-handler.js"></script>
     <script>
+        function selectBrand(id) {
+            document.getElementById('brandIdInput').value = id;
+            document.getElementById('filterForm').submit();
+        }
+
+        function slideBrand(dir) {
+            const t = document.getElementById('brandSliderTrack');
+            if (t) t.scrollBy({ left: dir * 130, behavior: 'smooth' });
+        }
+
         // Set View Type (Grid/List)
         function setView(type) {
             document.cookie = "viewType=" + type + ";path=/;max-age=" + (30*24*60*60);
@@ -410,6 +480,10 @@
 
         // Compare Logic
         let compareList = JSON.parse(localStorage.getItem('compareList') || '[]');
+        function addToCompareFromBtn(btn) {
+            addToCompare(parseInt(btn.dataset.id), btn.dataset.name, btn.dataset.img, parseFloat(btn.dataset.price));
+        }
+
         function addToCompare(id, name, img, price) {
             if (compareList.length >= 3) {
                 alert('Chỉ so sánh tối đa 3 sản phẩm!');

@@ -10,6 +10,7 @@ using AutoMapper;
 namespace MotoShop.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class FlashSaleController : Controller
     {
         private readonly MotoShopDbContext _context;
@@ -27,6 +28,12 @@ namespace MotoShop.Areas.Admin.Controllers
                 .Include(f => f.FlashSaleProducts)
                 .OrderByDescending(f => f.StartDate)
                 .ToListAsync();
+
+            // Dashboard Statistics
+            var allProducts = flashSales.SelectMany(f => f.FlashSaleProducts).ToList();
+            ViewBag.TotalProducts = allProducts.Sum(p => p.Quantity);
+            ViewBag.TotalSold = allProducts.Sum(p => p.SoldQuantity);
+            ViewBag.TotalRevenue = allProducts.Sum(p => p.SoldQuantity * p.FlashSalePrice);
 
             var dtos = _mapper.Map<List<FlashSaleDto>>(flashSales);
             return View(dtos);
@@ -177,3 +184,4 @@ namespace MotoShop.Areas.Admin.Controllers
         }
     }
 }
+

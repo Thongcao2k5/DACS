@@ -1,0 +1,163 @@
+@model MotoShop.Business.DTOs.ProductDto
+@{
+    var cat        = (Model.CategoryName ?? "").ToUpper();
+    var imgBg      = cat.Contains("NHỚT") || cat.Contains("DẦU") ? "#fff5f5"
+                   : cat.Contains("LỐP")  || cat.Contains("VỎ")  ? "#fffbeb"
+                   : cat.Contains("PHANH")|| cat.Contains("CHÂ") ? "#eff6ff"
+                   : cat.Contains("ẮC QUY")|| cat.Contains("BÌNH")? "#f0fdf4"
+                   : "#f8f9fa";
+    var catDotColor = cat.Contains("NHỚT") || cat.Contains("DẦU") ? "#ef4444"
+                    : cat.Contains("LỐP")  || cat.Contains("VỎ")  ? "#16a34a"
+                    : cat.Contains("PHANH")|| cat.Contains("CHÂ") ? "#3b82f6"
+                    : cat.Contains("ẮC QUY")|| cat.Contains("BÌNH")? "#8b5cf6"
+                    : cat.Contains("BẢO DƯỠNG")                   ? "#f97316"
+                    : "#6b7280";
+    var discPct    = Model.CalculatedDiscountPercent > 0 ? Model.CalculatedDiscountPercent : Model.DiscountPercent;
+    var isNew      = discPct == 0 && !Model.IsFeatured && (DateTime.Now - Model.CreatedDate).TotalDays <= 14;
+    var stockPct   = Math.Min(100, Math.Max(4, Model.StockCount * 5));
+    var stockColor = Model.StockCount > 20 ? "#22c55e" : Model.StockCount > 5 ? "#f59e0b" : "#ef4444";
+    var outOfStock = !Model.IsInStock;
+    var reviewCount = Model.Reviews.Count(r => r.IsApproved);
+    var avgRating   = reviewCount > 0 ? Model.Reviews.Where(r => r.IsApproved).Average(r => (double)r.Rating) : 0.0;
+    var roundedRating = (int)Math.Round(avgRating);
+
+    decimal savingAmount = 0;
+    if (Model.IsFlashSale && Model.FlashSalePrice.HasValue)
+        savingAmount = Model.MinPrice - Model.FlashSalePrice.Value;
+    else if (Model.MinOriginalPrice.HasValue && Model.MinOriginalPrice > Model.MinPrice)
+        savingAmount = Model.MinOriginalPrice.Value - Model.MinPrice;
+    var savingK = (int)Math.Round((double)savingAmount / 1000.0);
+}
+
+<div class="pc-card">
+
+    @* ── VÙNG ẢNH ── *@
+    <div class="pc-img-area" style="background:@imgBg;">
+
+        @* Badge góc trái *@
+        @if (discPct > 0)
+        {
+            <span class="pc-badge pc-badge-sale">-@discPct%</span>
+        }
+        else if (isNew)
+        {
+            <span class="pc-badge pc-badge-new">Mới</span>
+        }
+        else if (Model.IsFeatured)
+        {
+            <span class="pc-badge pc-badge-hot">Bán chạy</span>
+        }
+
+        @* Ảnh sản phẩm *@
+        <a asp-controller="Product" asp-action="Details" asp-route-slug="@Model.Slug" class="pc-img-link">
+            <img src="@(string.IsNullOrEmpty(Model.PrimaryImageUrl) ? "/assets/img/elements/18.jpg" : Model.PrimaryImageUrl)"
+                 alt="@Model.ProductName"
+                 class="pc-img" loading="lazy"
+                 onerror="this.src='/assets/img/elements/18.jpg'">
+        </a>
+
+        @* Category strip — đáy ảnh *@
+        @if (!string.IsNullOrEmpty(Model.CategoryName))
+        {
+            <div class="cat-strip">
+                <span class="cat-dot" style="background:@catDotColor;"></span>
+                <span>@Model.CategoryName</span>
+            </div>
+        }
+
+        @* Nút tim — z-index 10, luôn clickable *@
+        <button type="button" class="pc-wish-btn" onclick="addToWishlist(@Model.ProductId)" title="Yêu thích">
+            <i class='bx bx-heart'></i>
+        </button>
+    </div>
+
+    @* ── NỘI DUNG ── *@
+    <div class="pc-body">
+
+        @* Brand + sold count *@
+        <div class="pc-brand-row">
+            @if (!string.IsNullOrEmpty(Model.BrandName))
+            {
+                <span class="pc-brand">@Model.BrandName</span>
+            }
+            @if (Model.SoldCount > 0)
+            {
+                <span class="pc-sold">Đã bán @Model.SoldCount</span>
+            }
+        </div>
+
+        @* Tên sản phẩm *@
+        <h6 class="pc-name">
+            <a asp-controller="Product" asp-action="Details" asp-route-slug="@Model.Slug" class="pc-name-link">
+                @Model.ProductName
+            </a>
+        </h6>
+
+        @* Sao đánh giá — chỉ hiện khi có review được duyệt *@
+        @if (reviewCount > 0)
+        {
+            <div class="pc-stars">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <i class='bx @(i <= roundedRating ? "bxs-star" : "bx-star")'></i>
+                }
+                <span class="pc-review-count">(@reviewCount)</span>
+            </div>
+        }
+
+        @* Giá *@
+        <div class="pc-price-row">
+            @if (Model.IsFlashSale && Model.FlashSalePrice.HasValue)
+            {
+                <span class="pc-price">@Model.FlashSalePrice.Value.ToString("N0")đ</span>
+                <del class="pc-old-price">@Model.MinPrice.ToString("N0")đ</del>
+                @if (savingK > 0)
+                {
+                    <span class="saving-pill">Tiết kiệm @(savingK)k</span>
+                }
+            }
+            else
+            {
+                <span class="pc-price">@(Model.MinPrice > 0 ? Model.MinPrice.ToString("N0") + "đ" : "Liên hệ")</span>
+                @if (Model.MinOriginalPrice.HasValue && Model.MinOriginalPrice > Model.MinPrice)
+                {
+                    <del class="pc-old-price">@Model.MinOriginalPrice.Value.ToString("N0")đ</del>
+                    @if (savingK > 0)
+                    {
+                        <span class="saving-pill">Tiết kiệm @(savingK)k</span>
+                    }
+                }
+            }
+        </div>
+
+        @* Thanh tồn kho *@
+        @if (Model.StockCount > 0)
+        {
+            <div class="pc-stock-wrap">
+                <div class="pc-stock-bar" style="width:@stockPct%;background:@stockColor;"></div>
+            </div>
+            <div class="pc-stock-lbl">
+                @(Model.StockCount > 20 ? "✓ Còn hàng" : Model.StockCount > 5 ? $"Còn {Model.StockCount} sp" : $"Sắp hết ({Model.StockCount})")
+            </div>
+        }
+        else
+        {
+            <div class="pc-out-stock">Hết hàng</div>
+        }
+    </div>
+
+    @* ── NÚT HÀNH ĐỘNG ── *@
+    <div class="pc-action-row">
+        <button type="button" class="btn-cart"
+                onclick="handleAddToCart(@Model.DefaultVariantId)"
+                @(outOfStock ? "disabled" : "")>
+            <i class='bx bx-cart-add'></i> Giỏ hàng
+        </button>
+        <button type="button" class="btn-buynow"
+                onclick="handleBuyNow(@Model.DefaultVariantId)"
+                @(outOfStock ? "disabled" : "")>
+            <i class='bx bxs-zap'></i> Mua ngay
+        </button>
+    </div>
+
+</div>

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MotoShop.Business.Interfaces;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 using System.Linq;
@@ -8,13 +9,16 @@ using System.Threading.Tasks;
 namespace MotoShop.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class BookingController : Controller
     {
         private readonly MotoShopDbContext _context;
+        private readonly IEmailService _emailService;
 
-        public BookingController(MotoShopDbContext context)
+        public BookingController(MotoShopDbContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         public async Task<IActionResult> Index(string? searchTerm, string? status, DateTime? fromDate, DateTime? toDate, int? staffId, int page = 1, int pageSize = 10)
@@ -80,16 +84,44 @@ namespace MotoShop.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> ApproveDeposit(int bookingId)
         {
-            var booking = await _context.ServiceBookings.FindAsync(bookingId);
+            var booking = await _context.ServiceBookings
+                .Include(b => b.Service)
+                .FirstOrDefaultAsync(b => b.BookingId == bookingId);
             if (booking == null) return Json(new { success = false });
 
             booking.Status = "Confirmed";
             booking.DepositStatus = "Paid";
             booking.ConfirmedAt = DateTime.Now;
             await _context.SaveChangesAsync();
-            
-            // TODO: Gửi Email/SMS thông báo
-            
+
+            if (!string.IsNullOrEmpty(booking.CustomerEmail))
+            {
+                var serviceName = booking.Service?.ServiceName ?? "Dịch vụ";
+                var serviceDate = booking.ServiceDate?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa xác định";
+                var subject = $"[MotoShop] Xác nhận đặt cọc thành công - {booking.BookingCode}";
+                var body = $@"
+<div style='font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #eee;border-radius:8px;overflow:hidden'>
+  <div style='background:#E24B4A;padding:20px;text-align:center'>
+    <h2 style='color:#fff;margin:0'>Đặt cọc được xác nhận!</h2>
+  </div>
+  <div style='padding:30px'>
+    <p>Xin chào <b>{booking.CustomerFullName}</b>,</p>
+    <p>Cửa hàng <b>MotoShop</b> đã xác nhận khoản đặt cọc của bạn. Chi tiết lịch hẹn:</p>
+    <table style='width:100%;border-collapse:collapse;margin:16px 0'>
+      <tr style='background:#f8f8f8'><td style='padding:10px;border:1px solid #ddd;font-weight:bold'>Mã lịch hẹn</td><td style='padding:10px;border:1px solid #ddd'>{booking.BookingCode}</td></tr>
+      <tr><td style='padding:10px;border:1px solid #ddd;font-weight:bold'>Dịch vụ</td><td style='padding:10px;border:1px solid #ddd'>{serviceName}</td></tr>
+      <tr style='background:#f8f8f8'><td style='padding:10px;border:1px solid #ddd;font-weight:bold'>Ngày hẹn</td><td style='padding:10px;border:1px solid #ddd'>{serviceDate}</td></tr>
+      <tr><td style='padding:10px;border:1px solid #ddd;font-weight:bold'>Số tiền đặt cọc</td><td style='padding:10px;border:1px solid #ddd;color:#E24B4A;font-weight:bold'>{booking.DepositAmount:N0}₫</td></tr>
+    </table>
+    <p>Vui lòng có mặt đúng giờ. Mang theo xe và mã lịch hẹn khi đến cửa hàng.</p>
+    <p style='color:#888;font-size:13px'>Nếu cần hỗ trợ, liên hệ hotline của cửa hàng.</p>
+    <p>Trân trọng,<br/><b>Đội ngũ MotoShop</b></p>
+  </div>
+</div>";
+                try { await _emailService.SendEmailAsync(booking.CustomerEmail, subject, body); }
+                catch { /* Không để lỗi email ảnh hưởng đến luồng xác nhận cọc */ }
+            }
+
             return Json(new { success = true, message = "Duyệt cọc thành công!" });
         }
 
@@ -108,3 +140,4 @@ namespace MotoShop.Areas.Admin.Controllers
         }
     }
 }
+

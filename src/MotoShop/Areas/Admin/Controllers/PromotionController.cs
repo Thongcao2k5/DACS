@@ -12,6 +12,7 @@ using MotoShop.Business.DTOs;
 namespace MotoShop.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class PromotionController : Controller
     {
         private readonly MotoShopDbContext _context;
@@ -306,3 +307,4 @@ namespace MotoShop.Areas.Admin.Controllers
         }
     }
 }
+
