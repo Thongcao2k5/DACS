@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 using MotoShop.Business.Interfaces;
@@ -17,11 +18,15 @@ namespace MotoShop.Areas.Admin.Controllers
     {
         private readonly MotoShopDbContext _context;
         private readonly IOrderService _orderService;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<OrderController> _logger;
 
-        public OrderController(MotoShopDbContext context, IOrderService orderService)
+        public OrderController(MotoShopDbContext context, IOrderService orderService, IEmailService emailService, ILogger<OrderController> logger)
         {
             _context = context;
             _orderService = orderService;
+            _emailService = emailService;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index(string? searchTerm, string? status, DateTime? fromDate, DateTime? toDate, string? paymentMethod, int page = 1, int pageSize = 10)
@@ -192,6 +197,34 @@ namespace MotoShop.Areas.Admin.Controllers
             {
                 order.Status = status;
                 await _context.SaveChangesAsync();
+            }
+
+            // Gửi email thông báo trạng thái đơn hàng
+            if (status == "Shipping" || status == "Completed")
+            {
+                try
+                {
+                    var orderForEmail = await _context.Orders
+                        .Include(o => o.Customer)
+                        .Include(o => o.OrderItems)
+                            .ThenInclude(oi => oi.ProductVariant)
+                                .ThenInclude(v => v!.Product)
+                        .Include(o => o.ShippingMethod)
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(o => o.OrderId == id);
+
+                    if (orderForEmail?.Customer?.Email != null)
+                    {
+                        if (status == "Shipping")
+                            await _emailService.SendOrderShippingAsync(orderForEmail);
+                        else
+                            await _emailService.SendOrderCompletedAsync(orderForEmail);
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    _logger.LogError(ex, "Status email failed for order {OrderId} → {Status}", id, status);
+                }
             }
 
             return Json(new { success = true });

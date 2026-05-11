@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using MotoShop.Business.DTOs;
 using MotoShop.Business.Interfaces;
 using MotoShop.Data.Data;
@@ -15,11 +16,15 @@ namespace MotoShop.Business.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly MotoShopDbContext _context;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<OrderService> _logger;
 
-        public OrderService(IUnitOfWork unitOfWork, MotoShopDbContext context)
+        public OrderService(IUnitOfWork unitOfWork, MotoShopDbContext context, IEmailService emailService, ILogger<OrderService> logger)
         {
             _unitOfWork = unitOfWork;
             _context = context;
+            _emailService = emailService;
+            _logger = logger;
         }
 
         public async Task<(bool Success, string Message, int OrderId)> CreateOrderAsync(string userId, CheckoutDto checkoutData)
@@ -162,7 +167,29 @@ namespace MotoShop.Business.Services
 
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
-                    return (true, "Đặt hàng thành công!", order.OrderId);
+
+                    // Gửi email xác nhận — không block nếu lỗi
+                    var confirmedOrderId = order.OrderId;
+                    try
+                    {
+                        var orderForEmail = await _context.Orders
+                            .AsNoTracking()
+                            .Include(o => o.Customer)
+                            .Include(o => o.OrderItems)
+                                .ThenInclude(oi => oi.ProductVariant)
+                                    .ThenInclude(v => v!.Product)
+                            .Include(o => o.ShippingMethod)
+                            .FirstOrDefaultAsync(o => o.OrderId == confirmedOrderId);
+
+                        if (orderForEmail?.Customer?.Email != null)
+                            await _emailService.SendOrderConfirmationAsync(orderForEmail);
+                    }
+                    catch (Exception emailEx)
+                    {
+                        _logger.LogError(emailEx, "Order confirmation email failed for order {OrderId}", confirmedOrderId);
+                    }
+
+                    return (true, "Đặt hàng thành công!", confirmedOrderId);
                 }
                 catch (Exception ex)
                 {

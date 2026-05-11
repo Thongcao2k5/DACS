@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MotoShop.Business.DTOs;
 using MotoShop.Business.Interfaces;
 using MotoShop.Data.Interfaces;
@@ -15,11 +16,15 @@ namespace MotoShop.Business.Services
     {
         private readonly IUnitOfWork _uow;
         private readonly IConfiguration _config;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<BookingService> _logger;
 
-        public BookingService(IUnitOfWork uow, IConfiguration config)
+        public BookingService(IUnitOfWork uow, IConfiguration config, IEmailService emailService, ILogger<BookingService> logger)
         {
             _uow = uow;
             _config = config;
+            _emailService = emailService;
+            _logger = logger;
         }
 
         public async Task<(bool Success, string Message, int BookingId)> CreateBookingAsync(BookingViewModel model, int? customerId)
@@ -81,7 +86,24 @@ namespace MotoShop.Business.Services
             await _uow.Repository<ServiceBooking>().AddAsync(booking);
             await _uow.CompleteAsync();
 
-            return (true, "Đặt lịch thành công!", booking.BookingId);
+            // Gửi email xác nhận — không block nếu lỗi
+            var confirmedBookingId = booking.BookingId;
+            try
+            {
+                var bookingForEmail = await _uow.Repository<ServiceBooking>()
+                    .Find(b => b.BookingId == confirmedBookingId)
+                    .Include(b => b.Service)
+                    .FirstOrDefaultAsync();
+
+                if (bookingForEmail?.CustomerEmail != null)
+                    await _emailService.SendBookingConfirmationAsync(bookingForEmail);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Booking confirmation email failed for booking {BookingId}", confirmedBookingId);
+            }
+
+            return (true, "Đặt lịch thành công!", confirmedBookingId);
         }
 
         public async Task<BookingSuccessViewModel?> GetBookingSuccessAsync(int bookingId)

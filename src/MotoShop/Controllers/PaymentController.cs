@@ -17,13 +17,15 @@ namespace MotoShop.Controllers
         private readonly IOrderService _orderService;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly MotoShop.Data.Data.MotoShopDbContext _context;
+        private readonly MotoShop.Business.Interfaces.IEmailService _emailService;
 
-        public PaymentController(IConfiguration configuration, IOrderService orderService, UserManager<IdentityUser> userManager, MotoShop.Data.Data.MotoShopDbContext context)
+        public PaymentController(IConfiguration configuration, IOrderService orderService, UserManager<IdentityUser> userManager, MotoShop.Data.Data.MotoShopDbContext context, MotoShop.Business.Interfaces.IEmailService emailService)
         {
             _configuration = configuration;
             _orderService = orderService;
             _userManager = userManager;
             _context = context;
+            _emailService = emailService;
         }
 
         // Bước 1: Tạo URL và Redirect sang VNPay cho Đơn hàng
@@ -106,6 +108,8 @@ namespace MotoShop.Controllers
                     ViewBag.Status = "success";
                     if (vnp_ResponseCode == "00")
                     {
+                        string vnpayTxnNo = vnpay.GetResponseData("vnp_TransactionNo");
+
                         if (txnRef.StartsWith("SB_"))
                         {
                             // Xử lý cọc dịch vụ
@@ -117,6 +121,17 @@ namespace MotoShop.Controllers
                                 booking.DepositStatus = "Paid";
                                 booking.ConfirmedAt = DateTime.Now;
                                 await _context.SaveChangesAsync();
+
+                                // Gửi email xác nhận cọc
+                                try
+                                {
+                                    var bookingForEmail = await _context.ServiceBookings
+                                        .Include(b => b.Service)
+                                        .FirstOrDefaultAsync(b => b.BookingId == bookingId);
+                                    if (bookingForEmail?.CustomerEmail != null)
+                                        await _emailService.SendDepositConfirmedAsync(bookingForEmail, vnpayTxnNo);
+                                }
+                                catch { /* email failure không ảnh hưởng kết quả */ }
 
                                 ViewBag.BookingId = bookingId;
                                 ViewBag.Message = "Thanh toán cọc dịch vụ thành công!";
