@@ -46,6 +46,20 @@ namespace MotoShop.Areas.Admin.Controllers
             await _context.SaveChangesAsync();
             return Json(new { success = true });
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var unit = await _context.Units.FindAsync(id);
+            if (unit == null) return Json(new { success = false, message = "Không tìm thấy đơn vị tính" });
+
+            var isUsed = await _context.ProductVariants.AnyAsync(v => v.BaseUnitId == id);
+            if (isUsed) return Json(new { success = false, message = "Không thể xóa — đang được dùng bởi biến thể sản phẩm" });
+
+            _context.Units.Remove(unit);
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
+        }
     }
 }
 

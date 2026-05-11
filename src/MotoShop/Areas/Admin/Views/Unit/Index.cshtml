@@ -29,6 +29,7 @@
                         <td><span class="fw-bold">@item.UnitName</span></td>
                         <td class="text-end">
                             <button class="btn btn-sm btn-icon text-primary" onclick="openUnitModal('edit', {id: @item.UnitId, name: '@item.UnitName', symbol: '@item.Symbol'})"><i class="bx bx-edit-alt"></i></button>
+                            <button class="btn btn-sm btn-icon text-danger" onclick="deleteUnit(@item.UnitId, '@item.UnitName')"><i class="bx bx-trash"></i></button>
                         </td>
                     </tr>
                 }
@@ -97,6 +98,20 @@
                     unitModal.hide();
                     UI.toast('Thành công', 'success');
                     location.reload();
+                }
+            });
+        }
+
+        function deleteUnit(id, name) {
+            if (!confirm(`Xóa đơn vị tính "${name}"?\nLưu ý: Không thể xóa nếu đang được dùng bởi sản phẩm.`)) return;
+            showLoader();
+            $.post(`/Admin/Unit/Delete?id=${id}`, function(res) {
+                hideLoader();
+                if (res.success) {
+                    UI.toast('Đã xóa đơn vị tính', 'success');
+                    location.reload();
+                } else {
+                    UI.toast(res.message || 'Xóa thất bại', 'error');
                 }
             });
         }
