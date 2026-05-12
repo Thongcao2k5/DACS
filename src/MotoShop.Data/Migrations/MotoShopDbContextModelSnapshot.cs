@@ -672,7 +672,8 @@ namespace MotoShop.Data.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("CustomerId");
 

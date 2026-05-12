@@ -167,12 +167,38 @@ namespace MotoShop.Business.Services
 
         public async Task<IEnumerable<ProductDto>> GetRandomProductsAsync(int count)
         {
-            return await _productRepository.Find(p => p.IsActive)
+            // Use explicit Select instead of ProjectTo to avoid the expensive
+            // correlated subqueries generated for IsFlashSale/FlashSalePrice/FlashSaleEndDate.
+            var pool = await _productRepository.Find(p => p.IsActive && !p.IsDeleted)
                 .AsNoTracking()
-                .OrderBy(p => EF.Functions.Random())
-                .Take(count)
-                .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+                .OrderByDescending(p => p.IsFeatured)
+                .ThenByDescending(p => p.SoldCount)
+                .Take(count * 4)
+                .Select(p => new ProductDto
+                {
+                    ProductId = p.ProductId,
+                    ProductName = p.ProductName,
+                    Slug = p.Slug,
+                    CategoryName = p.Category != null ? p.Category.CategoryName : string.Empty,
+                    CategoryId = p.CategoryId,
+                    BrandName = p.Brand != null ? p.Brand.BrandName : string.Empty,
+                    BrandLogoUrl = p.Brand != null ? p.Brand.LogoUrl : string.Empty,
+                    BrandId = p.BrandId,
+                    IsFeatured = p.IsFeatured,
+                    SoldCount = p.SoldCount,
+                    CreatedDate = p.CreatedDate,
+                    MinPrice = p.Variants.Select(v => v.Price).OrderBy(x => x).FirstOrDefault(),
+                    MinOriginalPrice = p.Variants.OrderBy(v => v.Price).Select(v => v.OriginalPrice).FirstOrDefault(),
+                    OldPrice = p.Variants.OrderBy(v => v.Price).Select(v => v.OriginalPrice).FirstOrDefault(),
+                    DefaultVariantId = p.Variants.OrderBy(v => v.Price).Select(v => v.ProductVariantId).FirstOrDefault(),
+                    PrimaryImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault()
+                        ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? string.Empty,
+                    StockCount = p.Variants.Sum(v => v.StockQuantity),
+                    IsInStock = p.Variants.Any(v => v.StockQuantity > 0),
+                })
                 .ToListAsync();
+
+            return pool.OrderBy(_ => Guid.NewGuid()).Take(count).ToList();
         }
 
         public async Task<ProductDto?> GetProductBySlugAsync(string slug)

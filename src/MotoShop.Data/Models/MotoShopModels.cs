@@ -207,6 +207,7 @@ namespace MotoShop.Data.Models
     {
         [Key]
         public int CustomerId { get; set; }
+        [StringLength(450)]
         public string? UserId { get; set; }
         [Required, StringLength(200)]
         public string FullName { get; set; } = string.Empty;

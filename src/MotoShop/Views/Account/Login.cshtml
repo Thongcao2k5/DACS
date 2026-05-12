@@ -69,16 +69,26 @@
                 <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small">Hoặc đăng nhập bằng</span>
             </div>
 
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger small py-2">@TempData["Error"]</div>
+            }
             <div class="row g-2">
                 <div class="col-6">
-                    <a href="#" class="btn btn-outline-dark w-100 rounded-pill small fw-bold py-2">
-                        <i class='bx bxl-google text-danger me-1'></i> Google
-                    </a>
+                    <form method="post" asp-action="ExternalLogin" asp-route-returnUrl="@returnUrl">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" name="provider" value="Google" class="btn btn-outline-dark w-100 rounded-pill small fw-bold py-2">
+                            <i class='bx bxl-google text-danger me-1'></i> Google
+                        </button>
+                    </form>
                 </div>
                 <div class="col-6">
-                    <a href="#" class="btn btn-outline-dark w-100 rounded-pill small fw-bold py-2">
-                        <i class='bx bxl-facebook-circle text-primary me-1'></i> Facebook
-                    </a>
+                    <form method="post" asp-action="ExternalLogin" asp-route-returnUrl="@returnUrl">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" name="provider" value="Facebook" class="btn btn-outline-dark w-100 rounded-pill small fw-bold py-2">
+                            <i class='bx bxl-facebook-circle text-primary me-1'></i> Facebook
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

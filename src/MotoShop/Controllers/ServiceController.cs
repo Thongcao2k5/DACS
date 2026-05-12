@@ -17,13 +17,15 @@ namespace MotoShop.Controllers
         private readonly IBookingService _bookingService;
         private readonly IUnitOfWork _uow;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly IAuditLogService _auditLogService;
 
-        public ServiceController(MotoShopDbContext context, IBookingService bookingService, IUnitOfWork uow, UserManager<IdentityUser> userManager)
+        public ServiceController(MotoShopDbContext context, IBookingService bookingService, IUnitOfWork uow, UserManager<IdentityUser> userManager, IAuditLogService auditLogService)
         {
             _context = context;
             _bookingService = bookingService;
             _uow = uow;
             _userManager = userManager;
+            _auditLogService = auditLogService;
         }
 
         public async Task<IActionResult> Index(int? categoryId)
@@ -275,6 +277,11 @@ namespace MotoShop.Controllers
             {
                 return Json(new { success = false, message });
             }
+
+            await _auditLogService.LogActionAsync(
+                _userManager.GetUserId(User), "Create", "Booking", bookingId.ToString(),
+                null, $"Đặt lịch dịch vụ #{bookingId}",
+                HttpContext.Connection.RemoteIpAddress?.ToString());
 
             return Json(new
             {

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using MotoShop.Business.Interfaces;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 using System.Linq;
@@ -14,10 +16,14 @@ namespace MotoShop.Areas.Admin.Controllers
     public class CustomerController : Controller
     {
         private readonly MotoShopDbContext _context;
+        private readonly IAuditLogService _auditLogService;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public CustomerController(MotoShopDbContext context)
+        public CustomerController(MotoShopDbContext context, IAuditLogService auditLogService, UserManager<IdentityUser> userManager)
         {
             _context = context;
+            _auditLogService = auditLogService;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index(string? searchTerm, string? status, int page = 1, int pageSize = 10)
@@ -97,6 +103,12 @@ namespace MotoShop.Areas.Admin.Controllers
 
             customer.IsLocked = !customer.IsLocked;
             await _context.SaveChangesAsync();
+
+            var action = customer.IsLocked ? "Lock" : "Unlock";
+            var adminId = _userManager.GetUserId(User);
+            await _auditLogService.LogActionAsync(adminId, action, "User", id.ToString(),
+                null, $"{(customer.IsLocked ? "Khóa" : "Mở khóa")} tài khoản: {customer.FullName}",
+                HttpContext.Connection.RemoteIpAddress?.ToString());
 
             string msg = customer.IsLocked ? "Đã khóa tài khoản" : "Đã mở khóa tài khoản";
             return Json(new { success = true, message = msg, isLocked = customer.IsLocked });

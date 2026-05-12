@@ -16,6 +16,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
+using System.Security.Claims;
 
 namespace MotoShop.Controllers
 {
@@ -351,6 +352,84 @@ namespace MotoShop.Controllers
             {
                 return Json(new { success = false, message = ex.Message });
             }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ExternalLogin(string provider, string? returnUrl = null)
+        {
+            var redirectUrl = Url.Action("ExternalLoginCallback", "Account", new { returnUrl });
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            return Challenge(properties, provider);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExternalLoginCallback(string? returnUrl = null, string? remoteError = null)
+        {
+            if (remoteError != null)
+            {
+                TempData["Error"] = $"Lỗi từ {remoteError}.";
+                return RedirectToAction("Login");
+            }
+
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null) return RedirectToAction("Login");
+
+            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+            if (result.Succeeded)
+            {
+                var existingUser = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+                if (existingUser != null) await EnsureCustomerAsync(existingUser, info);
+                return RedirectToLocal(returnUrl);
+            }
+
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrEmpty(email))
+            {
+                var nameIdentifier = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                email = $"fb_{nameIdentifier}@facebook.local";
+            }
+
+            var userByEmail = await _userManager.FindByEmailAsync(email);
+            if (userByEmail != null)
+            {
+                await _userManager.AddLoginAsync(userByEmail, info);
+                await _signInManager.SignInAsync(userByEmail, isPersistent: false);
+                await EnsureCustomerAsync(userByEmail, info);
+                return RedirectToLocal(returnUrl);
+            }
+
+            var newUser = new IdentityUser { UserName = email, Email = email, EmailConfirmed = true };
+            var createResult = await _userManager.CreateAsync(newUser);
+            if (createResult.Succeeded)
+            {
+                await _userManager.AddLoginAsync(newUser, info);
+                await _userManager.AddToRoleAsync(newUser, "Customer");
+                await EnsureCustomerAsync(newUser, info);
+                await _signInManager.SignInAsync(newUser, isPersistent: false);
+                return RedirectToLocal(returnUrl);
+            }
+
+            TempData["Error"] = "Không thể tạo tài khoản: " + string.Join(", ", createResult.Errors.Select(e => e.Description));
+            return RedirectToAction("Login");
+        }
+
+        private async Task EnsureCustomerAsync(IdentityUser user, ExternalLoginInfo info)
+        {
+            var exists = await _context.Customers.AnyAsync(c => c.UserId == user.Id);
+            if (!exists)
+            {
+                var name = info.Principal.FindFirstValue(ClaimTypes.Name) ?? user.Email ?? "Khách hàng";
+                _context.Customers.Add(new Customer { UserId = user.Id, FullName = name, Email = user.Email, CreatedDate = DateTime.Now });
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        private IActionResult RedirectToLocal(string? returnUrl)
+        {
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return Redirect(returnUrl);
+            return RedirectToAction("Index", "Home");
         }
 
         [HttpPost]

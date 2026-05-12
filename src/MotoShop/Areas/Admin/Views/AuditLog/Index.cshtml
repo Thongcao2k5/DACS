@@ -1,0 +1,230 @@
+@model IEnumerable<MotoShop.Data.Models.AuditLog>
+@{
+    ViewData["Title"] = "Nhật ký hoạt động";
+    Layout = "_AdminLayout";
+    var actions      = ViewBag.Actions  as List<string> ?? new List<string>();
+    var entities     = ViewBag.Entities as List<string> ?? new List<string>();
+    int currentPage  = (int)(ViewBag.CurrentPage ?? 1);
+    int totalPages   = (int)(ViewBag.TotalPages  ?? 1);
+    int totalItems   = (int)(ViewBag.TotalItems  ?? 0);
+    int pageSize     = (int)(ViewBag.PageSize    ?? 20);
+
+    string PageUrl(int p) =>
+        $"?page={p}" +
+        $"&action={ViewBag.FilterAction}" +
+        $"&entityName={ViewBag.FilterEntity}" +
+        $"&userId={ViewBag.FilterUser}" +
+        $"&fromDate={ViewBag.FromDate}" +
+        $"&toDate={ViewBag.ToDate}";
+
+    string BadgeClass(string? act) => act switch {
+        "Create"         => "bg-success",
+        "Update"         => "bg-primary",
+        "Delete"         => "bg-danger",
+        "STATUS_CHANGE"  => "bg-warning text-dark",
+        "Lock"           => "bg-danger",
+        "Unlock"         => "bg-success",
+        "PAYMENT_SUCCESS"=> "bg-success",
+        "PAYMENT_FAIL"   => "bg-danger",
+        "APPROVE_DEPOSIT"=> "bg-success",
+        "REJECT_DEPOSIT" => "bg-danger",
+        _                => "bg-secondary"
+    };
+}
+
+<div class="container-fluid py-4">
+
+    <!-- Page header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h4 class="fw-bold mb-1"><i class="bx bx-history me-2 text-danger"></i>Nhật ký hoạt động</h4>
+            <p class="text-muted small mb-0">Tổng cộng <strong>@totalItems</strong> bản ghi</p>
+        </div>
+        <form method="post" asp-action="Clear" onsubmit="return confirm('Xóa log cũ hơn 90 ngày?')">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill">
+                <i class="bx bx-trash me-1"></i> Dọn log cũ (&gt;90 ngày)
+            </button>
+        </form>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bx bxs-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Filter card -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body py-3">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label fw-600 small mb-1">Hành động</label>
+                    <select name="action" class="form-select form-select-sm">
+                        <option value="">-- Tất cả --</option>
+                        @foreach (var act in actions)
+                        {
+                            <option value="@act" selected="@(ViewBag.FilterAction == act ? "selected" : null)">@act</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-600 small mb-1">Đối tượng</label>
+                    <select name="entityName" class="form-select form-select-sm">
+                        <option value="">-- Tất cả --</option>
+                        @foreach (var ent in entities)
+                        {
+                            <option value="@ent" selected="@(ViewBag.FilterEntity == ent ? "selected" : null)">@ent</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-600 small mb-1">User ID</label>
+                    <input type="text" name="userId" value="@ViewBag.FilterUser"
+                           class="form-control form-control-sm" placeholder="User ID...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-600 small mb-1">Từ ngày</label>
+                    <input type="date" name="fromDate" value="@ViewBag.FromDate" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-600 small mb-1">Đến ngày</label>
+                    <input type="date" name="toDate" value="@ViewBag.ToDate" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-1 d-flex gap-1">
+                    <button type="submit" class="btn btn-danger btn-sm rounded-pill flex-fill">
+                        <i class="bx bx-search"></i>
+                    </button>
+                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-sm rounded-pill flex-fill" title="Xóa lọc">
+                        <i class="bx bx-x"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Log table -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="bx bx-history display-4 d-block mb-3"></i>
+                    <p>Chưa có bản ghi nào.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size:.83rem">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:160px">Thời gian</th>
+                                <th style="width:140px">Hành động</th>
+                                <th style="width:110px">Đối tượng</th>
+                                <th style="width:80px">ID</th>
+                                <th>Mô tả</th>
+                                <th>Giá trị cũ</th>
+                                <th>Giá trị mới</th>
+                                <th style="width:110px">IP</th>
+                                <th>User</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var log in Model)
+                            {
+                                <tr>
+                                    <td class="text-nowrap text-muted">
+                                        <div>@log.CreatedAt.ToString("dd/MM/yyyy")</div>
+                                        <div class="text-muted" style="font-size:.75rem">@log.CreatedAt.ToString("HH:mm:ss")</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge @BadgeClass(log.Action) rounded-pill px-3">@log.Action</span>
+                                    </td>
+                                    <td class="fw-600">@log.EntityName</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(log.EntityId))
+                                        {
+                                            <span class="badge bg-light text-dark border rounded-pill">#@log.EntityId</span>
+                                        }
+                                    </td>
+                                    <td style="max-width:200px">
+                                        <span class="text-truncate d-inline-block" style="max-width:200px" title="@log.NewValues">
+                                            @log.NewValues
+                                        </span>
+                                    </td>
+                                    <td class="text-muted" style="max-width:120px">
+                                        <span class="text-truncate d-inline-block" style="max-width:120px" title="@log.OldValues">
+                                            @(string.IsNullOrEmpty(log.OldValues) ? "—" : log.OldValues)
+                                        </span>
+                                    </td>
+                                    <td style="max-width:120px">
+                                        <span class="text-truncate d-inline-block" style="max-width:120px" title="@log.NewValues">
+                                            @(string.IsNullOrEmpty(log.OldValues) ? "—" : log.NewValues)
+                                        </span>
+                                    </td>
+                                    <td class="text-muted small">@(log.IpAddress ?? "—")</td>
+                                    <td style="max-width:130px">
+                                        @if (!string.IsNullOrEmpty(log.UserId))
+                                        {
+                                            <span class="text-truncate d-inline-block text-primary small"
+                                                  style="max-width:130px" title="@log.UserId">
+                                                @log.UserId[..Math.Min(12, log.UserId.Length)]…
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">System</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                @if (totalPages > 1)
+                {
+                    <div class="d-flex align-items-center justify-content-between px-3 py-3 border-top">
+                        <span class="text-muted small">
+                            Trang @currentPage / @totalPages &nbsp;·&nbsp; @totalItems bản ghi
+                        </span>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0">
+                                <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                                    <a class="page-link" href="@PageUrl(currentPage - 1)">
+                                        <i class="bx bx-chevron-left"></i>
+                                    </a>
+                                </li>
+                                @{
+                                    int startPage = Math.Max(1, currentPage - 2);
+                                    int endPage   = Math.Min(totalPages, startPage + 4);
+                                    startPage     = Math.Max(1, endPage - 4);
+                                }
+                                @for (int p = startPage; p <= endPage; p++)
+                                {
+                                    <li class="page-item @(p == currentPage ? "active" : "")">
+                                        <a class="page-link" href="@PageUrl(p)">@p</a>
+                                    </li>
+                                }
+                                <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                                    <a class="page-link" href="@PageUrl(currentPage + 1)">
+                                        <i class="bx bx-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .fw-600 { font-weight: 600; }
+</style>

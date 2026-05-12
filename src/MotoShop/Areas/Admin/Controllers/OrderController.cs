@@ -7,6 +7,7 @@ using MotoShop.Business.Interfaces;
 using MotoShop.Business.Services;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
 using ClosedXML.Excel;
 using System.IO;
 
@@ -20,13 +21,15 @@ namespace MotoShop.Areas.Admin.Controllers
         private readonly IOrderService _orderService;
         private readonly IEmailService _emailService;
         private readonly ILogger<OrderController> _logger;
+        private readonly IAuditLogService _auditLogService;
 
-        public OrderController(MotoShopDbContext context, IOrderService orderService, IEmailService emailService, ILogger<OrderController> logger)
+        public OrderController(MotoShopDbContext context, IOrderService orderService, IEmailService emailService, ILogger<OrderController> logger, IAuditLogService auditLogService)
         {
             _context = context;
             _orderService = orderService;
             _emailService = emailService;
             _logger = logger;
+            _auditLogService = auditLogService;
         }
 
         public async Task<IActionResult> Index(string? searchTerm, string? status, DateTime? fromDate, DateTime? toDate, string? paymentMethod, int page = 1, int pageSize = 10)
@@ -226,6 +229,12 @@ namespace MotoShop.Areas.Admin.Controllers
                     _logger.LogError(ex, "Status email failed for order {OrderId} → {Status}", id, status);
                 }
             }
+
+            await _auditLogService.LogActionAsync(
+                User.FindFirstValue(ClaimTypes.NameIdentifier),
+                "STATUS_CHANGE", "Order", id.ToString(),
+                currentStatus, status,
+                HttpContext.Connection.RemoteIpAddress?.ToString());
 
             return Json(new { success = true });
         }

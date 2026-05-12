@@ -102,11 +102,25 @@
                 
                 <!-- KINH DOANH -->
                 <li class="menu-header small text-uppercase"><span class="menu-header-text">Kinh doanh</span></li>
-                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Report" && ViewContext.RouteData.Values["action"]?.ToString() == "Revenue" ? "active" : "")">
-                    <a asp-area="Admin" asp-controller="Report" asp-action="Revenue" class="menu-link">
+                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Report" ? "open" : "")">
+                    <a href="javascript:void(0);" class="menu-link menu-toggle">
                         <i class="menu-icon tf-icons bx bx-line-chart"></i>
-                        <div>Báo cáo doanh thu</div>
+                        <div>Báo cáo</div>
                     </a>
+                    <ul class="menu-sub">
+                        <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Report" && ViewContext.RouteData.Values["action"]?.ToString() == "Revenue" ? "active" : "")">
+                            <a asp-area="Admin" asp-controller="Report" asp-action="Revenue" class="menu-link"><div>Doanh thu</div></a>
+                        </li>
+                        <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Report" && ViewContext.RouteData.Values["action"]?.ToString() == "TopProducts" ? "active" : "")">
+                            <a asp-area="Admin" asp-controller="Report" asp-action="TopProducts" class="menu-link"><div>Sản phẩm bán chạy</div></a>
+                        </li>
+                        <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Report" && ViewContext.RouteData.Values["action"]?.ToString() == "Orders" ? "active" : "")">
+                            <a asp-area="Admin" asp-controller="Report" asp-action="Orders" class="menu-link"><div>Đơn hàng</div></a>
+                        </li>
+                        <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Report" && ViewContext.RouteData.Values["action"]?.ToString() == "Customers" ? "active" : "")">
+                            <a asp-area="Admin" asp-controller="Report" asp-action="Customers" class="menu-link"><div>Khách hàng</div></a>
+                        </li>
+                    </ul>
                 </li>
                 <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Order" ? "active" : "")">
                     <a asp-area="Admin" asp-controller="Order" asp-action="Index" class="menu-link">

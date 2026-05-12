@@ -63,13 +63,6 @@ namespace MotoShop.Data.Data
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<ProductReviewImage> ProductReviewImages { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            base.OnConfiguring(optionsBuilder);
-            // Tắt cảnh báo lỗi khi model thay đổi mà chưa migration (đặc biệt trong .NET 9)
-            optionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-        }
-
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

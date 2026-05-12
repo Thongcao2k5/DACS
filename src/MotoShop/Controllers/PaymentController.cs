@@ -1,13 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MotoShop.Business.Helpers;
 using MotoShop.Business.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace MotoShop.Controllers
 {
@@ -18,14 +17,18 @@ namespace MotoShop.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly MotoShop.Data.Data.MotoShopDbContext _context;
         private readonly MotoShop.Business.Interfaces.IEmailService _emailService;
+        private readonly ILogger<PaymentController> _logger;
+        private readonly MotoShop.Business.Interfaces.IAuditLogService _auditLogService;
 
-        public PaymentController(IConfiguration configuration, IOrderService orderService, UserManager<IdentityUser> userManager, MotoShop.Data.Data.MotoShopDbContext context, MotoShop.Business.Interfaces.IEmailService emailService)
+        public PaymentController(IConfiguration configuration, IOrderService orderService, UserManager<IdentityUser> userManager, MotoShop.Data.Data.MotoShopDbContext context, MotoShop.Business.Interfaces.IEmailService emailService, ILogger<PaymentController> logger, MotoShop.Business.Interfaces.IAuditLogService auditLogService)
         {
             _configuration = configuration;
             _orderService = orderService;
             _userManager = userManager;
             _context = context;
             _emailService = emailService;
+            _logger = logger;
+            _auditLogService = auditLogService;
         }
 
         // Bước 1: Tạo URL và Redirect sang VNPay cho Đơn hàng
@@ -83,81 +86,160 @@ namespace MotoShop.Controllers
         // Bước 2: Nhận kết quả từ VNPay
         public async Task<IActionResult> PaymentCallback()
         {
-            if (Request.Query.Count > 0)
-            {
-                string vnp_HashSecret = _configuration["Payment:VnPay:HashSecret"] ?? "";
-                var vnpayData = Request.Query;
-                VnPayLibrary vnpay = new VnPayLibrary();
+            if (Request.Query.Count == 0)
+                return View();
 
-                foreach (var s in vnpayData)
+            string vnp_HashSecret = _configuration["Payment:VnPay:HashSecret"] ?? "";
+            VnPayLibrary vnpay = new VnPayLibrary();
+
+            foreach (var s in Request.Query)
+            {
+                if (!string.IsNullOrEmpty(s.Key) && s.Key.StartsWith("vnp_"))
+                    vnpay.AddResponseData(s.Key, s.Value.ToString());
+            }
+
+            string txnRef = vnpay.GetResponseData("vnp_TxnRef");
+            string vnp_ResponseCode = vnpay.GetResponseData("vnp_ResponseCode");
+            string vnp_SecureHash = Request.Query["vnp_SecureHash"].ToString();
+            string vnpayTxnNo = vnpay.GetResponseData("vnp_TransactionNo");
+
+            // FIX 3: Verify chữ ký trước khi xử lý bất kỳ thứ gì
+            if (!vnpay.ValidateSignature(vnp_SecureHash, vnp_HashSecret))
+            {
+                _logger.LogWarning("VNPay invalid signature. TxnRef={TxnRef}", txnRef);
+                ViewBag.Status = "error";
+                ViewBag.Message = "Chữ ký không hợp lệ.";
+                return View();
+            }
+
+            if (vnp_ResponseCode != "00")
+            {
+                _logger.LogInformation("VNPay payment failed. TxnRef={TxnRef}, Code={Code}", txnRef, vnp_ResponseCode);
+                await _auditLogService.LogActionAsync(
+                    _userManager.GetUserId(User), "PAYMENT_FAIL", "Order", txnRef,
+                    null, $"VNPay thất bại: mã lỗi {vnp_ResponseCode}",
+                    HttpContext.Connection.RemoteIpAddress?.ToString());
+                ViewBag.Status = "error";
+                ViewBag.Message = "Giao dịch không thành công. Mã lỗi: " + vnp_ResponseCode;
+                return View();
+            }
+
+            // FIX 1: Validate số tiền
+            if (!long.TryParse(vnpay.GetResponseData("vnp_Amount"), out long receivedAmount))
+            {
+                _logger.LogWarning("VNPay invalid amount format. TxnRef={TxnRef}", txnRef);
+                ViewBag.Status = "error";
+                ViewBag.Message = "Dữ liệu thanh toán không hợp lệ.";
+                return View();
+            }
+
+            if (txnRef.StartsWith("SB_"))
+            {
+                // Xử lý cọc dịch vụ
+                if (!int.TryParse(txnRef.Replace("SB_", ""), out int bookingId))
                 {
-                    if (!string.IsNullOrEmpty(s.Key) && s.Key.StartsWith("vnp_"))
-                    {
-                        vnpay.AddResponseData(s.Key, s.Value.ToString());
-                    }
+                    ViewBag.Status = "error";
+                    ViewBag.Message = "Mã đặt lịch không hợp lệ.";
+                    return View();
                 }
 
-                string txnRef = vnpay.GetResponseData("vnp_TxnRef");
-                string vnp_ResponseCode = vnpay.GetResponseData("vnp_ResponseCode");
-                string vnp_SecureHash = Request.Query["vnp_SecureHash"].ToString();
-
-                bool checkSignature = vnpay.ValidateSignature(vnp_SecureHash, vnp_HashSecret);
-
-                if (checkSignature)
+                var booking = await _context.ServiceBookings.FindAsync(bookingId);
+                if (booking == null)
                 {
-                    ViewBag.Status = "success";
-                    if (vnp_ResponseCode == "00")
+                    ViewBag.Status = "error";
+                    ViewBag.Message = "Không tìm thấy đặt lịch.";
+                    return View();
+                }
+
+                long expectedAmount = (long)(booking.DepositAmount * 100);
+                if (expectedAmount != receivedAmount)
+                {
+                    _logger.LogWarning("VNPay amount mismatch for booking {BookingId}. Expected={Expected}, Received={Received}", bookingId, expectedAmount, receivedAmount);
+                    ViewBag.Status = "error";
+                    ViewBag.Message = "Số tiền thanh toán không khớp.";
+                    return View();
+                }
+
+                // Idempotency: callback có thể gọi 2 lần
+                if (booking.DepositStatus != "Paid")
+                {
+                    booking.Status = "Confirmed";
+                    booking.DepositStatus = "Paid";
+                    booking.ConfirmedAt = DateTime.Now;
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("VNPay booking deposit paid. BookingId={BookingId}, TxnNo={TxnNo}", bookingId, vnpayTxnNo);
+                    await _auditLogService.LogActionAsync(
+                        _userManager.GetUserId(User), "PAYMENT_SUCCESS", "Booking", bookingId.ToString(),
+                        null, $"VNPay cọc dịch vụ thành công: {booking.DepositAmount:N0}₫, TxnNo={vnpayTxnNo}",
+                        HttpContext.Connection.RemoteIpAddress?.ToString());
+
+                    try
                     {
-                        string vnpayTxnNo = vnpay.GetResponseData("vnp_TransactionNo");
-
-                        if (txnRef.StartsWith("SB_"))
-                        {
-                            // Xử lý cọc dịch vụ
-                            int bookingId = int.Parse(txnRef.Replace("SB_", ""));
-                            var booking = await _context.ServiceBookings.FindAsync(bookingId);
-                            if (booking != null)
-                            {
-                                booking.Status = "Confirmed";
-                                booking.DepositStatus = "Paid";
-                                booking.ConfirmedAt = DateTime.Now;
-                                await _context.SaveChangesAsync();
-
-                                // Gửi email xác nhận cọc
-                                try
-                                {
-                                    var bookingForEmail = await _context.ServiceBookings
-                                        .Include(b => b.Service)
-                                        .FirstOrDefaultAsync(b => b.BookingId == bookingId);
-                                    if (bookingForEmail?.CustomerEmail != null)
-                                        await _emailService.SendDepositConfirmedAsync(bookingForEmail, vnpayTxnNo);
-                                }
-                                catch { /* email failure không ảnh hưởng kết quả */ }
-
-                                ViewBag.BookingId = bookingId;
-                                ViewBag.Message = "Thanh toán cọc dịch vụ thành công!";
-                            }
-                        }
-                        else
-                        {
-                            // Xử lý đơn hàng
-                            int orderId = int.Parse(txnRef);
-                            await _orderService.UpdatePaymentStatusAsync(orderId, "Paid");
-                            ViewBag.OrderId = orderId;
-                            ViewBag.Message = "Thanh toán thành công đơn hàng #" + txnRef;
-                        }
+                        var bookingForEmail = await _context.ServiceBookings
+                            .Include(b => b.Service)
+                            .FirstOrDefaultAsync(b => b.BookingId == bookingId);
+                        if (bookingForEmail?.CustomerEmail != null)
+                            await _emailService.SendDepositConfirmedAsync(bookingForEmail, vnpayTxnNo);
                     }
-                    else
-                    {
-                        ViewBag.Message = "Giao dịch không thành công. Mã lỗi: " + vnp_ResponseCode;
-                        ViewBag.Status = "error";
-                    }
+                    catch { /* email failure không ảnh hưởng kết quả */ }
                 }
                 else
                 {
-                    ViewBag.Message = "Chữ ký không hợp lệ.";
-                    ViewBag.Status = "error";
+                    _logger.LogInformation("VNPay duplicate callback for booking {BookingId}", bookingId);
                 }
+
+                ViewBag.Status = "success";
+                ViewBag.BookingId = bookingId;
+                ViewBag.Message = "Thanh toán cọc dịch vụ thành công!";
             }
+            else
+            {
+                // Xử lý đơn hàng
+                if (!int.TryParse(txnRef, out int orderId))
+                {
+                    ViewBag.Status = "error";
+                    ViewBag.Message = "Mã đơn hàng không hợp lệ.";
+                    return View();
+                }
+
+                var order = await _context.Orders.FindAsync(orderId);
+                if (order == null)
+                {
+                    ViewBag.Status = "error";
+                    ViewBag.Message = "Không tìm thấy đơn hàng.";
+                    return View();
+                }
+
+                long expectedAmount = (long)(order.TotalAmount * 100);
+                if (expectedAmount != receivedAmount)
+                {
+                    _logger.LogWarning("VNPay amount mismatch for order {OrderId}. Expected={Expected}, Received={Received}", orderId, expectedAmount, receivedAmount);
+                    ViewBag.Status = "error";
+                    ViewBag.Message = "Số tiền thanh toán không khớp.";
+                    return View();
+                }
+
+                // Idempotency: callback có thể gọi 2 lần
+                if (order.PaymentStatus != "Paid")
+                {
+                    await _orderService.UpdatePaymentStatusAsync(orderId, "Paid");
+                    _logger.LogInformation("VNPay order paid. OrderId={OrderId}, TxnNo={TxnNo}", orderId, vnpayTxnNo);
+                    await _auditLogService.LogActionAsync(
+                        _userManager.GetUserId(User), "PAYMENT_SUCCESS", "Order", orderId.ToString(),
+                        null, $"VNPay thanh toán thành công: {order.TotalAmount:N0}₫, TxnNo={vnpayTxnNo}",
+                        HttpContext.Connection.RemoteIpAddress?.ToString());
+                }
+                else
+                {
+                    _logger.LogInformation("VNPay duplicate callback for order {OrderId}", orderId);
+                }
+
+                ViewBag.Status = "success";
+                ViewBag.OrderId = orderId;
+                ViewBag.Message = "Thanh toán thành công đơn hàng #" + txnRef;
+            }
+
             return View();
         }
     }

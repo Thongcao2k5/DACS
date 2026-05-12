@@ -8,8 +8,9 @@
         <div class="row g-0 h-100">
             <!-- Sidebar: Danh sách phiên chat -->
             <div class="col-4 border-end h-100 d-flex flex-column">
-                <div class="p-3 border-bottom bg-light">
+                <div class="p-3 border-bottom bg-light d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold"><i class='bx bx-message-square-dots me-2'></i>Hội thoại</h5>
+                    <span id="hubStatusDot" class="rounded-circle d-inline-block" style="width:10px;height:10px;background:#fbb;" title="Đang kết nối..."></span>
                 </div>
                 <div class="flex-grow-1 overflow-auto" id="sessionList">
                     <div class="text-center p-5 text-muted">Đang tải danh sách...</div>
@@ -21,7 +22,7 @@
                 <div id="chatHeader" class="p-3 border-bottom d-none">
                     <div class="d-flex align-items-center">
                         <div class="avatar avatar-online me-2">
-                            <img src="~/assets/img/avatars/1.png" class="rounded-circle">
+                            <img src="~/assets/img/avatars/1.png" class="rounded-circle" style="width:38px;height:38px;object-fit:cover;">
                         </div>
                         <div>
                             <h6 class="mb-0" id="currentClientName">Khách hàng</h6>
@@ -31,7 +32,7 @@
                 </div>
 
                 <div class="flex-grow-1 overflow-auto p-4 d-flex flex-column gap-3" id="adminChatMsgs" style="background: #f4f7f6;">
-                    <div class="h-100 d-flex align-items-center justify-content-center text-muted">
+                    <div class="h-100 d-flex align-items-center justify-content-center text-muted" id="emptyHint">
                         Chọn một cuộc hội thoại để bắt đầu trả lời
                     </div>
                 </div>
@@ -48,98 +49,216 @@
 </div>
 
 @section Scripts {
-    <script>
-        let selectedSessionId = null;
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"
+        integrity="sha512-R9HBWzlbf1W3dUJc/vKGJxSi9VIoH0/HFJpMR5vUSgYoovqxf1T/cFQB5gQU6AxHPq7N4YdTCPNc7qbEU8hQ=="
+        crossorigin="anonymous"></script>
+<script>
+(function () {
+    'use strict';
 
-        async function loadSessions() {
+    let currentSessionId = null;
+    // sessions: Map<sessionId, { lastMessage, lastMsgTime, unreadCount }>
+    const sessions = new Map();
+
+    // ── SignalR ──────────────────────────────────────────────────
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl('/chatHub')
+        .withAutomaticReconnect([0, 2000, 5000, 15000])
+        .configureLogging(signalR.LogLevel.Warning)
+        .build();
+
+    connection.on('NewMessage', function (sessionId, text, time) {
+        const s = sessions.get(sessionId) || { unreadCount: 0 };
+        s.lastMessage = text;
+        s.lastMsgTime = new Date(time);
+        s.unreadCount = (sessionId === currentSessionId) ? 0 : (s.unreadCount || 0) + 1;
+        sessions.set(sessionId, s);
+        renderSessionList();
+
+        if (sessionId === currentSessionId) {
+            appendBubble(text, false, new Date(time));
+        }
+    });
+
+    connection.on('AdminMessageSent', function (sessionId, text, time) {
+        // Sync own message across other admin tabs
+        if (sessionId === currentSessionId) {
+            appendBubble(text, true, new Date(time));
+        }
+    });
+
+    connection.onreconnecting(function () { setHubStatus(false); });
+    connection.onreconnected(function () {
+        setHubStatus(true);
+        connection.invoke('JoinAdminRoom').catch(function () {});
+    });
+    connection.onclose(function () { setHubStatus(false); });
+
+    async function startHub() {
+        try {
+            await connection.start();
+            await connection.invoke('JoinAdminRoom');
+            setHubStatus(true);
+        } catch (e) {
+            setHubStatus(false);
+        }
+    }
+
+    function setHubStatus(online) {
+        var dot = document.getElementById('hubStatusDot');
+        if (dot) {
+            dot.style.background = online ? '#68d391' : '#fc8181';
+            dot.title = online ? 'Đang kết nối' : 'Mất kết nối';
+        }
+    }
+
+    // ── Load initial session list via HTTP ───────────────────────
+    async function loadSessions() {
+        try {
             const res = await fetch('/Admin/Chat/GetSessions');
-            const sessions = await res.json();
-            const list = document.getElementById('sessionList');
-            list.innerHTML = '';
-
-            sessions.forEach(s => {
-                const div = document.createElement('div');
-                div.className = `p-3 border-bottom cursor-pointer session-item ${selectedSessionId === s.sessionId ? 'bg-label-primary' : ''}`;
-                div.style.cursor = 'pointer';
-                div.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <strong class="text-truncate" style="max-width: 150px;">Khách ${s.sessionId.substring(0, 8)}</strong>
-                        <small class="text-muted">${new Date(s.lastMsgTime).toLocaleTimeString()}</small>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <small class="text-muted text-truncate w-75">${s.lastMessage}</small>
-                        ${s.unreadCount > 0 ? `<span class="badge bg-danger rounded-pill">${s.unreadCount}</span>` : ''}
-                    </div>
-                `;
-                div.onclick = () => selectSession(s.sessionId);
-                list.appendChild(div);
+            if (!res.ok) return;
+            const data = await res.json();
+            sessions.clear();
+            data.forEach(function (s) {
+                sessions.set(s.sessionId, {
+                    lastMessage: s.lastMessage,
+                    lastMsgTime: new Date(s.lastMsgTime),
+                    unreadCount: s.unreadCount || 0
+                });
             });
+            renderSessionList();
+        } catch (e) {}
+    }
+
+    function renderSessionList() {
+        var list = document.getElementById('sessionList');
+        if (!list) return;
+        if (sessions.size === 0) {
+            list.innerHTML = '<div class="text-center p-5 text-muted">Chưa có hội thoại nào</div>';
+            return;
         }
 
-        async function selectSession(sessionId) {
-            selectedSessionId = sessionId;
-            document.getElementById('chatHeader').classList.remove('d-none');
-            document.getElementById('chatFooter').classList.remove('d-none');
-            document.getElementById('currentSessionId').innerText = sessionId;
-            document.getElementById('currentClientName').innerText = "Khách hàng #" + sessionId.substring(0, 8);
-            
-            await loadMessages();
-            loadSessions(); // Reload list to update unread count
+        // Sort by lastMsgTime descending
+        const sorted = Array.from(sessions.entries()).sort(function (a, b) {
+            return (b[1].lastMsgTime || 0) - (a[1].lastMsgTime || 0);
+        });
+
+        list.innerHTML = '';
+        sorted.forEach(function ([sid, info]) {
+            var div = document.createElement('div');
+            div.className = 'p-3 border-bottom session-item' + (sid === currentSessionId ? ' bg-label-primary' : '');
+            div.style.cursor = 'pointer';
+            var timeStr = info.lastMsgTime ? info.lastMsgTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '';
+            div.innerHTML =
+                '<div class="d-flex justify-content-between align-items-center mb-1">' +
+                    '<strong class="text-truncate" style="max-width:150px;">Khách ' + sid.substring(0, 8) + '</strong>' +
+                    '<small class="text-muted">' + timeStr + '</small>' +
+                '</div>' +
+                '<div class="d-flex justify-content-between">' +
+                    '<small class="text-muted text-truncate w-75">' + escHtml(info.lastMessage || '') + '</small>' +
+                    (info.unreadCount > 0 ? '<span class="badge bg-danger rounded-pill">' + info.unreadCount + '</span>' : '') +
+                '</div>';
+            div.onclick = function () { selectSession(sid); };
+            list.appendChild(div);
+        });
+    }
+
+    // ── Select session ───────────────────────────────────────────
+    async function selectSession(sessionId) {
+        currentSessionId = sessionId;
+
+        // Clear unread
+        if (sessions.has(sessionId)) {
+            sessions.get(sessionId).unreadCount = 0;
         }
 
-        async function loadMessages() {
-            if (!selectedSessionId) return;
-            const res = await fetch(`/Admin/Chat/GetMessages?sessionId=${selectedSessionId}`);
+        document.getElementById('chatHeader').classList.remove('d-none');
+        document.getElementById('chatFooter').classList.remove('d-none');
+        document.getElementById('currentSessionId').innerText = sessionId;
+        document.getElementById('currentClientName').innerText = 'Khách hàng #' + sessionId.substring(0, 8);
+        renderSessionList();
+
+        // Load full message history for this session
+        try {
+            const res = await fetch('/Admin/Chat/GetMessages?sessionId=' + encodeURIComponent(sessionId));
+            if (!res.ok) return;
             const msgs = await res.json();
             const container = document.getElementById('adminChatMsgs');
             container.innerHTML = '';
-            
-            msgs.forEach(m => {
-                const div = document.createElement('div');
-                div.className = m.isFromAdmin ? 'msg-admin-reply' : 'msg-client-reply';
-                div.innerHTML = `
-                    <div class="msg-bubble ${m.isFromAdmin ? 'bg-primary text-white ms-auto' : 'bg-white border'}" 
-                         style="max-width: 70%; padding: 10px 15px; border-radius: 15px; font-size: 14px;">
-                        ${m.message}
-                        <div class="text-end mt-1" style="font-size: 10px; opacity: 0.7;">
-                            ${new Date(m.createdAt).toLocaleTimeString()}
-                        </div>
-                    </div>
-                `;
-                container.appendChild(div);
+            msgs.forEach(function (m) {
+                appendBubble(m.message, m.isFromAdmin, new Date(m.createdAt));
             });
-            container.scrollTop = container.scrollHeight;
+        } catch (e) {}
+    }
+
+    // ── Append bubble ────────────────────────────────────────────
+    function appendBubble(text, isAdmin, time) {
+        var container = document.getElementById('adminChatMsgs');
+        if (!container) return;
+
+        var hint = document.getElementById('emptyHint');
+        if (hint) hint.remove();
+
+        var wrapper = document.createElement('div');
+        wrapper.className = isAdmin ? 'msg-admin-reply' : 'msg-client-reply';
+
+        var timeStr = time.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        var bubble = document.createElement('div');
+        bubble.className = 'msg-bubble ' + (isAdmin ? 'bg-primary text-white ms-auto' : 'bg-white border');
+        bubble.style.cssText = 'max-width:70%;padding:10px 15px;border-radius:15px;font-size:14px;';
+        bubble.innerHTML = escHtml(text) +
+            '<div class="text-end mt-1" style="font-size:10px;opacity:.7;">' + timeStr + '</div>';
+
+        wrapper.appendChild(bubble);
+        container.appendChild(wrapper);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function escHtml(s) {
+        return String(s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ── Admin reply ──────────────────────────────────────────────
+    async function adminReply() {
+        var input = document.getElementById('replyInput');
+        var msg = (input ? input.value : '').trim();
+        if (!msg || !currentSessionId) return;
+        input.value = '';
+
+        if (connection.state === signalR.HubConnectionState.Connected) {
+            try {
+                // Hub will broadcast AdminMessageSent back — no optimistic append
+                await connection.invoke('AdminReply', msg, currentSessionId);
+                return;
+            } catch (e) {}
         }
 
-        async function sendReply() {
-            const msg = document.getElementById('replyInput').value.trim();
-            if (!msg || !selectedSessionId) return;
-
-            const res = await fetch('/Admin/Chat/Reply', {
+        // Fallback: HTTP POST + optimistic append
+        appendBubble(msg, true, new Date());
+        try {
+            await fetch('/Admin/Chat/Reply', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sessionId: selectedSessionId, message: msg })
+                body: JSON.stringify({ sessionId: currentSessionId, message: msg })
             });
+        } catch (e) {}
+    }
 
-            if (await res.json()) {
-                document.getElementById('replyInput').value = '';
-                await loadMessages();
-                loadSessions();
-            }
-        }
+    document.getElementById('btnReply').onclick = adminReply;
+    document.getElementById('replyInput').onkeypress = function (e) {
+        if (e.key === 'Enter') adminReply();
+    };
 
-        document.getElementById('btnReply').onclick = sendReply;
-        document.getElementById('replyInput').onkeypress = (e) => { if(e.key === 'Enter') sendReply(); };
-
-        // Polling mỗi 3 giây
-        setInterval(loadSessions, 3000);
-        setInterval(loadMessages, 3000);
-        
-        loadSessions();
-    </script>
-    <style>
-        .msg-admin-reply { display: flex; justify-content: flex-end; width: 100%; }
-        .msg-client-reply { display: flex; justify-content: flex-start; width: 100%; }
-        .session-item:hover { background: #f8f9fa; }
-    </style>
+    // Boot
+    startHub();
+    loadSessions();
+}());
+</script>
+<style>
+    .msg-admin-reply  { display:flex; justify-content:flex-end;   width:100%; }
+    .msg-client-reply { display:flex; justify-content:flex-start;  width:100%; }
+    .session-item:hover { background:#f8f9fa; }
+</style>
 }

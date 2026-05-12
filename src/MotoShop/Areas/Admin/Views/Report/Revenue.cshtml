@@ -3,164 +3,216 @@
 @{
     ViewData["Title"] = "Báo cáo doanh thu";
     Layout = "_AdminLayout";
+    var period = (string)(ViewBag.Period ?? "7d");
+
+    // Extract từ ViewBag vào biến local để dùng .ToString() đúng cú pháp Razor
+    decimal revToday     = (decimal)(ViewBag.RevenueToday  ?? 0m);
+    decimal revMonth     = (decimal)(ViewBag.RevenueMonth  ?? 0m);
+    decimal revYear      = (decimal)(ViewBag.RevenueYear   ?? 0m);
+    double  growthMon    = (double) (ViewBag.GrowthMonth   ?? 0.0);
+    decimal totalRevenue = (decimal)(ViewBag.TotalRevenue  ?? 0m);
+    int     totalOrders  = (int)    (ViewBag.TotalOrders   ?? 0);
+    decimal aov          = (decimal)(ViewBag.AOV           ?? 0m);
+    double  revenueGrowth = (double)(ViewBag.RevenueGrowth ?? 0.0);
+    double  orderGrowth   = (double)(ViewBag.OrderGrowth   ?? 0.0);
+    double  aovGrowth     = (double)(ViewBag.AovGrowth     ?? 0.0);
+
+    string GrowthClass(double g) => g >= 0 ? "growth-up" : "growth-down";
+    string GrowthIcon(double g)  => g >= 0 ? "bx-up-arrow-alt" : "bx-down-arrow-alt";
+    string GrowthText(double g)  => $"{(g >= 0 ? "+" : "")}{g:F1}%";
 }
 
 <style>
-    :root {
-        --ms-red: #E24B4A;
-        --ms-light-bg: #f8f9fa;
-        --ms-border: #dee2e6;
-    }
-
-    .revenue-container { font-family: 'Inter', sans-serif; background: var(--ms-light-bg); }
-    .card-kpi { background: #fff; border: 1px solid var(--ms-border); border-radius: 12px; padding: 20px; transition: transform 0.2s; }
-    .card-kpi:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-    .kpi-title { color: #666; font-size: 0.85rem; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .kpi-value { font-size: 1.6rem; font-weight: 700; color: #333; margin: 0; }
-    .growth-tag { font-size: 0.8rem; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
-    .growth-up { background: #e8f5e9; color: #2e7d32; }
-    .growth-down { background: #ffebee; color: #c62828; }
-
-    .filter-section { background: #fff; border: 1px solid var(--ms-border); border-radius: 12px; padding: 15px; margin-bottom: 20px; }
-    .btn-ms-red { background: var(--ms-red); color: white; border: none; font-weight: 600; }
-    .btn-ms-red:hover { background: #c63d3c; color: white; }
-
-    .table-revenue { background: #fff; border-radius: 12px; border: 1px solid var(--ms-border); overflow: hidden; }
-    .table-revenue th { background: #fdfdfd; color: #666; font-size: 0.75rem; text-transform: uppercase; padding: 15px; border-bottom: 2px solid #eee; }
-    .table-revenue td { padding: 15px; vertical-align: middle; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    :root { --ms-red: #E24B4A; --ms-border: #dee2e6; }
+    .card-kpi { background:#fff; border:1px solid var(--ms-border); border-radius:12px; padding:20px; transition:transform .2s; }
+    .card-kpi:hover { transform:translateY(-3px); box-shadow:0 5px 15px rgba(0,0,0,.05); }
+    .kpi-title { color:#666; font-size:.8rem; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+    .kpi-value { font-size:1.5rem; font-weight:700; color:#333; margin:0; }
+    .growth-tag { font-size:.78rem; font-weight:600; padding:2px 7px; border-radius:4px; }
+    .growth-up   { background:#e8f5e9; color:#2e7d32; }
+    .growth-down { background:#ffebee; color:#c62828; }
+    .period-btn { border-radius:6px !important; font-size:.82rem; font-weight:600; }
+    .period-btn.active { background:var(--ms-red) !important; color:#fff !important; border-color:var(--ms-red) !important; }
+    .report-tabs .nav-link { color:#555; font-weight:500; }
+    .report-tabs .nav-link.active { color:var(--ms-red); border-bottom:2px solid var(--ms-red); background:none; }
+    .report-tabs { border-bottom:2px solid #eee; }
+    .table-report th { background:#fdfdfd; color:#666; font-size:.73rem; text-transform:uppercase; padding:13px 15px; border-bottom:2px solid #eee; }
+    .table-report td { padding:13px 15px; vertical-align:middle; border-bottom:1px solid #f0f0f0; font-size:.88rem; }
+    .btn-ms-red { background:var(--ms-red); color:#fff; border:none; font-weight:600; }
+    .btn-ms-red:hover { background:#c63d3c; color:#fff; }
 </style>
 
-<div class="revenue-container p-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold m-0"><i class='bx bx-line-chart me-2' style="color: var(--ms-red)"></i>Báo cáo doanh thu</h4>
-        <button class="btn btn-outline-secondary btn-sm"><i class='bx bx-export me-1'></i> Xuất Excel</button>
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold m-0"><i class='bx bx-line-chart me-2' style="color:var(--ms-red)"></i>Báo cáo</h4>
     </div>
 
-    <!-- PHẦN TRÊN: KPI CARDS -->
+    <!-- TABS NAV -->
+    <ul class="nav report-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link active px-4" asp-area="Admin" asp-controller="Report" asp-action="Revenue">
+                <i class='bx bx-line-chart me-1'></i>Doanh thu
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link px-4" asp-area="Admin" asp-controller="Report" asp-action="TopProducts">
+                <i class='bx bx-trophy me-1'></i>Sản phẩm bán chạy
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link px-4" asp-area="Admin" asp-controller="Report" asp-action="Orders">
+                <i class='bx bx-receipt me-1'></i>Đơn hàng
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link px-4" asp-area="Admin" asp-controller="Report" asp-action="Customers">
+                <i class='bx bx-group me-1'></i>Khách hàng
+            </a>
+        </li>
+    </ul>
+
+    <!-- FIXED KPIs -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="card-kpi">
                 <p class="kpi-title">Doanh thu hôm nay</p>
-                <p class="kpi-value">@ViewBag.RevenueToday.ToString("C0", new CultureInfo("vi-VN"))</p>
-                <div class="mt-2">
-                    <span class="growth-tag @(ViewBag.GrowthMonth >= 0 ? "growth-up" : "growth-down")">
-                        <i class='bx @(ViewBag.GrowthMonth >= 0 ? "bx-up-arrow-alt" : "bx-down-arrow-alt")'></i>
-                        @(Math.Abs((double)ViewBag.GrowthMonth).ToString("F1"))% tháng này
-                    </span>
-                </div>
+                <p class="kpi-value">@(revToday.ToString("N0"))₫</p>
+                <span class="growth-tag @GrowthClass(growthMon) mt-2 d-inline-block">
+                    <i class='bx @GrowthIcon(growthMon)'></i>
+                    @GrowthText(growthMon) so tháng trước
+                </span>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card-kpi">
                 <p class="kpi-title">Doanh thu tháng này</p>
-                <p class="kpi-value text-primary">@ViewBag.RevenueMonth.ToString("C0", new CultureInfo("vi-VN"))</p>
-                <p class="text-muted small mt-2 m-0">Tháng @DateTime.Now.Month / @DateTime.Now.Year</p>
+                <p class="kpi-value text-primary">@(revMonth.ToString("N0"))₫</p>
+                <p class="text-muted small mt-2 mb-0">Tháng @DateTime.Now.Month / @DateTime.Now.Year</p>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card-kpi">
                 <p class="kpi-title">Doanh thu năm nay</p>
-                <p class="kpi-value text-success">@ViewBag.RevenueYear.ToString("C0", new CultureInfo("vi-VN"))</p>
-                <p class="text-muted small mt-2 m-0">Năm @DateTime.Now.Year</p>
+                <p class="kpi-value text-success">@(revYear.ToString("N0"))₫</p>
+                <p class="text-muted small mt-2 mb-0">Năm @DateTime.Now.Year</p>
             </div>
         </div>
     </div>
 
-    <!-- BỘ LỌC -->
-    <div class="filter-section">
-        <form method="get" asp-action="Revenue" class="row g-3 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label small fw-bold">Từ ngày</label>
-                <input type="date" name="fromDate" value="@ViewBag.FromDate" class="form-control">
+    <!-- PERIOD TOGGLE -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+        <div class="d-flex gap-2">
+            @foreach (var (label, val) in new[] {("7 ngày","7d"),("30 ngày","30d"),("3 tháng","3m"),("Năm nay","ytd")}) {
+                <a href="?period=@val" class="btn btn-outline-secondary btn-sm period-btn @(period == val ? "active" : "")">@label</a>
+            }
+            <button class="btn btn-outline-secondary btn-sm period-btn @(period == "custom" ? "active" : "")"
+                    type="button" data-bs-toggle="collapse" data-bs-target="#customRange">
+                <i class='bx bx-calendar me-1'></i>Tùy chọn
+            </button>
+        </div>
+        <a asp-area="Admin" asp-controller="Report" asp-action="ExportRevenue"
+           asp-route-period="@period" asp-route-fromDate="@ViewBag.FromDate" asp-route-toDate="@ViewBag.ToDate"
+           class="btn btn-outline-success btn-sm">
+            <i class='bx bx-download me-1'></i>Xuất CSV
+        </a>
+    </div>
+
+    <div class="collapse @(period == "custom" ? "show" : "") mb-3" id="customRange">
+        <form method="get" class="d-flex gap-2 align-items-end p-3 bg-white border rounded">
+            <input type="hidden" name="period" value="custom">
+            <div>
+                <label class="form-label small fw-bold mb-1">Từ ngày</label>
+                <input type="date" name="fromDate" value="@ViewBag.FromDate" class="form-control form-control-sm">
             </div>
-            <div class="col-md-3">
-                <label class="form-label small fw-bold">Đến ngày</label>
-                <input type="date" name="toDate" value="@ViewBag.ToDate" class="form-control">
+            <div>
+                <label class="form-label small fw-bold mb-1">Đến ngày</label>
+                <input type="date" name="toDate" value="@ViewBag.ToDate" class="form-control form-control-sm">
             </div>
-            <div class="col-md-2">
-                <label class="form-label small fw-bold">Tháng</label>
-                <select name="month" class="form-select">
-                    <option value="">-- Tất cả --</option>
-                    @for (int i = 1; i <= 12; i++) {
-                        <option value="@i" selected="@(ViewBag.Month == i)">Tháng @i</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small fw-bold">Năm</label>
-                <select name="year" class="form-select">
-                    @for (int i = DateTime.Now.Year; i >= 2024; i--) {
-                        <option value="@i" selected="@(ViewBag.Year == i)">Năm @i</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-ms-red w-100"><i class='bx bx-filter-alt me-1'></i> Lọc dữ liệu</button>
-            </div>
+            <button type="submit" class="btn btn-ms-red btn-sm">Áp dụng</button>
         </form>
     </div>
 
-    <!-- BIỂU ĐỒ -->
-    <div class="row mb-4">
-        <div class="col-12">
+    <!-- PERIOD KPIs WITH COMPARISON -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
             <div class="card-kpi">
-                <h6 class="fw-bold mb-4 text-uppercase small">Biến động doanh thu 7 ngày gần nhất</h6>
-                <div style="height: 300px;">
-                    <canvas id="revenueChart"></canvas>
-                </div>
+                <p class="kpi-title">Doanh thu kỳ này</p>
+                <p class="kpi-value">@(totalRevenue.ToString("N0"))₫</p>
+                <span class="growth-tag @GrowthClass(revenueGrowth) mt-2 d-inline-block">
+                    <i class='bx @GrowthIcon(revenueGrowth)'></i> @GrowthText(revenueGrowth) vs kỳ trước
+                </span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-kpi">
+                <p class="kpi-title">Số đơn hàng</p>
+                <p class="kpi-value">@(totalOrders.ToString("N0"))</p>
+                <span class="growth-tag @GrowthClass(orderGrowth) mt-2 d-inline-block">
+                    <i class='bx @GrowthIcon(orderGrowth)'></i> @GrowthText(orderGrowth) vs kỳ trước
+                </span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-kpi">
+                <p class="kpi-title">Giá trị TB / đơn (AOV)</p>
+                <p class="kpi-value">@(aov.ToString("N0"))₫</p>
+                <span class="growth-tag @GrowthClass(aovGrowth) mt-2 d-inline-block">
+                    <i class='bx @GrowthIcon(aovGrowth)'></i> @GrowthText(aovGrowth) vs kỳ trước
+                </span>
             </div>
         </div>
     </div>
 
-    <!-- BẢNG CHI TIẾT -->
-    <div class="table-revenue">
-        <table class="table table-hover m-0">
+    <!-- LINE CHART -->
+    <div class="card-kpi mb-4">
+        <h6 class="fw-bold mb-4 text-uppercase small">Biến động doanh thu theo kỳ đã chọn</h6>
+        <div style="height:300px">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+
+    <!-- ORDERS TABLE -->
+    <div class="bg-white border rounded overflow-hidden">
+        <table class="table table-hover m-0 table-report">
             <thead>
                 <tr>
-                    <th>MÃ ĐƠN</th>
-                    <th>KHÁCH HÀNG</th>
-                    <th>SẢN PHẨM / DỊCH VỤ</th>
-                    <th>TỔNG TIỀN</th>
-                    <th>NGÀY TẠO</th>
-                    <th>TRẠNG THÁI</th>
+                    <th>Mã đơn</th>
+                    <th>Khách hàng</th>
+                    <th>Sản phẩm</th>
+                    <th>Tổng tiền</th>
+                    <th>Ngày đặt</th>
+                    <th>Trạng thái</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var order in Model) {
+                @foreach (var o in Model) {
+                    var badge = o.Status switch {
+                        "Completed"  => "bg-success",
+                        "Pending"    => "bg-warning text-dark",
+                        "Processing" => "bg-info",
+                        "Shipping"   => "bg-primary",
+                        "Cancelled"  => "bg-danger",
+                        _            => "bg-secondary"
+                    };
                     <tr>
-                        <td class="fw-bold" style="color: var(--ms-red)">#@order.OrderCode</td>
+                        <td class="fw-bold" style="color:var(--ms-red)">#@o.OrderCode</td>
                         <td>
-                            <div class="fw-bold">@order.Customer?.FullName</div>
-                            <div class="text-muted small">@order.Customer?.Phone</div>
+                            <div class="fw-semibold">@o.Customer?.FullName</div>
+                            <div class="text-muted small">@o.Customer?.Phone</div>
                         </td>
-                        <td>
-                            <div class="small">
-                                @if(order.OrderItems != null && order.OrderItems.Any()) {
-                                    @string.Join(", ", order.OrderItems.Select(oi => oi.ProductVariant?.VariantName).Take(2))
-                                    @if(order.OrderItems.Count > 2) { <span>... (+@(order.OrderItems.Count - 2))</span> }
-                                } else {
-                                    <span class="text-muted">Không có dữ liệu</span>
-                                }
-                            </div>
-                        </td>
-                        <td class="fw-bold">@order.TotalAmount.ToString("N0")₫</td>
-                        <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td>
-                            @{
-                                var badgeClass = order.Status switch {
-                                    "Completed" => "bg-success",
-                                    "Pending" => "bg-warning",
-                                    "Processing" => "bg-info",
-                                    "Delivered" => "bg-primary",
-                                    _ => "bg-secondary"
-                                };
+                        <td class="small text-muted">
+                            @if (o.OrderItems?.Any() == true) {
+                                @string.Join(", ", o.OrderItems.Select(oi => oi.ProductVariant?.VariantName).Take(2))
+                                if (o.OrderItems.Count > 2) { <span>(+@(o.OrderItems.Count - 2))</span> }
                             }
-                            <span class="badge @badgeClass">@order.Status</span>
                         </td>
+                        <td class="fw-bold">@o.TotalAmount.ToString("N0")₫</td>
+                        <td class="text-muted small">@o.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td><span class="badge @badge">@o.Status</span></td>
                     </tr>
                 }
                 @if (!Model.Any()) {
-                    <tr><td colspan="6" class="text-center py-4 text-muted">Không tìm thấy dữ liệu phù hợp</td></tr>
+                    <tr><td colspan="6" class="text-center py-5 text-muted">Không có dữ liệu trong kỳ này</td></tr>
                 }
             </tbody>
         </table>
@@ -170,12 +222,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const ctx = document.getElementById('revenueChart').getContext('2d');
-    
-    // Gradient fill
-    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(226, 75, 74, 0.4)');
-    gradient.addColorStop(1, 'rgba(226, 75, 74, 0)');
-
+    const grad = ctx.createLinearGradient(0, 0, 0, 300);
+    grad.addColorStop(0, 'rgba(226,75,74,.35)');
+    grad.addColorStop(1, 'rgba(226,75,74,0)');
     new Chart(ctx, {
         type: 'line',
         data: {
@@ -184,8 +233,8 @@
                 label: 'Doanh thu (VNĐ)',
                 data: @Html.Raw(Json.Serialize(ViewBag.ChartValues)),
                 borderColor: '#E24B4A',
-                borderWidth: 3,
-                backgroundColor: gradient,
+                borderWidth: 2.5,
+                backgroundColor: grad,
                 fill: true,
                 tension: 0.4,
                 pointRadius: 4,
@@ -196,18 +245,12 @@
         },
         options: {
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
+            plugins: { legend: { display: false } },
             scales: {
                 y: {
                     beginAtZero: true,
-                    grid: { borderDash: [5, 5] },
-                    ticks: {
-                        callback: function(value) {
-                            return (value / 1000000).toFixed(1) + 'M';
-                        }
-                    }
+                    grid: { borderDash: [4,4] },
+                    ticks: { callback: v => (v/1e6).toFixed(1)+'M' }
                 },
                 x: { grid: { display: false } }
             }

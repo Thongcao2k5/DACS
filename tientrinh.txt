@@ -1,0 +1,182 @@
+================================================================
+  TIẾN TRÌNH DỰ ÁN MOTOSHOP DACS
+  Cập nhật: 11/05/2026
+================================================================
+
+--- THÔNG TIN CHUNG ---
+Tên dự án  : MotoShop DACS
+Loại       : Đồ án đại học — Web thương mại điện tử
+Mô tả      : Website bán phụ tùng & dịch vụ sửa xe máy (giao diện kiểu Shopee)
+Developer  : Thongcao2k5 (thongminhcao2k5@gmail.com)
+Ngày hôm nay: 11/05/2026
+
+--- TECH STACK ---
+- ASP.NET Core MVC 9.0
+- Entity Framework Core 9.0
+- SQL Server (MSI\SQLEXPRESS, Windows Auth, MotorcycleShopDB)
+- ASP.NET Core Identity (cookie 7 ngày, lockout 5 lần sai)
+- AutoMapper 14
+- Serilog (rolling 7 ngày, Logs/log-.txt) — file sink v7
+- SixLabors.ImageSharp
+- ClosedXML (export Excel)
+- VNPay (thanh toán online)
+- MailKit 4.7.1 (thay thế System.Net.Mail) — Gmail SMTP qua App Password
+
+--- KIẾN TRÚC 3-TIER ---
+MotoShop            → Presentation (Controllers, Views, ViewComponents, wwwroot)
+MotoShop.Business   → Business Logic (Services, DTOs, Interfaces, Mappings, Helpers)
+MotoShop.Data       → Data (DbContext, Models, Repositories, Migrations)
+
+Pattern: Repository + UnitOfWork, Dependency Injection, AutoMapper DTO mapping
+Khi thêm feature mới: interface → service → đăng ký DI trong Program.cs
+
+--- CÁC FILE QUAN TRỌNG ---
+Program.cs              - DI, Identity, EF, middleware config + raw SQL schema trên startup
+MotoShopModels.cs       - Tất cả entity models trong 1 file
+MotoShopDbContext.cs    - EF context kế thừa IdentityDbContext
+DbSeeder.cs             - Seed dữ liệu ban đầu
+MappingProfile.cs       - AutoMapper profiles
+GEMINI.md               - Quy tắc bắt buộc của dự án
+
+--- CÁC CONTROLLERS ---
+Public:  Home, Product, Cart, Order, Account, Service, Booking, Payment, Blog, Wishlist, Review, Chat
+API:     AccountApiController, HomeApiController
+Admin (21 controllers):
+  Product, Category, Brand, Order, Customer, Booking, Service,
+  Inventory, Coupon, Promotion, FlashSale, Blog, Review,
+  SliderBanner, ShippingMethod, Unit, Chat, Report, Account
+
+--- TÍNH NĂNG ĐÃ HOÀN THÀNH ---
+[x] Catalog sản phẩm với variants (1 Product = nhiều Variant kiểu Shopee)
+[x] Giỏ hàng & checkout (guest + đăng nhập, session-based sync)
+[x] Quản lý đơn hàng + lịch sử trạng thái
+[x] Booking dịch vụ sửa chữa có deposit (mặc định 30%)
+[x] Flash sale, promotion, coupon
+[x] Blog + Review sản phẩm/dịch vụ (Review có ảnh đính kèm)
+[x] Wishlist, Chat, Audit log (AuditLog entity + service hoàn chỉnh)
+[x] Thanh toán VNPay + chuyển khoản
+[x] Admin dashboard đầy đủ (21 controllers)
+[x] Session-based guest cart/wishlist với auto-sync khi login
+[x] Phân quyền admin — [Authorize(Roles = "Admin")] trên tất cả Admin controllers
+[x] Thông báo hệ thống thống nhất (unified notifications)
+[x] Hotline/Zalo, Blog sharing, Product filtering
+[x] Page 404 view resolution
+[x] Chat hệ thống (fix lỗi ngày 4/5/2026)
+[x] Email với MailKit (SecureSocketOptions.Auto, logging chi tiết, App Password)
+[x] Tìm kiếm tiếng Việt không dấu (EF.Functions.Collate SQL_Latin1_General_CP1_CI_AI)
+[x] Upload file: validate MIME type + magic bytes + giới hạn 5MB
+[x] Flash Sale admin: dashboard thống kê (tổng SP, đã bán, doanh thu) + countdown timer + DataTables
+[x] Seed dữ liệu đầy đủ: StoreSettings, MotorbikeModels phân cấp, 4 Services, 10 Products mẫu chi tiết
+[x] Đăng ký OTP dùng CreateExecutionStrategy (tương thích EnableRetryOnFailure)
+[x] CSRF protection toàn cục (AutoValidateAntiforgeryTokenAttribute)
+[x] Serilog ghi file log (Logs/log-.txt, rolling daily, giữ 7 ngày)
+[x] So sánh sản phẩm (Compare) — fix lỗi parse int an toàn
+
+--- QUY TẮC BẮT BUỘC (GEMINI.md) ---
+1. 1 Product = nhiều Variants — KHÔNG tách thành product riêng
+2. Mỗi ProductVariant phải có SKU duy nhất
+3. Attributes nhất quán (không mix "9g" / "9 gram" / "0.01kg")
+4. URL theo dõi variantId trong query string
+5. Không tạo migration mới — dùng raw SQL trong Program.cs
+
+--- LỊCH SỬ COMMIT GẦN ĐÂY ---
+[WIP]    - Cập nhật 11/05: Email MailKit, search tiếng Việt, AuditLog, ProductReviewImage,
+           Flash Sale dashboard, DbSeeder đầy đủ, CSRF global, Serilog file sink, brand logos
+6d49958 - Update product variant architecture, flash sale features, export DB schema
+ad5dc78 - Fix lỗi cập nhật thêm chat hệ thống (4/5)
+78a6eac - Session-based guest cart/wishlist, auto-sync on login
+f70f242 - Fix Page404, unified notifications, UI/UX (Hotline/Zalo, Blog sharing, Filter)
+00e3bcb - VNPay done
+ba187ff - Security, business logic, performance + SQL schema (27/04)
+6a53357 - Hoàn thành blog, liên hệ, logic khuyến mãi, phân quyền admin
+807effc - Hoàn thiện task 3
+
+--- CÁC THAY ĐỔI CHI TIẾT (11/05/2026) ---
+
+1. EMAIL (MailKit)
+   - Chuyển EmailSender từ System.Net.Mail → MailKit.Net.Smtp
+   - Hỗ trợ SecureSocketOptions.Auto (tự chọn StartTls/SSL)
+   - Logging chi tiết khi connect, authenticate, gửi, lỗi auth
+   - Gói: MotoShop.Business.csproj thêm MailKit 4.7.1
+
+2. TÌM KIẾM TIẾNG VIỆT KHÔNG DẤU
+   - ProductService.cs & ProductController.cs dùng EF.Functions.Collate("SQL_Latin1_General_CP1_CI_AI")
+   - VietnameseStringHelper.NormalizeKeyword() chuẩn hóa từ khóa trước khi tìm
+   - Áp dụng cho: ProductName, Description, BrandName, CategoryName
+   - Autocomplete search cũng được cập nhật
+
+3. UPLOAD FILE (FileService)
+   - Validate MIME type (image/jpeg, image/png, image/webp) — bỏ gif
+   - Validate file size tối đa 5MB
+   - Magic bytes check nhất quán giữa SaveFileAsync và SaveImageAsync
+   - Chuẩn hóa danh sách extension/MIME dùng chung
+
+4. AUDIT LOG
+   - Model: AuditLog entity (Id, UserId, Action, EntityName, EntityId, OldValues, NewValues, IpAddress, CreatedAt)
+   - SQL: tạo bảng AuditLogs trong Program.cs startup
+   - DbContext: thêm DbSet<AuditLog>
+   - IAuditLogService đăng ký DI trong Program.cs
+   - Admin/ProductController: log hành động "Delete" khi xóa mềm sản phẩm
+
+5. REVIEW SẢN PHẨM CÓ ẢNH
+   - Model: ProductReviewImage entity (Id, ReviewId, ImageUrl)
+   - ProductReview: thêm navigation ICollection<ProductReviewImage> Images
+   - SQL: tạo bảng ProductReviewImages trong Program.cs startup
+   - DbContext: thêm DbSet<ProductReviewImage>
+   - ProductReviewDto: thêm AvatarUrl, ReviewImages
+   - MappingProfile: map AvatarUrl từ Customer.AvatarUrl, ReviewImages từ Images
+
+6. MAPPING PROFILE CẬP NHẬT
+   - ProductDto: thêm FlashSaleEndDate, StockCount, IsInStock
+   - MappingProfile: map FlashSaleEndDate (ngày kết thúc flash sale đang active)
+   - StockCount = tổng tồn kho các variant; IsInStock = có ít nhất 1 variant > 0
+
+7. FLASH SALE ADMIN
+   - FlashSaleController: thêm [Authorize(Roles="Admin")]
+   - Dashboard stats: ViewBag.TotalProducts, TotalSold, TotalRevenue
+   - FlashSale/Index.cshtml: 3 dashboard cards, DataTables integration (v1.13.4, i18n tiếng Việt)
+   - Countdown timer real-time cho flash sale đang active
+   - Label cột "Giá gốc (Min)" thay "Giá gốc"
+
+8. ADMIN CONTROLLERS BẢO MẬT
+   - Thêm [Authorize(Roles = "Admin")] trên FlashSaleController, ProductController
+   - ProductController: inject IAuditLogService + UserManager để audit xóa sản phẩm
+
+9. ĐĂNG KÝ TÀI KHOẢN
+   - AccountApiController: dùng CreateExecutionStrategy thay BeginTransactionAsync trực tiếp
+     (tránh lỗi với SqlServerRetryingExecutionStrategy khi EnableRetryOnFailure)
+   - Thêm ILogger injection; log lỗi OTP gửi mail, lỗi tạo user
+   - ForgotPasswordStep1: try-catch, log lỗi gửi mail
+   - RegisterVerifyDto: mật khẩu tối thiểu 8 ký tự (tăng từ 6)
+
+10. PROGRAM.CS / STARTUP
+    - Serilog: thêm WriteTo.File (Logs/log-.txt, rolling day, retainedFileCountLimit=7)
+    - appsettings.json: chuyển sang cấu hình Serilog MinimumLevel/Override thay Logging.LogLevel
+    - AutoValidateAntiforgeryTokenAttribute global (CSRF protection cho toàn app)
+    - AuditLogService đăng ký DI
+    - SQL: tạo bảng AuditLogs, ProductReviewImages nếu chưa có
+    - SQL: UPDATE brand logos (25+ thương hiệu) theo file SVG/PNG local
+    - Startup command timeout: 300 giây (tăng từ mặc định 30s)
+    - DbSeeder.SeedAsync luôn được gọi (không check !context.Categories.Any() nữa)
+    - Serilog.Sinks.File nâng lên v7
+
+11. DBSEEDER MỞ RỘNG
+    - Seed StoreSettings (nếu chưa có)
+    - Seed MotorbikeModels phân cấp: Honda, Yamaha, Suzuki, Kawasaki + 13 model con
+    - Seed Categories: thêm trường Icon (boxicons), IsActive
+    - Seed Brands: upsert-style (không tạo trùng), thêm LogoUrl
+    - Seed Services: 4 dịch vụ mẫu (thay nhớt, vệ sinh buồng đốt, thay lốp, bảo dưỡng 3000km)
+    - Seed 10 Products mẫu đầy đủ thông tin (variants, attributes, images, MotorbikeModel)
+    - Seed ProductAttributes và AttributeValues dùng chung
+
+12. MODEL VÀ DBCONTEXT
+    - ProductVariantAttributeValue: thêm [Table("ProductVariantAttributeValue")]
+    - DbContext: thêm DbSet<ProductVariantAttributeValues>, DbSet<AuditLogs>, DbSet<ProductReviewImages>
+
+--- GHI CHÚ ---
+- Static files upload: wwwroot/uploads/ (avatars, products, blogs, services, deposits, brands)
+- Brand logos: wwwroot/uploads/brands/ (SVG/PNG cho 25+ thương hiệu)
+- DB kết nối: MSI\SQLEXPRESS Windows Auth, TrustServerCertificate=true
+- Không push DB credentials lên git
+- SMTP credentials trong appsettings.json — không push lên git
+================================================================

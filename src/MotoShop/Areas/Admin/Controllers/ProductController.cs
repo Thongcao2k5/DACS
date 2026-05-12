@@ -193,6 +193,10 @@ namespace MotoShop.Areas.Admin.Controllers
                 await _productRepository.AddAsync(product);
                 await _productRepository.SaveChangesAsync();
 
+                var userId = _userManager.GetUserId(User);
+                await _auditLogService.LogActionAsync(userId, "Create", "Product", product.ProductId.ToString(),
+                    null, $"Tạo sản phẩm: {product.ProductName}", HttpContext.Connection.RemoteIpAddress?.ToString());
+
                 return Json(new { success = true });
             }
             catch (Exception ex)
@@ -331,6 +335,11 @@ namespace MotoShop.Areas.Admin.Controllers
                 }
 
                 await _productRepository.SaveChangesAsync();
+
+                var userId = _userManager.GetUserId(User);
+                await _auditLogService.LogActionAsync(userId, "Update", "Product", ProductId.ToString(),
+                    null, $"Cập nhật sản phẩm: {ProductName}", HttpContext.Connection.RemoteIpAddress?.ToString());
+
                 return Json(new { success = true });
             }
             catch (Exception ex)

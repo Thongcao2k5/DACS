@@ -4,6 +4,7 @@ using MotoShop.Business.Interfaces;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace MotoShop.Areas.Admin.Controllers
@@ -14,11 +15,13 @@ namespace MotoShop.Areas.Admin.Controllers
     {
         private readonly MotoShopDbContext _context;
         private readonly IEmailService _emailService;
+        private readonly IAuditLogService _auditLogService;
 
-        public BookingController(MotoShopDbContext context, IEmailService emailService)
+        public BookingController(MotoShopDbContext context, IEmailService emailService, IAuditLogService auditLogService)
         {
             _context = context;
             _emailService = emailService;
+            _auditLogService = auditLogService;
         }
 
         public async Task<IActionResult> Index(string? searchTerm, string? status, DateTime? fromDate, DateTime? toDate, int? staffId, int page = 1, int pageSize = 10)
@@ -74,9 +77,16 @@ namespace MotoShop.Areas.Admin.Controllers
             var booking = await _context.ServiceBookings.FindAsync(bookingId);
             if (booking == null) return Json(new { success = false });
 
+            var oldStatus = booking.Status;
             booking.Status = status;
             if (!string.IsNullOrEmpty(notes)) booking.Notes = notes;
             await _context.SaveChangesAsync();
+
+            await _auditLogService.LogActionAsync(
+                User.FindFirstValue(ClaimTypes.NameIdentifier),
+                "STATUS_CHANGE", "Booking", bookingId.ToString(),
+                oldStatus, status,
+                HttpContext.Connection.RemoteIpAddress?.ToString());
 
             return Json(new { success = true, message = "Cập nhật trạng thái thành công" });
         }
@@ -122,6 +132,12 @@ namespace MotoShop.Areas.Admin.Controllers
                 catch { /* Không để lỗi email ảnh hưởng đến luồng xác nhận cọc */ }
             }
 
+            await _auditLogService.LogActionAsync(
+                User.FindFirstValue(ClaimTypes.NameIdentifier),
+                "APPROVE_DEPOSIT", "Booking", bookingId.ToString(),
+                null, $"Duyệt cọc booking #{bookingId}",
+                HttpContext.Connection.RemoteIpAddress?.ToString());
+
             return Json(new { success = true, message = "Duyệt cọc thành công!" });
         }
 
@@ -135,6 +151,12 @@ namespace MotoShop.Areas.Admin.Controllers
             booking.CancelReason = reason;
             booking.DepositStatus = "Rejected";
             await _context.SaveChangesAsync();
+
+            await _auditLogService.LogActionAsync(
+                User.FindFirstValue(ClaimTypes.NameIdentifier),
+                "REJECT_DEPOSIT", "Booking", bookingId.ToString(),
+                null, $"Từ chối cọc: {reason}",
+                HttpContext.Connection.RemoteIpAddress?.ToString());
 
             return Json(new { success = true, message = "Đã từ chối cọc và hủy lịch." });
         }

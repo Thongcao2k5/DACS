@@ -46,22 +46,35 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-builder.Services.AddDbContext<MotoShopDbContext>(options =>
+builder.Services.AddDbContextPool<MotoShopDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
-    sqlOptions => sqlOptions.EnableRetryOnFailure(
-        maxRetryCount: 3,
-        maxRetryDelay: TimeSpan.FromSeconds(5),
-        errorNumbersToAdd: null)));
+    sqlOptions =>
+    {
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(5),
+            errorNumbersToAdd: null);
+        sqlOptions.CommandTimeout(120);
+        sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+    })
+    .ConfigureWarnings(w => w
+        .Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
+        .Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.MultipleCollectionIncludeWarning)),
+    poolSize: 50);
 
+builder.Services.AddSignalR();
 builder.Services.AddMemoryCache();
-builder.Services.AddResponseCompression(opts =>
+if (!builder.Environment.IsDevelopment())
 {
-    opts.EnableForHttps = true;
-    opts.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
-    opts.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
-});
-builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProviderOptions>(o => o.Level = System.IO.Compression.CompressionLevel.Fastest);
-builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProviderOptions>(o => o.Level = System.IO.Compression.CompressionLevel.Fastest);
+    builder.Services.AddResponseCompression(opts =>
+    {
+        opts.EnableForHttps = true;
+        opts.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
+        opts.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
+    });
+    builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProviderOptions>(o => o.Level = System.IO.Compression.CompressionLevel.Fastest);
+    builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProviderOptions>(o => o.Level = System.IO.Compression.CompressionLevel.Fastest);
+}
 
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-XSRF-TOKEN");
 builder.Services.AddHealthChecks();
@@ -79,6 +92,20 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
 })
 .AddEntityFrameworkStores<MotoShopDbContext>()
 .AddDefaultTokenProviders();
+
+builder.Services.AddAuthentication()
+    .AddGoogle(options => {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
+    })
+    .AddFacebook(options => {
+        options.AppId = builder.Configuration["Authentication:Facebook:AppId"]!;
+        options.AppSecret = builder.Configuration["Authentication:Facebook:AppSecret"]!;
+        options.Scope.Clear();
+        options.Scope.Add("public_profile");
+        options.Fields.Add("name");
+        options.Fields.Add("email");
+    });
 
 builder.Services.ConfigureApplicationCookie(options => {
     options.Cookie.HttpOnly = true;
@@ -108,6 +135,7 @@ builder.Services.AddScoped<IFlashSaleService, FlashSaleService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddHostedService<BookingExpiryService>();
+builder.Services.AddHostedService<PendingPaymentCleanupService>();
 
 var app = builder.Build();
 
@@ -229,6 +257,46 @@ using (var scope = app.Services.CreateScope())
         await context.Database.ExecuteSqlRawAsync(@"
             IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Categories_CategoryName' AND object_id = OBJECT_ID('Categories'))
                 CREATE UNIQUE INDEX IX_Categories_CategoryName ON Categories (CategoryName);
+
+            -- Products: index chính cho listing/filter
+            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Products_Active_Deleted' AND object_id = OBJECT_ID('Products'))
+                CREATE INDEX IX_Products_Active_Deleted ON Products (IsActive, IsDeleted)
+                INCLUDE (ProductId, CategoryId, BrandId, IsFeatured, SoldCount, CreatedDate, ProductName, Slug);
+
+            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Products_Slug' AND object_id = OBJECT_ID('Products'))
+                CREATE INDEX IX_Products_Slug ON Products (Slug);
+
+            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Products_CategoryId' AND object_id = OBJECT_ID('Products'))
+                CREATE INDEX IX_Products_CategoryId ON Products (CategoryId, IsActive, IsDeleted);
+
+            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Products_BrandId' AND object_id = OBJECT_ID('Products'))
+                CREATE INDEX IX_Products_BrandId ON Products (BrandId, IsActive, IsDeleted);
+
+            -- ProductVariants: index cho join với Products
+            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_ProductVariants_ProductId' AND object_id = OBJECT_ID('ProductVariants'))
+                CREATE INDEX IX_ProductVariants_ProductId ON ProductVariants (ProductId)
+                INCLUDE (Price, OriginalPrice, StockQuantity, SKU, VariantName);
+
+            -- Orders: index cho báo cáo và lịch sử đơn hàng
+            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Orders_Status_Date' AND object_id = OBJECT_ID('Orders'))
+                CREATE INDEX IX_Orders_Status_Date ON Orders (Status, OrderDate DESC)
+                INCLUDE (CustomerId, TotalAmount, PaymentMethod);
+
+            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Orders_CustomerId' AND object_id = OBJECT_ID('Orders'))
+                CREATE INDEX IX_Orders_CustomerId ON Orders (CustomerId, OrderDate DESC);
+
+            -- OrderItems: index cho join với Orders
+            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_OrderItems_OrderId' AND object_id = OBJECT_ID('OrderItems'))
+                CREATE INDEX IX_OrderItems_OrderId ON OrderItems (OrderId)
+                INCLUDE (ProductVariantId, Quantity, Price);
+
+            -- ServiceBookings: index cho customer và status
+            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_ServiceBookings_CustomerId' AND object_id = OBJECT_ID('ServiceBookings'))
+                CREATE INDEX IX_ServiceBookings_CustomerId ON ServiceBookings (CustomerId, BookingDate DESC);
+
+            -- Customers: index cho UserId (link với IdentityUser)
+            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Customers_UserId' AND object_id = OBJECT_ID('Customers'))
+                CREATE INDEX IX_Customers_UserId ON Customers (UserId);
         ");
 
         await context.Database.ExecuteSqlRawAsync(@"
@@ -297,7 +365,10 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseStatusCodePagesWithReExecute("/Home/Error/{0}");
 
-app.UseResponseCompression();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseResponseCompression();
+}
 app.UseHttpsRedirection();
 app.UseStaticFiles(new StaticFileOptions
 {
@@ -310,9 +381,9 @@ app.UseRouting();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseAntiforgery(); // Cần thiết để nhận diện X-XSRF-TOKEN header
 
 app.MapControllerRoute(name: "areas", pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapHub<MotoShop.Hubs.ChatHub>("/chatHub");
 
 app.Run();

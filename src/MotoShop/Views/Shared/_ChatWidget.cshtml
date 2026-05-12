@@ -1,0 +1,388 @@
+@* Chat widget – hiển thị trên mọi trang khách hàng *@
+
+<!-- Chat Panel -->
+<div id="chatPanel" class="chat-panel" style="display:none;" role="dialog" aria-label="Hỗ trợ trực tuyến">
+    <div class="chat-panel-header">
+        <div class="d-flex align-items-center gap-2">
+            <i class='bx bxs-message-rounded-dots' style="font-size:18px;"></i>
+            <span>Hỗ trợ trực tuyến</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span id="chatConnDot" title="Trạng thái kết nối"></span>
+            <small id="chatConnText" style="font-size:11px;opacity:.8;">Đang kết nối...</small>
+            <button onclick="toggleChat()" class="btn-close btn-close-white btn-sm ms-1" aria-label="Đóng"></button>
+        </div>
+    </div>
+
+    <div id="chatMsgBox" class="chat-msg-box">
+        <div class="chat-welcome">
+            <i class='bx bxs-bot' style="font-size:32px;color:#e53e3e;"></i>
+            <p class="mb-0 mt-2 fw-bold" style="font-size:14px;">Xin chào! Chúng tôi có thể giúp gì cho bạn?</p>
+            <p class="mb-0" style="font-size:12px;color:#718096;">Thường phản hồi trong vài phút</p>
+        </div>
+    </div>
+
+    <div class="chat-composer">
+        <input type="text" id="chatInput" class="form-control form-control-sm"
+               placeholder="Nhập tin nhắn..." maxlength="500" autocomplete="off" />
+        <button class="chat-send-btn" onclick="chatSend()" title="Gửi">
+            <i class='bx bxs-send'></i>
+        </button>
+    </div>
+</div>
+
+<!-- Chat Toggle Button -->
+<div class="chat-bubble-wrap" id="chatBubbleWrap">
+    <button class="chat-bubble-btn" onclick="toggleChat()" title="Chat với chúng tôi">
+        <i class='bx bxs-message-rounded-dots' id="chatBubbleIcon"></i>
+        <i class='bx bx-x d-none' id="chatBubbleClose"></i>
+    </button>
+    <span id="chatUnreadBadge" class="chat-unread-badge" style="display:none;">0</span>
+</div>
+
+<style>
+/* ── Chat Bubble ─────────────────────────────────────── */
+.chat-bubble-wrap {
+    position: fixed;
+    bottom: 100px;
+    right: 28px;
+    z-index: 1055;
+}
+.chat-bubble-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #e53e3e;
+    border: none;
+    color: white;
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(229,62,62,.4);
+    cursor: pointer;
+    transition: transform .2s, box-shadow .2s;
+}
+.chat-bubble-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 22px rgba(229,62,62,.5);
+}
+.chat-unread-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #fc4545;
+    color: white;
+    border-radius: 50%;
+    min-width: 20px;
+    height: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    border: 2px solid white;
+}
+
+/* ── Chat Panel ──────────────────────────────────────── */
+.chat-panel {
+    position: fixed;
+    bottom: 168px;
+    right: 20px;
+    width: 340px;
+    height: 460px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 36px rgba(0,0,0,.18);
+    display: flex;
+    flex-direction: column;
+    z-index: 1060;
+    overflow: hidden;
+    animation: chatUp .25s ease;
+}
+@@keyframes chatUp {
+    from { opacity:0; transform:translateY(16px) scale(.97); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+}
+.chat-panel-header {
+    background: #e53e3e;
+    color: white;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+#chatConnDot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #fbb;
+    display: inline-block;
+    transition: background .4s;
+}
+#chatConnDot.online  { background: #68d391; }
+#chatConnDot.offline { background: #fc8181; }
+
+.chat-msg-box {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 12px;
+    background: #f7f8fa;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.chat-welcome {
+    text-align: center;
+    padding: 20px 10px;
+    color: #4a5568;
+}
+
+/* Bubbles */
+.chat-row       { display: flex; }
+.chat-row.mine  { justify-content: flex-end; }
+.chat-row.theirs{ justify-content: flex-start; }
+.chat-bubble {
+    max-width: 76%;
+    padding: 9px 13px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    word-break: break-word;
+}
+.chat-row.mine   .chat-bubble { background:#e53e3e; color:white; border-radius:14px 14px 4px 14px; }
+.chat-row.theirs .chat-bubble { background:white; border:1px solid #eee; color:#333; border-radius:14px 14px 14px 4px; }
+.chat-time { font-size:10px; opacity:.55; margin-top:3px; }
+.chat-row.mine   .chat-time { text-align:right; }
+
+/* Typing indicator */
+.chat-typing .chat-bubble { background:white; border:1px solid #eee; padding:10px 14px; border-radius:14px 14px 14px 4px; }
+.typing-dots span {
+    display:inline-block; width:6px; height:6px; border-radius:50%;
+    background:#bbb; margin:0 2px;
+    animation: bounce .9s infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay:.15s; }
+.typing-dots span:nth-child(3) { animation-delay:.3s; }
+@@keyframes bounce {
+    0%,60%,100% { transform:translateY(0); }
+    30%          { transform:translateY(-6px); }
+}
+
+/* Composer */
+.chat-composer {
+    padding: 10px 12px;
+    border-top: 1px solid #eee;
+    background: white;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+}
+.chat-send-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: #e53e3e;
+    border: none; color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0; cursor: pointer;
+    transition: background .2s;
+}
+.chat-send-btn:hover { background:#c53030; }
+
+@@media (max-width: 480px) {
+    .chat-panel { width: calc(100vw - 24px); right: 12px; bottom: 140px; }
+}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"
+        integrity="sha512-R9HBWzlbf1W3dUJc/vKGJxSi9VIoH0/HFJpMR5vUSgYoovqxf1T/cFQB5gQU6AxHPq7N4YdTCPNc7qbEU8hQ=="
+        crossorigin="anonymous"></script>
+<script>
+(function () {
+    'use strict';
+
+    // ── Session ID ────────────────────────────────────────────
+    function getOrCreateSession() {
+        let sid = (document.cookie.match(/ChatSessionId=([^;]+)/) || [])[1]
+               || localStorage.getItem('chatSessionId');
+        if (!sid) {
+            sid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                const r = crypto.getRandomValues(new Uint8Array(1))[0] % 16;
+                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+            localStorage.setItem('chatSessionId', sid);
+            document.cookie = 'ChatSessionId=' + sid + ';path=/;max-age=604800;SameSite=Lax';
+        }
+        return sid;
+    }
+
+    const SESSION_ID = getOrCreateSession();
+    let isOpen = false;
+    let unread  = 0;
+    let hubOk   = false;
+    let historyLoaded = false;
+
+    // ── SignalR ───────────────────────────────────────────────
+    const hub = new signalR.HubConnectionBuilder()
+        .withUrl('/chatHub')
+        .withAutomaticReconnect([0, 2000, 5000, 15000])
+        .configureLogging(signalR.LogLevel.Warning)
+        .build();
+
+    hub.on('ReceiveMessage', function (text, isAdmin, time) {
+        appendBubble(text, isAdmin, new Date(time));
+        if (!isOpen && isAdmin) {
+            unread++;
+            renderBadge();
+        }
+    });
+
+    hub.onreconnecting(function () { setConnStatus(false, 'Đang kết nối lại...'); });
+    hub.onreconnected(function ()  {
+        setConnStatus(true, 'Đã kết nối');
+        hub.invoke('JoinSession', SESSION_ID).catch(function(){});
+    });
+    hub.onclose(function () { setConnStatus(false, 'Mất kết nối'); hubOk = false; });
+
+    async function startHub() {
+        try {
+            await hub.start();
+            await hub.invoke('JoinSession', SESSION_ID);
+            setConnStatus(true, 'Đang kết nối');
+            hubOk = true;
+        } catch (e) {
+            setConnStatus(false, 'Ngoại tuyến');
+            hubOk = false;
+        }
+    }
+
+    function setConnStatus(online, text) {
+        hubOk = online;
+        var dot = document.getElementById('chatConnDot');
+        var txt = document.getElementById('chatConnText');
+        if (dot) dot.className = online ? 'online' : 'offline';
+        if (txt) txt.textContent = text || (online ? 'Đã kết nối' : 'Mất kết nối');
+    }
+
+    // ── Toggle panel ──────────────────────────────────────────
+    window.toggleChat = function () {
+        var panel = document.getElementById('chatPanel');
+        var icon  = document.getElementById('chatBubbleIcon');
+        var closeI = document.getElementById('chatBubbleClose');
+        isOpen = !isOpen;
+
+        if (isOpen) {
+            panel.style.display = 'flex';
+            panel.style.flexDirection = 'column';
+            if (icon)  icon.classList.add('d-none');
+            if (closeI) closeI.classList.remove('d-none');
+            unread = 0;
+            renderBadge();
+            if (!historyLoaded) { loadHistory(); historyLoaded = true; }
+            setTimeout(function () {
+                document.getElementById('chatInput')?.focus();
+            }, 200);
+        } else {
+            panel.style.display = 'none';
+            if (icon)  icon.classList.remove('d-none');
+            if (closeI) closeI.classList.add('d-none');
+        }
+    };
+
+    // ── Load chat history via HTTP ────────────────────────────
+    async function loadHistory() {
+        try {
+            const res = await fetch('/Chat/GetMessages');
+            if (!res.ok) return;
+            const msgs = await res.json();
+            if (!msgs || !msgs.length) return;
+            // Clear welcome message
+            var box = document.getElementById('chatMsgBox');
+            var welcome = box.querySelector('.chat-welcome');
+            if (welcome) welcome.remove();
+            msgs.forEach(function (m) {
+                appendBubble(m.message, m.isFromAdmin, new Date(m.createdAt));
+            });
+        } catch (e) {}
+    }
+
+    // ── Append bubble ─────────────────────────────────────────
+    function appendBubble(text, isAdmin, time) {
+        var box = document.getElementById('chatMsgBox');
+        if (!box) return;
+
+        // Remove welcome block on first real message
+        var welcome = box.querySelector('.chat-welcome');
+        if (welcome) welcome.remove();
+
+        var row = document.createElement('div');
+        row.className = 'chat-row ' + (isAdmin ? 'theirs' : 'mine');
+        var t = time.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        row.innerHTML = '<div class="chat-bubble">' + escHtml(text)
+            + '<div class="chat-time">' + t + '</div></div>';
+        box.appendChild(row);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function escHtml(s) {
+        return String(s)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Badge ─────────────────────────────────────────────────
+    function renderBadge() {
+        var b = document.getElementById('chatUnreadBadge');
+        if (!b) return;
+        if (unread > 0) {
+            b.textContent = unread > 9 ? '9+' : unread;
+            b.style.display = 'flex';
+        } else {
+            b.style.display = 'none';
+        }
+    }
+
+    // ── Send message ──────────────────────────────────────────
+    window.chatSend = async function () {
+        var input = document.getElementById('chatInput');
+        var text = (input ? input.value : '').trim();
+        if (!text) return;
+        input.value = '';
+
+        if (hubOk && hub.state === signalR.HubConnectionState.Connected) {
+            // Hub echoes back via ReceiveMessage — no optimistic append needed
+            try {
+                await hub.invoke('SendMessage', text, SESSION_ID);
+                return;
+            } catch (e) { hubOk = false; }
+        }
+
+        // Fallback: HTTP POST + optimistic append
+        appendBubble(text, false, new Date());
+        try {
+            await fetch('/Chat/SendMessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            });
+        } catch (e) {}
+    };
+
+    // Enter to send
+    document.addEventListener('DOMContentLoaded', function () {
+        var input = document.getElementById('chatInput');
+        if (input) {
+            input.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.chatSend(); }
+            });
+        }
+    });
+
+    // Start SignalR
+    startHub();
+}());
+</script>

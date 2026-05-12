@@ -226,6 +226,7 @@ namespace MotoShop.Controllers
             return PartialView("_QuickViewPartial", product);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Compare(string ids)
         {
             if (string.IsNullOrEmpty(ids)) return RedirectToAction("Index");
@@ -234,8 +235,10 @@ namespace MotoShop.Controllers
                 .Select(s => int.TryParse(s.Trim(), out var n) ? n : 0)
                 .Where(n => n > 0)
                 .Distinct()
-                .Take(4)
+                .Take(3)
                 .ToList();
+
+            if (idList.Count < 2) return RedirectToAction("Index");
 
             var rawProducts = await _unitOfWork.Repository<Product>()
                 .Find(x => idList.Contains(x.ProductId) && x.IsActive)
@@ -244,15 +247,36 @@ namespace MotoShop.Controllers
                 .Include(x => x.Brand)
                 .Include(x => x.Category)
                 .Include(x => x.Specifications)
+                .Include(x => x.Reviews)
                 .AsNoTracking()
                 .ToListAsync();
 
-            var specsMap = new Dictionary<int, Dictionary<string, string>>();
+            if (rawProducts.Count < 2) return RedirectToAction("Index");
+
+            // Validate: all products must be in the same category
+            var distinctCategoryIds = rawProducts.Select(p => p.CategoryId).Distinct().ToList();
+            if (distinctCategoryIds.Count > 1)
+            {
+                TempData["CompareError"] = "Chỉ có thể so sánh sản phẩm cùng danh mục.";
+                return RedirectToAction("Index");
+            }
+
+            var categoryName = rawProducts.First().Category?.CategoryName ?? string.Empty;
+            var categoryId   = rawProducts.First().CategoryId;
+
+            var specsMap  = new Dictionary<int, Dictionary<string, string>>();
+            var ratingMap = new Dictionary<int, double>();
+
             var products = rawProducts.Select(p =>
             {
                 specsMap[p.ProductId] = p.Specifications
                     .OrderBy(s => s.DisplayOrder)
                     .ToDictionary(s => s.SpecName, s => s.SpecValue);
+
+                var approvedReviews = p.Reviews.Where(r => r.Status == "Approved").ToList();
+                ratingMap[p.ProductId] = approvedReviews.Any()
+                    ? Math.Round(approvedReviews.Average(r => r.Rating), 1)
+                    : 0;
 
                 return new ProductDto
                 {
@@ -274,14 +298,63 @@ namespace MotoShop.Controllers
                 };
             }).OrderBy(p => idList.IndexOf(p.ProductId)).ToList();
 
-            ViewBag.SpecNames = specsMap.Values
-                .SelectMany(d => d.Keys)
-                .Distinct()
-                .OrderBy(n => n)
-                .ToList();
-            ViewBag.SpecsMap = specsMap;
+            // Category spec template (ordered), then append any extra DB specs not in template
+            var categorySpecTemplate = GetSpecsForCategory(categoryName);
+            var allSpecNames = new List<string>(categorySpecTemplate);
+            foreach (var key in specsMap.Values.SelectMany(d => d.Keys).Distinct())
+            {
+                if (!allSpecNames.Contains(key))
+                    allSpecNames.Add(key);
+            }
+
+            // Related products: same category, not in comparison, ordered by popularity
+            var compareIds   = products.Select(p => p.ProductId).ToList();
+            var relatedRaw   = await _unitOfWork.Repository<Product>()
+                .Find(p => p.CategoryId == categoryId && !compareIds.Contains(p.ProductId) && p.IsActive)
+                .Include(p => p.Images)
+                .Include(p => p.Variants)
+                .OrderByDescending(p => p.SoldCount)
+                .Take(4)
+                .AsNoTracking()
+                .ToListAsync();
+
+            ViewBag.RelatedProducts = relatedRaw.Select(p => new ProductDto
+            {
+                ProductId        = p.ProductId,
+                ProductName      = p.ProductName,
+                Slug             = p.Slug ?? string.Empty,
+                CategoryName     = categoryName,
+                PrimaryImageUrl  = p.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault()
+                                   ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? string.Empty,
+                MinPrice         = p.Variants.Any() ? p.Variants.Min(v => v.Price) : 0,
+                MinOriginalPrice = p.Variants.OrderBy(v => v.Price).Select(v => v.OriginalPrice).FirstOrDefault(),
+                IsInStock        = p.Variants.Any(v => v.StockQuantity > 0),
+                SoldCount        = p.SoldCount
+            }).ToList();
+
+            ViewBag.SpecNames    = allSpecNames;
+            ViewBag.SpecsMap     = specsMap;
+            ViewBag.RatingMap    = ratingMap;
+            ViewBag.CategoryName = categoryName;
 
             return View(products);
+        }
+
+        private static List<string> GetSpecsForCategory(string categoryName)
+        {
+            if (categoryName.Contains("Dầu") || categoryName.Contains("nhớt") || categoryName.Contains("Bôi trơn"))
+                return new List<string> { "Độ nhớt", "Loại dầu", "Dung tích", "Tiêu chuẩn API", "Xuất xứ", "Chu kỳ thay" };
+            if (categoryName.Contains("Lốp") || categoryName.Contains("Vành"))
+                return new List<string> { "Kích thước", "Loại lốp", "Tải trọng tối đa", "Chỉ số tốc độ", "Xuất xứ", "Tuổi thọ" };
+            if (categoryName.Contains("phanh") || categoryName.Contains("Phanh"))
+                return new List<string> { "Loại phanh", "Vật liệu má", "Tương thích xe", "Vị trí", "Xuất xứ", "Bảo hành" };
+            if (categoryName.Contains("Giảm xóc"))
+                return new List<string> { "Loại", "Hành trình", "Tương thích xe", "Điều chỉnh được", "Xuất xứ", "Bảo hành" };
+            if (categoryName.Contains("Ắc quy") || categoryName.Contains("Điện"))
+                return new List<string> { "Điện áp", "Dung lượng (Ah)", "Loại", "Kích thước", "Xuất xứ", "Bảo hành" };
+            if (categoryName.Contains("Mũ") || categoryName.Contains("Bảo hộ"))
+                return new List<string> { "Loại", "Size", "Tiêu chuẩn an toàn", "Vật liệu vỏ", "Trọng lượng", "Xuất xứ" };
+            return new List<string> { "Tương thích xe", "Vật liệu", "Xuất xứ", "Bảo hành", "Chính hãng" };
         }
 
         public IActionResult Category(int id)

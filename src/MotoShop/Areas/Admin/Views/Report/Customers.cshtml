@@ -1,0 +1,217 @@
+@using MotoShop.Areas.Admin.Controllers
+@{
+    ViewData["Title"] = "Báo cáo khách hàng";
+    Layout = "_AdminLayout";
+    var vi = new System.Globalization.CultureInfo("vi-VN");
+    var period = (string)(ViewBag.Period ?? "30d");
+    int    newCus    = ViewBag.NewCus    ?? 0;
+    int    prevNew   = ViewBag.PrevNewCus ?? 0;
+    double newGrowth = ViewBag.NewGrowth ?? 0.0;
+    int    returning = ViewBag.Returning ?? 0;
+    var topSpenders  = (List<ReportSpender>)(ViewBag.TopSpenders ?? new List<ReportSpender>());
+    string GrowthClass(double g) => g >= 0 ? "growth-up" : "growth-down";
+    string GrowthIcon(double g)  => g >= 0 ? "bx-up-arrow-alt" : "bx-down-arrow-alt";
+    string GrowthText(double g)  => $"{(g >= 0 ? "+" : "")}{g:F1}%";
+}
+
+<style>
+    :root { --ms-red: #E24B4A; --ms-border: #dee2e6; }
+    .card-kpi { background:#fff; border:1px solid var(--ms-border); border-radius:12px; padding:20px; }
+    .kpi-title { color:#666; font-size:.8rem; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+    .kpi-value { font-size:1.5rem; font-weight:700; color:#333; margin:0; }
+    .growth-tag { font-size:.78rem; font-weight:600; padding:2px 7px; border-radius:4px; }
+    .growth-up   { background:#e8f5e9; color:#2e7d32; }
+    .growth-down { background:#ffebee; color:#c62828; }
+    .period-btn { border-radius:6px !important; font-size:.82rem; font-weight:600; }
+    .period-btn.active { background:var(--ms-red) !important; color:#fff !important; border-color:var(--ms-red) !important; }
+    .report-tabs .nav-link { color:#555; font-weight:500; }
+    .report-tabs .nav-link.active { color:var(--ms-red); border-bottom:2px solid var(--ms-red); background:none; }
+    .report-tabs { border-bottom:2px solid #eee; }
+    .table-report th { background:#fdfdfd; color:#666; font-size:.73rem; text-transform:uppercase; padding:13px 15px; border-bottom:2px solid #eee; }
+    .table-report td { padding:12px 15px; vertical-align:middle; border-bottom:1px solid #f0f0f0; font-size:.88rem; }
+    .avatar-sm { width:36px; height:36px; object-fit:cover; border-radius:50%; }
+    .avatar-placeholder { width:36px; height:36px; border-radius:50%; background:#f0f0f0; display:inline-flex; align-items:center; justify-content:center; }
+    .btn-ms-red { background:var(--ms-red); color:#fff; border:none; font-weight:600; }
+    .btn-ms-red:hover { background:#c63d3c; color:#fff; }
+</style>
+
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold m-0"><i class='bx bx-group me-2' style="color:var(--ms-red)"></i>Báo cáo</h4>
+    </div>
+
+    <!-- TABS NAV -->
+    <ul class="nav report-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link px-4" asp-area="Admin" asp-controller="Report" asp-action="Revenue">
+                <i class='bx bx-line-chart me-1'></i>Doanh thu
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link px-4" asp-area="Admin" asp-controller="Report" asp-action="TopProducts">
+                <i class='bx bx-trophy me-1'></i>Sản phẩm bán chạy
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link px-4" asp-area="Admin" asp-controller="Report" asp-action="Orders">
+                <i class='bx bx-receipt me-1'></i>Đơn hàng
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active px-4" asp-area="Admin" asp-controller="Report" asp-action="Customers">
+                <i class='bx bx-group me-1'></i>Khách hàng
+            </a>
+        </li>
+    </ul>
+
+    <!-- PERIOD TOGGLE -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+        <div class="d-flex gap-2">
+            @foreach (var (label, val) in new[] {("7 ngày","7d"),("30 ngày","30d"),("3 tháng","3m"),("Năm nay","ytd")}) {
+                <a href="?period=@val" class="btn btn-outline-secondary btn-sm period-btn @(period == val ? "active" : "")">@label</a>
+            }
+            <button class="btn btn-outline-secondary btn-sm period-btn @(period == "custom" ? "active" : "")"
+                    type="button" data-bs-toggle="collapse" data-bs-target="#customRange">
+                <i class='bx bx-calendar me-1'></i>Tùy chọn
+            </button>
+        </div>
+        <a asp-area="Admin" asp-controller="Report" asp-action="ExportCustomers"
+           asp-route-period="@period" class="btn btn-outline-success btn-sm">
+            <i class='bx bx-download me-1'></i>Xuất CSV
+        </a>
+    </div>
+
+    <div class="collapse @(period == "custom" ? "show" : "") mb-4" id="customRange">
+        <form method="get" class="d-flex gap-2 align-items-end p-3 bg-white border rounded">
+            <input type="hidden" name="period" value="custom">
+            <div>
+                <label class="form-label small fw-bold mb-1">Từ ngày</label>
+                <input type="date" name="fromDate" value="@ViewBag.FromDate" class="form-control form-control-sm">
+            </div>
+            <div>
+                <label class="form-label small fw-bold mb-1">Đến ngày</label>
+                <input type="date" name="toDate" value="@ViewBag.ToDate" class="form-control form-control-sm">
+            </div>
+            <button type="submit" class="btn btn-ms-red btn-sm">Áp dụng</button>
+        </form>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card-kpi">
+                <p class="kpi-title">Khách hàng mới</p>
+                <p class="kpi-value text-primary">@newCus.ToString("N0")</p>
+                <span class="growth-tag @GrowthClass(newGrowth) mt-2 d-inline-block">
+                    <i class='bx @GrowthIcon(newGrowth)'></i> @GrowthText(newGrowth) vs kỳ trước
+                </span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-kpi">
+                <p class="kpi-title">Khách hàng quay lại</p>
+                <p class="kpi-value text-success">@returning.ToString("N0")</p>
+                <p class="text-muted small mt-2 mb-0">Mua >1 lần, hoạt động trong kỳ</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-kpi">
+                <p class="kpi-title">Tổng khách hoạt động</p>
+                <p class="kpi-value">@((newCus + returning).ToString("N0"))</p>
+                <p class="text-muted small mt-2 mb-0">Đã đặt đơn trong kỳ</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHART + TOP SPENDERS -->
+    <div class="row g-4">
+        <div class="col-md-5">
+            <div class="card-kpi">
+                <h6 class="fw-bold mb-4 text-uppercase small">KH mới vs quay lại theo tuần</h6>
+                <div style="height:280px">
+                    <canvas id="cusChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="bg-white border rounded overflow-hidden">
+                <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom bg-light">
+                    <span class="fw-bold small text-uppercase" style="color:#666">Top 10 khách chi tiêu nhiều nhất</span>
+                </div>
+                <table class="table table-hover m-0 table-report">
+                    <thead>
+                        <tr>
+                            <th>Khách hàng</th>
+                            <th class="text-center">Số đơn</th>
+                            <th class="text-end">Tổng chi tiêu</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in topSpenders) {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if (!string.IsNullOrEmpty(s.AvatarUrl)) {
+                                            <img src="@s.AvatarUrl" class="avatar-sm" alt="">
+                                        } else {
+                                            <span class="avatar-placeholder">
+                                                <i class='bx bx-user text-muted'></i>
+                                            </span>
+                                        }
+                                        <div>
+                                            <div class="fw-semibold">@s.FullName</div>
+                                            <div class="text-muted small">@s.Phone</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark border">@s.OrderCount đơn</span>
+                                </td>
+                                <td class="text-end fw-bold" style="color:var(--ms-red)">
+                                    @s.TotalSpent.ToString("N0")₫
+                                </td>
+                            </tr>
+                        }
+                        @if (!topSpenders.Any()) {
+                            <tr><td colspan="3" class="text-center py-5 text-muted">Không có dữ liệu</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    new Chart(document.getElementById('cusChart'), {
+        type: 'bar',
+        data: {
+            labels: @Html.Raw(Json.Serialize(ViewBag.WeekLabels)),
+            datasets: [
+                {
+                    label: 'KH mới',
+                    data: @Html.Raw(Json.Serialize(ViewBag.WeekNew)),
+                    backgroundColor: 'rgba(66,135,245,.75)',
+                    borderRadius: 4
+                },
+                {
+                    label: 'KH quay lại',
+                    data: @Html.Raw(Json.Serialize(ViewBag.WeekRet)),
+                    backgroundColor: 'rgba(46,204,113,.75)',
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+            },
+            scales: {
+                x: { stacked: false, grid: { display: false } },
+                y: { beginAtZero: true, grid: { borderDash: [4,4] }, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+</script>

@@ -1,0 +1,241 @@
+@using MotoShop.Areas.Admin.Controllers
+@{
+    ViewData["Title"] = "Báo cáo đơn hàng";
+    Layout = "_AdminLayout";
+    var vi = new System.Globalization.CultureInfo("vi-VN");
+    var period = (string)(ViewBag.Period ?? "30d");
+    int    total          = ViewBag.TotalOrders    ?? 0;
+    int    completed      = ViewBag.Completed      ?? 0;
+    int    cancelled      = ViewBag.Cancelled      ?? 0;
+    double completionRate = ViewBag.CompletionRate ?? 0.0;
+    double cancelRate     = ViewBag.CancelRate     ?? 0.0;
+    double avgHours       = ViewBag.AvgHours       ?? 0.0;
+    var statusGroups = (List<ReportStatusGroup>)(ViewBag.StatusGroups ?? new List<ReportStatusGroup>());
+
+    string StatusBadge(string s) => s switch {
+        "Completed"  => "bg-success",
+        "Pending"    => "bg-warning text-dark",
+        "Processing" => "bg-info",
+        "Shipping"   => "bg-primary",
+        "Cancelled"  => "bg-danger",
+        _            => "bg-secondary"
+    };
+    string StatusVi(string s) => s switch {
+        "Completed"  => "Hoàn thành",
+        "Pending"    => "Chờ xử lý",
+        "Processing" => "Đang xử lý",
+        "Shipping"   => "Đang giao",
+        "Cancelled"  => "Đã hủy",
+        _            => s
+    };
+}
+
+<style>
+    :root { --ms-red: #E24B4A; --ms-border: #dee2e6; }
+    .card-kpi { background:#fff; border:1px solid var(--ms-border); border-radius:12px; padding:20px; }
+    .kpi-title { color:#666; font-size:.8rem; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+    .kpi-value { font-size:1.5rem; font-weight:700; color:#333; margin:0; }
+    .period-btn { border-radius:6px !important; font-size:.82rem; font-weight:600; }
+    .period-btn.active { background:var(--ms-red) !important; color:#fff !important; border-color:var(--ms-red) !important; }
+    .report-tabs .nav-link { color:#555; font-weight:500; }
+    .report-tabs .nav-link.active { color:var(--ms-red); border-bottom:2px solid var(--ms-red); background:none; }
+    .report-tabs { border-bottom:2px solid #eee; }
+    .table-report th { background:#fdfdfd; color:#666; font-size:.73rem; text-transform:uppercase; padding:13px 15px; border-bottom:2px solid #eee; }
+    .table-report td { padding:13px 15px; vertical-align:middle; border-bottom:1px solid #f0f0f0; font-size:.88rem; }
+    .progress-sm { height:6px; border-radius:4px; }
+    .btn-ms-red { background:var(--ms-red); color:#fff; border:none; font-weight:600; }
+    .btn-ms-red:hover { background:#c63d3c; color:#fff; }
+</style>
+
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold m-0"><i class='bx bx-receipt me-2' style="color:var(--ms-red)"></i>Báo cáo</h4>
+    </div>
+
+    <!-- TABS NAV -->
+    <ul class="nav report-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link px-4" asp-area="Admin" asp-controller="Report" asp-action="Revenue">
+                <i class='bx bx-line-chart me-1'></i>Doanh thu
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link px-4" asp-area="Admin" asp-controller="Report" asp-action="TopProducts">
+                <i class='bx bx-trophy me-1'></i>Sản phẩm bán chạy
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active px-4" asp-area="Admin" asp-controller="Report" asp-action="Orders">
+                <i class='bx bx-receipt me-1'></i>Đơn hàng
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link px-4" asp-area="Admin" asp-controller="Report" asp-action="Customers">
+                <i class='bx bx-group me-1'></i>Khách hàng
+            </a>
+        </li>
+    </ul>
+
+    <!-- PERIOD TOGGLE -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+        <div class="d-flex gap-2">
+            @foreach (var (label, val) in new[] {("7 ngày","7d"),("30 ngày","30d"),("3 tháng","3m"),("Năm nay","ytd")}) {
+                <a href="?period=@val" class="btn btn-outline-secondary btn-sm period-btn @(period == val ? "active" : "")">@label</a>
+            }
+            <button class="btn btn-outline-secondary btn-sm period-btn @(period == "custom" ? "active" : "")"
+                    type="button" data-bs-toggle="collapse" data-bs-target="#customRange">
+                <i class='bx bx-calendar me-1'></i>Tùy chọn
+            </button>
+        </div>
+        <a asp-area="Admin" asp-controller="Report" asp-action="ExportOrders"
+           asp-route-period="@period" class="btn btn-outline-success btn-sm">
+            <i class='bx bx-download me-1'></i>Xuất CSV
+        </a>
+    </div>
+
+    <div class="collapse @(period == "custom" ? "show" : "") mb-4" id="customRange">
+        <form method="get" class="d-flex gap-2 align-items-end p-3 bg-white border rounded">
+            <input type="hidden" name="period" value="custom">
+            <div>
+                <label class="form-label small fw-bold mb-1">Từ ngày</label>
+                <input type="date" name="fromDate" value="@ViewBag.FromDate" class="form-control form-control-sm">
+            </div>
+            <div>
+                <label class="form-label small fw-bold mb-1">Đến ngày</label>
+                <input type="date" name="toDate" value="@ViewBag.ToDate" class="form-control form-control-sm">
+            </div>
+            <button type="submit" class="btn btn-ms-red btn-sm">Áp dụng</button>
+        </form>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card-kpi text-center">
+                <p class="kpi-title">Tổng đơn hàng</p>
+                <p class="kpi-value text-primary">@total.ToString("N0")</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-kpi text-center">
+                <p class="kpi-title">Tỉ lệ hoàn thành</p>
+                <p class="kpi-value text-success">@completionRate.ToString("F1")%</p>
+                <div class="progress progress-sm mt-2">
+                    <div class="progress-bar bg-success" style="width:@completionRate.ToString("F1")%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-kpi text-center">
+                <p class="kpi-title">Tỉ lệ hủy đơn</p>
+                <p class="kpi-value text-danger">@cancelRate.ToString("F1")%</p>
+                <div class="progress progress-sm mt-2">
+                    <div class="progress-bar bg-danger" style="width:@cancelRate.ToString("F1")%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-kpi text-center">
+                <p class="kpi-title">Thời gian xử lý TB</p>
+                <p class="kpi-value">
+                    @if (avgHours >= 24) {
+                        @($"{(avgHours / 24):F1} ngày")
+                    } else {
+                        @($"{avgHours:F1} giờ")
+                    }
+                </p>
+                <p class="text-muted small mb-0">Từ đặt → hoàn thành</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHART + TABLE SIDE BY SIDE -->
+    <div class="row g-4">
+        <div class="col-md-5">
+            <div class="card-kpi h-100">
+                <h6 class="fw-bold mb-4 text-uppercase small">Phân bổ trạng thái</h6>
+                <div style="position:relative; height:280px">
+                    <canvas id="statusChart"></canvas>
+                </div>
+                <div id="chartLegend" class="mt-3"></div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="bg-white border rounded overflow-hidden">
+                <table class="table table-hover m-0 table-report">
+                    <thead>
+                        <tr>
+                            <th>Trạng thái</th>
+                            <th class="text-center">Số đơn</th>
+                            <th class="text-center">Tỉ lệ</th>
+                            <th class="text-end">Doanh thu</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var sg in statusGroups) {
+                            <tr>
+                                <td><span class="badge @StatusBadge(sg.Status)">@StatusVi(sg.Status)</span></td>
+                                <td class="text-center fw-bold">@sg.Count.ToString("N0")</td>
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1 progress-sm">
+                                            <div class="progress-bar bg-primary" style="width:@sg.Pct.ToString("F1")%"></div>
+                                        </div>
+                                        <span class="small text-muted">@sg.Pct.ToString("F1")%</span>
+                                    </div>
+                                </td>
+                                <td class="text-end">@sg.Revenue.ToString("N0")₫</td>
+                            </tr>
+                        }
+                        @if (!statusGroups.Any()) {
+                            <tr><td colspan="4" class="text-center py-5 text-muted">Không có dữ liệu</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const COLORS = ['#E24B4A','#4287f5','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#95a5a6'];
+    const labels = @Html.Raw(Json.Serialize(ViewBag.ChartLabels));
+    const values = @Html.Raw(Json.Serialize(ViewBag.ChartValues));
+
+    const labelsVi = {
+        'Completed':'Hoàn thành','Pending':'Chờ xử lý','Processing':'Đang xử lý',
+        'Shipping':'Đang giao','Cancelled':'Đã hủy'
+    };
+
+    new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: labels.map(l => labelsVi[l] || l),
+            datasets: [{
+                data: values,
+                backgroundColor: COLORS.slice(0, labels.length),
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` ${ctx.label}: ${ctx.raw} đơn (${(ctx.raw/values.reduce((a,b)=>a+b,0)*100).toFixed(1)}%)`
+                    }
+                }
+            }
+        }
+    });
+
+    // Custom legend
+    const legend = document.getElementById('chartLegend');
+    labels.forEach((l, i) => {
+        legend.innerHTML += `<span class="me-3 small"><span style="display:inline-block;width:10px;height:10px;background:${COLORS[i]};border-radius:2px;margin-right:4px"></span>${labelsVi[l]||l}</span>`;
+    });
+</script>

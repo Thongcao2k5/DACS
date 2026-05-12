@@ -1,0 +1,198 @@
+@using MotoShop.Areas.Admin.Controllers
+@{
+    ViewData["Title"] = "Sản phẩm bán chạy";
+    Layout = "_AdminLayout";
+    var vi = new System.Globalization.CultureInfo("vi-VN");
+    var period = (string)(ViewBag.Period ?? "30d");
+    var topByQty     = (List<ReportProductRow>)(ViewBag.TopByQty     ?? new List<ReportProductRow>());
+    var topByRevenue = (List<ReportProductRow>)(ViewBag.TopByRevenue ?? new List<ReportProductRow>());
+}
+
+<style>
+    :root { --ms-red: #E24B4A; --ms-border: #dee2e6; }
+    .card-kpi { background:#fff; border:1px solid var(--ms-border); border-radius:12px; padding:20px; }
+    .period-btn { border-radius:6px !important; font-size:.82rem; font-weight:600; }
+    .period-btn.active { background:var(--ms-red) !important; color:#fff !important; border-color:var(--ms-red) !important; }
+    .report-tabs .nav-link { color:#555; font-weight:500; }
+    .report-tabs .nav-link.active { color:var(--ms-red); border-bottom:2px solid var(--ms-red); background:none; }
+    .report-tabs { border-bottom:2px solid #eee; }
+    .table-report th { background:#fdfdfd; color:#666; font-size:.73rem; text-transform:uppercase; padding:13px 15px; border-bottom:2px solid #eee; }
+    .table-report td { padding:12px 15px; vertical-align:middle; border-bottom:1px solid #f0f0f0; font-size:.88rem; }
+    .rank-badge { width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:700; font-size:.8rem; }
+    .rank-1 { background:#FFD700; color:#333; }
+    .rank-2 { background:#C0C0C0; color:#333; }
+    .rank-3 { background:#CD7F32; color:#fff; }
+    .rank-n { background:#f0f0f0; color:#666; }
+    .product-img { width:42px; height:42px; object-fit:cover; border-radius:8px; }
+    .subtab-btn { border-radius:6px !important; font-size:.82rem; }
+    .subtab-btn.active { background:var(--ms-red); color:#fff; border-color:var(--ms-red); }
+    .btn-ms-red { background:var(--ms-red); color:#fff; border:none; font-weight:600; }
+    .btn-ms-red:hover { background:#c63d3c; color:#fff; }
+</style>
+
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold m-0"><i class='bx bx-trophy me-2' style="color:var(--ms-red)"></i>Báo cáo</h4>
+    </div>
+
+    <!-- TABS NAV -->
+    <ul class="nav report-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link px-4" asp-area="Admin" asp-controller="Report" asp-action="Revenue">
+                <i class='bx bx-line-chart me-1'></i>Doanh thu
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active px-4" asp-area="Admin" asp-controller="Report" asp-action="TopProducts">
+                <i class='bx bx-trophy me-1'></i>Sản phẩm bán chạy
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link px-4" asp-area="Admin" asp-controller="Report" asp-action="Orders">
+                <i class='bx bx-receipt me-1'></i>Đơn hàng
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link px-4" asp-area="Admin" asp-controller="Report" asp-action="Customers">
+                <i class='bx bx-group me-1'></i>Khách hàng
+            </a>
+        </li>
+    </ul>
+
+    <!-- PERIOD TOGGLE -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+        <div class="d-flex gap-2">
+            @foreach (var (label, val) in new[] {("7 ngày","7d"),("30 ngày","30d"),("3 tháng","3m"),("Năm nay","ytd")}) {
+                <a href="?period=@val" class="btn btn-outline-secondary btn-sm period-btn @(period == val ? "active" : "")">@label</a>
+            }
+            <button class="btn btn-outline-secondary btn-sm period-btn @(period == "custom" ? "active" : "")"
+                    type="button" data-bs-toggle="collapse" data-bs-target="#customRange">
+                <i class='bx bx-calendar me-1'></i>Tùy chọn
+            </button>
+        </div>
+        <a asp-area="Admin" asp-controller="Report" asp-action="ExportTopProducts"
+           asp-route-period="@period" class="btn btn-outline-success btn-sm">
+            <i class='bx bx-download me-1'></i>Xuất CSV
+        </a>
+    </div>
+
+    <div class="collapse @(period == "custom" ? "show" : "") mb-4" id="customRange">
+        <form method="get" class="d-flex gap-2 align-items-end p-3 bg-white border rounded">
+            <input type="hidden" name="period" value="custom">
+            <div>
+                <label class="form-label small fw-bold mb-1">Từ ngày</label>
+                <input type="date" name="fromDate" value="@ViewBag.FromDate" class="form-control form-control-sm">
+            </div>
+            <div>
+                <label class="form-label small fw-bold mb-1">Đến ngày</label>
+                <input type="date" name="toDate" value="@ViewBag.ToDate" class="form-control form-control-sm">
+            </div>
+            <button type="submit" class="btn btn-ms-red btn-sm">Áp dụng</button>
+        </form>
+    </div>
+
+    @if (!topByQty.Any() && !topByRevenue.Any()) {
+        <div class="card-kpi text-center py-5 text-muted">
+            <i class='bx bx-data' style="font-size:3rem; opacity:.3"></i>
+            <p class="mt-2">Chưa có dữ liệu đơn hàng hoàn thành trong kỳ này.</p>
+        </div>
+    } else {
+        <!-- SUB-TABS -->
+        <ul class="nav nav-pills mb-3" id="productSubTab">
+            <li class="nav-item me-2">
+                <button class="btn btn-outline-secondary btn-sm subtab-btn active" data-bs-toggle="pill" data-bs-target="#tabQty">
+                    <i class='bx bx-package me-1'></i>Theo số lượng bán
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="btn btn-outline-secondary btn-sm subtab-btn" data-bs-toggle="pill" data-bs-target="#tabRevenue">
+                    <i class='bx bx-dollar-circle me-1'></i>Theo doanh thu
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- TOP BY QTY -->
+            <div class="tab-pane fade show active" id="tabQty">
+                <div class="bg-white border rounded overflow-hidden">
+                    <table class="table table-hover m-0 table-report">
+                        <thead>
+                            <tr>
+                                <th style="width:50px">Hạng</th>
+                                <th>Sản phẩm</th>
+                                <th>Danh mục</th>
+                                <th class="text-end">Số lượng bán</th>
+                                <th class="text-end">Doanh thu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < topByQty.Count; i++) {
+                                var item = topByQty[i];
+                                var rankClass = i == 0 ? "rank-1" : i == 1 ? "rank-2" : i == 2 ? "rank-3" : "rank-n";
+                                <tr>
+                                    <td><span class="rank-badge @rankClass">@(i + 1)</span></td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            @if (!string.IsNullOrEmpty(item.ImageUrl)) {
+                                                <img src="@item.ImageUrl" class="product-img" alt="">
+                                            } else {
+                                                <div class="product-img bg-light d-flex align-items-center justify-content-center rounded">
+                                                    <i class='bx bx-image text-muted'></i>
+                                                </div>
+                                            }
+                                            <span class="fw-semibold">@item.ProductName</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border">@item.CategoryName</span></td>
+                                    <td class="text-end fw-bold" style="color:var(--ms-red)">@item.TotalQty.ToString("N0")</td>
+                                    <td class="text-end text-muted">@item.TotalRevenue.ToString("N0")₫</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TOP BY REVENUE -->
+            <div class="tab-pane fade" id="tabRevenue">
+                <div class="bg-white border rounded overflow-hidden">
+                    <table class="table table-hover m-0 table-report">
+                        <thead>
+                            <tr>
+                                <th style="width:50px">Hạng</th>
+                                <th>Sản phẩm</th>
+                                <th>Danh mục</th>
+                                <th class="text-end">Doanh thu</th>
+                                <th class="text-end">Số lượng bán</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < topByRevenue.Count; i++) {
+                                var item = topByRevenue[i];
+                                var rankClass = i == 0 ? "rank-1" : i == 1 ? "rank-2" : i == 2 ? "rank-3" : "rank-n";
+                                <tr>
+                                    <td><span class="rank-badge @rankClass">@(i + 1)</span></td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            @if (!string.IsNullOrEmpty(item.ImageUrl)) {
+                                                <img src="@item.ImageUrl" class="product-img" alt="">
+                                            } else {
+                                                <div class="product-img bg-light d-flex align-items-center justify-content-center rounded">
+                                                    <i class='bx bx-image text-muted'></i>
+                                                </div>
+                                            }
+                                            <span class="fw-semibold">@item.ProductName</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border">@item.CategoryName</span></td>
+                                    <td class="text-end fw-bold" style="color:var(--ms-red)">@item.TotalRevenue.ToString("N0")₫</td>
+                                    <td class="text-end text-muted">@item.TotalQty.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

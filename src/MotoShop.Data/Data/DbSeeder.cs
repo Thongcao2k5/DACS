@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Models;
 using System;
@@ -43,7 +43,7 @@ namespace MotoShop.Data.Data
                         StoreName = "MotoShop DACS",
                         Phone = "0123.456.789",
                         Email = "support@motoshop.vn",
-                        Address = "123 Đường Số 1, Quận 1, TP.HCM",
+                        Address = "123 ÄÆ°á»ng Sá»‘ 1, Quáº­n 1, TP.HCM",
                         Facebook = "https://facebook.com/motoshop",
                         Zalo = "https://zalo.me/0123456789",
                         LogoUrl = "/assets/img/logo.png"
@@ -85,18 +85,18 @@ namespace MotoShop.Data.Data
                 {
                     context.Categories.AddRange(new List<Category>
                     {
-                        new Category { CategoryName = "Dầu nhớt & Bôi trơn",  Slug = "dau-nhot-boi-tron",  Icon = "bxs-droplet",     IsActive = true },
-                        new Category { CategoryName = "Lốp xe & Vành",         Slug = "lop-xe-vanh",        Icon = "bx-rotate-right",  IsActive = true },
-                        new Category { CategoryName = "Hệ thống phanh",        Slug = "he-thong-phanh",     Icon = "bxs-stop-circle",  IsActive = true },
-                        new Category { CategoryName = "Giảm xóc",              Slug = "giam-xoc",           Icon = "bx-equalizer",     IsActive = true },
-                        new Category { CategoryName = "Ắc quy & Điện",         Slug = "ac-quy-dien",        Icon = "bx-bolt-circle",   IsActive = true },
-                        new Category { CategoryName = "Mũ & Bảo hộ",           Slug = "mu-bao-ho",          Icon = "bx-hard-hat",      IsActive = true },
-                        new Category { CategoryName = "Phụ tùng & Phụ kiện",   Slug = "phu-tung-phu-kien",  Icon = "bx-cog",           IsActive = true }
+                        new Category { CategoryName = "Dáº§u nhá»›t & BĂ´i trÆ¡n",  Slug = "dau-nhot-boi-tron",  Icon = "bxs-droplet",     IsActive = true },
+                        new Category { CategoryName = "Lá»‘p xe & VĂ nh",         Slug = "lop-xe-vanh",        Icon = "bx-rotate-right",  IsActive = true },
+                        new Category { CategoryName = "Há»‡ thá»‘ng phanh",        Slug = "he-thong-phanh",     Icon = "bxs-stop-circle",  IsActive = true },
+                        new Category { CategoryName = "Giáº£m xĂ³c",              Slug = "giam-xoc",           Icon = "bx-equalizer",     IsActive = true },
+                        new Category { CategoryName = "áº®c quy & Äiá»‡n",         Slug = "ac-quy-dien",        Icon = "bx-bolt-circle",   IsActive = true },
+                        new Category { CategoryName = "MÅ© & Báº£o há»™",           Slug = "mu-bao-ho",          Icon = "bx-hard-hat",      IsActive = true },
+                        new Category { CategoryName = "Phá»¥ tĂ¹ng & Phá»¥ kiá»‡n",   Slug = "phu-tung-phu-kien",  Icon = "bx-cog",           IsActive = true }
                     });
                     await context.SaveChangesAsync();
                 }
 
-                // 6. SEED BRANDS — thêm từng brand nếu chưa có (upsert-style)
+                // 6. SEED BRANDS â€” thĂªm tá»«ng brand náº¿u chÆ°a cĂ³ (upsert-style)
                 var brandList = new List<(string Name, string Logo)>
                 {
                     ("Motul", "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Motul_logo.svg/512px-Motul_logo.svg.png"),
@@ -123,18 +123,18 @@ namespace MotoShop.Data.Data
                 {
                     context.ShippingMethods.AddRange(new List<ShippingMethod>
                     {
-                        new ShippingMethod { Name = "Giao hàng nhanh", Cost = 30000, EstimatedDays = "2-3 ngày", IsActive = true },
-                        new ShippingMethod { Name = "Hỏa tốc 2H", Cost = 50000, EstimatedDays = "2 giờ", IsActive = true },
-                        new ShippingMethod { Name = "Tiêu chuẩn", Cost = 15000, EstimatedDays = "4-5 ngày", IsActive = true }
+                        new ShippingMethod { Name = "Giao hĂ ng nhanh", Cost = 30000, EstimatedDays = "2-3 ngĂ y", IsActive = true },
+                        new ShippingMethod { Name = "Há»a tá»‘c 2H", Cost = 50000, EstimatedDays = "2 giá»", IsActive = true },
+                        new ShippingMethod { Name = "TiĂªu chuáº©n", Cost = 15000, EstimatedDays = "4-5 ngĂ y", IsActive = true }
                     });
                     await context.SaveChangesAsync();
                 }
 
                 // 8. SEED SERVICE CATEGORIES + SERVICES + COMBOS
-                // DisplayOrder > 0 = đã seed đúng; = 0 = do SQL cũ trong Program.cs tạo thủ công → cần xóa & seed lại
+                // DisplayOrder > 0 = Ä‘Ă£ seed Ä‘Ăºng; = 0 = do SQL cÅ© trong Program.cs táº¡o thá»§ cĂ´ng â†’ cáº§n xĂ³a & seed láº¡i
                 if (!context.ServiceCategories.Any(c => c.DisplayOrder > 0))
                 {
-                    // Xóa dữ liệu cũ (seeded bởi SQL thủ công hoặc seed cũ) để tránh conflict
+                    // XĂ³a dá»¯ liá»‡u cÅ© (seeded bá»Ÿi SQL thá»§ cĂ´ng hoáº·c seed cÅ©) Ä‘á»ƒ trĂ¡nh conflict
                     await context.Database.ExecuteSqlRawAsync("DELETE FROM ServiceComboItems");
                     await context.Database.ExecuteSqlRawAsync("DELETE FROM ServiceImages");
                     await context.Database.ExecuteSqlRawAsync("DELETE FROM ServiceCombos");
@@ -142,62 +142,62 @@ namespace MotoShop.Data.Data
                     await context.Database.ExecuteSqlRawAsync("DELETE FROM Services");
                     await context.Database.ExecuteSqlRawAsync("DELETE FROM ServiceCategories");
 
-                    // --- Danh mục dịch vụ ---
-                    var scBaoDuong = new ServiceCategory { CategoryName = "Bảo dưỡng", Slug = "bao-duong", Icon = "bx-wrench", DisplayOrder = 1 };
-                    var scRuaXe   = new ServiceCategory { CategoryName = "Rửa xe",    Slug = "rua-xe",    Icon = "bx-droplet",    DisplayOrder = 2 };
-                    var scCuuHo   = new ServiceCategory { CategoryName = "Cứu hộ",    Slug = "cuu-ho",    Icon = "bx-car-crash",  DisplayOrder = 3 };
-                    var scDoXe    = new ServiceCategory { CategoryName = "Độ xe",     Slug = "do-xe",     Icon = "bx-customize",  DisplayOrder = 4 };
-                    var scPhuTung = new ServiceCategory { CategoryName = "Phụ tùng",  Slug = "phu-tung",  Icon = "bx-cog",        DisplayOrder = 5 };
-                    var scKiemTra = new ServiceCategory { CategoryName = "Kiểm tra",  Slug = "kiem-tra",  Icon = "bx-search-alt", DisplayOrder = 6 };
+                    // --- Danh má»¥c dá»‹ch vá»¥ ---
+                    var scBaoDuong = new ServiceCategory { CategoryName = "Báº£o dÆ°á»¡ng", Slug = "bao-duong", Icon = "bx-wrench", DisplayOrder = 1 };
+                    var scRuaXe   = new ServiceCategory { CategoryName = "Rá»­a xe",    Slug = "rua-xe",    Icon = "bx-droplet",    DisplayOrder = 2 };
+                    var scCuuHo   = new ServiceCategory { CategoryName = "Cá»©u há»™",    Slug = "cuu-ho",    Icon = "bx-car-crash",  DisplayOrder = 3 };
+                    var scDoXe    = new ServiceCategory { CategoryName = "Äá»™ xe",     Slug = "do-xe",     Icon = "bx-customize",  DisplayOrder = 4 };
+                    var scPhuTung = new ServiceCategory { CategoryName = "Phá»¥ tĂ¹ng",  Slug = "phu-tung",  Icon = "bx-cog",        DisplayOrder = 5 };
+                    var scKiemTra = new ServiceCategory { CategoryName = "Kiá»ƒm tra",  Slug = "kiem-tra",  Icon = "bx-search-alt", DisplayOrder = 6 };
                     context.ServiceCategories.AddRange(scBaoDuong, scRuaXe, scCuuHo, scDoXe, scPhuTung, scKiemTra);
                     await context.SaveChangesAsync();
 
-                    // ── BẢO DƯỠNG ──
-                    var sv01 = new Service { ServiceName = "Thay nhớt máy + lọc dầu", Slug = "thay-nhot-may-loc-dau", CategoryId = scBaoDuong.CategoryId, Price = 20000, OriginalPrice = null, Duration = 15, WarrantyDays = 90, IsPopular = true, Tags = "nhanh,chinh-hang,bao-hanh", ShortDescription = "Dầu nhớt chính hãng, thay lọc dầu mới, kiểm tra mức dầu toàn diện.", Description = "Sử dụng dầu nhớt chính hãng Motul, Castrol hoặc theo yêu cầu khách hàng. Thay lọc dầu mới, kiểm tra mức dầu, vệ sinh nắp đổ dầu. Bảo hành 3 tháng hoặc 3.000km.", TotalBookings = 342, AverageRating = 4.9m, TotalReviews = 128, ImageUrl = "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=800", IsActive = true };
-                    var sv02 = new Service { ServiceName = "Bảo dưỡng định kỳ 5.000km", Slug = "bao-duong-dinh-ky-5000km", CategoryId = scBaoDuong.CategoryId, Price = 280000, OriginalPrice = 350000, Duration = 45, WarrantyDays = 30, IsPopular = true, Tags = "toan-dien,dinh-ky,bao-hanh", ShortDescription = "Thay nhớt, lọc gió, bugi, kiểm tra phanh, xích nhông toàn diện.", Description = "Gói bảo dưỡng định kỳ 5.000km bao gồm: thay dầu nhớt + lọc dầu, vệ sinh lọc gió, thay bugi, kiểm tra và hiệu chỉnh phanh trước/sau, kiểm tra xích nhông, bơm lốp đúng áp suất, kiểm tra đèn và điện. Phù hợp cho tất cả dòng xe tay ga và côn tay.", TotalBookings = 215, AverageRating = 4.8m, TotalReviews = 89, ImageUrl = "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800", IsActive = true };
-                    var sv03 = new Service { ServiceName = "Thay lốp xe + cân bằng bánh", Slug = "thay-lop-xe-can-bang-banh", CategoryId = scBaoDuong.CategoryId, Price = 50000, OriginalPrice = null, Duration = 20, WarrantyDays = 30, IsPopular = false, Tags = "lop-xe,michelin,dunlop", ShortDescription = "Thay lốp Michelin, Dunlop, IRC chính hãng. Cân bằng và chỉnh áp suất chuẩn.", Description = "Thay lốp xe chính hãng các thương hiệu: Michelin, Dunlop, IRC, Maxxis. Bao gồm công thay, cân bằng bánh, kiểm tra và bơm áp suất chuẩn theo khuyến cáo nhà sản xuất. Hỗ trợ tất cả kích thước lốp phổ biến tại Việt Nam.", TotalBookings = 178, AverageRating = 4.7m, TotalReviews = 64, ImageUrl = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800", IsActive = true };
-                    var sv04 = new Service { ServiceName = "Sửa phanh + thay má phanh", Slug = "sua-phanh-thay-ma-phanh", CategoryId = scBaoDuong.CategoryId, Price = 80000, OriginalPrice = null, Duration = 30, WarrantyDays = 30, IsPopular = false, Tags = "phanh,an-toan,brembo", ShortDescription = "Kiểm tra, hiệu chỉnh phanh trước/sau. Thay má phanh Brembo chính hãng nếu cần.", Description = "Kiểm tra toàn bộ hệ thống phanh: má phanh, đĩa phanh, dầu phanh, dây phanh. Hiệu chỉnh độ ăn phanh, thay má phanh Brembo nếu mòn dưới mức an toàn. Giá chưa bao gồm phụ tùng thay thế.", TotalBookings = 143, AverageRating = 4.9m, TotalReviews = 52, ImageUrl = "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800", IsActive = true };
-                    var sv05 = new Service { ServiceName = "Thay bugi + vệ sinh kim phun", Slug = "thay-bugi-ve-sinh-kim-phun", CategoryId = scBaoDuong.CategoryId, Price = 45000, OriginalPrice = null, Duration = 25, WarrantyDays = 30, IsPopular = false, Tags = "bugi,ngk,kim-phun", ShortDescription = "Thay bugi NGK chính hãng, vệ sinh kim phun xăng, cân chỉnh hỗn hợp nhiên liệu.", Description = "Thay bugi NGK Standard hoặc Iridium theo yêu cầu. Vệ sinh kim phun xăng bằng máy siêu âm chuyên dụng, cân chỉnh hỗn hợp nhiên liệu, kiểm tra cảm biến. Giúp xe tiết kiệm xăng và tăng hiệu suất động cơ.", TotalBookings = 98, AverageRating = 4.6m, TotalReviews = 38, ImageUrl = "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=800", IsActive = true };
+                    // â”€â”€ Báº¢O DÆ¯á» NG â”€â”€
+                    var sv01 = new Service { ServiceName = "Thay nhá»›t mĂ¡y + lá»c dáº§u", Slug = "thay-nhot-may-loc-dau", CategoryId = scBaoDuong.CategoryId, Price = 20000, OriginalPrice = null, Duration = 15, WarrantyDays = 90, IsPopular = true, Tags = "nhanh,chinh-hang,bao-hanh", ShortDescription = "Dáº§u nhá»›t chĂ­nh hĂ£ng, thay lá»c dáº§u má»›i, kiá»ƒm tra má»©c dáº§u toĂ n diá»‡n.", Description = "Sá»­ dá»¥ng dáº§u nhá»›t chĂ­nh hĂ£ng Motul, Castrol hoáº·c theo yĂªu cáº§u khĂ¡ch hĂ ng. Thay lá»c dáº§u má»›i, kiá»ƒm tra má»©c dáº§u, vá»‡ sinh náº¯p Ä‘á»• dáº§u. Báº£o hĂ nh 3 thĂ¡ng hoáº·c 3.000km.", TotalBookings = 342, AverageRating = 4.9m, TotalReviews = 128, ImageUrl = "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=800", IsActive = true };
+                    var sv02 = new Service { ServiceName = "Báº£o dÆ°á»¡ng Ä‘á»‹nh ká»³ 5.000km", Slug = "bao-duong-dinh-ky-5000km", CategoryId = scBaoDuong.CategoryId, Price = 280000, OriginalPrice = 350000, Duration = 45, WarrantyDays = 30, IsPopular = true, Tags = "toan-dien,dinh-ky,bao-hanh", ShortDescription = "Thay nhá»›t, lá»c giĂ³, bugi, kiá»ƒm tra phanh, xĂ­ch nhĂ´ng toĂ n diá»‡n.", Description = "GĂ³i báº£o dÆ°á»¡ng Ä‘á»‹nh ká»³ 5.000km bao gá»“m: thay dáº§u nhá»›t + lá»c dáº§u, vá»‡ sinh lá»c giĂ³, thay bugi, kiá»ƒm tra vĂ  hiá»‡u chá»‰nh phanh trÆ°á»›c/sau, kiá»ƒm tra xĂ­ch nhĂ´ng, bÆ¡m lá»‘p Ä‘Ăºng Ă¡p suáº¥t, kiá»ƒm tra Ä‘Ă¨n vĂ  Ä‘iá»‡n. PhĂ¹ há»£p cho táº¥t cáº£ dĂ²ng xe tay ga vĂ  cĂ´n tay.", TotalBookings = 215, AverageRating = 4.8m, TotalReviews = 89, ImageUrl = "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800", IsActive = true };
+                    var sv03 = new Service { ServiceName = "Thay lá»‘p xe + cĂ¢n báº±ng bĂ¡nh", Slug = "thay-lop-xe-can-bang-banh", CategoryId = scBaoDuong.CategoryId, Price = 50000, OriginalPrice = null, Duration = 20, WarrantyDays = 30, IsPopular = false, Tags = "lop-xe,michelin,dunlop", ShortDescription = "Thay lá»‘p Michelin, Dunlop, IRC chĂ­nh hĂ£ng. CĂ¢n báº±ng vĂ  chá»‰nh Ă¡p suáº¥t chuáº©n.", Description = "Thay lá»‘p xe chĂ­nh hĂ£ng cĂ¡c thÆ°Æ¡ng hiá»‡u: Michelin, Dunlop, IRC, Maxxis. Bao gá»“m cĂ´ng thay, cĂ¢n báº±ng bĂ¡nh, kiá»ƒm tra vĂ  bÆ¡m Ă¡p suáº¥t chuáº©n theo khuyáº¿n cĂ¡o nhĂ  sáº£n xuáº¥t. Há»— trá»£ táº¥t cáº£ kĂ­ch thÆ°á»›c lá»‘p phá»• biáº¿n táº¡i Viá»‡t Nam.", TotalBookings = 178, AverageRating = 4.7m, TotalReviews = 64, ImageUrl = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800", IsActive = true };
+                    var sv04 = new Service { ServiceName = "Sá»­a phanh + thay mĂ¡ phanh", Slug = "sua-phanh-thay-ma-phanh", CategoryId = scBaoDuong.CategoryId, Price = 80000, OriginalPrice = null, Duration = 30, WarrantyDays = 30, IsPopular = false, Tags = "phanh,an-toan,brembo", ShortDescription = "Kiá»ƒm tra, hiá»‡u chá»‰nh phanh trÆ°á»›c/sau. Thay mĂ¡ phanh Brembo chĂ­nh hĂ£ng náº¿u cáº§n.", Description = "Kiá»ƒm tra toĂ n bá»™ há»‡ thá»‘ng phanh: mĂ¡ phanh, Ä‘Ä©a phanh, dáº§u phanh, dĂ¢y phanh. Hiá»‡u chá»‰nh Ä‘á»™ Äƒn phanh, thay mĂ¡ phanh Brembo náº¿u mĂ²n dÆ°á»›i má»©c an toĂ n. GiĂ¡ chÆ°a bao gá»“m phá»¥ tĂ¹ng thay tháº¿.", TotalBookings = 143, AverageRating = 4.9m, TotalReviews = 52, ImageUrl = "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800", IsActive = true };
+                    var sv05 = new Service { ServiceName = "Thay bugi + vá»‡ sinh kim phun", Slug = "thay-bugi-ve-sinh-kim-phun", CategoryId = scBaoDuong.CategoryId, Price = 45000, OriginalPrice = null, Duration = 25, WarrantyDays = 30, IsPopular = false, Tags = "bugi,ngk,kim-phun", ShortDescription = "Thay bugi NGK chĂ­nh hĂ£ng, vá»‡ sinh kim phun xÄƒng, cĂ¢n chá»‰nh há»—n há»£p nhiĂªn liá»‡u.", Description = "Thay bugi NGK Standard hoáº·c Iridium theo yĂªu cáº§u. Vá»‡ sinh kim phun xÄƒng báº±ng mĂ¡y siĂªu Ă¢m chuyĂªn dá»¥ng, cĂ¢n chá»‰nh há»—n há»£p nhiĂªn liá»‡u, kiá»ƒm tra cáº£m biáº¿n. GiĂºp xe tiáº¿t kiá»‡m xÄƒng vĂ  tÄƒng hiá»‡u suáº¥t Ä‘á»™ng cÆ¡.", TotalBookings = 98, AverageRating = 4.6m, TotalReviews = 38, ImageUrl = "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=800", IsActive = true };
 
-                    // ── RỬA XE ──
-                    var sv06 = new Service { ServiceName = "Rửa xe cơ bản", Slug = "rua-xe-co-ban", CategoryId = scRuaXe.CategoryId, Price = 30000, OriginalPrice = null, Duration = 20, WarrantyDays = 0, IsPopular = true, Tags = "rua-xe,sach-se,nhanh", ShortDescription = "Rửa sạch toàn bộ xe bằng máy xịt áp lực cao, lau khô, xịt bóng nhựa.", Description = "Rửa xe bằng máy xịt áp lực cao Karcher chuyên dụng. Xà phòng xe máy chuyên dụng, không ăn mòn sơn. Lau khô bằng khăn microfiber, xịt bóng nhựa đen cho các chi tiết nhựa.", TotalBookings = 512, AverageRating = 4.7m, TotalReviews = 201, ImageUrl = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800", IsActive = true };
-                    var sv07 = new Service { ServiceName = "Rửa xe cao cấp + đánh bóng", Slug = "rua-xe-cao-cap-danh-bong", CategoryId = scRuaXe.CategoryId, Price = 80000, OriginalPrice = 100000, Duration = 45, WarrantyDays = 0, IsPopular = false, Tags = "danh-bong,cao-cap,bong-dep", ShortDescription = "Rửa sạch, đánh bóng toàn thân xe, xử lý vết xước nhẹ, bảo vệ sơn.", Description = "Rửa xe áp lực cao, đánh bóng toàn thân bằng máy polisher chuyên nghiệp. Xử lý vết xước nhẹ, phục hồi độ bóng sơn, phủ nano bảo vệ sơn 3 tháng. Kết quả: xe sáng bóng như mới xuất xưởng.", TotalBookings = 87, AverageRating = 4.8m, TotalReviews = 34, ImageUrl = "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?w=800", IsActive = true };
-                    var sv08 = new Service { ServiceName = "Vệ sinh nồi xe ga", Slug = "ve-sinh-noi-xe-ga", CategoryId = scRuaXe.CategoryId, Price = 150000, OriginalPrice = null, Duration = 30, WarrantyDays = 7, IsPopular = true, Tags = "noi-xe-ga,ve-sinh,boc-hon", ShortDescription = "Làm sạch bộ nồi CVT giúp xe chạy bốc hơn, tiết kiệm nhiên liệu.", Description = "Tháo và vệ sinh toàn bộ bộ nồi CVT: puly trước/sau, dây curoa, bi nhông. Làm sạch bụi bẩn, kiểm tra độ mòn dây curoa và bi nhông, tư vấn thay thế nếu cần. Xe chạy bốc hơn 15-20% sau khi vệ sinh.", TotalBookings = 234, AverageRating = 4.9m, TotalReviews = 98, ImageUrl = "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800", IsActive = true };
-                    var sv09 = new Service { ServiceName = "Vệ sinh bình xăng + thông nhiên liệu", Slug = "ve-sinh-binh-xang-thong-nhien-lieu", CategoryId = scRuaXe.CategoryId, Price = 120000, OriginalPrice = null, Duration = 40, WarrantyDays = 14, IsPopular = false, Tags = "binh-xang,thong-nhien-lieu,xe-cu", ShortDescription = "Vệ sinh bình xăng, lọc xăng, thông đường dẫn nhiên liệu. Phù hợp xe cũ hay nghẹt xăng.", Description = "Tháo vệ sinh bình xăng bằng dung dịch chuyên dụng, thay lọc xăng mới, thông và kiểm tra toàn bộ đường dẫn nhiên liệu. Phù hợp cho xe bị nghẹt xăng, chạy không đều, hay tắt máy đột ngột.", TotalBookings = 76, AverageRating = 4.7m, TotalReviews = 29, ImageUrl = "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800", IsActive = true };
-                    var sv10 = new Service { ServiceName = "Phủ nano bảo vệ xe", Slug = "phu-nano-bao-ve-xe", CategoryId = scRuaXe.CategoryId, Price = 200000, OriginalPrice = 250000, Duration = 60, WarrantyDays = 90, IsPopular = false, Tags = "nano,bao-ve-son,chong-xuoc", ShortDescription = "Phủ lớp nano ceramic bảo vệ sơn xe khỏi bụi bẩn, UV và xước nhẹ trong 3 tháng.", Description = "Làm sạch bề mặt, clay bar loại bỏ tạp chất, phủ lớp nano ceramic chuyên dụng. Bảo vệ sơn xe khỏi tia UV, bụi bẩn, mưa axit, vết xước nhẹ. Xe dễ rửa hơn, bóng đẹp bền 3-6 tháng.", TotalBookings = 45, AverageRating = 4.8m, TotalReviews = 18, ImageUrl = "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?w=800", IsActive = true };
+                    // â”€â”€ Rá»¬A XE â”€â”€
+                    var sv06 = new Service { ServiceName = "Rá»­a xe cÆ¡ báº£n", Slug = "rua-xe-co-ban", CategoryId = scRuaXe.CategoryId, Price = 30000, OriginalPrice = null, Duration = 20, WarrantyDays = 0, IsPopular = true, Tags = "rua-xe,sach-se,nhanh", ShortDescription = "Rá»­a sáº¡ch toĂ n bá»™ xe báº±ng mĂ¡y xá»‹t Ă¡p lá»±c cao, lau khĂ´, xá»‹t bĂ³ng nhá»±a.", Description = "Rá»­a xe báº±ng mĂ¡y xá»‹t Ă¡p lá»±c cao Karcher chuyĂªn dá»¥ng. XĂ  phĂ²ng xe mĂ¡y chuyĂªn dá»¥ng, khĂ´ng Äƒn mĂ²n sÆ¡n. Lau khĂ´ báº±ng khÄƒn microfiber, xá»‹t bĂ³ng nhá»±a Ä‘en cho cĂ¡c chi tiáº¿t nhá»±a.", TotalBookings = 512, AverageRating = 4.7m, TotalReviews = 201, ImageUrl = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800", IsActive = true };
+                    var sv07 = new Service { ServiceName = "Rá»­a xe cao cáº¥p + Ä‘Ă¡nh bĂ³ng", Slug = "rua-xe-cao-cap-danh-bong", CategoryId = scRuaXe.CategoryId, Price = 80000, OriginalPrice = 100000, Duration = 45, WarrantyDays = 0, IsPopular = false, Tags = "danh-bong,cao-cap,bong-dep", ShortDescription = "Rá»­a sáº¡ch, Ä‘Ă¡nh bĂ³ng toĂ n thĂ¢n xe, xá»­ lĂ½ váº¿t xÆ°á»›c nháº¹, báº£o vá»‡ sÆ¡n.", Description = "Rá»­a xe Ă¡p lá»±c cao, Ä‘Ă¡nh bĂ³ng toĂ n thĂ¢n báº±ng mĂ¡y polisher chuyĂªn nghiá»‡p. Xá»­ lĂ½ váº¿t xÆ°á»›c nháº¹, phá»¥c há»“i Ä‘á»™ bĂ³ng sÆ¡n, phá»§ nano báº£o vá»‡ sÆ¡n 3 thĂ¡ng. Káº¿t quáº£: xe sĂ¡ng bĂ³ng nhÆ° má»›i xuáº¥t xÆ°á»Ÿng.", TotalBookings = 87, AverageRating = 4.8m, TotalReviews = 34, ImageUrl = "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?w=800", IsActive = true };
+                    var sv08 = new Service { ServiceName = "Vá»‡ sinh ná»“i xe ga", Slug = "ve-sinh-noi-xe-ga", CategoryId = scRuaXe.CategoryId, Price = 150000, OriginalPrice = null, Duration = 30, WarrantyDays = 7, IsPopular = true, Tags = "noi-xe-ga,ve-sinh,boc-hon", ShortDescription = "LĂ m sáº¡ch bá»™ ná»“i CVT giĂºp xe cháº¡y bá»‘c hÆ¡n, tiáº¿t kiá»‡m nhiĂªn liá»‡u.", Description = "ThĂ¡o vĂ  vá»‡ sinh toĂ n bá»™ bá»™ ná»“i CVT: puly trÆ°á»›c/sau, dĂ¢y curoa, bi nhĂ´ng. LĂ m sáº¡ch bá»¥i báº©n, kiá»ƒm tra Ä‘á»™ mĂ²n dĂ¢y curoa vĂ  bi nhĂ´ng, tÆ° váº¥n thay tháº¿ náº¿u cáº§n. Xe cháº¡y bá»‘c hÆ¡n 15-20% sau khi vá»‡ sinh.", TotalBookings = 234, AverageRating = 4.9m, TotalReviews = 98, ImageUrl = "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800", IsActive = true };
+                    var sv09 = new Service { ServiceName = "Vá»‡ sinh bĂ¬nh xÄƒng + thĂ´ng nhiĂªn liá»‡u", Slug = "ve-sinh-binh-xang-thong-nhien-lieu", CategoryId = scRuaXe.CategoryId, Price = 120000, OriginalPrice = null, Duration = 40, WarrantyDays = 14, IsPopular = false, Tags = "binh-xang,thong-nhien-lieu,xe-cu", ShortDescription = "Vá»‡ sinh bĂ¬nh xÄƒng, lá»c xÄƒng, thĂ´ng Ä‘Æ°á»ng dáº«n nhiĂªn liá»‡u. PhĂ¹ há»£p xe cÅ© hay ngháº¹t xÄƒng.", Description = "ThĂ¡o vá»‡ sinh bĂ¬nh xÄƒng báº±ng dung dá»‹ch chuyĂªn dá»¥ng, thay lá»c xÄƒng má»›i, thĂ´ng vĂ  kiá»ƒm tra toĂ n bá»™ Ä‘Æ°á»ng dáº«n nhiĂªn liá»‡u. PhĂ¹ há»£p cho xe bá»‹ ngháº¹t xÄƒng, cháº¡y khĂ´ng Ä‘á»u, hay táº¯t mĂ¡y Ä‘á»™t ngá»™t.", TotalBookings = 76, AverageRating = 4.7m, TotalReviews = 29, ImageUrl = "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800", IsActive = true };
+                    var sv10 = new Service { ServiceName = "Phá»§ nano báº£o vá»‡ xe", Slug = "phu-nano-bao-ve-xe", CategoryId = scRuaXe.CategoryId, Price = 200000, OriginalPrice = 250000, Duration = 60, WarrantyDays = 90, IsPopular = false, Tags = "nano,bao-ve-son,chong-xuoc", ShortDescription = "Phá»§ lá»›p nano ceramic báº£o vá»‡ sÆ¡n xe khá»i bá»¥i báº©n, UV vĂ  xÆ°á»›c nháº¹ trong 3 thĂ¡ng.", Description = "LĂ m sáº¡ch bá» máº·t, clay bar loáº¡i bá» táº¡p cháº¥t, phá»§ lá»›p nano ceramic chuyĂªn dá»¥ng. Báº£o vá»‡ sÆ¡n xe khá»i tia UV, bá»¥i báº©n, mÆ°a axit, váº¿t xÆ°á»›c nháº¹. Xe dá»… rá»­a hÆ¡n, bĂ³ng Ä‘áº¹p bá»n 3-6 thĂ¡ng.", TotalBookings = 45, AverageRating = 4.8m, TotalReviews = 18, ImageUrl = "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?w=800", IsActive = true };
 
-                    // ── CỨU HỘ ──
-                    var sv11 = new Service { ServiceName = "Cứu hộ xe chết máy tại chỗ", Slug = "cuu-ho-xe-chet-may-tai-cho", CategoryId = scCuuHo.CategoryId, Price = 150000, OriginalPrice = null, Duration = 30, WarrantyDays = 0, IsPopular = true, Tags = "cuu-ho,khan-cap,24-7", ShortDescription = "Kỹ thuật viên đến tận nơi xử lý xe chết máy trong vòng 30 phút.", Description = "Dịch vụ cứu hộ khẩn cấp 24/7. Kỹ thuật viên có kinh nghiệm sẽ đến tận nơi trong vòng 30 phút (nội thành). Xử lý các sự cố: hết xăng, hỏng điện, chết ắc quy, hỏng khởi động. Phí di chuyển tính theo km nếu ngoài nội thành.", TotalBookings = 189, AverageRating = 4.9m, TotalReviews = 76, ImageUrl = "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=800", IsActive = true };
-                    var sv12 = new Service { ServiceName = "Thay ắc quy tại chỗ", Slug = "thay-ac-quy-tai-cho", CategoryId = scCuuHo.CategoryId, Price = 50000, OriginalPrice = null, Duration = 15, WarrantyDays = 365, IsPopular = false, Tags = "ac-quy,thay-tai-cho,gs-yuasa", ShortDescription = "Mang ắc quy mới đến tận nơi, thay và test ngay tại chỗ. Bảo hành 12 tháng.", Description = "Kỹ thuật viên mang ắc quy GS, Yuasa, Motobatt chính hãng đến tận nơi thay. Test máy phát điện, kiểm tra hệ thống điện tổng thể. Bảo hành ắc quy 12 tháng, đổi mới nếu lỗi.", TotalBookings = 134, AverageRating = 4.8m, TotalReviews = 54, ImageUrl = "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800", IsActive = true };
-                    var sv13 = new Service { ServiceName = "Vá lốp khẩn cấp tại chỗ", Slug = "va-lop-khan-cap-tai-cho", CategoryId = scCuuHo.CategoryId, Price = 80000, OriginalPrice = null, Duration = 20, WarrantyDays = 30, IsPopular = true, Tags = "va-lop,kep-dinh,nhanh", ShortDescription = "Vá lốp không ruột (tubeless) tại chỗ bằng dây vá chuyên nghiệp. Nhanh chóng và bền.", Description = "Vá lốp tubeless bằng dây vá Moto chuyên nghiệp hoặc vá nguội tùy mức độ hỏng. Bơm lại áp suất chuẩn, kiểm tra rò rỉ. Không áp dụng cho lốp hỏng quá 3 lỗ hoặc hỏng thành lốp.", TotalBookings = 267, AverageRating = 4.7m, TotalReviews = 103, ImageUrl = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800", IsActive = true };
-                    var sv14 = new Service { ServiceName = "Kéo xe về xưởng", Slug = "keo-xe-ve-xuong", CategoryId = scCuuHo.CategoryId, Price = 200000, OriginalPrice = null, Duration = 60, WarrantyDays = 0, IsPopular = false, Tags = "keo-xe,tai-nan,hu-nang", ShortDescription = "Kéo xe về xưởng khi hỏng nặng không sửa được tại chỗ. Phí tính theo km.", Description = "Dịch vụ kéo xe bằng xe tải chuyên dụng. Phí cơ bản 200.000₫ trong bán kính 5km, +20.000₫/km tiếp theo. Đội ngũ chuyên nghiệp, bảo đảm xe nguyên vẹn trong quá trình vận chuyển. Hỗ trợ 24/7.", TotalBookings = 78, AverageRating = 4.6m, TotalReviews = 31, ImageUrl = "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=800", IsActive = true };
-                    var sv15 = new Service { ServiceName = "Sạc ắc quy tại chỗ", Slug = "sac-ac-quy-tai-cho", CategoryId = scCuuHo.CategoryId, Price = 30000, OriginalPrice = null, Duration = 45, WarrantyDays = 0, IsPopular = false, Tags = "sac-ac-quy,het-dien,nhanh", ShortDescription = "Sạc ắc quy nhanh tại chỗ bằng máy sạc thông minh. Xong trong 30-45 phút.", Description = "Sạc ắc quy bằng máy sạc CTEK hoặc NOCO chuyên nghiệp. Phục hồi ắc quy bị hết hoàn toàn, kiểm tra sức khỏe ắc quy sau khi sạc, tư vấn có nên thay mới không.", TotalBookings = 156, AverageRating = 4.8m, TotalReviews = 58, ImageUrl = "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800", IsActive = true };
+                    // â”€â”€ Cá»¨U Há»˜ â”€â”€
+                    var sv11 = new Service { ServiceName = "Cá»©u há»™ xe cháº¿t mĂ¡y táº¡i chá»—", Slug = "cuu-ho-xe-chet-may-tai-cho", CategoryId = scCuuHo.CategoryId, Price = 150000, OriginalPrice = null, Duration = 30, WarrantyDays = 0, IsPopular = true, Tags = "cuu-ho,khan-cap,24-7", ShortDescription = "Ká»¹ thuáº­t viĂªn Ä‘áº¿n táº­n nÆ¡i xá»­ lĂ½ xe cháº¿t mĂ¡y trong vĂ²ng 30 phĂºt.", Description = "Dá»‹ch vá»¥ cá»©u há»™ kháº©n cáº¥p 24/7. Ká»¹ thuáº­t viĂªn cĂ³ kinh nghiá»‡m sáº½ Ä‘áº¿n táº­n nÆ¡i trong vĂ²ng 30 phĂºt (ná»™i thĂ nh). Xá»­ lĂ½ cĂ¡c sá»± cá»‘: háº¿t xÄƒng, há»ng Ä‘iá»‡n, cháº¿t áº¯c quy, há»ng khá»Ÿi Ä‘á»™ng. PhĂ­ di chuyá»ƒn tĂ­nh theo km náº¿u ngoĂ i ná»™i thĂ nh.", TotalBookings = 189, AverageRating = 4.9m, TotalReviews = 76, ImageUrl = "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=800", IsActive = true };
+                    var sv12 = new Service { ServiceName = "Thay áº¯c quy táº¡i chá»—", Slug = "thay-ac-quy-tai-cho", CategoryId = scCuuHo.CategoryId, Price = 50000, OriginalPrice = null, Duration = 15, WarrantyDays = 365, IsPopular = false, Tags = "ac-quy,thay-tai-cho,gs-yuasa", ShortDescription = "Mang áº¯c quy má»›i Ä‘áº¿n táº­n nÆ¡i, thay vĂ  test ngay táº¡i chá»—. Báº£o hĂ nh 12 thĂ¡ng.", Description = "Ká»¹ thuáº­t viĂªn mang áº¯c quy GS, Yuasa, Motobatt chĂ­nh hĂ£ng Ä‘áº¿n táº­n nÆ¡i thay. Test mĂ¡y phĂ¡t Ä‘iá»‡n, kiá»ƒm tra há»‡ thá»‘ng Ä‘iá»‡n tá»•ng thá»ƒ. Báº£o hĂ nh áº¯c quy 12 thĂ¡ng, Ä‘á»•i má»›i náº¿u lá»—i.", TotalBookings = 134, AverageRating = 4.8m, TotalReviews = 54, ImageUrl = "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800", IsActive = true };
+                    var sv13 = new Service { ServiceName = "VĂ¡ lá»‘p kháº©n cáº¥p táº¡i chá»—", Slug = "va-lop-khan-cap-tai-cho", CategoryId = scCuuHo.CategoryId, Price = 80000, OriginalPrice = null, Duration = 20, WarrantyDays = 30, IsPopular = true, Tags = "va-lop,kep-dinh,nhanh", ShortDescription = "VĂ¡ lá»‘p khĂ´ng ruá»™t (tubeless) táº¡i chá»— báº±ng dĂ¢y vĂ¡ chuyĂªn nghiá»‡p. Nhanh chĂ³ng vĂ  bá»n.", Description = "VĂ¡ lá»‘p tubeless báº±ng dĂ¢y vĂ¡ Moto chuyĂªn nghiá»‡p hoáº·c vĂ¡ nguá»™i tĂ¹y má»©c Ä‘á»™ há»ng. BÆ¡m láº¡i Ă¡p suáº¥t chuáº©n, kiá»ƒm tra rĂ² rá»‰. KhĂ´ng Ă¡p dá»¥ng cho lá»‘p há»ng quĂ¡ 3 lá»— hoáº·c há»ng thĂ nh lá»‘p.", TotalBookings = 267, AverageRating = 4.7m, TotalReviews = 103, ImageUrl = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800", IsActive = true };
+                    var sv14 = new Service { ServiceName = "KĂ©o xe vá» xÆ°á»Ÿng", Slug = "keo-xe-ve-xuong", CategoryId = scCuuHo.CategoryId, Price = 200000, OriginalPrice = null, Duration = 60, WarrantyDays = 0, IsPopular = false, Tags = "keo-xe,tai-nan,hu-nang", ShortDescription = "KĂ©o xe vá» xÆ°á»Ÿng khi há»ng náº·ng khĂ´ng sá»­a Ä‘Æ°á»£c táº¡i chá»—. PhĂ­ tĂ­nh theo km.", Description = "Dá»‹ch vá»¥ kĂ©o xe báº±ng xe táº£i chuyĂªn dá»¥ng. PhĂ­ cÆ¡ báº£n 200.000â‚« trong bĂ¡n kĂ­nh 5km, +20.000â‚«/km tiáº¿p theo. Äá»™i ngÅ© chuyĂªn nghiá»‡p, báº£o Ä‘áº£m xe nguyĂªn váº¹n trong quĂ¡ trĂ¬nh váº­n chuyá»ƒn. Há»— trá»£ 24/7.", TotalBookings = 78, AverageRating = 4.6m, TotalReviews = 31, ImageUrl = "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=800", IsActive = true };
+                    var sv15 = new Service { ServiceName = "Sáº¡c áº¯c quy táº¡i chá»—", Slug = "sac-ac-quy-tai-cho", CategoryId = scCuuHo.CategoryId, Price = 30000, OriginalPrice = null, Duration = 45, WarrantyDays = 0, IsPopular = false, Tags = "sac-ac-quy,het-dien,nhanh", ShortDescription = "Sáº¡c áº¯c quy nhanh táº¡i chá»— báº±ng mĂ¡y sáº¡c thĂ´ng minh. Xong trong 30-45 phĂºt.", Description = "Sáº¡c áº¯c quy báº±ng mĂ¡y sáº¡c CTEK hoáº·c NOCO chuyĂªn nghiá»‡p. Phá»¥c há»“i áº¯c quy bá»‹ háº¿t hoĂ n toĂ n, kiá»ƒm tra sá»©c khá»e áº¯c quy sau khi sáº¡c, tÆ° váº¥n cĂ³ nĂªn thay má»›i khĂ´ng.", TotalBookings = 156, AverageRating = 4.8m, TotalReviews = 58, ImageUrl = "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800", IsActive = true };
 
-                    // ── ĐỘ XE ──
-                    var sv16 = new Service { ServiceName = "Lắp đèn LED + đèn trợ sáng", Slug = "lap-den-led-den-tro-sang", CategoryId = scDoXe.CategoryId, Price = 150000, OriginalPrice = 180000, Duration = 60, WarrantyDays = 180, IsPopular = true, Tags = "den-led,do-xe,sang-hon", ShortDescription = "Lắp đèn LED pha sáng hơn, đèn trợ sáng 30W-50W. Bảo hành 6 tháng.", Description = "Thay thế đèn pha halogen sang LED cao cấp sáng gấp 3 lần. Lắp thêm đèn trợ sáng Yamaha, Osram 30-50W cho xe phượt và xe côn. Đi dây điện gọn gàng, chống nước IP67. Bảo hành 6 tháng.", TotalBookings = 145, AverageRating = 4.8m, TotalReviews = 56, ImageUrl = "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=800", IsActive = true };
-                    var sv17 = new Service { ServiceName = "Lắp giảm xóc hậu Ohlins/YSS", Slug = "lap-giam-xoc-hau-ohlins-yss", CategoryId = scDoXe.CategoryId, Price = 200000, OriginalPrice = null, Duration = 45, WarrantyDays = 30, IsPopular = false, Tags = "giam-xoc,ohlins,yss,do-xe", ShortDescription = "Tháo lắp giảm xóc hậu cao cấp Ohlins, YSS. Cân chỉnh chiều cao và độ cứng.", Description = "Tháo giảm xóc hậu cũ, lắp giảm xóc Ohlins S36E hoặc YSS G-Plus theo yêu cầu. Cân chỉnh chiều cao xe, điều chỉnh độ cứng phù hợp cân nặng người lái. Kiểm tra góc lái sau khi lắp. Giá chưa bao gồm giảm xóc.", TotalBookings = 89, AverageRating = 4.9m, TotalReviews = 34, ImageUrl = "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800", IsActive = true };
-                    var sv18 = new Service { ServiceName = "Lắp ốp nội thất + decal", Slug = "lap-op-noi-that-decal", CategoryId = scDoXe.CategoryId, Price = 100000, OriginalPrice = null, Duration = 60, WarrantyDays = 90, IsPopular = false, Tags = "op-xe,decal,do-ngoai-that", ShortDescription = "Lắp ốp nhựa ABS cao cấp, dán decal tem xe theo yêu cầu. 100+ mẫu có sẵn.", Description = "Lắp ốp nội thất, ốp bình xăng, ốp đuôi xe bằng nhựa ABS cao cấp không phai màu. Dán decal tem xe theo mẫu có sẵn hoặc thiết kế theo yêu cầu. Bảo hành không bong tróc 3 tháng.", TotalBookings = 67, AverageRating = 4.7m, TotalReviews = 25, ImageUrl = "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?w=800", IsActive = true };
-                    var sv19 = new Service { ServiceName = "Lắp hệ thống âm thanh Bluetooth", Slug = "lap-he-thong-am-thanh-bluetooth", CategoryId = scDoXe.CategoryId, Price = 300000, OriginalPrice = 380000, Duration = 90, WarrantyDays = 180, IsPopular = false, Tags = "am-thanh,bluetooth,loa-xe", ShortDescription = "Lắp loa Bluetooth không dây, kết nối điện thoại, nghe nhạc khi lái xe.", Description = "Lắp hệ thống loa Bluetooth chống nước IPX5 lên ghi đông hoặc yên xe. Kết nối điện thoại qua Bluetooth, âm lượng lớn rõ ràng ngay cả khi chạy tốc độ cao. Tích hợp nút điều khiển trên tay lái. Bảo hành 6 tháng.", TotalBookings = 43, AverageRating = 4.6m, TotalReviews = 17, ImageUrl = "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800", IsActive = true };
-                    var sv20 = new Service { ServiceName = "Lắp khóa chống trộm thông minh", Slug = "lap-khoa-chong-trom-thong-minh", CategoryId = scDoXe.CategoryId, Price = 180000, OriginalPrice = null, Duration = 60, WarrantyDays = 365, IsPopular = true, Tags = "khoa-chong-trom,bao-mat,gps", ShortDescription = "Lắp khóa chống trộm cảm biến rung + cảnh báo điện thoại. Bảo hành 12 tháng.", Description = "Lắp hệ thống chống trộm thông minh: cảm biến rung, còi cảnh báo 120dB, gửi thông báo về điện thoại qua app. Một số model có tích hợp GPS theo dõi vị trí xe realtime. Giá chưa bao gồm thiết bị.", TotalBookings = 112, AverageRating = 4.8m, TotalReviews = 44, ImageUrl = "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=800", IsActive = true };
+                    // â”€â”€ Äá»˜ XE â”€â”€
+                    var sv16 = new Service { ServiceName = "Láº¯p Ä‘Ă¨n LED + Ä‘Ă¨n trá»£ sĂ¡ng", Slug = "lap-den-led-den-tro-sang", CategoryId = scDoXe.CategoryId, Price = 150000, OriginalPrice = 180000, Duration = 60, WarrantyDays = 180, IsPopular = true, Tags = "den-led,do-xe,sang-hon", ShortDescription = "Láº¯p Ä‘Ă¨n LED pha sĂ¡ng hÆ¡n, Ä‘Ă¨n trá»£ sĂ¡ng 30W-50W. Báº£o hĂ nh 6 thĂ¡ng.", Description = "Thay tháº¿ Ä‘Ă¨n pha halogen sang LED cao cáº¥p sĂ¡ng gáº¥p 3 láº§n. Láº¯p thĂªm Ä‘Ă¨n trá»£ sĂ¡ng Yamaha, Osram 30-50W cho xe phÆ°á»£t vĂ  xe cĂ´n. Äi dĂ¢y Ä‘iá»‡n gá»n gĂ ng, chá»‘ng nÆ°á»›c IP67. Báº£o hĂ nh 6 thĂ¡ng.", TotalBookings = 145, AverageRating = 4.8m, TotalReviews = 56, ImageUrl = "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=800", IsActive = true };
+                    var sv17 = new Service { ServiceName = "Láº¯p giáº£m xĂ³c háº­u Ohlins/YSS", Slug = "lap-giam-xoc-hau-ohlins-yss", CategoryId = scDoXe.CategoryId, Price = 200000, OriginalPrice = null, Duration = 45, WarrantyDays = 30, IsPopular = false, Tags = "giam-xoc,ohlins,yss,do-xe", ShortDescription = "ThĂ¡o láº¯p giáº£m xĂ³c háº­u cao cáº¥p Ohlins, YSS. CĂ¢n chá»‰nh chiá»u cao vĂ  Ä‘á»™ cá»©ng.", Description = "ThĂ¡o giáº£m xĂ³c háº­u cÅ©, láº¯p giáº£m xĂ³c Ohlins S36E hoáº·c YSS G-Plus theo yĂªu cáº§u. CĂ¢n chá»‰nh chiá»u cao xe, Ä‘iá»u chá»‰nh Ä‘á»™ cá»©ng phĂ¹ há»£p cĂ¢n náº·ng ngÆ°á»i lĂ¡i. Kiá»ƒm tra gĂ³c lĂ¡i sau khi láº¯p. GiĂ¡ chÆ°a bao gá»“m giáº£m xĂ³c.", TotalBookings = 89, AverageRating = 4.9m, TotalReviews = 34, ImageUrl = "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800", IsActive = true };
+                    var sv18 = new Service { ServiceName = "Láº¯p á»‘p ná»™i tháº¥t + decal", Slug = "lap-op-noi-that-decal", CategoryId = scDoXe.CategoryId, Price = 100000, OriginalPrice = null, Duration = 60, WarrantyDays = 90, IsPopular = false, Tags = "op-xe,decal,do-ngoai-that", ShortDescription = "Láº¯p á»‘p nhá»±a ABS cao cáº¥p, dĂ¡n decal tem xe theo yĂªu cáº§u. 100+ máº«u cĂ³ sáºµn.", Description = "Láº¯p á»‘p ná»™i tháº¥t, á»‘p bĂ¬nh xÄƒng, á»‘p Ä‘uĂ´i xe báº±ng nhá»±a ABS cao cáº¥p khĂ´ng phai mĂ u. DĂ¡n decal tem xe theo máº«u cĂ³ sáºµn hoáº·c thiáº¿t káº¿ theo yĂªu cáº§u. Báº£o hĂ nh khĂ´ng bong trĂ³c 3 thĂ¡ng.", TotalBookings = 67, AverageRating = 4.7m, TotalReviews = 25, ImageUrl = "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?w=800", IsActive = true };
+                    var sv19 = new Service { ServiceName = "Láº¯p há»‡ thá»‘ng Ă¢m thanh Bluetooth", Slug = "lap-he-thong-am-thanh-bluetooth", CategoryId = scDoXe.CategoryId, Price = 300000, OriginalPrice = 380000, Duration = 90, WarrantyDays = 180, IsPopular = false, Tags = "am-thanh,bluetooth,loa-xe", ShortDescription = "Láº¯p loa Bluetooth khĂ´ng dĂ¢y, káº¿t ná»‘i Ä‘iá»‡n thoáº¡i, nghe nháº¡c khi lĂ¡i xe.", Description = "Láº¯p há»‡ thá»‘ng loa Bluetooth chá»‘ng nÆ°á»›c IPX5 lĂªn ghi Ä‘Ă´ng hoáº·c yĂªn xe. Káº¿t ná»‘i Ä‘iá»‡n thoáº¡i qua Bluetooth, Ă¢m lÆ°á»£ng lá»›n rĂµ rĂ ng ngay cáº£ khi cháº¡y tá»‘c Ä‘á»™ cao. TĂ­ch há»£p nĂºt Ä‘iá»u khiá»ƒn trĂªn tay lĂ¡i. Báº£o hĂ nh 6 thĂ¡ng.", TotalBookings = 43, AverageRating = 4.6m, TotalReviews = 17, ImageUrl = "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800", IsActive = true };
+                    var sv20 = new Service { ServiceName = "Láº¯p khĂ³a chá»‘ng trá»™m thĂ´ng minh", Slug = "lap-khoa-chong-trom-thong-minh", CategoryId = scDoXe.CategoryId, Price = 180000, OriginalPrice = null, Duration = 60, WarrantyDays = 365, IsPopular = true, Tags = "khoa-chong-trom,bao-mat,gps", ShortDescription = "Láº¯p khĂ³a chá»‘ng trá»™m cáº£m biáº¿n rung + cáº£nh bĂ¡o Ä‘iá»‡n thoáº¡i. Báº£o hĂ nh 12 thĂ¡ng.", Description = "Láº¯p há»‡ thá»‘ng chá»‘ng trá»™m thĂ´ng minh: cáº£m biáº¿n rung, cĂ²i cáº£nh bĂ¡o 120dB, gá»­i thĂ´ng bĂ¡o vá» Ä‘iá»‡n thoáº¡i qua app. Má»™t sá»‘ model cĂ³ tĂ­ch há»£p GPS theo dĂµi vá»‹ trĂ­ xe realtime. GiĂ¡ chÆ°a bao gá»“m thiáº¿t bá»‹.", TotalBookings = 112, AverageRating = 4.8m, TotalReviews = 44, ImageUrl = "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=800", IsActive = true };
 
-                    // ── PHỤ TÙNG ──
-                    var sv21 = new Service { ServiceName = "Thay xích nhông đĩa", Slug = "thay-xich-nhong-dia", CategoryId = scPhuTung.CategoryId, Price = 60000, OriginalPrice = null, Duration = 30, WarrantyDays = 90, IsPopular = true, Tags = "xich-nhong,cong-thay,chinh-hang", ShortDescription = "Công thay xích nhông đĩa chính hãng Honda/Yamaha. Cân chỉnh xích đúng độ căng.", Description = "Tháo lắp bộ xích nhông đĩa, cân chỉnh độ căng xích theo tiêu chuẩn nhà sản xuất. Bôi mỡ chuyên dụng, kiểm tra độ mòn và tư vấn chu kỳ thay tiếp theo. Giá chưa bao gồm xích nhông.", TotalBookings = 198, AverageRating = 4.8m, TotalReviews = 78, ImageUrl = "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800", IsActive = true };
-                    var sv22 = new Service { ServiceName = "Thay gương + đèn xi nhan", Slug = "thay-guong-den-xi-nhan", CategoryId = scPhuTung.CategoryId, Price = 30000, OriginalPrice = null, Duration = 15, WarrantyDays = 30, IsPopular = false, Tags = "guong,xi-nhan,chinh-hang", ShortDescription = "Thay gương chiếu hậu và đèn xi nhan chính hãng. Nhanh chóng, giá rẻ.", Description = "Thay gương chiếu hậu Honda, Yamaha, Piaggio chính hãng. Thay bóng đèn xi nhan, kiểm tra mạch điện. Giá là công lắp, chưa bao gồm phụ tùng. Hỗ trợ tư vấn chọn gương phù hợp xe.", TotalBookings = 145, AverageRating = 4.7m, TotalReviews = 55, ImageUrl = "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800", IsActive = true };
-                    var sv23 = new Service { ServiceName = "Thay dây curoa xe ga", Slug = "thay-day-curoa-xe-ga", CategoryId = scPhuTung.CategoryId, Price = 80000, OriginalPrice = null, Duration = 40, WarrantyDays = 90, IsPopular = false, Tags = "day-curoa,xe-ga,chinh-hang", ShortDescription = "Thay dây curoa chính hãng, kiểm tra bi nhông, điều chỉnh côn tự động.", Description = "Tháo hộp số CVT, thay dây curoa mới chính hãng theo đúng model xe. Kiểm tra và thay bi nhông nếu mòn, vệ sinh và bôi mỡ hộp số, cân chỉnh côn tự động. Giá chưa bao gồm dây curoa.", TotalBookings = 167, AverageRating = 4.8m, TotalReviews = 64, ImageUrl = "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800", IsActive = true };
-                    var sv24 = new Service { ServiceName = "Thay lọc gió + vệ sinh bộ chế hòa khí", Slug = "thay-loc-gio-ve-sinh-bo-che-hoa-khi", CategoryId = scPhuTung.CategoryId, Price = 50000, OriginalPrice = null, Duration = 30, WarrantyDays = 30, IsPopular = false, Tags = "loc-gio,che-hoa-khi,tiet-kiem-xang", ShortDescription = "Thay lọc gió mới, vệ sinh bộ chế hòa khí giúp xe tiết kiệm xăng hơn 10%.", Description = "Thay lọc gió theo đúng OEM xe, vệ sinh buồng phao và kim ga bộ chế hòa khí bằng dung dịch chuyên dụng. Cân chỉnh tỉ lệ hỗn hợp nhiên liệu-không khí tối ưu. Giá chưa bao gồm lọc gió.", TotalBookings = 123, AverageRating = 4.7m, TotalReviews = 47, ImageUrl = "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=800", IsActive = true };
-                    var sv25 = new Service { ServiceName = "Thay nhớt hộp số + nhớt phuộc", Slug = "thay-nhot-hop-so-nhot-phuoc", CategoryId = scPhuTung.CategoryId, Price = 35000, OriginalPrice = null, Duration = 20, WarrantyDays = 30, IsPopular = false, Tags = "nhot-hop-so,nhot-phuoc,bao-duong", ShortDescription = "Thay nhớt hộp số xe côn tay và nhớt phuộc trước. Thường bị bỏ qua khi bảo dưỡng.", Description = "Thay nhớt hộp số xe côn tay (thường bỏ quên khi thay nhớt định kỳ), thay nhớt phuộc trước giúp phuộc êm hơn. Kiểm tra độ rò rỉ, tư vấn chu kỳ thay tiếp theo. Giá chưa bao gồm nhớt.", TotalBookings = 89, AverageRating = 4.8m, TotalReviews = 33, ImageUrl = "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=800", IsActive = true };
+                    // â”€â”€ PHá»¤ TĂ™NG â”€â”€
+                    var sv21 = new Service { ServiceName = "Thay xĂ­ch nhĂ´ng Ä‘Ä©a", Slug = "thay-xich-nhong-dia", CategoryId = scPhuTung.CategoryId, Price = 60000, OriginalPrice = null, Duration = 30, WarrantyDays = 90, IsPopular = true, Tags = "xich-nhong,cong-thay,chinh-hang", ShortDescription = "CĂ´ng thay xĂ­ch nhĂ´ng Ä‘Ä©a chĂ­nh hĂ£ng Honda/Yamaha. CĂ¢n chá»‰nh xĂ­ch Ä‘Ăºng Ä‘á»™ cÄƒng.", Description = "ThĂ¡o láº¯p bá»™ xĂ­ch nhĂ´ng Ä‘Ä©a, cĂ¢n chá»‰nh Ä‘á»™ cÄƒng xĂ­ch theo tiĂªu chuáº©n nhĂ  sáº£n xuáº¥t. BĂ´i má»¡ chuyĂªn dá»¥ng, kiá»ƒm tra Ä‘á»™ mĂ²n vĂ  tÆ° váº¥n chu ká»³ thay tiáº¿p theo. GiĂ¡ chÆ°a bao gá»“m xĂ­ch nhĂ´ng.", TotalBookings = 198, AverageRating = 4.8m, TotalReviews = 78, ImageUrl = "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800", IsActive = true };
+                    var sv22 = new Service { ServiceName = "Thay gÆ°Æ¡ng + Ä‘Ă¨n xi nhan", Slug = "thay-guong-den-xi-nhan", CategoryId = scPhuTung.CategoryId, Price = 30000, OriginalPrice = null, Duration = 15, WarrantyDays = 30, IsPopular = false, Tags = "guong,xi-nhan,chinh-hang", ShortDescription = "Thay gÆ°Æ¡ng chiáº¿u háº­u vĂ  Ä‘Ă¨n xi nhan chĂ­nh hĂ£ng. Nhanh chĂ³ng, giĂ¡ ráº».", Description = "Thay gÆ°Æ¡ng chiáº¿u háº­u Honda, Yamaha, Piaggio chĂ­nh hĂ£ng. Thay bĂ³ng Ä‘Ă¨n xi nhan, kiá»ƒm tra máº¡ch Ä‘iá»‡n. GiĂ¡ lĂ  cĂ´ng láº¯p, chÆ°a bao gá»“m phá»¥ tĂ¹ng. Há»— trá»£ tÆ° váº¥n chá»n gÆ°Æ¡ng phĂ¹ há»£p xe.", TotalBookings = 145, AverageRating = 4.7m, TotalReviews = 55, ImageUrl = "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800", IsActive = true };
+                    var sv23 = new Service { ServiceName = "Thay dĂ¢y curoa xe ga", Slug = "thay-day-curoa-xe-ga", CategoryId = scPhuTung.CategoryId, Price = 80000, OriginalPrice = null, Duration = 40, WarrantyDays = 90, IsPopular = false, Tags = "day-curoa,xe-ga,chinh-hang", ShortDescription = "Thay dĂ¢y curoa chĂ­nh hĂ£ng, kiá»ƒm tra bi nhĂ´ng, Ä‘iá»u chá»‰nh cĂ´n tá»± Ä‘á»™ng.", Description = "ThĂ¡o há»™p sá»‘ CVT, thay dĂ¢y curoa má»›i chĂ­nh hĂ£ng theo Ä‘Ăºng model xe. Kiá»ƒm tra vĂ  thay bi nhĂ´ng náº¿u mĂ²n, vá»‡ sinh vĂ  bĂ´i má»¡ há»™p sá»‘, cĂ¢n chá»‰nh cĂ´n tá»± Ä‘á»™ng. GiĂ¡ chÆ°a bao gá»“m dĂ¢y curoa.", TotalBookings = 167, AverageRating = 4.8m, TotalReviews = 64, ImageUrl = "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800", IsActive = true };
+                    var sv24 = new Service { ServiceName = "Thay lá»c giĂ³ + vá»‡ sinh bá»™ cháº¿ hĂ²a khĂ­", Slug = "thay-loc-gio-ve-sinh-bo-che-hoa-khi", CategoryId = scPhuTung.CategoryId, Price = 50000, OriginalPrice = null, Duration = 30, WarrantyDays = 30, IsPopular = false, Tags = "loc-gio,che-hoa-khi,tiet-kiem-xang", ShortDescription = "Thay lá»c giĂ³ má»›i, vá»‡ sinh bá»™ cháº¿ hĂ²a khĂ­ giĂºp xe tiáº¿t kiá»‡m xÄƒng hÆ¡n 10%.", Description = "Thay lá»c giĂ³ theo Ä‘Ăºng OEM xe, vá»‡ sinh buá»“ng phao vĂ  kim ga bá»™ cháº¿ hĂ²a khĂ­ báº±ng dung dá»‹ch chuyĂªn dá»¥ng. CĂ¢n chá»‰nh tá»‰ lá»‡ há»—n há»£p nhiĂªn liá»‡u-khĂ´ng khĂ­ tá»‘i Æ°u. GiĂ¡ chÆ°a bao gá»“m lá»c giĂ³.", TotalBookings = 123, AverageRating = 4.7m, TotalReviews = 47, ImageUrl = "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=800", IsActive = true };
+                    var sv25 = new Service { ServiceName = "Thay nhá»›t há»™p sá»‘ + nhá»›t phuá»™c", Slug = "thay-nhot-hop-so-nhot-phuoc", CategoryId = scPhuTung.CategoryId, Price = 35000, OriginalPrice = null, Duration = 20, WarrantyDays = 30, IsPopular = false, Tags = "nhot-hop-so,nhot-phuoc,bao-duong", ShortDescription = "Thay nhá»›t há»™p sá»‘ xe cĂ´n tay vĂ  nhá»›t phuá»™c trÆ°á»›c. ThÆ°á»ng bá»‹ bá» qua khi báº£o dÆ°á»¡ng.", Description = "Thay nhá»›t há»™p sá»‘ xe cĂ´n tay (thÆ°á»ng bá» quĂªn khi thay nhá»›t Ä‘á»‹nh ká»³), thay nhá»›t phuá»™c trÆ°á»›c giĂºp phuá»™c Ăªm hÆ¡n. Kiá»ƒm tra Ä‘á»™ rĂ² rá»‰, tÆ° váº¥n chu ká»³ thay tiáº¿p theo. GiĂ¡ chÆ°a bao gá»“m nhá»›t.", TotalBookings = 89, AverageRating = 4.8m, TotalReviews = 33, ImageUrl = "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=800", IsActive = true };
 
-                    // ── KIỂM TRA ──
-                    var sv26 = new Service { ServiceName = "Kiểm tra tổng quát miễn phí", Slug = "kiem-tra-tong-quat-mien-phi", CategoryId = scKiemTra.CategoryId, Price = 0, OriginalPrice = null, Duration = 20, WarrantyDays = 0, IsPopular = true, Tags = "mien-phi,kiem-tra,tu-van", ShortDescription = "Kiểm tra 20 hạng mục an toàn miễn phí. Nhận báo cáo tình trạng xe chi tiết.", Description = "Kiểm tra 20 hạng mục: phanh, lốp, đèn, điện, nhớt, xích, phuộc, bugi, lọc gió, ắc quy... Nhận báo cáo chi tiết tình trạng xe, tư vấn ưu tiên sửa chữa. Hoàn toàn miễn phí, không ép mua thêm dịch vụ.", TotalBookings = 456, AverageRating = 4.9m, TotalReviews = 187, ImageUrl = "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800", IsActive = true };
-                    var sv27 = new Service { ServiceName = "Kiểm tra hệ thống điện", Slug = "kiem-tra-he-thong-dien", CategoryId = scKiemTra.CategoryId, Price = 50000, OriginalPrice = null, Duration = 30, WarrantyDays = 0, IsPopular = false, Tags = "kiem-tra-dien,ac-quy,may-phat", ShortDescription = "Kiểm tra ắc quy, máy phát điện, hệ thống đánh lửa, relay và cầu chì toàn bộ.", Description = "Dùng thiết bị chuyên dụng kiểm tra: sức khỏe ắc quy (CCA), điện áp máy phát, bộ nạp điện, hệ thống đánh lửa, relay, cầu chì. Tìm nguyên nhân xe hay hết điện, khởi động yếu, đèn chớp tắt bất thường.", TotalBookings = 134, AverageRating = 4.8m, TotalReviews = 51, ImageUrl = "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800", IsActive = true };
-                    var sv28 = new Service { ServiceName = "Đọc lỗi động cơ (OBD/FI)", Slug = "doc-loi-dong-co-obd-fi", CategoryId = scKiemTra.CategoryId, Price = 80000, OriginalPrice = null, Duration = 20, WarrantyDays = 0, IsPopular = false, Tags = "doc-loi,fi,obd,cam-bien", ShortDescription = "Đọc và xóa lỗi hệ thống FI (phun xăng điện tử) bằng thiết bị chuyên dụng.", Description = "Kết nối thiết bị chẩn đoán chuyên dụng đọc mã lỗi động cơ FI/EFI. Xác định chính xác cảm biến hoặc linh kiện lỗi, xóa lỗi sau khi sửa chữa. Hỗ trợ Honda (HDS), Yamaha (YDT), Suzuki, Kawasaki.", TotalBookings = 98, AverageRating = 4.8m, TotalReviews = 38, ImageUrl = "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800", IsActive = true };
-                    var sv29 = new Service { ServiceName = "Kiểm tra và cân chỉnh carburetor", Slug = "kiem-tra-can-chinh-carburetor", CategoryId = scKiemTra.CategoryId, Price = 60000, OriginalPrice = null, Duration = 30, WarrantyDays = 14, IsPopular = false, Tags = "carburetor,can-chinh,xe-cu", ShortDescription = "Kiểm tra, vệ sinh và cân chỉnh bộ chế hòa khí cho xe dùng xăng cơ học (không FI).", Description = "Tháo vệ sinh toàn bộ bộ chế hòa khí, cân chỉnh vít gió, kim ga, phao xăng đúng mực. Phù hợp xe cũ dùng carburetor: Wave cũ, Dream, xe côn đời cũ. Xe chạy đều hơn, tiết kiệm xăng hơn.", TotalBookings = 78, AverageRating = 4.7m, TotalReviews = 29, ImageUrl = "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=800", IsActive = true };
-                    var sv30 = new Service { ServiceName = "Kiểm tra trước chuyến đi dài", Slug = "kiem-tra-truoc-chuyen-di-dai", CategoryId = scKiemTra.CategoryId, Price = 100000, OriginalPrice = 150000, Duration = 45, WarrantyDays = 0, IsPopular = true, Tags = "truoc-chuyen-di,phuot,an-toan", ShortDescription = "Kiểm tra toàn diện xe trước chuyến phượt dài. Đảm bảo an toàn tuyệt đối cho hành trình.", Description = "Gói kiểm tra chuyên biệt cho chuyến đi dài: lốp xe (áp suất, độ mòn, vết nứt), phanh (má phanh, dầu phanh), xích nhông (độ căng, độ mòn), đèn chiếu sáng, ắc quy và điện, nhớt máy, lọc gió. Cấp báo cáo kiểm tra kèm khuyến nghị. Phù hợp xe côn tay và xe phượt.", TotalBookings = 167, AverageRating = 4.9m, TotalReviews = 68, ImageUrl = "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?w=800", IsActive = true };
+                    // â”€â”€ KIá»‚M TRA â”€â”€
+                    var sv26 = new Service { ServiceName = "Kiá»ƒm tra tá»•ng quĂ¡t miá»…n phĂ­", Slug = "kiem-tra-tong-quat-mien-phi", CategoryId = scKiemTra.CategoryId, Price = 0, OriginalPrice = null, Duration = 20, WarrantyDays = 0, IsPopular = true, Tags = "mien-phi,kiem-tra,tu-van", ShortDescription = "Kiá»ƒm tra 20 háº¡ng má»¥c an toĂ n miá»…n phĂ­. Nháº­n bĂ¡o cĂ¡o tĂ¬nh tráº¡ng xe chi tiáº¿t.", Description = "Kiá»ƒm tra 20 háº¡ng má»¥c: phanh, lá»‘p, Ä‘Ă¨n, Ä‘iá»‡n, nhá»›t, xĂ­ch, phuá»™c, bugi, lá»c giĂ³, áº¯c quy... Nháº­n bĂ¡o cĂ¡o chi tiáº¿t tĂ¬nh tráº¡ng xe, tÆ° váº¥n Æ°u tiĂªn sá»­a chá»¯a. HoĂ n toĂ n miá»…n phĂ­, khĂ´ng Ă©p mua thĂªm dá»‹ch vá»¥.", TotalBookings = 456, AverageRating = 4.9m, TotalReviews = 187, ImageUrl = "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800", IsActive = true };
+                    var sv27 = new Service { ServiceName = "Kiá»ƒm tra há»‡ thá»‘ng Ä‘iá»‡n", Slug = "kiem-tra-he-thong-dien", CategoryId = scKiemTra.CategoryId, Price = 50000, OriginalPrice = null, Duration = 30, WarrantyDays = 0, IsPopular = false, Tags = "kiem-tra-dien,ac-quy,may-phat", ShortDescription = "Kiá»ƒm tra áº¯c quy, mĂ¡y phĂ¡t Ä‘iá»‡n, há»‡ thá»‘ng Ä‘Ă¡nh lá»­a, relay vĂ  cáº§u chĂ¬ toĂ n bá»™.", Description = "DĂ¹ng thiáº¿t bá»‹ chuyĂªn dá»¥ng kiá»ƒm tra: sá»©c khá»e áº¯c quy (CCA), Ä‘iá»‡n Ă¡p mĂ¡y phĂ¡t, bá»™ náº¡p Ä‘iá»‡n, há»‡ thá»‘ng Ä‘Ă¡nh lá»­a, relay, cáº§u chĂ¬. TĂ¬m nguyĂªn nhĂ¢n xe hay háº¿t Ä‘iá»‡n, khá»Ÿi Ä‘á»™ng yáº¿u, Ä‘Ă¨n chá»›p táº¯t báº¥t thÆ°á»ng.", TotalBookings = 134, AverageRating = 4.8m, TotalReviews = 51, ImageUrl = "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800", IsActive = true };
+                    var sv28 = new Service { ServiceName = "Äá»c lá»—i Ä‘á»™ng cÆ¡ (OBD/FI)", Slug = "doc-loi-dong-co-obd-fi", CategoryId = scKiemTra.CategoryId, Price = 80000, OriginalPrice = null, Duration = 20, WarrantyDays = 0, IsPopular = false, Tags = "doc-loi,fi,obd,cam-bien", ShortDescription = "Äá»c vĂ  xĂ³a lá»—i há»‡ thá»‘ng FI (phun xÄƒng Ä‘iá»‡n tá»­) báº±ng thiáº¿t bá»‹ chuyĂªn dá»¥ng.", Description = "Káº¿t ná»‘i thiáº¿t bá»‹ cháº©n Ä‘oĂ¡n chuyĂªn dá»¥ng Ä‘á»c mĂ£ lá»—i Ä‘á»™ng cÆ¡ FI/EFI. XĂ¡c Ä‘á»‹nh chĂ­nh xĂ¡c cáº£m biáº¿n hoáº·c linh kiá»‡n lá»—i, xĂ³a lá»—i sau khi sá»­a chá»¯a. Há»— trá»£ Honda (HDS), Yamaha (YDT), Suzuki, Kawasaki.", TotalBookings = 98, AverageRating = 4.8m, TotalReviews = 38, ImageUrl = "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800", IsActive = true };
+                    var sv29 = new Service { ServiceName = "Kiá»ƒm tra vĂ  cĂ¢n chá»‰nh carburetor", Slug = "kiem-tra-can-chinh-carburetor", CategoryId = scKiemTra.CategoryId, Price = 60000, OriginalPrice = null, Duration = 30, WarrantyDays = 14, IsPopular = false, Tags = "carburetor,can-chinh,xe-cu", ShortDescription = "Kiá»ƒm tra, vá»‡ sinh vĂ  cĂ¢n chá»‰nh bá»™ cháº¿ hĂ²a khĂ­ cho xe dĂ¹ng xÄƒng cÆ¡ há»c (khĂ´ng FI).", Description = "ThĂ¡o vá»‡ sinh toĂ n bá»™ bá»™ cháº¿ hĂ²a khĂ­, cĂ¢n chá»‰nh vĂ­t giĂ³, kim ga, phao xÄƒng Ä‘Ăºng má»±c. PhĂ¹ há»£p xe cÅ© dĂ¹ng carburetor: Wave cÅ©, Dream, xe cĂ´n Ä‘á»i cÅ©. Xe cháº¡y Ä‘á»u hÆ¡n, tiáº¿t kiá»‡m xÄƒng hÆ¡n.", TotalBookings = 78, AverageRating = 4.7m, TotalReviews = 29, ImageUrl = "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=800", IsActive = true };
+                    var sv30 = new Service { ServiceName = "Kiá»ƒm tra trÆ°á»›c chuyáº¿n Ä‘i dĂ i", Slug = "kiem-tra-truoc-chuyen-di-dai", CategoryId = scKiemTra.CategoryId, Price = 100000, OriginalPrice = 150000, Duration = 45, WarrantyDays = 0, IsPopular = true, Tags = "truoc-chuyen-di,phuot,an-toan", ShortDescription = "Kiá»ƒm tra toĂ n diá»‡n xe trÆ°á»›c chuyáº¿n phÆ°á»£t dĂ i. Äáº£m báº£o an toĂ n tuyá»‡t Ä‘á»‘i cho hĂ nh trĂ¬nh.", Description = "GĂ³i kiá»ƒm tra chuyĂªn biá»‡t cho chuyáº¿n Ä‘i dĂ i: lá»‘p xe (Ă¡p suáº¥t, Ä‘á»™ mĂ²n, váº¿t ná»©t), phanh (mĂ¡ phanh, dáº§u phanh), xĂ­ch nhĂ´ng (Ä‘á»™ cÄƒng, Ä‘á»™ mĂ²n), Ä‘Ă¨n chiáº¿u sĂ¡ng, áº¯c quy vĂ  Ä‘iá»‡n, nhá»›t mĂ¡y, lá»c giĂ³. Cáº¥p bĂ¡o cĂ¡o kiá»ƒm tra kĂ¨m khuyáº¿n nghá»‹. PhĂ¹ há»£p xe cĂ´n tay vĂ  xe phÆ°á»£t.", TotalBookings = 167, AverageRating = 4.9m, TotalReviews = 68, ImageUrl = "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?w=800", IsActive = true };
 
                     context.Services.AddRange(sv01, sv02, sv03, sv04, sv05, sv06, sv07, sv08, sv09, sv10, sv11, sv12, sv13, sv14, sv15, sv16, sv17, sv18, sv19, sv20, sv21, sv22, sv23, sv24, sv25, sv26, sv27, sv28, sv29, sv30);
                     await context.SaveChangesAsync();
 
-                    // --- ServiceImages chi tiết ---
+                    // --- ServiceImages chi tiáº¿t ---
                     context.ServiceImages.AddRange(
                         new ServiceImage { ServiceId = sv01.ServiceId, ImageUrl = "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=1200", DisplayOrder = 1 },
                         new ServiceImage { ServiceId = sv01.ServiceId, ImageUrl = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200", DisplayOrder = 2 },
@@ -247,13 +247,13 @@ namespace MotoShop.Data.Data
                     );
                     await context.SaveChangesAsync();
 
-                    // --- Combo dịch vụ ---
-                    var combo1 = new ServiceCombo { ComboName = "Gói Bảo dưỡng Cơ bản",    TotalPrice = 65000,  DiscountPrice = 55000,  Description = "Gói tiết kiệm cho bảo dưỡng hàng tháng. Thay nhớt + thay bugi trong một lần ghé.",                                               ImageUrl = "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=800" };
-                    var combo2 = new ServiceCombo { ComboName = "Gói Bảo dưỡng Toàn Diện", TotalPrice = 375000, DiscountPrice = 320000, Description = "Gói bảo dưỡng định kỳ đầy đủ nhất. Phù hợp xe đã chạy 5.000–10.000km.",                                                      ImageUrl = "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800" };
-                    var combo3 = new ServiceCombo { ComboName = "Gói Rửa xe + Bảo dưỡng",  TotalPrice = 110000, DiscountPrice = 90000,  Description = "Kết hợp thay nhớt và rửa xe cao cấp. Xe vừa bảo dưỡng vừa sạch bóng.",                                                        ImageUrl = "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?w=800" };
-                    var combo4 = new ServiceCombo { ComboName = "Gói An Toàn Phanh + Lốp", TotalPrice = 130000, DiscountPrice = 110000, Description = "Kiểm tra và sửa phanh, thay lốp cùng lúc. An toàn toàn diện cho cả xe.",                                                      ImageUrl = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800" };
-                    var combo5 = new ServiceCombo { ComboName = "Gói Phượt An Toàn",        TotalPrice = 290000, DiscountPrice = 240000, Description = "Chuẩn bị hoàn hảo trước chuyến phượt dài. Đảm bảo xe luôn trong trạng thái tốt nhất.",                                        ImageUrl = "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=800" };
-                    var combo6 = new ServiceCombo { ComboName = "Gói Độ xe Cơ bản",         TotalPrice = 430000, DiscountPrice = 380000, Description = "Gói độ xe phổ biến nhất: LED sáng hơn, giảm xóc tốt hơn, ngoại thất đẹp hơn.",                                                ImageUrl = "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800" };
+                    // --- Combo dá»‹ch vá»¥ ---
+                    var combo1 = new ServiceCombo { ComboName = "GĂ³i Báº£o dÆ°á»¡ng CÆ¡ báº£n",    TotalPrice = 65000,  DiscountPrice = 55000,  Description = "GĂ³i tiáº¿t kiá»‡m cho báº£o dÆ°á»¡ng hĂ ng thĂ¡ng. Thay nhá»›t + thay bugi trong má»™t láº§n ghĂ©.",                                               ImageUrl = "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=800" };
+                    var combo2 = new ServiceCombo { ComboName = "GĂ³i Báº£o dÆ°á»¡ng ToĂ n Diá»‡n", TotalPrice = 375000, DiscountPrice = 320000, Description = "GĂ³i báº£o dÆ°á»¡ng Ä‘á»‹nh ká»³ Ä‘áº§y Ä‘á»§ nháº¥t. PhĂ¹ há»£p xe Ä‘Ă£ cháº¡y 5.000â€“10.000km.",                                                      ImageUrl = "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800" };
+                    var combo3 = new ServiceCombo { ComboName = "GĂ³i Rá»­a xe + Báº£o dÆ°á»¡ng",  TotalPrice = 110000, DiscountPrice = 90000,  Description = "Káº¿t há»£p thay nhá»›t vĂ  rá»­a xe cao cáº¥p. Xe vá»«a báº£o dÆ°á»¡ng vá»«a sáº¡ch bĂ³ng.",                                                        ImageUrl = "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?w=800" };
+                    var combo4 = new ServiceCombo { ComboName = "GĂ³i An ToĂ n Phanh + Lá»‘p", TotalPrice = 130000, DiscountPrice = 110000, Description = "Kiá»ƒm tra vĂ  sá»­a phanh, thay lá»‘p cĂ¹ng lĂºc. An toĂ n toĂ n diá»‡n cho cáº£ xe.",                                                      ImageUrl = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800" };
+                    var combo5 = new ServiceCombo { ComboName = "GĂ³i PhÆ°á»£t An ToĂ n",        TotalPrice = 290000, DiscountPrice = 240000, Description = "Chuáº©n bá»‹ hoĂ n háº£o trÆ°á»›c chuyáº¿n phÆ°á»£t dĂ i. Äáº£m báº£o xe luĂ´n trong tráº¡ng thĂ¡i tá»‘t nháº¥t.",                                        ImageUrl = "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=800" };
+                    var combo6 = new ServiceCombo { ComboName = "GĂ³i Äá»™ xe CÆ¡ báº£n",         TotalPrice = 430000, DiscountPrice = 380000, Description = "GĂ³i Ä‘á»™ xe phá»• biáº¿n nháº¥t: LED sĂ¡ng hÆ¡n, giáº£m xĂ³c tá»‘t hÆ¡n, ngoáº¡i tháº¥t Ä‘áº¹p hÆ¡n.",                                                ImageUrl = "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800" };
                     context.ServiceCombos.AddRange(combo1, combo2, combo3, combo4, combo5, combo6);
                     await context.SaveChangesAsync();
 
@@ -279,617 +279,310 @@ namespace MotoShop.Data.Data
                     await context.SaveChangesAsync();
                 }
 
-                // 9. SEED 10 SẢN PHẨM ĐẦY ĐỦ THÔNG TIN
+                // 9. SEED PRODUCTS
                 if (!context.Products.Any())
                 {
-                    // Lấy categories và brands đã seed
-                    var catDauNhot    = await context.Categories.FirstAsync(c => c.CategoryName == "Dầu nhớt & Bôi trơn");
-                    var catPhuTung    = await context.Categories.FirstAsync(c => c.CategoryName == "Phụ tùng & Phụ kiện");
-                    var catPhanh      = await context.Categories.FirstAsync(c => c.CategoryName == "Hệ thống phanh");
-                    var catLop        = await context.Categories.FirstAsync(c => c.CategoryName == "Lốp xe & Vành");
-                    var catGiamXoc    = await context.Categories.FirstAsync(c => c.CategoryName == "Giảm xóc");
+                    var catMap   = await context.Categories.ToDictionaryAsync(c => c.Slug ?? "", c => c.CategoryId);
+                    var brandMap = await context.Brands.ToDictionaryAsync(b => b.BrandName, b => b.BrandId);
 
-                    var brandMotul    = await context.Brands.FirstAsync(b => b.BrandName == "Motul");
-                    var brandLiqui    = await context.Brands.FirstAsync(b => b.BrandName == "Liqui Moly");
-                    var brandBrembo   = await context.Brands.FirstAsync(b => b.BrandName == "Brembo");
-                    var brandMichelin = await context.Brands.FirstAsync(b => b.BrandName == "Michelin");
-                    var brandOhlins   = await context.Brands.FirstAsync(b => b.BrandName == "Ohlins");
-                    var brandYSS      = await context.Brands.FirstAsync(b => b.BrandName == "YSS");
-                    var brandHonda    = await context.Brands.FirstAsync(b => b.BrandName == "Honda");
-                    var brandYamaha   = await context.Brands.FirstAsync(b => b.BrandName == "Yamaha");
-                    var brandNGK      = await context.Brands.FirstAsync(b => b.BrandName == "NGK");
+                    int cOil  = catMap.GetValueOrDefault("dau-nhot-boi-tron");
+                    int cTire = catMap.GetValueOrDefault("lop-xe-vanh");
+                    int cBrk  = catMap.GetValueOrDefault("he-thong-phanh");
+                    int cShk  = catMap.GetValueOrDefault("giam-xoc");
+                    int cBat  = catMap.GetValueOrDefault("ac-quy-dien");
+                    int cHelm = catMap.GetValueOrDefault("mu-bao-ho");
+                    int cPart = catMap.GetValueOrDefault("phu-tung-phu-kien");
 
-                    // Lấy motorbike models
-                    var modelWinnerX  = await context.MotorbikeModels.FirstOrDefaultAsync(m => m.ModelName == "Winner X");
-                    var modelExciter  = await context.MotorbikeModels.FirstOrDefaultAsync(m => m.ModelName == "Exciter 155");
-                    var modelNVX      = await context.MotorbikeModels.FirstOrDefaultAsync(m => m.ModelName == "NVX 155");
-                    var modelAirBlade = await context.MotorbikeModels.FirstOrDefaultAsync(m => m.ModelName == "Air Blade 160");
-                    var modelPCX      = await context.MotorbikeModels.FirstOrDefaultAsync(m => m.ModelName == "PCX 160");
-                    var modelVario    = await context.MotorbikeModels.FirstOrDefaultAsync(m => m.ModelName == "Vario 160");
+                    int bMotul = brandMap.GetValueOrDefault("Motul");
+                    int bLiqui = brandMap.GetValueOrDefault("Liqui Moly");
+                    int bBrem  = brandMap.GetValueOrDefault("Brembo");
+                    int bMich  = brandMap.GetValueOrDefault("Michelin");
+                    int bOhl   = brandMap.GetValueOrDefault("Ohlins");
+                    int bYSS   = brandMap.GetValueOrDefault("YSS");
+                    int bHonda = brandMap.GetValueOrDefault("Honda");
+                    int bYama  = brandMap.GetValueOrDefault("Yamaha");
+                    int bNGK   = brandMap.GetValueOrDefault("NGK");
 
-                    // ============================================================
-                    // Tạo các Attribute dùng chung
-                    // ============================================================
-                    var attrDungTich = new ProductAttribute { AttributeName = "Dung tích" };
-                    var attrKichThuoc = new ProductAttribute { AttributeName = "Kích thước" };
-                    var attrViTri = new ProductAttribute { AttributeName = "Vị trí" };
-                    var attrDongXe = new ProductAttribute { AttributeName = "Dòng xe" };
-                    context.ProductAttributes.AddRange(attrDungTich, attrKichThuoc, attrViTri, attrDongXe);
-                    await context.SaveChangesAsync();
-
-                    // Attribute values - Dung tích
-                    var val800ml = new AttributeValue { AttributeId = attrDungTich.AttributeId, Value = "800ml" };
-                    var val1L    = new AttributeValue { AttributeId = attrDungTich.AttributeId, Value = "1 Lít" };
-                    var val4L    = new AttributeValue { AttributeId = attrDungTich.AttributeId, Value = "4 Lít" };
-                    var val250ml = new AttributeValue { AttributeId = attrDungTich.AttributeId, Value = "250ml" };
-                    var val500ml = new AttributeValue { AttributeId = attrDungTich.AttributeId, Value = "500ml" };
-                    context.AttributeValues.AddRange(val800ml, val1L, val4L, val250ml, val500ml);
-
-                    // Attribute values - Kích thước lốp
-                    var valLop7090  = new AttributeValue { AttributeId = attrKichThuoc.AttributeId, Value = "70/90-17" };
-                    var valLop8090  = new AttributeValue { AttributeId = attrKichThuoc.AttributeId, Value = "80/90-17" };
-                    var valLop9080  = new AttributeValue { AttributeId = attrKichThuoc.AttributeId, Value = "90/80-17" };
-                    var valLop10080 = new AttributeValue { AttributeId = attrKichThuoc.AttributeId, Value = "100/80-17" };
-                    context.AttributeValues.AddRange(valLop7090, valLop8090, valLop9080, valLop10080);
-
-                    // Attribute values - Vị trí phanh
-                    var valTruoc = new AttributeValue { AttributeId = attrViTri.AttributeId, Value = "Phanh Trước" };
-                    var valSau   = new AttributeValue { AttributeId = attrViTri.AttributeId, Value = "Phanh Sau" };
-                    context.AttributeValues.AddRange(valTruoc, valSau);
-
-                    // Attribute values - Dòng xe
-                    var valWave        = new AttributeValue { AttributeId = attrDongXe.AttributeId, Value = "Wave / Dream / Future" };
-                    var valWinnerX     = new AttributeValue { AttributeId = attrDongXe.AttributeId, Value = "Winner X / CB150R" };
-                    var valAirBladePCX = new AttributeValue { AttributeId = attrDongXe.AttributeId, Value = "Air Blade / PCX 160" };
-                    var valExciter     = new AttributeValue { AttributeId = attrDongXe.AttributeId, Value = "Exciter 150/155" };
-                    var valNVX         = new AttributeValue { AttributeId = attrDongXe.AttributeId, Value = "NVX 155 / Aerox" };
-                    var valFreeGo      = new AttributeValue { AttributeId = attrDongXe.AttributeId, Value = "FreeGo 125" };
-                    context.AttributeValues.AddRange(valWave, valWinnerX, valAirBladePCX, valExciter, valNVX, valFreeGo);
-                    await context.SaveChangesAsync();
-
-                    // Seed review customer
-                    var reviewCustomer = await context.Customers.FirstOrDefaultAsync();
-                    if (reviewCustomer == null)
+                    var products = new List<Product>
                     {
-                        reviewCustomer = new Customer { FullName = "Trần Minh Khoa", Email = "khoa.tran@gmail.com", Phone = "0901234567", AvatarUrl = "https://i.pravatar.cc/150?img=12" };
-                        context.Customers.Add(reviewCustomer);
-                        await context.SaveChangesAsync();
-                    }
-                    var reviewCustomer2 = new Customer { FullName = "Nguyễn Thị Lan", Email = "lan.nguyen@gmail.com", Phone = "0912345678", AvatarUrl = "https://i.pravatar.cc/150?img=47" };
-                    context.Customers.Add(reviewCustomer2);
-                    await context.SaveChangesAsync();
-
-                    // ============================================================
-                    // SẢN PHẨM 1: Dầu nhớt Motul 7100 10W40 Full Synthetic
-                    // ============================================================
-                    var p1 = new Product
-                    {
-                        ProductName = "Dầu nhớt Motul 7100 10W40 4T",
-                        CategoryId = catDauNhot.CategoryId,
-                        BrandId = brandMotul.BrandId,
-                        Slug = "dau-nhot-motul-7100-10w40-4t",
-                        Description = "<h4>Motul 7100 10W40 — Nhớt Tổng Hợp Toàn Phần Cao Cấp</h4><p>Motul 7100 là dòng nhớt <strong>100% tổng hợp ester</strong> tiêu chuẩn đường đua, được hàng triệu biker tin dùng tại Việt Nam. Công thức ester tiên tiến giúp bảo vệ động cơ tối đa, giảm mài mòn và duy trì hiệu suất ổn định ngay cả khi vận hành cường độ cao.</p><ul><li>Tổng hợp toàn phần 100% ester — bảo vệ vượt trội</li><li>Giảm nhiệt độ động cơ hiệu quả</li><li>Phù hợp BS6/Euro 5, hộp số tích hợp</li><li>Bảo hành 3.000km hoặc 3 tháng</li></ul>",
-                        IsActive = true,
-                        IsFeatured = true,
-                        CreatedDate = DateTime.Now.AddDays(-30)
+                        new Product { CategoryId = cOil,  BrandId = bMotul, ProductName = "Dầu nhớt Motul 3000 4T",        Slug = "dau-nhot-motul-3000-4t",       Description = "Dầu nhớt khoáng Motul 3000 4T đặc biệt cho xe máy 4 thì. Bảo vệ động cơ tối ưu, giảm ma sát và mài mòn.",           IsFeatured = true,  IsActive = true, SoldCount = 420 },
+                        new Product { CategoryId = cOil,  BrandId = bMotul, ProductName = "Dầu nhớt Motul 7100 4T",        Slug = "dau-nhot-motul-7100-4t",       Description = "Nhớt tổng hợp 100% Motul 7100 4T cao cấp. Hiệu suất vượt trội, phù hợp xe thể thao và xe phân khối lớn.",         IsFeatured = true,  IsActive = true, SoldCount = 312 },
+                        new Product { CategoryId = cOil,  BrandId = bLiqui, ProductName = "Dầu nhớt Liqui Moly Scooter",  Slug = "dau-nhot-liqui-moly-scooter",  Description = "Nhớt bán tổng hợp Liqui Moly đặc chế cho xe tay ga. Bảo vệ bộ côn CVT, giảm tiêu hao nhiên liệu.",                  IsFeatured = false, IsActive = true, SoldCount = 198 },
+                        new Product { CategoryId = cOil,  BrandId = bHonda, ProductName = "Lọc dầu Honda chính hãng",     Slug = "loc-dau-honda-chinh-hang",     Description = "Lọc dầu chính hãng Honda phù hợp Wave Alpha, Wave RSX, AirBlade, SH. Lọc sạch tạp chất, bảo vệ động cơ.",           IsFeatured = false, IsActive = true, SoldCount = 534 },
+                        new Product { CategoryId = cTire, BrandId = bMich,  ProductName = "Lốp Michelin Pilot Street 2",  Slug = "lop-michelin-pilot-street-2",  Description = "Lốp Michelin Pilot Street 2 chống trượt vượt trội, bền bỉ trên mọi địa hình. Tiêu chuẩn OEM xe Honda, Yamaha.",       IsFeatured = true,  IsActive = true, SoldCount = 267 },
+                        new Product { CategoryId = cTire, BrandId = bMich,  ProductName = "Lốp Michelin City Grip 2",     Slug = "lop-michelin-city-grip-2",     Description = "Lốp Michelin City Grip 2 thiết kế riêng cho đô thị. Bám đường xuất sắc khi trời mưa, tiếng ồn thấp.",                IsFeatured = false, IsActive = true, SoldCount = 189 },
+                        new Product { CategoryId = cTire, BrandId = bMich,  ProductName = "Lốp Dunlop TT900 GP",          Slug = "lop-dunlop-tt900-gp",          Description = "Lốp Dunlop TT900 GP thể thao, kết cấu đặc biệt giúp xe bám đường ở tốc độ cao. Phù hợp xe côn tay.",                IsFeatured = false, IsActive = true, SoldCount = 145 },
+                        new Product { CategoryId = cBrk,  BrandId = bBrem,  ProductName = "Má phanh Brembo Sintered",     Slug = "ma-phanh-brembo-sintered",     Description = "Má phanh Brembo Sintered hiệu năng cao, chịu nhiệt tốt. Tăng lực phanh 30% so với má phanh thường. Cho Wave, AirBlade.", IsFeatured = true,  IsActive = true, SoldCount = 356 },
+                        new Product { CategoryId = cBrk,  BrandId = bMotul, ProductName = "Dầu phanh Motul RBF 660",      Slug = "dau-phanh-motul-rbf-660",      Description = "Dầu phanh Motul RBF 660 DOT 4 Racing. Điểm sôi khô 325°C, điểm sôi ướt 204°C. Dành cho xe thể thao.",              IsFeatured = false, IsActive = true, SoldCount = 123 },
+                        new Product { CategoryId = cShk,  BrandId = bYSS,   ProductName = "Giảm xóc YSS G-Plus",          Slug = "giam-xoc-yss-g-plus",          Description = "Giảm xóc sau YSS G-Plus nâng cấp, hành trình 330mm. Điều chỉnh độ cứng 5 cấp. Phù hợp Wave, Future, Exciter.",      IsFeatured = true,  IsActive = true, SoldCount = 98  },
+                        new Product { CategoryId = cShk,  BrandId = bOhl,   ProductName = "Giảm xóc Ohlins S36E",         Slug = "giam-xoc-ohlins-s36e",         Description = "Giảm xóc Ohlins S36E cao cấp nhập khẩu chính hãng Thụy Điển. Công nghệ TTX, êm ái và ổn định tuyệt vời.",           IsFeatured = true,  IsActive = true, SoldCount = 43  },
+                        new Product { CategoryId = cBat,  BrandId = bHonda, ProductName = "Ắc quy GS GTZ5S",              Slug = "ac-quy-gs-gtz5s",              Description = "Ắc quy GS GTZ5S 12V-3.5Ah MF không cần bảo dưỡng. Khởi động mạnh mẽ, tuổi thọ cao. Bảo hành 12 tháng.",             IsFeatured = false, IsActive = true, SoldCount = 234 },
+                        new Product { CategoryId = cHelm, BrandId = bYama,  ProductName = "Mũ bảo hiểm AGV K1 S",         Slug = "mu-bao-hiem-agv-k1-s",         Description = "Mũ AGV K1 S full face cao cấp nhập khẩu Ý. Vỏ ngoài sợi composite, lưỡi trai kép chống sương mù. Chứng nhận DOT+ECE.", IsFeatured = true,  IsActive = true, SoldCount = 76  },
+                        new Product { CategoryId = cPart, BrandId = bNGK,   ProductName = "Bugi NGK CR8E",                Slug = "bugi-ngk-cr8e",                Description = "Bugi NGK CR8E chính hãng, phù hợp Honda Wave, AirBlade, Vario. Đánh lửa ổn định, bền bỉ, tiết kiệm nhiên liệu.",     IsFeatured = false, IsActive = true, SoldCount = 678 },
+                        new Product { CategoryId = cPart, BrandId = bNGK,   ProductName = "Bugi NGK Iridium CPR8EAIX",   Slug = "bugi-ngk-iridium-cpr8eaix",   Description = "Bugi NGK Iridium cao cấp, điện cực iridium siêu mảnh. Tuổi thọ gấp 4 lần bugi thường. Xe chạy mượt và tiết kiệm xăng.", IsFeatured = false, IsActive = true, SoldCount = 245 },
+                        new Product { CategoryId = cPart, BrandId = bYama,  ProductName = "Bộ nhông xích Yamaha Exciter", Slug = "nhong-xich-yamaha-exciter",    Description = "Bộ nhông xích chính hãng Yamaha cho Exciter 155. Thép tôi cứng, chống mài mòn. Bao gồm xích 428H, nhông trước 14T, đĩa 42T.", IsFeatured = false, IsActive = true, SoldCount = 167 },
+                        new Product { CategoryId = cPart, BrandId = bHonda, ProductName = "Lọc gió Honda Air Blade 160",  Slug = "loc-gio-honda-air-blade-160",  Description = "Lọc gió chính hãng Honda cho Air Blade 160. Lọc bụi hiệu quả, đảm bảo hỗn hợp nhiên liệu tối ưu.",                  IsFeatured = false, IsActive = true, SoldCount = 312 },
+                        new Product { CategoryId = cPart, BrandId = bHonda, ProductName = "Gương chiếu hậu Honda SH",     Slug = "guong-chieu-hau-honda-sh",     Description = "Gương chiếu hậu chính hãng Honda SH 125i/150i. Tầm nhìn rộng, chống chói, điều chỉnh dễ dàng.",                    IsFeatured = false, IsActive = true, SoldCount = 89  },
+                        new Product { CategoryId = cOil,  BrandId = bHonda, ProductName = "Nhớt phuộc Honda 10W30",       Slug = "nhot-phuoc-honda-10w30",       Description = "Dầu nhớt phuộc trước chính hãng Honda 10W30. Giữ phuộc hoạt động êm ái, chống rò rỉ, bảo hành 30 ngày.",              IsFeatured = false, IsActive = true, SoldCount = 145 },
+                        new Product { CategoryId = cBrk,  BrandId = bBrem,  ProductName = "Dầu phanh Brembo Dot 4",       Slug = "dau-phanh-brembo-dot4",        Description = "Dầu phanh Brembo DOT 4 Racing. Điểm sôi cao, độ nhớt ổn định theo nhiệt độ. Phù hợp mọi xe có phanh đĩa.",           IsFeatured = false, IsActive = true, SoldCount = 134 },
                     };
-                    context.Products.Add(p1);
+                    context.Products.AddRange(products);
                     await context.SaveChangesAsync();
 
-                    context.ProductImages.AddRange(new List<ProductImage>
-                    {
-                        new ProductImage { ProductId = p1.ProductId, ImageUrl = "https://shop2banh.vn/images/thumbs/2024/08/nhot-motul-7100-10w40-1l-2346-slide-products-66c41032b2819.png", IsPrimary = true, DisplayOrder = 1 },
-                        new ProductImage { ProductId = p1.ProductId, ImageUrl = "https://bizweb.dktcdn.net/100/409/246/products/nhot-motul-7100-10w40-1l-hang-chinh-hang-1-081498b5-5c3b-4860-9be0-f94d93026a8d.jpg", IsPrimary = false, DisplayOrder = 2 },
-                        new ProductImage { ProductId = p1.ProductId, ImageUrl = "https://www.motul.com/sites/default/files/product-images/104093-BS4-4L.jpg", IsPrimary = false, DisplayOrder = 3 },
-                        new ProductImage { ProductId = p1.ProductId, ImageUrl = "https://product.hstatic.net/200000430800/product/motul7100-banner_grande.jpg", IsPrimary = false, DisplayOrder = 4 }
-                    });
-                    context.ProductSpecifications.AddRange(new List<ProductSpecification>
-                    {
-                        new ProductSpecification { ProductId = p1.ProductId, SpecName = "Loại nhớt", SpecValue = "Tổng hợp toàn phần (100% Ester)", DisplayOrder = 1 },
-                        new ProductSpecification { ProductId = p1.ProductId, SpecName = "Độ nhớt", SpecValue = "10W-40", DisplayOrder = 2 },
-                        new ProductSpecification { ProductId = p1.ProductId, SpecName = "Tiêu chuẩn API", SpecValue = "API SL / JASO MA2", DisplayOrder = 3 },
-                        new ProductSpecification { ProductId = p1.ProductId, SpecName = "Ứng dụng", SpecValue = "Xe số, xe côn tay 4 thì", DisplayOrder = 4 },
-                        new ProductSpecification { ProductId = p1.ProductId, SpecName = "Chu kỳ thay", SpecValue = "3.000km hoặc 3 tháng", DisplayOrder = 5 }
-                    });
-                    context.ProductTags.AddRange(new List<ProductTag>
-                    {
-                        new ProductTag { ProductId = p1.ProductId, TagName = "nhớt tổng hợp" },
-                        new ProductTag { ProductId = p1.ProductId, TagName = "Motul 7100" },
-                        new ProductTag { ProductId = p1.ProductId, TagName = "dầu động cơ" }
-                    });
-                    var p1v1 = new ProductVariant { ProductId = p1.ProductId, VariantName = "Chai 1 Lít", Price = 320000, OriginalPrice = 355000, CostPrice = 220000, SKU = "MOTUL-7100-1L", StockQuantity = 150, ImageUrl = "https://shop2banh.vn/images/thumbs/2024/08/nhot-motul-7100-10w40-1l-2346-slide-products-66c41032b2819.png", MinStockLevel = 20, CreatedDate = DateTime.Now };
-                    var p1v2 = new ProductVariant { ProductId = p1.ProductId, VariantName = "Can 4 Lít", Price = 1050000, OriginalPrice = 1200000, CostPrice = 720000, SKU = "MOTUL-7100-4L", StockQuantity = 80, ImageUrl = "https://www.motul.com/sites/default/files/product-images/104093-BS4-4L.jpg", MinStockLevel = 10, CreatedDate = DateTime.Now };
-                    context.ProductVariants.AddRange(p1v1, p1v2);
-                    await context.SaveChangesAsync();
+                    // Variants
+                    var imgOil1  = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600";
+                    var imgOil2  = "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=600";
+                    var imgTire  = "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=600";
+                    var imgBrk   = "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=600";
+                    var imgShk   = "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=600";
+                    var imgBat   = "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=600";
+                    var imgHelm  = "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?w=600";
+                    var imgPart  = "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=600";
 
-                    context.ProductVariantAttributeValues.AddRange(
-                        new ProductVariantAttributeValue { ProductVariantId = p1v1.ProductVariantId, ValueId = val1L.ValueId },
-                        new ProductVariantAttributeValue { ProductVariantId = p1v2.ProductVariantId, ValueId = val4L.ValueId }
-                    );
-                    context.ProductReviews.AddRange(new List<ProductReview>
+                    var p = products; // shorthand
+                    var variants = new List<ProductVariant>
                     {
-                        new ProductReview { ProductId = p1.ProductId, ProductVariantId = p1v1.ProductVariantId, CustomerId = reviewCustomer.CustomerId, Rating = 5, Comment = "Nhớt thật sự rất tốt, máy êm hơn hẳn so với nhớt hãng. Đã dùng được 2.500km vẫn còn rất ngon. Winner X của mình mát máy hơn nhiều.", Status = "Approved", CreatedDate = DateTime.Now.AddDays(-10) },
-                        new ProductReview { ProductId = p1.ProductId, ProductVariantId = p1v2.ProductVariantId, CustomerId = reviewCustomer2.CustomerId, Rating = 5, Comment = "Mua can 4L về tự thay tiết kiệm hơn nhiều. Hàng chính hãng, tem niêm phong nguyên vẹn. Giao hàng nhanh, đóng gói cẩn thận.", Status = "Approved", CreatedDate = DateTime.Now.AddDays(-5) }
-                    });
-                    await context.SaveChangesAsync();
-
-                    // ============================================================
-                    // SẢN PHẨM 2: Dầu nhớt Motul 5100 10W40 Semi-Synthetic
-                    // ============================================================
-                    var p2 = new Product
-                    {
-                        ProductName = "Dầu nhớt Motul 5100 10W40 4T",
-                        CategoryId = catDauNhot.CategoryId,
-                        BrandId = brandMotul.BrandId,
-                        Slug = "dau-nhot-motul-5100-10w40-4t",
-                        Description = "<h4>Motul 5100 — Bán Tổng Hợp Ester Chính Hãng</h4><p>Motul 5100 là dòng nhớt <strong>bán tổng hợp (Technosynthese)</strong> sử dụng công nghệ ester, mang lại hiệu suất bôi trơn tốt với chi phí hợp lý hơn dòng 7100. Phù hợp với đa số xe số và xe côn tay thế hệ hiện tại.</p><ul><li>Công nghệ Technosynthese (bán tổng hợp ester)</li><li>Bảo vệ động cơ và hộp số tích hợp</li><li>Tiêu chuẩn JASO MA2 — phù hợp ly hợp ướt</li><li>Tiết kiệm nhiên liệu hơn nhờt khoáng</li></ul>",
-                        IsActive = true,
-                        IsFeatured = true,
-                        CreatedDate = DateTime.Now.AddDays(-25)
+                        // Motul 3000
+                        new ProductVariant { ProductId = p[0].ProductId, VariantName = "Motul 3000 4T 10W40 - 0.8L", Price = 95000,    OriginalPrice = 110000,  CostPrice = 70000,  StockQuantity = 150, SKU = "MOT3000-08", ImageUrl = imgOil1 },
+                        new ProductVariant { ProductId = p[0].ProductId, VariantName = "Motul 3000 4T 10W40 - 1L",   Price = 115000,   OriginalPrice = 130000,  CostPrice = 85000,  StockQuantity = 120, SKU = "MOT3000-10", ImageUrl = imgOil1 },
+                        // Motul 7100
+                        new ProductVariant { ProductId = p[1].ProductId, VariantName = "Motul 7100 4T 10W40 - 1L",   Price = 195000,   OriginalPrice = null,     CostPrice = 145000, StockQuantity = 80,  SKU = "MOT7100-10", ImageUrl = imgOil2 },
+                        new ProductVariant { ProductId = p[1].ProductId, VariantName = "Motul 7100 4T 5W40 - 1L",    Price = 205000,   OriginalPrice = null,     CostPrice = 155000, StockQuantity = 60,  SKU = "MOT7100-5W", ImageUrl = imgOil2 },
+                        // Liqui Moly
+                        new ProductVariant { ProductId = p[2].ProductId, VariantName = "Liqui Moly Scooter 10W40 - 0.8L", Price = 185000, OriginalPrice = 210000, CostPrice = 140000, StockQuantity = 70,  SKU = "LQSC-08",   ImageUrl = imgOil1 },
+                        // Lọc dầu Honda
+                        new ProductVariant { ProductId = p[3].ProductId, VariantName = "Lọc dầu Honda Wave/AirBlade", Price = 35000,    OriginalPrice = null,     CostPrice = 22000,  StockQuantity = 200, SKU = "LDHONDA-WA", ImageUrl = imgPart },
+                        new ProductVariant { ProductId = p[3].ProductId, VariantName = "Lọc dầu Honda SH/PCX",        Price = 42000,    OriginalPrice = null,     CostPrice = 28000,  StockQuantity = 180, SKU = "LDHONDA-SH", ImageUrl = imgPart },
+                        // Michelin Pilot Street 2
+                        new ProductVariant { ProductId = p[4].ProductId, VariantName = "Pilot Street 2 90/90-14 F",   Price = 450000,   OriginalPrice = 490000,  CostPrice = 340000, StockQuantity = 45,  SKU = "MCH-PS2-F",  ImageUrl = imgTire },
+                        new ProductVariant { ProductId = p[4].ProductId, VariantName = "Pilot Street 2 100/80-14 R",  Price = 490000,   OriginalPrice = 530000,  CostPrice = 370000, StockQuantity = 40,  SKU = "MCH-PS2-R",  ImageUrl = imgTire },
+                        // Michelin City Grip 2
+                        new ProductVariant { ProductId = p[5].ProductId, VariantName = "City Grip 2 90/90-14",         Price = 420000,   OriginalPrice = null,     CostPrice = 315000, StockQuantity = 35,  SKU = "MCH-CG2-14", ImageUrl = imgTire },
+                        new ProductVariant { ProductId = p[5].ProductId, VariantName = "City Grip 2 100/90-10",        Price = 395000,   OriginalPrice = null,     CostPrice = 295000, StockQuantity = 30,  SKU = "MCH-CG2-10", ImageUrl = imgTire },
+                        // Dunlop TT900
+                        new ProductVariant { ProductId = p[6].ProductId, VariantName = "TT900 GP 80/90-17 F",          Price = 320000,   OriginalPrice = 350000,  CostPrice = 240000, StockQuantity = 55,  SKU = "DUN-TT9-F",  ImageUrl = imgTire },
+                        new ProductVariant { ProductId = p[6].ProductId, VariantName = "TT900 GP 100/90-17 R",         Price = 360000,   OriginalPrice = 390000,  CostPrice = 270000, StockQuantity = 50,  SKU = "DUN-TT9-R",  ImageUrl = imgTire },
+                        // Brembo Sintered
+                        new ProductVariant { ProductId = p[7].ProductId, VariantName = "Brembo Sin. Wave Alpha/RSX",   Price = 250000,   OriginalPrice = 290000,  CostPrice = 185000, StockQuantity = 60,  SKU = "BRE-SIN-WA", ImageUrl = imgBrk },
+                        new ProductVariant { ProductId = p[7].ProductId, VariantName = "Brembo Sin. AirBlade/Vario",   Price = 280000,   OriginalPrice = 320000,  CostPrice = 210000, StockQuantity = 55,  SKU = "BRE-SIN-AB", ImageUrl = imgBrk },
+                        new ProductVariant { ProductId = p[7].ProductId, VariantName = "Brembo Sin. Exciter/NVX",      Price = 350000,   OriginalPrice = 390000,  CostPrice = 265000, StockQuantity = 40,  SKU = "BRE-SIN-EX", ImageUrl = imgBrk },
+                        // Dầu phanh Motul RBF 660
+                        new ProductVariant { ProductId = p[8].ProductId, VariantName = "Motul RBF 660 DOT4 - 250ml",  Price = 280000,   OriginalPrice = null,     CostPrice = 210000, StockQuantity = 40,  SKU = "MOTRB-250",  ImageUrl = imgBrk },
+                        // YSS G-Plus
+                        new ProductVariant { ProductId = p[9].ProductId, VariantName = "YSS G-Plus Wave Alpha/RSX",    Price = 1250000,  OriginalPrice = 1450000, CostPrice = 950000, StockQuantity = 25,  SKU = "YSS-GP-WA",  ImageUrl = imgShk },
+                        new ProductVariant { ProductId = p[9].ProductId, VariantName = "YSS G-Plus AirBlade/PCX",      Price = 1450000,  OriginalPrice = 1650000, CostPrice = 1100000,StockQuantity = 20,  SKU = "YSS-GP-AB",  ImageUrl = imgShk },
+                        new ProductVariant { ProductId = p[9].ProductId, VariantName = "YSS G-Plus Exciter 155",        Price = 1550000,  OriginalPrice = 1750000, CostPrice = 1180000,StockQuantity = 18,  SKU = "YSS-GP-EX",  ImageUrl = imgShk },
+                        // Ohlins S36E
+                        new ProductVariant { ProductId = p[10].ProductId, VariantName = "Ohlins S36E 330mm Black",     Price = 3500000,  OriginalPrice = null,     CostPrice = 2700000,StockQuantity = 10,  SKU = "OHL-S36-BK", ImageUrl = imgShk },
+                        new ProductVariant { ProductId = p[10].ProductId, VariantName = "Ohlins S36E 350mm Gold",      Price = 3800000,  OriginalPrice = null,     CostPrice = 2950000,StockQuantity = 8,   SKU = "OHL-S36-GD", ImageUrl = imgShk },
+                        // Ắc quy GS
+                        new ProductVariant { ProductId = p[11].ProductId, VariantName = "GS GTZ5S 12V-3.5Ah MF",      Price = 320000,   OriginalPrice = null,     CostPrice = 240000, StockQuantity = 40,  SKU = "GS-GTZ5S",   ImageUrl = imgBat },
+                        new ProductVariant { ProductId = p[11].ProductId, VariantName = "GS YTX9-BS 12V-8Ah MF",      Price = 580000,   OriginalPrice = null,     CostPrice = 440000, StockQuantity = 25,  SKU = "GS-YTX9",    ImageUrl = imgBat },
+                        // Mũ AGV K1 S
+                        new ProductVariant { ProductId = p[12].ProductId, VariantName = "AGV K1 S - Size M - Đen",    Price = 1800000,  OriginalPrice = 2100000, CostPrice = 1380000,StockQuantity = 15,  SKU = "AGV-K1-M-BK",ImageUrl = imgHelm },
+                        new ProductVariant { ProductId = p[12].ProductId, VariantName = "AGV K1 S - Size L - Đen",    Price = 1800000,  OriginalPrice = 2100000, CostPrice = 1380000,StockQuantity = 12,  SKU = "AGV-K1-L-BK",ImageUrl = imgHelm },
+                        new ProductVariant { ProductId = p[12].ProductId, VariantName = "AGV K1 S - Size XL - Trắng", Price = 1900000,  OriginalPrice = 2200000, CostPrice = 1450000,StockQuantity = 10,  SKU = "AGV-K1-XL-W",ImageUrl = imgHelm },
+                        // Bugi NGK CR8E
+                        new ProductVariant { ProductId = p[13].ProductId, VariantName = "NGK CR8E - 1 cái",            Price = 45000,    OriginalPrice = null,     CostPrice = 30000,  StockQuantity = 300, SKU = "NGK-CR8E-1", ImageUrl = imgPart },
+                        new ProductVariant { ProductId = p[13].ProductId, VariantName = "NGK CR8E - Hộp 10 cái",      Price = 420000,   OriginalPrice = 450000,  CostPrice = 285000, StockQuantity = 50,  SKU = "NGK-CR8E-10",ImageUrl = imgPart },
+                        // Bugi NGK Iridium
+                        new ProductVariant { ProductId = p[14].ProductId, VariantName = "NGK Iridium CPR8EAIX",        Price = 125000,   OriginalPrice = null,     CostPrice = 88000,  StockQuantity = 120, SKU = "NGK-IRD-8",  ImageUrl = imgPart },
+                        // Nhông xích Yamaha
+                        new ProductVariant { ProductId = p[15].ProductId, VariantName = "Bộ nhông xích Exciter 155 - Standard", Price = 380000, OriginalPrice = 420000, CostPrice = 285000, StockQuantity = 30, SKU = "YAM-NX-EX-STD", ImageUrl = imgPart },
+                        new ProductVariant { ProductId = p[15].ProductId, VariantName = "Bộ nhông xích Exciter 155 - Racing",   Price = 520000, OriginalPrice = null,    CostPrice = 395000, StockQuantity = 20, SKU = "YAM-NX-EX-RC",  ImageUrl = imgPart },
+                        // Lọc gió Air Blade
+                        new ProductVariant { ProductId = p[16].ProductId, VariantName = "Lọc gió Air Blade 160 chính hãng",    Price = 85000,  OriginalPrice = null,     CostPrice = 55000,  StockQuantity = 90,  SKU = "HONDA-LG-AB",  ImageUrl = imgPart },
+                        // Gương SH
+                        new ProductVariant { ProductId = p[17].ProductId, VariantName = "Gương SH 125i - Bên phải",    Price = 180000,   OriginalPrice = null,     CostPrice = 130000, StockQuantity = 35,  SKU = "HONDA-GU-SH-R",ImageUrl = imgPart },
+                        new ProductVariant { ProductId = p[17].ProductId, VariantName = "Gương SH 125i - Bên trái",    Price = 180000,   OriginalPrice = null,     CostPrice = 130000, StockQuantity = 35,  SKU = "HONDA-GU-SH-L",ImageUrl = imgPart },
+                        // Nhớt phuộc
+                        new ProductVariant { ProductId = p[18].ProductId, VariantName = "Nhớt phuộc Honda 10W30 - 100ml", Price = 45000, OriginalPrice = null,     CostPrice = 30000,  StockQuantity = 110, SKU = "HONDA-NP-100", ImageUrl = imgOil1 },
+                        // Dầu phanh Brembo
+                        new ProductVariant { ProductId = p[19].ProductId, VariantName = "Brembo DOT 4 Racing - 250ml", Price = 220000,   OriginalPrice = null,     CostPrice = 165000, StockQuantity = 45,  SKU = "BRE-DOT4-250", ImageUrl = imgBrk },
                     };
-                    context.Products.Add(p2);
+                    context.ProductVariants.AddRange(variants);
                     await context.SaveChangesAsync();
 
-                    context.ProductImages.AddRange(new List<ProductImage>
+                    // Primary images for each product
+                    var productImages = products.SelectMany((pr, i) =>
                     {
-                        new ProductImage { ProductId = p2.ProductId, ImageUrl = "https://picsum.photos/seed/motul5100-main/640/640", IsPrimary = true, DisplayOrder = 1 },
-                        new ProductImage { ProductId = p2.ProductId, ImageUrl = "https://picsum.photos/seed/motul5100-side/640/640", IsPrimary = false, DisplayOrder = 2 },
-                        new ProductImage { ProductId = p2.ProductId, ImageUrl = "https://picsum.photos/seed/motul5100-pack/640/640", IsPrimary = false, DisplayOrder = 3 }
-                    });
-                    context.ProductSpecifications.AddRange(new List<ProductSpecification>
-                    {
-                        new ProductSpecification { ProductId = p2.ProductId, SpecName = "Loại nhớt", SpecValue = "Bán tổng hợp Technosynthese", DisplayOrder = 1 },
-                        new ProductSpecification { ProductId = p2.ProductId, SpecName = "Độ nhớt", SpecValue = "10W-40", DisplayOrder = 2 },
-                        new ProductSpecification { ProductId = p2.ProductId, SpecName = "Tiêu chuẩn API", SpecValue = "API SL / JASO MA2", DisplayOrder = 3 },
-                        new ProductSpecification { ProductId = p2.ProductId, SpecName = "Ứng dụng", SpecValue = "Xe số, xe côn tay 4 thì", DisplayOrder = 4 },
-                        new ProductSpecification { ProductId = p2.ProductId, SpecName = "Chu kỳ thay", SpecValue = "3.000km hoặc 3 tháng", DisplayOrder = 5 }
-                    });
-                    context.ProductTags.AddRange(new List<ProductTag>
-                    {
-                        new ProductTag { ProductId = p2.ProductId, TagName = "nhớt bán tổng hợp" },
-                        new ProductTag { ProductId = p2.ProductId, TagName = "Motul 5100" },
-                        new ProductTag { ProductId = p2.ProductId, TagName = "tiết kiệm" }
-                    });
-                    var p2v1 = new ProductVariant { ProductId = p2.ProductId, VariantName = "Chai 1 Lít", Price = 165000, OriginalPrice = 185000, CostPrice = 110000, SKU = "MOTUL-5100-1L", StockQuantity = 200, ImageUrl = "https://picsum.photos/seed/motul5100-main/640/640", MinStockLevel = 20, CreatedDate = DateTime.Now };
-                    var p2v2 = new ProductVariant { ProductId = p2.ProductId, VariantName = "Can 4 Lít", Price = 580000, OriginalPrice = 650000, CostPrice = 380000, SKU = "MOTUL-5100-4L", StockQuantity = 100, ImageUrl = "https://picsum.photos/seed/motul5100-pack/640/640", MinStockLevel = 10, CreatedDate = DateTime.Now };
-                    context.ProductVariants.AddRange(p2v1, p2v2);
-                    await context.SaveChangesAsync();
-
-                    context.ProductVariantAttributeValues.AddRange(
-                        new ProductVariantAttributeValue { ProductVariantId = p2v1.ProductVariantId, ValueId = val1L.ValueId },
-                        new ProductVariantAttributeValue { ProductVariantId = p2v2.ProductVariantId, ValueId = val4L.ValueId }
-                    );
-                    context.ProductReviews.Add(new ProductReview { ProductId = p2.ProductId, ProductVariantId = p2v1.ProductVariantId, CustomerId = reviewCustomer.CustomerId, Rating = 4, Comment = "Nhớt tốt, máy khá êm. Giá thành phải chăng hơn dòng 7100. Dùng cho xe số hàng ngày là quá ổn.", Status = "Approved", CreatedDate = DateTime.Now.AddDays(-8) });
-                    await context.SaveChangesAsync();
-
-                    // ============================================================
-                    // SẢN PHẨM 3: Liqui Moly Motorbike 4T 10W40
-                    // ============================================================
-                    var p3 = new Product
-                    {
-                        ProductName = "Dầu nhớt Liqui Moly Motorbike 4T 10W40",
-                        CategoryId = catDauNhot.CategoryId,
-                        BrandId = brandLiqui.BrandId,
-                        Slug = "dau-nhot-liqui-moly-motorbike-4t-10w40",
-                        Description = "<h4>Liqui Moly 4T 10W40 — Thương Hiệu Đức Uy Tín Số 1</h4><p>Liqui Moly là thương hiệu nhớt <strong>Đức cao cấp</strong>, được vinh danh nhớt tốt nhất thị trường châu Âu nhiều năm liền. Dòng Motorbike 4T được tối ưu hóa đặc biệt cho xe máy 4 thì với ly hợp ướt tích hợp hộp số.</p><ul><li>Xuất xứ Đức — chất lượng châu Âu đỉnh cao</li><li>Công thức HC-Synthesis (tổng hợp hydro-cracking)</li><li>Bảo vệ tối ưu trong điều kiện kẹt xe, nhiệt độ cao</li><li>Không làm trơn ly hợp — đúng tiêu chuẩn JASO MA2</li></ul>",
-                        IsActive = true,
-                        IsFeatured = false,
-                        CreatedDate = DateTime.Now.AddDays(-20)
-                    };
-                    context.Products.Add(p3);
-                    await context.SaveChangesAsync();
-
-                    context.ProductImages.AddRange(new List<ProductImage>
-                    {
-                        new ProductImage { ProductId = p3.ProductId, ImageUrl = "https://picsum.photos/seed/liquimoly-800ml/640/640", IsPrimary = true, DisplayOrder = 1 },
-                        new ProductImage { ProductId = p3.ProductId, ImageUrl = "https://picsum.photos/seed/liquimoly-1l/640/640", IsPrimary = false, DisplayOrder = 2 },
-                        new ProductImage { ProductId = p3.ProductId, ImageUrl = "https://picsum.photos/seed/liquimoly-4l/640/640", IsPrimary = false, DisplayOrder = 3 }
-                    });
-                    context.ProductSpecifications.AddRange(new List<ProductSpecification>
-                    {
-                        new ProductSpecification { ProductId = p3.ProductId, SpecName = "Loại nhớt", SpecValue = "HC-Synthesis (tổng hợp hydrocracking)", DisplayOrder = 1 },
-                        new ProductSpecification { ProductId = p3.ProductId, SpecName = "Độ nhớt", SpecValue = "10W-40", DisplayOrder = 2 },
-                        new ProductSpecification { ProductId = p3.ProductId, SpecName = "Tiêu chuẩn", SpecValue = "API SL / JASO MA2 / MB 229.1", DisplayOrder = 3 },
-                        new ProductSpecification { ProductId = p3.ProductId, SpecName = "Xuất xứ", SpecValue = "Đức (Germany)", DisplayOrder = 4 },
-                        new ProductSpecification { ProductId = p3.ProductId, SpecName = "Chu kỳ thay", SpecValue = "3.000km hoặc 3 tháng", DisplayOrder = 5 }
-                    });
-                    context.ProductTags.AddRange(new List<ProductTag>
-                    {
-                        new ProductTag { ProductId = p3.ProductId, TagName = "nhớt Đức" },
-                        new ProductTag { ProductId = p3.ProductId, TagName = "Liqui Moly" },
-                        new ProductTag { ProductId = p3.ProductId, TagName = "hàng chính hãng" }
-                    });
-                    var p3v1 = new ProductVariant { ProductId = p3.ProductId, VariantName = "Chai 800ml", Price = 185000, OriginalPrice = 210000, CostPrice = 125000, SKU = "LIQMO-4T-800ML", StockQuantity = 120, ImageUrl = "https://picsum.photos/seed/liquimoly-800ml/640/640", MinStockLevel = 15, CreatedDate = DateTime.Now };
-                    var p3v2 = new ProductVariant { ProductId = p3.ProductId, VariantName = "Chai 1 Lít", Price = 215000, OriginalPrice = 245000, CostPrice = 148000, SKU = "LIQMO-4T-1L", StockQuantity = 180, ImageUrl = "https://picsum.photos/seed/liquimoly-1l/640/640", MinStockLevel = 20, CreatedDate = DateTime.Now };
-                    var p3v3 = new ProductVariant { ProductId = p3.ProductId, VariantName = "Can 4 Lít", Price = 720000, OriginalPrice = 820000, CostPrice = 490000, SKU = "LIQMO-4T-4L", StockQuantity = 60, ImageUrl = "https://picsum.photos/seed/liquimoly-4l/640/640", MinStockLevel = 8, CreatedDate = DateTime.Now };
-                    context.ProductVariants.AddRange(p3v1, p3v2, p3v3);
-                    await context.SaveChangesAsync();
-
-                    context.ProductVariantAttributeValues.AddRange(
-                        new ProductVariantAttributeValue { ProductVariantId = p3v1.ProductVariantId, ValueId = val800ml.ValueId },
-                        new ProductVariantAttributeValue { ProductVariantId = p3v2.ProductVariantId, ValueId = val1L.ValueId },
-                        new ProductVariantAttributeValue { ProductVariantId = p3v3.ProductVariantId, ValueId = val4L.ValueId }
-                    );
-                    context.ProductReviews.AddRange(new List<ProductReview>
-                    {
-                        new ProductReview { ProductId = p3.ProductId, ProductVariantId = p3v2.ProductVariantId, CustomerId = reviewCustomer2.CustomerId, Rating = 5, Comment = "Nhớt Đức thật sự khác, máy chạy êm và mát hơn nhớt Việt Nam nhiều. Dùng cho NVX 155 rất ổn. Sẽ mua lại.", Status = "Approved", CreatedDate = DateTime.Now.AddDays(-12) }
-                    });
-                    await context.SaveChangesAsync();
-
-                    // ============================================================
-                    // SẢN PHẨM 4: Lốp Michelin Pilot Street 2
-                    // ============================================================
-                    var p4 = new Product
-                    {
-                        ProductName = "Lốp xe Michelin Pilot Street 2",
-                        CategoryId = catLop.CategoryId,
-                        BrandId = brandMichelin.BrandId,
-                        Slug = "lop-xe-michelin-pilot-street-2",
-                        Description = "<h4>Michelin Pilot Street 2 — Lốp Đường Phố Hiệu Suất Cao</h4><p>Michelin Pilot Street 2 kế thừa di sản từ công nghệ đường đua MotoGP, mang lại <strong>độ bám đường vượt trội</strong> trên cả đường khô và ướt. Thiết kế tối ưu hóa cho điều kiện giao thông đô thị tốc độ cao.</p><ul><li>Công nghệ XSARA Silica — bám đường ướt cực tốt</li><li>Vân lốp thoát nước hiệu quả</li><li>Phù hợp xe số, xe côn tay và tay ga cỡ nhỏ-trung</li><li>Tuổi thọ cao hơn 20% so với thế hệ trước</li></ul>",
-                        IsActive = true,
-                        IsFeatured = true,
-                        CreatedDate = DateTime.Now.AddDays(-18)
-                    };
-                    context.Products.Add(p4);
-                    await context.SaveChangesAsync();
-
-                    context.ProductImages.AddRange(new List<ProductImage>
-                    {
-                        new ProductImage { ProductId = p4.ProductId, ImageUrl = "https://picsum.photos/seed/michelin-ps2-main/640/640", IsPrimary = true, DisplayOrder = 1 },
-                        new ProductImage { ProductId = p4.ProductId, ImageUrl = "https://picsum.photos/seed/michelin-ps2-tread/640/640", IsPrimary = false, DisplayOrder = 2 },
-                        new ProductImage { ProductId = p4.ProductId, ImageUrl = "https://picsum.photos/seed/michelin-ps2-side/640/640", IsPrimary = false, DisplayOrder = 3 }
-                    });
-                    context.ProductSpecifications.AddRange(new List<ProductSpecification>
-                    {
-                        new ProductSpecification { ProductId = p4.ProductId, SpecName = "Thương hiệu", SpecValue = "Michelin (Pháp)", DisplayOrder = 1 },
-                        new ProductSpecification { ProductId = p4.ProductId, SpecName = "Loại lốp", SpecValue = "Lốp không ruột (Tubeless)", DisplayOrder = 2 },
-                        new ProductSpecification { ProductId = p4.ProductId, SpecName = "Công nghệ", SpecValue = "XSARA Silica compound", DisplayOrder = 3 },
-                        new ProductSpecification { ProductId = p4.ProductId, SpecName = "Chỉ số tốc độ", SpecValue = "T (190 km/h)", DisplayOrder = 4 },
-                        new ProductSpecification { ProductId = p4.ProductId, SpecName = "Xuất xứ", SpecValue = "Thái Lan", DisplayOrder = 5 }
-                    });
-                    context.ProductTags.AddRange(new List<ProductTag>
-                    {
-                        new ProductTag { ProductId = p4.ProductId, TagName = "lốp Michelin" },
-                        new ProductTag { ProductId = p4.ProductId, TagName = "lốp không ruột" },
-                        new ProductTag { ProductId = p4.ProductId, TagName = "bám đường tốt" }
-                    });
-                    var p4v1 = new ProductVariant { ProductId = p4.ProductId, VariantName = "70/90-17 (Bánh trước xe số)", Price = 365000, OriginalPrice = null, CostPrice = 250000, SKU = "MICH-PS2-7090-17", StockQuantity = 50, ImageUrl = "https://picsum.photos/seed/michelin-ps2-main/640/640", MinStockLevel = 8, CreatedDate = DateTime.Now };
-                    var p4v2 = new ProductVariant { ProductId = p4.ProductId, VariantName = "80/90-17 (Bánh sau xe số)", Price = 425000, OriginalPrice = null, CostPrice = 295000, SKU = "MICH-PS2-8090-17", StockQuantity = 45, ImageUrl = "https://picsum.photos/seed/michelin-ps2-main/640/640", MinStockLevel = 8, CreatedDate = DateTime.Now };
-                    var p4v3 = new ProductVariant { ProductId = p4.ProductId, VariantName = "90/80-17 (Côn tay sport)", Price = 480000, OriginalPrice = null, CostPrice = 335000, SKU = "MICH-PS2-9080-17", StockQuantity = 30, ImageUrl = "https://picsum.photos/seed/michelin-ps2-main/640/640", MinStockLevel = 5, CreatedDate = DateTime.Now };
-                    var p4v4 = new ProductVariant { ProductId = p4.ProductId, VariantName = "100/80-17 (Côn tay / Winner X)", Price = 535000, OriginalPrice = null, CostPrice = 375000, SKU = "MICH-PS2-10080-17", StockQuantity = 40, ImageUrl = "https://picsum.photos/seed/michelin-ps2-main/640/640", MinStockLevel = 6, CreatedDate = DateTime.Now };
-                    context.ProductVariants.AddRange(p4v1, p4v2, p4v3, p4v4);
-                    await context.SaveChangesAsync();
-
-                    context.ProductVariantAttributeValues.AddRange(
-                        new ProductVariantAttributeValue { ProductVariantId = p4v1.ProductVariantId, ValueId = valLop7090.ValueId },
-                        new ProductVariantAttributeValue { ProductVariantId = p4v2.ProductVariantId, ValueId = valLop8090.ValueId },
-                        new ProductVariantAttributeValue { ProductVariantId = p4v3.ProductVariantId, ValueId = valLop9080.ValueId },
-                        new ProductVariantAttributeValue { ProductVariantId = p4v4.ProductVariantId, ValueId = valLop10080.ValueId }
-                    );
-                    context.ProductReviews.AddRange(new List<ProductReview>
-                    {
-                        new ProductReview { ProductId = p4.ProductId, ProductVariantId = p4v2.ProductVariantId, CustomerId = reviewCustomer.CustomerId, Rating = 5, Comment = "Lốp bám đường cực tốt, trời mưa vẫn ôm cua tự tin. Winner X của mình chạy ngon hẳn từ khi thay lốp này.", Status = "Approved", CreatedDate = DateTime.Now.AddDays(-7) },
-                        new ProductReview { ProductId = p4.ProductId, ProductVariantId = p4v4.ProductVariantId, CustomerId = reviewCustomer2.CustomerId, Rating = 5, Comment = "Chất lượng Michelin luôn đỉnh, đã dùng 4.000km vẫn còn rất tốt. Giao hàng nhanh, hàng đúng size.", Status = "Approved", CreatedDate = DateTime.Now.AddDays(-3) }
-                    });
-                    await context.SaveChangesAsync();
-
-                    // ============================================================
-                    // SẢN PHẨM 5: Má phanh Brembo P07
-                    // ============================================================
-                    var p5 = new Product
-                    {
-                        ProductName = "Má phanh Brembo P07 xe tay ga / côn tay",
-                        CategoryId = catPhanh.CategoryId,
-                        BrandId = brandBrembo.BrandId,
-                        Slug = "ma-phanh-brembo-p07",
-                        Description = "<h4>Brembo P07 — Má Phanh Italy Hạng Nhất Thế Giới</h4><p>Brembo là thương hiệu phanh số 1 thế giới, được trang bị trên các siêu xe Ferrari, Lamborghini và xe đua F1. Dòng <strong>P07 Strada</strong> được chế tác từ hợp chất ma sát đặc biệt, mang lại lực hãm mạnh mẽ và ổn định nhất quán.</p><ul><li>Hợp chất ma sát độc quyền Brembo — lực hãm cực mạnh</li><li>Không ăn mòn đĩa phanh</li><li>Ít bụi bẩn — sạch lazang</li><li>Hoạt động tốt cả nguội lẫn nóng</li></ul>",
-                        IsActive = true,
-                        IsFeatured = true,
-                        CreatedDate = DateTime.Now.AddDays(-15)
-                    };
-                    context.Products.Add(p5);
-                    await context.SaveChangesAsync();
-
-                    context.ProductImages.AddRange(new List<ProductImage>
-                    {
-                        new ProductImage { ProductId = p5.ProductId, ImageUrl = "https://picsum.photos/seed/brembo-p07-front/640/640", IsPrimary = true, DisplayOrder = 1 },
-                        new ProductImage { ProductId = p5.ProductId, ImageUrl = "https://picsum.photos/seed/brembo-p07-rear/640/640", IsPrimary = false, DisplayOrder = 2 },
-                        new ProductImage { ProductId = p5.ProductId, ImageUrl = "https://picsum.photos/seed/brembo-p07-detail/640/640", IsPrimary = false, DisplayOrder = 3 }
-                    });
-                    context.ProductSpecifications.AddRange(new List<ProductSpecification>
-                    {
-                        new ProductSpecification { ProductId = p5.ProductId, SpecName = "Thương hiệu", SpecValue = "Brembo (Italy)", DisplayOrder = 1 },
-                        new ProductSpecification { ProductId = p5.ProductId, SpecName = "Dòng sản phẩm", SpecValue = "Strada (P07)", DisplayOrder = 2 },
-                        new ProductSpecification { ProductId = p5.ProductId, SpecName = "Chất liệu", SpecValue = "Sintered Metal compound", DisplayOrder = 3 },
-                        new ProductSpecification { ProductId = p5.ProductId, SpecName = "Áp dụng", SpecValue = "Tay ga & côn tay phân khối vừa", DisplayOrder = 4 },
-                        new ProductSpecification { ProductId = p5.ProductId, SpecName = "Bảo hành", SpecValue = "12 tháng hoặc 20.000km", DisplayOrder = 5 }
-                    });
-                    context.ProductTags.AddRange(new List<ProductTag>
-                    {
-                        new ProductTag { ProductId = p5.ProductId, TagName = "má phanh Brembo" },
-                        new ProductTag { ProductId = p5.ProductId, TagName = "phanh đĩa" },
-                        new ProductTag { ProductId = p5.ProductId, TagName = "hàng Italy" }
-                    });
-                    var p5v1 = new ProductVariant { ProductId = p5.ProductId, VariantName = "Phanh Trước", Price = 350000, OriginalPrice = 420000, CostPrice = 240000, SKU = "BRBO-P07-FRONT", StockQuantity = 60, ImageUrl = "https://picsum.photos/seed/brembo-p07-front/640/640", MinStockLevel = 10, CreatedDate = DateTime.Now };
-                    var p5v2 = new ProductVariant { ProductId = p5.ProductId, VariantName = "Phanh Sau", Price = 290000, OriginalPrice = 345000, CostPrice = 195000, SKU = "BRBO-P07-REAR", StockQuantity = 60, ImageUrl = "https://picsum.photos/seed/brembo-p07-rear/640/640", MinStockLevel = 10, CreatedDate = DateTime.Now };
-                    context.ProductVariants.AddRange(p5v1, p5v2);
-                    await context.SaveChangesAsync();
-
-                    context.ProductVariantAttributeValues.AddRange(
-                        new ProductVariantAttributeValue { ProductVariantId = p5v1.ProductVariantId, ValueId = valTruoc.ValueId },
-                        new ProductVariantAttributeValue { ProductVariantId = p5v2.ProductVariantId, ValueId = valSau.ValueId }
-                    );
-                    context.ProductReviews.Add(new ProductReview { ProductId = p5.ProductId, ProductVariantId = p5v1.ProductVariantId, CustomerId = reviewCustomer.CustomerId, Rating = 5, Comment = "Má phanh Brembo xịn thật, phanh cứng và dứt khoát hơn hẳn đồ zin. Air Blade của mình phanh tốt hơn nhiều từ khi lắp.", Status = "Approved", CreatedDate = DateTime.Now.AddDays(-6) });
-                    await context.SaveChangesAsync();
-
-                    // ============================================================
-                    // SẢN PHẨM 6: Dầu phanh Brembo DOT 4
-                    // ============================================================
-                    var p6 = new Product
-                    {
-                        ProductName = "Dầu phanh Brembo DOT 4",
-                        CategoryId = catPhanh.CategoryId,
-                        BrandId = brandBrembo.BrandId,
-                        Slug = "dau-phanh-brembo-dot-4",
-                        Description = "<h4>Brembo DOT 4 — Dầu Phanh Tiêu Chuẩn Quốc Tế</h4><p>Dầu phanh Brembo DOT 4 đạt tiêu chuẩn FMVSS No.116, với <strong>điểm sôi khô 230°C và ướt 155°C</strong>, đảm bảo hệ thống phanh hoạt động an toàn và hiệu quả. Phù hợp với tất cả hệ thống phanh đĩa thủy lực.</p><ul><li>Tiêu chuẩn DOT 4 quốc tế</li><li>Điểm sôi khô ≥ 230°C — an toàn khi phanh liên tục</li><li>Tương thích cao su và kim loại trong bơm phanh</li><li>Không ăn mòn xi lanh và ống dẫn dầu</li></ul>",
-                        IsActive = true,
-                        IsFeatured = false,
-                        CreatedDate = DateTime.Now.AddDays(-12)
-                    };
-                    context.Products.Add(p6);
-                    await context.SaveChangesAsync();
-
-                    context.ProductImages.AddRange(new List<ProductImage>
-                    {
-                        new ProductImage { ProductId = p6.ProductId, ImageUrl = "https://picsum.photos/seed/brembo-dot4-500ml/640/640", IsPrimary = true, DisplayOrder = 1 },
-                        new ProductImage { ProductId = p6.ProductId, ImageUrl = "https://picsum.photos/seed/brembo-dot4-250ml/640/640", IsPrimary = false, DisplayOrder = 2 }
-                    });
-                    context.ProductSpecifications.AddRange(new List<ProductSpecification>
-                    {
-                        new ProductSpecification { ProductId = p6.ProductId, SpecName = "Tiêu chuẩn", SpecValue = "DOT 4 / FMVSS No.116", DisplayOrder = 1 },
-                        new ProductSpecification { ProductId = p6.ProductId, SpecName = "Điểm sôi khô", SpecValue = "≥ 230°C", DisplayOrder = 2 },
-                        new ProductSpecification { ProductId = p6.ProductId, SpecName = "Điểm sôi ướt", SpecValue = "≥ 155°C", DisplayOrder = 3 },
-                        new ProductSpecification { ProductId = p6.ProductId, SpecName = "Ứng dụng", SpecValue = "Phanh đĩa thủy lực xe máy", DisplayOrder = 4 },
-                        new ProductSpecification { ProductId = p6.ProductId, SpecName = "Chu kỳ thay", SpecValue = "2 năm hoặc 30.000km", DisplayOrder = 5 }
-                    });
-                    context.ProductTags.AddRange(new List<ProductTag>
-                    {
-                        new ProductTag { ProductId = p6.ProductId, TagName = "dầu phanh" },
-                        new ProductTag { ProductId = p6.ProductId, TagName = "DOT 4" },
-                        new ProductTag { ProductId = p6.ProductId, TagName = "Brembo" }
-                    });
-                    var p6v1 = new ProductVariant { ProductId = p6.ProductId, VariantName = "Chai 250ml", Price = 115000, OriginalPrice = null, CostPrice = 75000, SKU = "BRBO-DOT4-250ML", StockQuantity = 80, ImageUrl = "https://picsum.photos/seed/brembo-dot4-250ml/640/640", MinStockLevel = 10, CreatedDate = DateTime.Now };
-                    var p6v2 = new ProductVariant { ProductId = p6.ProductId, VariantName = "Chai 500ml", Price = 210000, OriginalPrice = null, CostPrice = 140000, SKU = "BRBO-DOT4-500ML", StockQuantity = 60, ImageUrl = "https://picsum.photos/seed/brembo-dot4-500ml/640/640", MinStockLevel = 8, CreatedDate = DateTime.Now };
-                    context.ProductVariants.AddRange(p6v1, p6v2);
-                    await context.SaveChangesAsync();
-
-                    context.ProductVariantAttributeValues.AddRange(
-                        new ProductVariantAttributeValue { ProductVariantId = p6v1.ProductVariantId, ValueId = val250ml.ValueId },
-                        new ProductVariantAttributeValue { ProductVariantId = p6v2.ProductVariantId, ValueId = val500ml.ValueId }
-                    );
-                    await context.SaveChangesAsync();
-
-                    // ============================================================
-                    // SẢN PHẨM 7: Lọc dầu Honda chính hãng
-                    // ============================================================
-                    var p7 = new Product
-                    {
-                        ProductName = "Lọc dầu Honda chính hãng",
-                        CategoryId = catPhuTung.CategoryId,
-                        BrandId = brandHonda.BrandId,
-                        Slug = "loc-dau-honda-chinh-hang",
-                        Description = "<h4>Lọc Dầu Honda Chính Hãng — Bảo Vệ Động Cơ Toàn Diện</h4><p>Lọc dầu Honda chính hãng được sản xuất theo tiêu chuẩn OEM của nhà máy, với <strong>lõi lọc cao cấp</strong> có khả năng lọc các hạt bụi siêu nhỏ từ 10 micron, giúp dầu nhớt lưu thông sạch và bảo vệ động cơ tối đa.</p><ul><li>Hàng OEM chính hãng Honda</li><li>Lọc hiệu quả hạt bụi từ 10 micron</li><li>Gioăng cao su chịu nhiệt đặc biệt</li><li>Phù hợp nhiều dòng xe Honda</li></ul>",
-                        IsActive = true,
-                        IsFeatured = false,
-                        CreatedDate = DateTime.Now.AddDays(-22)
-                    };
-                    context.Products.Add(p7);
-                    await context.SaveChangesAsync();
-
-                    context.ProductImages.AddRange(new List<ProductImage>
-                    {
-                        new ProductImage { ProductId = p7.ProductId, ImageUrl = "https://picsum.photos/seed/honda-locdau-main/640/640", IsPrimary = true, DisplayOrder = 1 },
-                        new ProductImage { ProductId = p7.ProductId, ImageUrl = "https://picsum.photos/seed/honda-locdau-box/640/640", IsPrimary = false, DisplayOrder = 2 },
-                        new ProductImage { ProductId = p7.ProductId, ImageUrl = "https://picsum.photos/seed/honda-locdau-compare/640/640", IsPrimary = false, DisplayOrder = 3 }
-                    });
-                    context.ProductSpecifications.AddRange(new List<ProductSpecification>
-                    {
-                        new ProductSpecification { ProductId = p7.ProductId, SpecName = "Xuất xứ", SpecValue = "Honda (Nhật Bản / Việt Nam)", DisplayOrder = 1 },
-                        new ProductSpecification { ProductId = p7.ProductId, SpecName = "Kích thước lọc", SpecValue = "Lọc hạt ≥ 10 micron", DisplayOrder = 2 },
-                        new ProductSpecification { ProductId = p7.ProductId, SpecName = "Áp suất làm việc", SpecValue = "≤ 7.5 kPa (bypass valve)", DisplayOrder = 3 },
-                        new ProductSpecification { ProductId = p7.ProductId, SpecName = "Vật liệu lõi", SpecValue = "Giấy lọc cao cấp + lưới thép", DisplayOrder = 4 },
-                        new ProductSpecification { ProductId = p7.ProductId, SpecName = "Chu kỳ thay", SpecValue = "Mỗi 3.000km", DisplayOrder = 5 }
-                    });
-                    context.ProductTags.AddRange(new List<ProductTag>
-                    {
-                        new ProductTag { ProductId = p7.ProductId, TagName = "lọc dầu Honda" },
-                        new ProductTag { ProductId = p7.ProductId, TagName = "phụ tùng chính hãng" },
-                        new ProductTag { ProductId = p7.ProductId, TagName = "bảo dưỡng định kỳ" }
-                    });
-                    var p7v1 = new ProductVariant { ProductId = p7.ProductId, VariantName = "Wave / Dream / Future", Price = 38000, OriginalPrice = null, CostPrice = 22000, SKU = "HON-LOCDAU-WAVE", StockQuantity = 300, ModelId = modelWinnerX?.ModelId, ImageUrl = "https://picsum.photos/seed/honda-locdau-main/640/640", MinStockLevel = 30, CreatedDate = DateTime.Now };
-                    var p7v2 = new ProductVariant { ProductId = p7.ProductId, VariantName = "Winner X / CB150R", Price = 45000, OriginalPrice = null, CostPrice = 28000, SKU = "HON-LOCDAU-WNX", StockQuantity = 200, ModelId = modelWinnerX?.ModelId, ImageUrl = "https://picsum.photos/seed/honda-locdau-main/640/640", MinStockLevel = 20, CreatedDate = DateTime.Now };
-                    var p7v3 = new ProductVariant { ProductId = p7.ProductId, VariantName = "Air Blade 160 / PCX 160", Price = 52000, OriginalPrice = null, CostPrice = 32000, SKU = "HON-LOCDAU-AB", StockQuantity = 180, ModelId = modelAirBlade?.ModelId, ImageUrl = "https://picsum.photos/seed/honda-locdau-main/640/640", MinStockLevel = 15, CreatedDate = DateTime.Now };
-                    context.ProductVariants.AddRange(p7v1, p7v2, p7v3);
-                    await context.SaveChangesAsync();
-
-                    context.ProductVariantAttributeValues.AddRange(
-                        new ProductVariantAttributeValue { ProductVariantId = p7v1.ProductVariantId, ValueId = valWave.ValueId },
-                        new ProductVariantAttributeValue { ProductVariantId = p7v2.ProductVariantId, ValueId = valWinnerX.ValueId },
-                        new ProductVariantAttributeValue { ProductVariantId = p7v3.ProductVariantId, ValueId = valAirBladePCX.ValueId }
-                    );
-                    context.ProductReviews.Add(new ProductReview { ProductId = p7.ProductId, ProductVariantId = p7v2.ProductVariantId, CustomerId = reviewCustomer2.CustomerId, Rating = 5, Comment = "Lọc dầu xịn, đóng gói kỹ lưỡng. Giá shop rẻ hơn ngoài tiệm, mà hàng chính hãng Honda 100%.", Status = "Approved", CreatedDate = DateTime.Now.AddDays(-9) });
-                    await context.SaveChangesAsync();
-
-                    // ============================================================
-                    // SẢN PHẨM 8: Bugi NGK CR7HSA
-                    // ============================================================
-                    var p8 = new Product
-                    {
-                        ProductName = "Bugi NGK CR7HSA Standard",
-                        CategoryId = catPhuTung.CategoryId,
-                        BrandId = brandNGK.BrandId,
-                        Slug = "bugi-ngk-cr7hsa-standard",
-                        Description = "<h4>NGK CR7HSA — Bugi Tiêu Chuẩn OEM Phổ Thông Nhất</h4><p>NGK CR7HSA là model bugi phổ biến nhất thế giới, được chọn làm bugi <strong>lắp ráp gốc (OEM)</strong> trên hàng chục triệu xe máy Honda và nhiều hãng khác. Điện cực trung tâm niken chịu nhiệt tốt, đánh lửa đều và ổn định.</p><ul><li>Tiêu chuẩn OEM Honda / Yamaha / Suzuki</li><li>Điện cực trung tâm niken tinh khiết</li><li>Chống chịu nhiệt và rung động cao</li><li>Thay mỗi 6.000-8.000km để đảm bảo hiệu suất</li></ul>",
-                        IsActive = true,
-                        IsFeatured = false,
-                        CreatedDate = DateTime.Now.AddDays(-16)
-                    };
-                    context.Products.Add(p8);
-                    await context.SaveChangesAsync();
-
-                    context.ProductImages.AddRange(new List<ProductImage>
-                    {
-                        new ProductImage { ProductId = p8.ProductId, ImageUrl = "https://picsum.photos/seed/ngk-cr7hsa-main/640/640", IsPrimary = true, DisplayOrder = 1 },
-                        new ProductImage { ProductId = p8.ProductId, ImageUrl = "https://picsum.photos/seed/ngk-cr7hsa-box/640/640", IsPrimary = false, DisplayOrder = 2 },
-                        new ProductImage { ProductId = p8.ProductId, ImageUrl = "https://picsum.photos/seed/ngk-cr7hsa-install/640/640", IsPrimary = false, DisplayOrder = 3 }
-                    });
-                    context.ProductSpecifications.AddRange(new List<ProductSpecification>
-                    {
-                        new ProductSpecification { ProductId = p8.ProductId, SpecName = "Model", SpecValue = "CR7HSA", DisplayOrder = 1 },
-                        new ProductSpecification { ProductId = p8.ProductId, SpecName = "Ren", SpecValue = "M10 x 1.0", DisplayOrder = 2 },
-                        new ProductSpecification { ProductId = p8.ProductId, SpecName = "Chiều sâu ren", SpecValue = "19mm", DisplayOrder = 3 },
-                        new ProductSpecification { ProductId = p8.ProductId, SpecName = "Khe hở bugi", SpecValue = "0.6-0.7mm", DisplayOrder = 4 },
-                        new ProductSpecification { ProductId = p8.ProductId, SpecName = "Xe phù hợp", SpecValue = "Wave, Dream, Future, Air Blade, NVX, Exciter, FreeGo...", DisplayOrder = 5 }
-                    });
-                    context.ProductTags.AddRange(new List<ProductTag>
-                    {
-                        new ProductTag { ProductId = p8.ProductId, TagName = "bugi NGK" },
-                        new ProductTag { ProductId = p8.ProductId, TagName = "bugi xe máy" },
-                        new ProductTag { ProductId = p8.ProductId, TagName = "bảo dưỡng" }
-                    });
-
-                    // Attribute "Số lượng" tạo riêng
-                    var attrSoLuong = new ProductAttribute { AttributeName = "Số lượng" };
-                    context.ProductAttributes.Add(attrSoLuong);
-                    await context.SaveChangesAsync();
-                    var val1Cai = new AttributeValue { AttributeId = attrSoLuong.AttributeId, Value = "1 cái" };
-                    var valHop4Cai = new AttributeValue { AttributeId = attrSoLuong.AttributeId, Value = "Hộp 4 cái" };
-                    context.AttributeValues.AddRange(val1Cai, valHop4Cai);
-                    await context.SaveChangesAsync();
-
-                    var p8v1 = new ProductVariant { ProductId = p8.ProductId, VariantName = "1 cái", Price = 32000, OriginalPrice = null, CostPrice = 18000, SKU = "NGK-CR7HSA-1", StockQuantity = 500, ImageUrl = "https://picsum.photos/seed/ngk-cr7hsa-main/640/640", MinStockLevel = 50, CreatedDate = DateTime.Now };
-                    var p8v2 = new ProductVariant { ProductId = p8.ProductId, VariantName = "Hộp 4 cái", Price = 118000, OriginalPrice = 128000, CostPrice = 68000, SKU = "NGK-CR7HSA-4", StockQuantity = 150, ImageUrl = "https://picsum.photos/seed/ngk-cr7hsa-box/640/640", MinStockLevel = 15, CreatedDate = DateTime.Now };
-                    context.ProductVariants.AddRange(p8v1, p8v2);
-                    await context.SaveChangesAsync();
-
-                    context.ProductVariantAttributeValues.AddRange(
-                        new ProductVariantAttributeValue { ProductVariantId = p8v1.ProductVariantId, ValueId = val1Cai.ValueId },
-                        new ProductVariantAttributeValue { ProductVariantId = p8v2.ProductVariantId, ValueId = valHop4Cai.ValueId }
-                    );
-                    context.ProductReviews.Add(new ProductReview { ProductId = p8.ProductId, ProductVariantId = p8v1.ProductVariantId, CustomerId = reviewCustomer.CustomerId, Rating = 4, Comment = "Bugi NGK chính hãng, máy nổ đều hơn hẳn. Giá rẻ mà chất lượng tốt.", Status = "Approved", CreatedDate = DateTime.Now.AddDays(-4) });
-                    await context.SaveChangesAsync();
-
-                    // ============================================================
-                    // SẢN PHẨM 9: Giảm xóc sau YSS G-Plus
-                    // ============================================================
-                    var p9 = new Product
-                    {
-                        ProductName = "Giảm xóc sau YSS G-Plus",
-                        CategoryId = catGiamXoc.CategoryId,
-                        BrandId = brandYSS.BrandId,
-                        Slug = "giam-xoc-sau-yss-g-plus",
-                        Description = "<h4>YSS G-Plus — Giảm Xóc Thái Lan Phổ Biến Nhất Việt Nam</h4><p>YSS G-Plus là dòng giảm xóc thay thế <strong>best-seller tại Đông Nam Á</strong>, được thiết kế chuyên biệt cho từng dòng xe, mang lại cảm giác lái mềm mại và ổn định hơn hẳn zin theo xe. Chứa khí Nitrogen áp suất cao giúp dầu không bị sủi bọt ở nhiệt độ cao.</p><ul><li>Khí Nitrogen áp suất cao — không sủi bọt</li><li>Điều chỉnh lực căng 5 nấc</li><li>Piston van 46mm — hành trình dài hơn zin</li><li>Bảo hành 12 tháng tại YSS Việt Nam</li></ul>",
-                        IsActive = true,
-                        IsFeatured = true,
-                        CreatedDate = DateTime.Now.AddDays(-8)
-                    };
-                    context.Products.Add(p9);
-                    await context.SaveChangesAsync();
-
-                    context.ProductImages.AddRange(new List<ProductImage>
-                    {
-                        new ProductImage { ProductId = p9.ProductId, ImageUrl = "https://picsum.photos/seed/yss-gplus-main/640/640", IsPrimary = true, DisplayOrder = 1 },
-                        new ProductImage { ProductId = p9.ProductId, ImageUrl = "https://picsum.photos/seed/yss-gplus-side/640/640", IsPrimary = false, DisplayOrder = 2 },
-                        new ProductImage { ProductId = p9.ProductId, ImageUrl = "https://picsum.photos/seed/yss-gplus-detail/640/640", IsPrimary = false, DisplayOrder = 3 },
-                        new ProductImage { ProductId = p9.ProductId, ImageUrl = "https://picsum.photos/seed/yss-gplus-install/640/640", IsPrimary = false, DisplayOrder = 4 }
-                    });
-                    context.ProductSpecifications.AddRange(new List<ProductSpecification>
-                    {
-                        new ProductSpecification { ProductId = p9.ProductId, SpecName = "Thương hiệu", SpecValue = "YSS (Thái Lan)", DisplayOrder = 1 },
-                        new ProductSpecification { ProductId = p9.ProductId, SpecName = "Dòng sản phẩm", SpecValue = "G-Plus Series", DisplayOrder = 2 },
-                        new ProductSpecification { ProductId = p9.ProductId, SpecName = "Đường kính piston", SpecValue = "46mm", DisplayOrder = 3 },
-                        new ProductSpecification { ProductId = p9.ProductId, SpecName = "Điều chỉnh lực căng", SpecValue = "5 nấc xoay tay", DisplayOrder = 4 },
-                        new ProductSpecification { ProductId = p9.ProductId, SpecName = "Khí nén", SpecValue = "Nitrogen áp suất cao", DisplayOrder = 5 },
-                        new ProductSpecification { ProductId = p9.ProductId, SpecName = "Bảo hành", SpecValue = "12 tháng", DisplayOrder = 6 }
-                    });
-                    context.ProductTags.AddRange(new List<ProductTag>
-                    {
-                        new ProductTag { ProductId = p9.ProductId, TagName = "giảm xóc YSS" },
-                        new ProductTag { ProductId = p9.ProductId, TagName = "đồ chơi xe" },
-                        new ProductTag { ProductId = p9.ProductId, TagName = "nâng cấp xe" }
-                    });
-                    var p9v1 = new ProductVariant { ProductId = p9.ProductId, VariantName = "Exciter 150/155 (2015-nay)", Price = 1580000, OriginalPrice = 1750000, CostPrice = 1080000, SKU = "YSS-GP-EXC155", StockQuantity = 30, ModelId = modelExciter?.ModelId, ImageUrl = "https://picsum.photos/seed/yss-gplus-main/640/640", MinStockLevel = 5, CreatedDate = DateTime.Now };
-                    var p9v2 = new ProductVariant { ProductId = p9.ProductId, VariantName = "Winner X / CB150R (2019-nay)", Price = 1650000, OriginalPrice = 1850000, CostPrice = 1130000, SKU = "YSS-GP-WNX", StockQuantity = 25, ModelId = modelWinnerX?.ModelId, ImageUrl = "https://picsum.photos/seed/yss-gplus-main/640/640", MinStockLevel = 4, CreatedDate = DateTime.Now };
-                    var p9v3 = new ProductVariant { ProductId = p9.ProductId, VariantName = "NVX 155 / Aerox (2017-nay)", Price = 1620000, OriginalPrice = 1800000, CostPrice = 1110000, SKU = "YSS-GP-NVX", StockQuantity = 20, ModelId = modelNVX?.ModelId, ImageUrl = "https://picsum.photos/seed/yss-gplus-main/640/640", MinStockLevel = 4, CreatedDate = DateTime.Now };
-                    context.ProductVariants.AddRange(p9v1, p9v2, p9v3);
-                    await context.SaveChangesAsync();
-
-                    context.ProductVariantAttributeValues.AddRange(
-                        new ProductVariantAttributeValue { ProductVariantId = p9v1.ProductVariantId, ValueId = valExciter.ValueId },
-                        new ProductVariantAttributeValue { ProductVariantId = p9v2.ProductVariantId, ValueId = valWinnerX.ValueId },
-                        new ProductVariantAttributeValue { ProductVariantId = p9v3.ProductVariantId, ValueId = valNVX.ValueId }
-                    );
-                    context.ProductReviews.AddRange(new List<ProductReview>
-                    {
-                        new ProductReview { ProductId = p9.ProductId, ProductVariantId = p9v1.ProductVariantId, CustomerId = reviewCustomer.CustomerId, Rating = 5, Comment = "Lắp YSS G-Plus vào Exciter 155 xong thấy khác hẳn! Xe êm hơn, ổn định hơn khi vào cua. Giá tiền hợp lý so với chất lượng.", Status = "Approved", CreatedDate = DateTime.Now.AddDays(-5) },
-                        new ProductReview { ProductId = p9.ProductId, ProductVariantId = p9v2.ProductVariantId, CustomerId = reviewCustomer2.CustomerId, Rating = 5, Comment = "Winner X đi đường xóc mà vẫn ổn sau khi lắp YSS. Hàng đúng xe, lắp vào ok ngay không cần chỉnh.", Status = "Approved", CreatedDate = DateTime.Now.AddDays(-2) }
-                    });
-                    await context.SaveChangesAsync();
-
-                    // ============================================================
-                    // SẢN PHẨM 10: Giảm xóc Ohlins S36E
-                    // ============================================================
-                    var p10 = new Product
-                    {
-                        ProductName = "Giảm xóc Ohlins S36E",
-                        CategoryId = catGiamXoc.CategoryId,
-                        BrandId = brandOhlins.BrandId,
-                        Slug = "giam-xoc-ohlins-s36e",
-                        Description = "<h4>Ohlins S36E — Đỉnh Cao Giảm Xóc Thụy Điển</h4><p>Ohlins là thương hiệu giảm xóc <strong>huyền thoại từ Thụy Điển</strong>, được trang bị trên xe đua MotoGP, World Superbike và các siêu xe đường phố. Dòng S36E được tối ưu hóa đặc biệt cho các dòng xe Đông Nam Á, mang lại trải nghiệm lái hoàn toàn khác biệt.</p><ul><li>Van piston 36mm độc quyền Ohlins</li><li>Điều chỉnh preload vô cấp (stepless)</li><li>Dầu giảm xóc Ohlins Race Oil đặc chế</li><li>Có thể đại tu — dùng bền cả chục năm</li><li>Bảo hành 2 năm chính hãng</li></ul>",
-                        IsActive = true,
-                        IsFeatured = true,
-                        CreatedDate = DateTime.Now.AddDays(-5)
-                    };
-                    context.Products.Add(p10);
-                    await context.SaveChangesAsync();
-
-                    context.ProductImages.AddRange(new List<ProductImage>
-                    {
-                        new ProductImage { ProductId = p10.ProductId, ImageUrl = "https://picsum.photos/seed/ohlins-s36e-main/640/640", IsPrimary = true, DisplayOrder = 1 },
-                        new ProductImage { ProductId = p10.ProductId, ImageUrl = "https://picsum.photos/seed/ohlins-s36e-detail1/640/640", IsPrimary = false, DisplayOrder = 2 },
-                        new ProductImage { ProductId = p10.ProductId, ImageUrl = "https://picsum.photos/seed/ohlins-s36e-detail2/640/640", IsPrimary = false, DisplayOrder = 3 },
-                        new ProductImage { ProductId = p10.ProductId, ImageUrl = "https://picsum.photos/seed/ohlins-s36e-pack/640/640", IsPrimary = false, DisplayOrder = 4 }
-                    });
-                    context.ProductSpecifications.AddRange(new List<ProductSpecification>
-                    {
-                        new ProductSpecification { ProductId = p10.ProductId, SpecName = "Thương hiệu", SpecValue = "Öhlins (Thụy Điển)", DisplayOrder = 1 },
-                        new ProductSpecification { ProductId = p10.ProductId, SpecName = "Đường kính piston", SpecValue = "36mm", DisplayOrder = 2 },
-                        new ProductSpecification { ProductId = p10.ProductId, SpecName = "Điều chỉnh preload", SpecValue = "Vô cấp (stepless)", DisplayOrder = 3 },
-                        new ProductSpecification { ProductId = p10.ProductId, SpecName = "Dầu giảm xóc", SpecValue = "Ohlins Race Oil #5", DisplayOrder = 4 },
-                        new ProductSpecification { ProductId = p10.ProductId, SpecName = "Có thể đại tu", SpecValue = "Có (rebuildable)", DisplayOrder = 5 },
-                        new ProductSpecification { ProductId = p10.ProductId, SpecName = "Bảo hành", SpecValue = "2 năm chính hãng", DisplayOrder = 6 }
-                    });
-                    context.ProductTags.AddRange(new List<ProductTag>
-                    {
-                        new ProductTag { ProductId = p10.ProductId, TagName = "giảm xóc Ohlins" },
-                        new ProductTag { ProductId = p10.ProductId, TagName = "hàng Thụy Điển" },
-                        new ProductTag { ProductId = p10.ProductId, TagName = "cao cấp" }
-                    });
-                    var p10v1 = new ProductVariant { ProductId = p10.ProductId, VariantName = "Exciter 150/155 (2015-nay)", Price = 5800000, OriginalPrice = 6500000, CostPrice = 4200000, SKU = "OHL-S36E-EXC155", StockQuantity = 10, ModelId = modelExciter?.ModelId, ImageUrl = "https://picsum.photos/seed/ohlins-s36e-main/640/640", MinStockLevel = 2, CreatedDate = DateTime.Now };
-                    var p10v2 = new ProductVariant { ProductId = p10.ProductId, VariantName = "Winner X / CB150R (2019-nay)", Price = 5950000, OriginalPrice = 6700000, CostPrice = 4300000, SKU = "OHL-S36E-WNX", StockQuantity = 8, ModelId = modelWinnerX?.ModelId, ImageUrl = "https://picsum.photos/seed/ohlins-s36e-main/640/640", MinStockLevel = 2, CreatedDate = DateTime.Now };
-                    context.ProductVariants.AddRange(p10v1, p10v2);
-                    await context.SaveChangesAsync();
-
-                    context.ProductVariantAttributeValues.AddRange(
-                        new ProductVariantAttributeValue { ProductVariantId = p10v1.ProductVariantId, ValueId = valExciter.ValueId },
-                        new ProductVariantAttributeValue { ProductVariantId = p10v2.ProductVariantId, ValueId = valWinnerX.ValueId }
-                    );
-                    context.ProductReviews.Add(new ProductReview { ProductId = p10.ProductId, ProductVariantId = p10v1.ProductVariantId, CustomerId = reviewCustomer.CustomerId, Rating = 5, Comment = "Ohlins thật sự khác đẳng cấp, xe cứng và chính xác hơn hẳn. Đáng từng đồng tiền bỏ ra. Giao hàng nhanh, hộp seal nguyên vẹn.", Status = "Approved", CreatedDate = DateTime.Now.AddDays(-1) });
+                        string[] imgs = i switch
+                        {
+                            0 or 1 or 2 => new[] { imgOil1, imgOil2 },
+                            3           => new[] { imgPart, imgOil1 },
+                            4 or 5 or 6 => new[] { imgTire, imgBrk },
+                            7 or 8      => new[] { imgBrk,  imgShk },
+                            9 or 10     => new[] { imgShk,  imgBrk },
+                            11          => new[] { imgBat,  imgPart },
+                            12          => new[] { imgHelm, imgPart },
+                            _           => new[] { imgPart, imgOil1 },
+                        };
+                        return imgs.Select((url, idx) => new ProductImage
+                        {
+                            ProductId    = pr.ProductId,
+                            ImageUrl     = url,
+                            IsPrimary    = idx == 0,
+                            DisplayOrder = idx
+                        });
+                    }).ToList();
+                    context.ProductImages.AddRange(productImages);
                     await context.SaveChangesAsync();
                 }
 
-                // 10. SEED REVIEWS (nếu có products nhưng chưa có reviews — trường hợp db cũ)
-                // (Đã seed reviews ngay trong phần sản phẩm ở trên)
+                // 10. SEED CUSTOMERS
+                if (!context.Customers.Any())
+                {
+                    var customers = new[]
+                    {
+                        new Customer { FullName = "Nguyễn Văn An",     Email = "an.nguyen@gmail.com",     Phone = "0901234561", Address = "12 Lê Lợi, Q.1, TP.HCM",          CreatedDate = DateTime.Now.AddDays(-180) },
+                        new Customer { FullName = "Trần Thị Bích",     Email = "bich.tran@gmail.com",     Phone = "0912345672", Address = "34 Nguyễn Huệ, Q.1, TP.HCM",      CreatedDate = DateTime.Now.AddDays(-150) },
+                        new Customer { FullName = "Lê Minh Cường",     Email = "cuong.le@gmail.com",      Phone = "0923456783", Address = "56 Trần Hưng Đạo, Q.5, TP.HCM",   CreatedDate = DateTime.Now.AddDays(-130) },
+                        new Customer { FullName = "Phạm Thị Duyên",    Email = "duyen.pham@gmail.com",    Phone = "0934567894", Address = "78 Điện Biên Phủ, Q.3, TP.HCM",   CreatedDate = DateTime.Now.AddDays(-110) },
+                        new Customer { FullName = "Hoàng Văn Đức",     Email = "duc.hoang@gmail.com",     Phone = "0945678905", Address = "90 Cách Mạng Tháng 8, Q.10",       CreatedDate = DateTime.Now.AddDays(-95)  },
+                        new Customer { FullName = "Vũ Thị Hoa",        Email = "hoa.vu@gmail.com",        Phone = "0956789016", Address = "23 Bình Thạnh, TP.HCM",            CreatedDate = DateTime.Now.AddDays(-80)  },
+                        new Customer { FullName = "Đặng Văn Hùng",     Email = "hung.dang@gmail.com",     Phone = "0967890127", Address = "45 Phú Nhuận, TP.HCM",             CreatedDate = DateTime.Now.AddDays(-70)  },
+                        new Customer { FullName = "Bùi Thị Lan",       Email = "lan.bui@gmail.com",       Phone = "0978901238", Address = "67 Gò Vấp, TP.HCM",               CreatedDate = DateTime.Now.AddDays(-60)  },
+                        new Customer { FullName = "Ngô Văn Long",      Email = "long.ngo@gmail.com",      Phone = "0989012349", Address = "89 Tân Bình, TP.HCM",              CreatedDate = DateTime.Now.AddDays(-50)  },
+                        new Customer { FullName = "Đinh Thị Mai",      Email = "mai.dinh@gmail.com",      Phone = "0990123450", Address = "101 Quận 7, TP.HCM",              CreatedDate = DateTime.Now.AddDays(-40)  },
+                        new Customer { FullName = "Lý Văn Nam",        Email = "nam.ly@gmail.com",        Phone = "0901357901", Address = "15 Bình Dương",                    CreatedDate = DateTime.Now.AddDays(-30)  },
+                        new Customer { FullName = "Tô Thị Oanh",       Email = "oanh.to@gmail.com",       Phone = "0912468012", Address = "27 Đồng Nai",                      CreatedDate = DateTime.Now.AddDays(-20)  },
+                        new Customer { FullName = "Hồ Văn Phúc",       Email = "phuc.ho@gmail.com",       Phone = "0923579123", Address = "39 Long An",                       CreatedDate = DateTime.Now.AddDays(-12)  },
+                        new Customer { FullName = "Dương Thị Quỳnh",   Email = "quynh.duong@gmail.com",   Phone = "0934680234", Address = "51 Tiền Giang",                    CreatedDate = DateTime.Now.AddDays(-7)   },
+                        new Customer { FullName = "Châu Văn Rồng",     Email = "rong.chau@gmail.com",     Phone = "0945791345", Address = "63 Vũng Tàu",                      CreatedDate = DateTime.Now.AddDays(-3)   },
+                    };
+                    context.Customers.AddRange(customers);
+                    await context.SaveChangesAsync();
+                }
+
+                // 11. SEED ORDERS + ORDER ITEMS + STATUS HISTORY
+                if (!context.Orders.Any())
+                {
+                    var allCustomers = await context.Customers.ToListAsync();
+                    var allVariants  = await context.ProductVariants.ToListAsync();
+                    if (allCustomers.Any() && allVariants.Any())
+                    {
+                        var rng = new Random(42);
+                        var statuses   = new[] { "Completed","Completed","Completed","Completed","Completed","Pending","Confirmed","Shipping","Cancelled" };
+                        var pmethods   = new[] { "COD","COD","VNPay","VNPay","Momo","ZaloPay" };
+                        var allOrders  = new List<Order>();
+                        var allItems   = new List<OrderItem>();
+                        var allHistory = new List<OrderStatusHistory>();
+
+                        for (int i = 0; i < 100; i++)
+                        {
+                            var customer = allCustomers[rng.Next(allCustomers.Count)];
+                            var status   = statuses[rng.Next(statuses.Length)];
+                            var date     = DateTime.Now.AddDays(-rng.Next(1, 91)).Date.AddHours(rng.Next(8, 21)).AddMinutes(rng.Next(0, 60));
+
+                            // 1-3 items per order
+                            int itemCount = rng.Next(1, 4);
+                            var picked = Enumerable.Range(0, itemCount)
+                                .Select(_ => allVariants[rng.Next(allVariants.Count)])
+                                .ToList();
+
+                            decimal total = 0;
+                            var oItems = picked.Select(v => {
+                                int qty = rng.Next(1, 4);
+                                decimal price = v.Price;
+                                total += qty * price;
+                                return new OrderItem { ProductVariantId = v.ProductVariantId, Quantity = qty, Price = price };
+                            }).ToList();
+
+                            var order = new Order
+                            {
+                                CustomerId    = customer.CustomerId,
+                                OrderDate     = date,
+                                TotalAmount   = total,
+                                DiscountAmount = 0,
+                                Status        = status,
+                                ShippingAddress = customer.Address,
+                                PaymentMethod = pmethods[rng.Next(pmethods.Length)],
+                                PaymentStatus = status == "Cancelled" ? "Refunded" : status == "Completed" ? "Paid" : "Pending",
+                            };
+                            allOrders.Add(order);
+                            oItems.ForEach(it => it.Order = order);
+                            allItems.AddRange(oItems);
+
+                            if (status == "Completed")
+                            {
+                                allHistory.Add(new OrderStatusHistory
+                                {
+                                    Order = order,
+                                    Status = "Confirmed",
+                                    ChangedDate = date.AddHours(rng.Next(1, 3))
+                                });
+                                allHistory.Add(new OrderStatusHistory
+                                {
+                                    Order = order,
+                                    Status = "Shipping",
+                                    ChangedDate = date.AddHours(rng.Next(4, 12))
+                                });
+                                allHistory.Add(new OrderStatusHistory
+                                {
+                                    Order = order,
+                                    Status = "Completed",
+                                    ChangedDate = date.AddHours(rng.Next(24, 72))
+                                });
+                            }
+                            else if (status == "Cancelled")
+                            {
+                                allHistory.Add(new OrderStatusHistory { Order = order, Status = "Cancelled", ChangedDate = date.AddHours(rng.Next(1, 5)) });
+                            }
+                        }
+
+                        context.Orders.AddRange(allOrders);
+                        await context.SaveChangesAsync();
+
+                        // Gán OrderId sau khi lưu
+                        allItems.ForEach(it => it.OrderId = it.Order!.OrderId);
+                        allHistory.ForEach(h => h.OrderId = h.Order!.OrderId);
+                        // Xóa reference để tránh duplicate insert
+                        allItems.ForEach(it => it.Order = null);
+                        allHistory.ForEach(h => h.Order = null);
+
+                        context.OrderItems.AddRange(allItems);
+                        context.OrderStatusHistory.AddRange(allHistory);
+                        await context.SaveChangesAsync();
+                    }
+                }
+
+                // 12. SEED BANNERS + SLIDERS
+                if (!context.Banners.Any())
+                {
+                    context.Banners.AddRange(
+                        new Banner { Title = "Khuyến mãi mùa hè - Giảm đến 30%",       ImageUrl = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200", LinkUrl = "/san-pham",      Position = "home-top",    DisplayOrder = 1, IsActive = true },
+                        new Banner { Title = "Nhớt Motul chính hãng - Ưu đãi tháng 5",  ImageUrl = "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=1200", LinkUrl = "/san-pham/dau-nhot-motul-3000-4t", Position = "home-top", DisplayOrder = 2, IsActive = true },
+                        new Banner { Title = "Dịch vụ bảo dưỡng - Miễn phí kiểm tra",   ImageUrl = "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=1200", LinkUrl = "/dich-vu",       Position = "home-mid",    DisplayOrder = 1, IsActive = true },
+                        new Banner { Title = "Lốp Michelin - Bám đường mọi điều kiện",  ImageUrl = "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=1200", LinkUrl = "/san-pham/lop-michelin-pilot-street-2", Position = "sidebar", DisplayOrder = 1, IsActive = true }
+                    );
+                    await context.SaveChangesAsync();
+                }
+
+                if (!context.Sliders.Any())
+                {
+                    context.Sliders.AddRange(
+                        new Slider { Title = "MotoShop - Phụ tùng xe máy chính hãng",        ImageUrl = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600", LinkUrl = "/san-pham",  Position = 1, IsActive = true },
+                        new Slider { Title = "Dịch vụ bảo dưỡng chuyên nghiệp tại nhà",      ImageUrl = "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=1600", LinkUrl = "/dich-vu",   Position = 2, IsActive = true },
+                        new Slider { Title = "Giảm xóc YSS & Ohlins - Nhập khẩu chính hãng", ImageUrl = "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=1600", LinkUrl = "/san-pham",  Position = 3, IsActive = true },
+                        new Slider { Title = "Mũ bảo hiểm AGV - An toàn tuyệt đối",          ImageUrl = "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?w=1600", LinkUrl = "/san-pham",  Position = 4, IsActive = true },
+                        new Slider { Title = "Bugi NGK - Đánh lửa ổn định, tiết kiệm xăng",  ImageUrl = "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=1600", LinkUrl = "/san-pham",  Position = 5, IsActive = true }
+                    );
+                    await context.SaveChangesAsync();
+                }
+
+                // 13. SEED COUPONS
+                if (!context.Coupons.Any())
+                {
+                    context.Coupons.AddRange(
+                        new Coupon { Code = "WELCOME10",  DiscountValue = 10, DiscountType = "percent", MinOrderValue = 200000,  UsageLimit = 100, UsedCount = 23, ExpiryDate = DateTime.Now.AddMonths(3),  IsActive = true },
+                        new Coupon { Code = "MOTOSHOP50", DiscountValue = 50000, DiscountType = "fixed",  MinOrderValue = 500000,  UsageLimit = 50,  UsedCount = 8,  ExpiryDate = DateTime.Now.AddMonths(2),  IsActive = true },
+                        new Coupon { Code = "SUMMER20",   DiscountValue = 20, DiscountType = "percent", MinOrderValue = 300000,  UsageLimit = 200, UsedCount = 67, ExpiryDate = DateTime.Now.AddMonths(1),  IsActive = true },
+                        new Coupon { Code = "VIP100K",    DiscountValue = 100000, DiscountType = "fixed", MinOrderValue = 1000000, UsageLimit = 20,  UsedCount = 3,  ExpiryDate = DateTime.Now.AddMonths(6),  IsActive = true },
+                        new Coupon { Code = "FREESHIP",   DiscountValue = 30000, DiscountType = "fixed",  MinOrderValue = 150000,  UsageLimit = 500, UsedCount = 134,ExpiryDate = DateTime.Now.AddMonths(1),  IsActive = true }
+                    );
+                    await context.SaveChangesAsync();
+                }
+
             }
             catch (Exception ex)
             {

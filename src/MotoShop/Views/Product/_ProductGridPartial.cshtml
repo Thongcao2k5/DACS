@@ -15,6 +15,8 @@
                             data-name="@product.ProductName"
                             data-img="@(product.PrimaryImageUrl ?? "/assets/img/elements/18.jpg")"
                             data-price="@product.MinPrice"
+                            data-category-id="@(product.CategoryId ?? 0)"
+                            data-category-name="@product.CategoryName"
                             onclick="addToCompareFromBtn(this)"
                             title="So sánh">
                         <i class='bx bx-git-compare'></i>
