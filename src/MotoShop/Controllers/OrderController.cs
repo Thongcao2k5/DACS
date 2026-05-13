@@ -46,6 +46,7 @@ namespace MotoShop.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(string status = "all", int page = 1)
         {
+            page = Math.Max(1, page);
             var identityUserId = _userManager.GetUserId(User);
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == identityUserId);
             if (customer == null) return RedirectToAction("Login", "Account");

@@ -54,6 +54,9 @@ namespace MotoShop.Controllers.Api
         [HttpGet("products/discount")]
         public async Task<IActionResult> GetDiscountProducts(int pageNumber = 1, int pageSize = 12, string sort = "newest")
         {
+            pageNumber = Math.Max(1, pageNumber);
+            pageSize = Math.Clamp(pageSize, 1, 100);
+
             var pagedResult = await _productService.GetPagedDiscountProductsAsync(pageNumber, pageSize, sort);
 
             return Ok(new {

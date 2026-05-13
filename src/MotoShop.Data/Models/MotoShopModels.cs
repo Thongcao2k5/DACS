@@ -224,26 +224,7 @@ namespace MotoShop.Data.Models
 
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
         public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
-        public virtual ICollection<Wishlist> Wishlists { get; set; } = new List<Wishlist>();
-        public virtual ICollection<CustomerAddress> CustomerAddresses { get; set; } = new List<CustomerAddress>();
         public virtual ICollection<AddressNew> Addresses { get; set; } = new List<AddressNew>();
-    }
-
-    public class CustomerAddress
-    {
-        [Key]
-        public int Id { get; set; }
-        public int CustomerId { get; set; }
-        [Required, StringLength(200)]
-        public string FullName { get; set; } = string.Empty;
-        [Required, StringLength(50)]
-        public string Phone { get; set; } = string.Empty;
-        [Required, StringLength(500)]
-        public string Address { get; set; } = string.Empty;
-        public bool IsDefault { get; set; } = false;
-
-        [ForeignKey("CustomerId")]
-        public virtual Customer? Customer { get; set; }
     }
 
     public class Order

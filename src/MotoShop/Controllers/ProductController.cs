@@ -56,6 +56,9 @@ namespace MotoShop.Controllers
             int page = 1,
             int pageSize = 12)
         {
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 100);
+
             // Chạy tuần tự để tránh lỗi "A second operation was started on this context..."
             
             // 1. Lấy dữ liệu phân trang

@@ -14,10 +14,12 @@ namespace MotoShop.Business.Services
     public class CartService : ICartService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly MotoShop.Data.Data.MotoShopDbContext _context;
 
-        public CartService(IUnitOfWork unitOfWork)
+        public CartService(IUnitOfWork unitOfWork, MotoShop.Data.Data.MotoShopDbContext context)
         {
             _unitOfWork = unitOfWork;
+            _context = context;
         }
 
         public async Task<bool> AddToCartAsync(string userId, int variantId, int quantity)
@@ -30,43 +32,7 @@ namespace MotoShop.Business.Services
             if (variant == null || variant.StockQuantity < quantity) return false;
 
             // TÍNH GIÁ KHUYẾN MÃI (NẾU CÓ)
-            decimal finalPrice = variant.Price;
-            var now = DateTime.Now;
-
-            // 1. Kiểm tra Flash Sale (Ưu tiên cao nhất)
-            var flashSaleProduct = await _unitOfWork.Repository<FlashSaleProduct>()
-                .Find(fsp => fsp.ProductId == variant.ProductId && fsp.FlashSale != null && fsp.FlashSale.IsActive && fsp.FlashSale.StartDate <= now && fsp.FlashSale.EndDate >= now && fsp.Quantity > fsp.SoldQuantity)
-                .FirstOrDefaultAsync();
-
-            if (flashSaleProduct != null)
-            {
-                finalPrice = flashSaleProduct.FlashSalePrice;
-            }
-            else
-            {
-                // 2. Kiểm tra Khuyến mãi thường (Nếu không có Flash Sale)
-                var activePromotion = await _unitOfWork.Repository<PromotionProduct>()
-                    .Find(pp => pp.ProductId == variant.ProductId && pp.Promotion != null && pp.Promotion.IsActive && pp.Promotion.StartDate <= now && pp.Promotion.EndDate >= now)
-                    .Include(pp => pp.Promotion)
-                    .Select(pp => pp.Promotion)
-                    .FirstOrDefaultAsync();
-
-                if (activePromotion != null)
-                {
-                    if (activePromotion.DiscountType == "Percentage")
-                    {
-                        finalPrice = variant.Price * (1 - (activePromotion.DiscountPercentage / 100));
-                    }
-                    else if (activePromotion.DiscountType == "FixedAmount")
-                    {
-                        finalPrice = variant.Price - activePromotion.DiscountAmount;
-                    }
-                }
-            }
-
-            if (finalPrice < 0) finalPrice = 0;
-            // Chỉ áp dụng giá khuyến mãi nếu nó thấp hơn giá gốc hiện tại
-            if (finalPrice > variant.Price) finalPrice = variant.Price;
+            decimal finalPrice = await MotoShop.Business.Helpers.PromotionHelper.GetDiscountedPriceAsync(_context, variant);
 
             var cart = await _unitOfWork.Repository<MotoShop.Data.Models.Cart>()
                 .Find(c => c.UserId == userId)

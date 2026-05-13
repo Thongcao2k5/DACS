@@ -73,7 +73,7 @@ namespace MotoShop.Areas.Admin.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var customer = await _context.Customers
-                .Include(c => c.CustomerAddresses)
+                .Include(c => c.Addresses)
                 .Include(c => c.Orders).ThenInclude(o => o.OrderItems)
                 .FirstOrDefaultAsync(c => c.CustomerId == id);
 

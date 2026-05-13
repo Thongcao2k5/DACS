@@ -20,7 +20,6 @@ namespace MotoShop.Data.Data
         public DbSet<ProductVariantAttributeValue> ProductVariantAttributeValues { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<Customer> Customers { get; set; }
-        public DbSet<CustomerAddress> CustomerAddresses { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Service> Services { get; set; }
@@ -41,8 +40,6 @@ namespace MotoShop.Data.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<OrderStatusHistory> OrderStatusHistory { get; set; }
         public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
-        public DbSet<Wishlist> Wishlists { get; set; }
-        public DbSet<WishlistItem> WishlistItems { get; set; }
         public DbSet<WishlistNew> WishlistsNew { get; set; }
         public DbSet<AddressNew> AddressesNew { get; set; }
         public DbSet<ProductAttribute> ProductAttributes { get; set; }

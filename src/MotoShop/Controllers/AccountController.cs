@@ -170,7 +170,7 @@ namespace MotoShop.Controllers
             var userId = _userManager.GetUserId(User);
             var customer = await _context.Customers
                 .Include(c => c.Orders)
-                .Include(c => c.CustomerAddresses)
+                .Include(c => c.Addresses)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
             
             if (customer == null) return NotFound();

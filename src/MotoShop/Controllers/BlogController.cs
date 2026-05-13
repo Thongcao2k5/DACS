@@ -20,6 +20,7 @@ namespace MotoShop.Controllers
 
         public async Task<IActionResult> Index(string? searchTerm, int? categoryId, int page = 1)
         {
+            page = Math.Max(1, page);
             const int pageSize = 6;
 
             var query = _context.Blogs

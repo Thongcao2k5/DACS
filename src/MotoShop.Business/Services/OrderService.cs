@@ -136,7 +136,7 @@ namespace MotoShop.Business.Services
                     // 4. TẠO ĐƠN HÀNG
                     var order = new Order {
                         CustomerId = customer.CustomerId, OrderDate = DateTime.Now, TotalAmount = subTotal + shippingCost - discountAmount,
-                        Status = "Pending", PaymentStatus = "Unpaid", DiscountAmount = discountAmount,
+                        Status = MotoShop.Data.Constants.OrderStatusConst.Pending, PaymentStatus = "Unpaid", DiscountAmount = discountAmount,
                         ShippingAddress = $"{finalFullName} | {finalPhone} | {finalAddressStr}",
                         Note = checkoutData.Note, ShippingMethodId = checkoutData.ShippingMethodId, CouponId = checkoutData.CouponId,
                         PaymentMethod = checkoutData.PaymentMethod
@@ -148,11 +148,34 @@ namespace MotoShop.Business.Services
                     // 5. LƯU CHI TIẾT VÀ TRỪ KHO
                     foreach (var item in orderItemsToCreate)
                     {
-                        var dbVar = await _context.ProductVariants.FindAsync(item.ProductVariantId);
+                        var dbVar = await _context.ProductVariants
+                            .Include(v => v.Product)
+                            .FirstOrDefaultAsync(v => v.ProductVariantId == item.ProductVariantId);
+                            
                         if (dbVar == null || dbVar.StockQuantity < item.Quantity) throw new Exception("Sản phẩm hết hàng.");
                         item.OrderId = order.OrderId;
                         _context.OrderItems.Add(item);
                         dbVar.StockQuantity -= item.Quantity;
+                        
+                        if (dbVar.Product != null)
+                        {
+                            dbVar.Product.SoldCount += item.Quantity;
+                            
+                            var now = DateTime.Now;
+                            var flashSaleProd = await _context.FlashSaleProducts
+                                .Include(f => f.FlashSale)
+                                .FirstOrDefaultAsync(f => f.ProductId == dbVar.ProductId 
+                                    && f.FlashSale != null 
+                                    && f.FlashSale.IsActive 
+                                    && f.FlashSale.StartDate <= now 
+                                    && f.FlashSale.EndDate >= now);
+                                    
+                            if (flashSaleProd != null)
+                            {
+                                flashSaleProd.SoldQuantity += item.Quantity;
+                            }
+                        }
+
                         _context.InventoryTransactions.Add(new InventoryTransaction {
                             ProductVariantId = dbVar.ProductVariantId, Quantity = -item.Quantity,
                             TransactionType = "OUT", TransactionDate = DateTime.Now, Note = $"Đơn hàng #{order.OrderId}"
@@ -242,10 +265,10 @@ namespace MotoShop.Business.Services
                 try
                 {
                     var order = await _context.Orders.Include(o => o.OrderItems).ThenInclude(oi => oi.ProductVariant).FirstOrDefaultAsync(o => o.OrderId == orderId);
-                    var cancellable = new[] { "Pending", "Processing", "DangXuLy" };
+                    var cancellable = new[] { MotoShop.Data.Constants.OrderStatusConst.Pending, MotoShop.Data.Constants.OrderStatusConst.Processing, MotoShop.Data.Constants.OrderStatusConst.DangXuLy };
                     if (order == null || !cancellable.Contains(order.Status)) return false;
 
-                    order.Status = "Cancelled";
+                    order.Status = MotoShop.Data.Constants.OrderStatusConst.Cancelled;
                     if (order.CouponId.HasValue)
                     {
                         var coupon = await _context.Coupons.FindAsync(order.CouponId.Value);
@@ -257,6 +280,27 @@ namespace MotoShop.Business.Services
                         if (item.ProductVariant != null)
                         {
                             item.ProductVariant.StockQuantity += item.Quantity;
+                            
+                            var dbProduct = await _context.Products.FindAsync(item.ProductVariant.ProductId);
+                            if (dbProduct != null)
+                            {
+                                dbProduct.SoldCount = Math.Max(0, dbProduct.SoldCount - item.Quantity);
+                                
+                                var now = DateTime.Now;
+                                var flashSaleProd = await _context.FlashSaleProducts
+                                    .Include(f => f.FlashSale)
+                                    .FirstOrDefaultAsync(f => f.ProductId == dbProduct.ProductId 
+                                        && f.FlashSale != null 
+                                        && f.FlashSale.IsActive 
+                                        && f.FlashSale.StartDate <= now 
+                                        && f.FlashSale.EndDate >= now);
+                                        
+                                if (flashSaleProd != null)
+                                {
+                                    flashSaleProd.SoldQuantity = Math.Max(0, flashSaleProd.SoldQuantity - item.Quantity);
+                                }
+                            }
+
                             _context.InventoryTransactions.Add(new InventoryTransaction {
                                 ProductVariantId = item.ProductVariantId, Quantity = item.Quantity,
                                 TransactionType = "IN", TransactionDate = DateTime.Now, Note = $"Hoàn kho #{order.OrderId}"
@@ -280,47 +324,14 @@ namespace MotoShop.Business.Services
             var order = await _unitOfWork.Repository<Order>().GetByIdAsync(orderId);
             if (order == null) return false;
             order.PaymentStatus = status;
-            if (status == "Paid") order.Status = "Processing";
+            if (status == "Paid") order.Status = MotoShop.Data.Constants.OrderStatusConst.Processing;
             _unitOfWork.Repository<Order>().Update(order);
             return await _unitOfWork.CompleteAsync() > 0;
         }
 
         private async Task<decimal> GetDiscountedPrice(ProductVariant variant)
         {
-            decimal finalPrice = variant.Price;
-            var now = DateTime.Now;
-
-            // 1. Kiểm tra Flash Sale
-            var flashSaleProduct = await _context.FlashSaleProducts.AsNoTracking()
-                .Include(fsp => fsp.FlashSale)
-                .FirstOrDefaultAsync(fsp => fsp.ProductId == variant.ProductId && fsp.FlashSale != null && fsp.FlashSale.IsActive && fsp.FlashSale.StartDate <= now && fsp.FlashSale.EndDate >= now && fsp.Quantity > fsp.SoldQuantity);
-
-            if (flashSaleProduct != null)
-            {
-                finalPrice = flashSaleProduct.FlashSalePrice;
-            }
-            else
-            {
-                // 2. Kiểm tra Khuyến mãi thường
-                var activePromotion = await _context.PromotionProducts.AsNoTracking()
-                    .Include(pp => pp.Promotion)
-                    .Where(pp => pp.ProductId == variant.ProductId && pp.Promotion != null && pp.Promotion.IsActive && pp.Promotion.StartDate <= now && pp.Promotion.EndDate >= now)
-                    .Select(pp => pp.Promotion)
-                    .FirstOrDefaultAsync();
-
-                if (activePromotion != null)
-                {
-                    if (activePromotion.DiscountType == "Percentage")
-                        finalPrice = variant.Price * (1 - (activePromotion.DiscountPercentage / 100));
-                    else if (activePromotion.DiscountType == "FixedAmount")
-                        finalPrice = variant.Price - activePromotion.DiscountAmount;
-                }
-            }
-
-            if (finalPrice < 0) finalPrice = 0;
-            if (finalPrice > variant.Price) finalPrice = variant.Price;
-
-            return finalPrice;
+            return await MotoShop.Business.Helpers.PromotionHelper.GetDiscountedPriceAsync(_context, variant);
         }
     }
 }

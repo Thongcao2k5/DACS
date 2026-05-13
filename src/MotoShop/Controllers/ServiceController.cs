@@ -139,6 +139,7 @@ namespace MotoShop.Controllers
         [HttpGet]
         public async Task<IActionResult> LoadMoreReviews(int serviceId, int page = 1)
         {
+            page = Math.Max(1, page);
             int pageSize = 5;
             var reviews = await _context.ServiceReviews
                 .Include(r => r.Customer)

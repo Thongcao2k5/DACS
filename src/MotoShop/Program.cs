@@ -35,12 +35,23 @@ builder.Services.AddControllersWithViews(options =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
-        builder =>
+        policy =>
         {
-            builder.SetIsOriginAllowed(origin => true)
-                   .AllowAnyMethod()
-                   .AllowAnyHeader()
-                   .AllowCredentials();
+            var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+            if (builder.Environment.IsDevelopment() || allowedOrigins == null || allowedOrigins.Length == 0)
+            {
+                policy.SetIsOriginAllowed(origin => true)
+                      .AllowAnyMethod()
+                      .AllowAnyHeader()
+                      .AllowCredentials();
+            }
+            else
+            {
+                policy.WithOrigins(allowedOrigins)
+                      .AllowAnyMethod()
+                      .AllowAnyHeader()
+                      .AllowCredentials();
+            }
         });
 });
 
@@ -355,7 +366,10 @@ using (var scope = app.Services.CreateScope())
 
         await DbSeeder.SeedAsync(context, userManager, roleManager);
     }
-    catch (Exception ex) { Log.Error("Startup Error: {Message}", ex.Message); }
+    catch (Exception ex) { 
+        Log.Error("Startup Error: {Message}", ex.Message); 
+        throw; 
+    }
 }
 
 if (!app.Environment.IsDevelopment())
