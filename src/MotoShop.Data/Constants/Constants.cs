@@ -44,5 +44,6 @@ namespace MotoShop.Data.Constants
         public const string HomeFlashSale = "home_flash_sale";
         public const string HomeBrandProducts = "home_brand_products";
         public const string HomeCategoryProducts = "home_category_products";
+        public const string HomeFeaturedPromotions = "home_featured_promotions";
     }
 }

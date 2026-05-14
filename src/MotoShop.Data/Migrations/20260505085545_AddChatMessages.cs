@@ -11,22 +11,30 @@ namespace MotoShop.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_OrderStatusHistories_Orders_OrderId",
-                table: "OrderStatusHistories");
-
-            migrationBuilder.DropPrimaryKey(
-                name: "PK_OrderStatusHistories",
-                table: "OrderStatusHistories");
-
-            migrationBuilder.RenameTable(
-                name: "OrderStatusHistories",
-                newName: "OrderStatusHistory");
-
-            migrationBuilder.RenameIndex(
-                name: "IX_OrderStatusHistories_OrderId",
-                table: "OrderStatusHistory",
-                newName: "IX_OrderStatusHistory_OrderId");
+            // OrderStatusHistory may already exist from Program.cs raw SQL startup
+            migrationBuilder.Sql(@"
+                IF OBJECT_ID(N'FK_OrderStatusHistories_Orders_OrderId', 'F') IS NOT NULL
+                    ALTER TABLE [OrderStatusHistories] DROP CONSTRAINT [FK_OrderStatusHistories_Orders_OrderId];
+                IF EXISTS (SELECT 1 FROM sys.key_constraints WHERE name = 'PK_OrderStatusHistories' AND type = 'PK')
+                    ALTER TABLE [OrderStatusHistories] DROP CONSTRAINT [PK_OrderStatusHistories];
+                IF OBJECT_ID(N'[OrderStatusHistory]', 'U') IS NOT NULL
+                BEGIN
+                    IF OBJECT_ID(N'[OrderStatusHistories]', 'U') IS NOT NULL
+                    BEGIN
+                        DECLARE @pkOld NVARCHAR(200) = (SELECT TOP 1 name FROM sys.key_constraints WHERE type = 'PK' AND parent_object_id = OBJECT_ID('OrderStatusHistories'));
+                        IF @pkOld IS NOT NULL EXEC ('ALTER TABLE [OrderStatusHistories] DROP CONSTRAINT [' + @pkOld + ']');
+                        DROP TABLE [OrderStatusHistories];
+                    END
+                    DECLARE @autoPk NVARCHAR(200) = (SELECT TOP 1 kc.name FROM sys.key_constraints kc WHERE kc.type = 'PK' AND kc.parent_object_id = OBJECT_ID('OrderStatusHistory') AND kc.name <> 'PK_OrderStatusHistory');
+                    IF @autoPk IS NOT NULL EXEC ('ALTER TABLE [OrderStatusHistory] DROP CONSTRAINT [' + @autoPk + ']');
+                END
+                ELSE IF OBJECT_ID(N'[OrderStatusHistories]', 'U') IS NOT NULL
+                BEGIN
+                    EXEC sp_rename N'[OrderStatusHistories]', N'OrderStatusHistory', 'OBJECT';
+                    IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_OrderStatusHistories_OrderId' AND object_id = OBJECT_ID('OrderStatusHistory'))
+                        EXEC sp_rename N'[OrderStatusHistory].[IX_OrderStatusHistories_OrderId]', N'IX_OrderStatusHistory_OrderId', 'INDEX';
+                END
+            ");
 
             migrationBuilder.AlterColumn<bool>(
                 name: "IsActive",
@@ -135,10 +143,10 @@ namespace MotoShop.Data.Migrations
                 nullable: false,
                 defaultValue: 0);
 
-            migrationBuilder.AddPrimaryKey(
-                name: "PK_OrderStatusHistory",
-                table: "OrderStatusHistory",
-                column: "HistoryId");
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.key_constraints WHERE name = 'PK_OrderStatusHistory' AND type = 'PK')
+                    ALTER TABLE [OrderStatusHistory] ADD CONSTRAINT [PK_OrderStatusHistory] PRIMARY KEY ([HistoryId]);
+            ");
 
             migrationBuilder.CreateTable(
                 name: "AddressesNew",
@@ -275,12 +283,10 @@ namespace MotoShop.Data.Migrations
                 table: "WishlistsNew",
                 column: "ProductId");
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_OrderStatusHistory_Orders_OrderId",
-                table: "OrderStatusHistory",
-                column: "OrderId",
-                principalTable: "Orders",
-                principalColumn: "OrderId");
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_OrderStatusHistory_Orders_OrderId')
+                    ALTER TABLE [OrderStatusHistory] ADD CONSTRAINT [FK_OrderStatusHistory_Orders_OrderId] FOREIGN KEY ([OrderId]) REFERENCES [Orders] ([OrderId]);
+            ");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Services_ServiceCategories_CategoryId",

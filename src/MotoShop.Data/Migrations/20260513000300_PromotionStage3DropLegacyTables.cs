@@ -1,9 +1,13 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using MotoShop.Data.Data;
 
 #nullable disable
 
 namespace MotoShop.Data.Migrations
 {
+    [DbContext(typeof(MotoShopDbContext))]
     [Migration("20260513000300_PromotionStage3DropLegacyTables")]
     public partial class PromotionStage3DropLegacyTables : Migration
     {

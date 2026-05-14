@@ -55,7 +55,7 @@ public class HomeController : Controller
             return _promotionService.GetFlashSaleProductsAsync(8);
         }) ?? await _promotionService.GetFlashSaleProductsAsync(8);
 
-        var featuredPromotions = await _cache.GetOrCreateAsync("home_featured_promotions", e => {
+        var featuredPromotions = await _cache.GetOrCreateAsync(MotoShop.Data.Constants.CacheKeys.HomeFeaturedPromotions, e => {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
             return _promotionService.GetFeaturedAsync();
         }) ?? await _promotionService.GetFeaturedAsync();

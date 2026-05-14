@@ -679,59 +679,6 @@ section { padding: 60px 0; }
    HOME PAGE COMPONENTS NÃ‚NG CAO
    ========================================================= */
 
-/* 0. HERO SLIDER OPTIMIZATION */
-#heroSlider .carousel-item img {
-    height: 600px;
-    object-fit: cover;
-}
-
-#heroSlider .carousel-caption {
-    background: linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
-    left: 0;
-    right: 0;
-    padding-left: 10%;
-    padding-right: 10%;
-}
-
-@media (max-width: 991px) {
-    #heroSlider .carousel-item img {
-        height: 450px;
-    }
-    #heroSlider .display-3 {
-        font-size: 2.5rem;
-    }
-}
-
-@media (max-width: 767px) {
-    #heroSlider .carousel-item img {
-        height: 400px;
-    }
-    #heroSlider .carousel-caption {
-        background: rgba(0,0,0,0.4); /* Overlay tá»‘i hÆ¡n má»™t chÃºt trÃªn mobile Ä‘á»ƒ dá»… Ä‘á»c chá»¯ */
-        text-align: center !important;
-        padding-left: 5%;
-        padding-right: 5%;
-    }
-    #heroSlider .carousel-caption .col-lg-6 {
-        width: 100%;
-    }
-    #heroSlider .display-3 {
-        font-size: 1.8rem;
-        line-height: 1.2;
-    }
-    #heroSlider .fs-5 {
-        font-size: 0.9rem !important;
-        margin-bottom: 1.5rem !important;
-    }
-    #heroSlider .badge {
-        font-size: 0.7rem;
-    }
-    #heroSlider .btn-lg {
-        padding: 10px 30px !important;
-        font-size: 0.9rem;
-    }
-}
-
 /* 1. PRODUCT CARDS CHUYÃŠN NGHIá»†P */
 .product-card {
     background: #fff;
@@ -2983,7 +2930,7 @@ footer h5 {
 ============================================================ */
 .hero-slider-section { overflow: hidden; }
 .hero-slide-bg {
-    height: 480px;
+    height: 420px;
     background-size: cover;
     background-position: center;
     position: relative;
@@ -3006,7 +2953,7 @@ footer h5 {
     letter-spacing: 0.6px; margin-bottom: 16px;
 }
 .hero-slide-title {
-    font-size: 2.6rem; font-weight: 800;
+    font-size: 2.2rem; font-weight: 800;
     color: #fff; line-height: 1.2; margin-bottom: 12px;
 }
 .hero-slide-accent { color: #e53e3e; }
@@ -3042,8 +2989,8 @@ footer h5 {
 }
 
 @media (max-width: 575px) {
-    .hero-slide-bg { height: 280px; }
-    .hero-slide-title { font-size: 1.45rem; }
+    .hero-slide-bg { height: 240px; }
+    .hero-slide-title { font-size: 1.3rem; }
     .hero-slide-desc { display: none; }
     .hero-slide-badge { font-size: 10px; }
     .btn-hero-slide-primary, .btn-hero-slide-outline { font-size: 0.8rem; padding: 8px 16px; }

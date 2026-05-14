@@ -1,9 +1,13 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using MotoShop.Data.Data;
 
 #nullable disable
 
 namespace MotoShop.Data.Migrations
 {
+    [DbContext(typeof(MotoShopDbContext))]
     [Migration("20260513000100_PromotionStage1Unified")]
     public partial class PromotionStage1Unified : Migration
     {
@@ -101,12 +105,12 @@ BEGIN
                   CreatedAt = ISNULL(CreatedAt, GETDATE())
               WHERE DiscountValue = 0');
     ELSE
-        UPDATE Promotions
-        SET PromotionType = ISNULL(PromotionType, 'ProductDiscount'),
-            UsedCount = ISNULL(UsedCount, 0),
-            IsFeatured = ISNULL(IsFeatured, 0),
-            Priority = ISNULL(Priority, 0),
-            CreatedAt = ISNULL(CreatedAt, GETDATE());
+        EXEC('UPDATE Promotions
+              SET PromotionType = ISNULL(PromotionType, ''ProductDiscount''),
+                  UsedCount = ISNULL(UsedCount, 0),
+                  IsFeatured = ISNULL(IsFeatured, 0),
+                  Priority = ISNULL(Priority, 0),
+                  CreatedAt = ISNULL(CreatedAt, GETDATE())');
 END
 
 IF OBJECT_ID('PromotionProducts', 'U') IS NULL
@@ -127,7 +131,28 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_PromotionProducts_ProductId' AND object_id = OBJECT_ID('PromotionProducts'))
         CREATE INDEX IX_PromotionProducts_ProductId ON PromotionProducts (ProductId);
 END
+" );
+            // Make legacy columns nullable so Phase 2 INSERT (without those columns) won't fail
+            migrationBuilder.Sql(@"
+DECLARE @sql NVARCHAR(MAX) = '';
+SELECT @sql = @sql + 'ALTER TABLE Promotions DROP CONSTRAINT [' + dc.name + ']; '
+FROM sys.default_constraints dc
+JOIN sys.columns c ON dc.parent_object_id = c.object_id AND dc.parent_column_id = c.column_id
+WHERE dc.parent_object_id = OBJECT_ID('Promotions')
+  AND c.name IN ('DiscountPercentage','DiscountAmount','MinOrderValue','MinQuantity');
+IF LEN(@sql) > 0 EXEC(@sql);
 
+IF COL_LENGTH('Promotions','DiscountPercentage') IS NOT NULL
+    ALTER TABLE Promotions ALTER COLUMN DiscountPercentage DECIMAL(18,2) NULL;
+IF COL_LENGTH('Promotions','DiscountAmount') IS NOT NULL
+    ALTER TABLE Promotions ALTER COLUMN DiscountAmount DECIMAL(18,2) NULL;
+IF COL_LENGTH('Promotions','MinOrderValue') IS NOT NULL
+    ALTER TABLE Promotions ALTER COLUMN MinOrderValue DECIMAL(18,2) NULL;
+IF COL_LENGTH('Promotions','MinQuantity') IS NOT NULL
+    ALTER TABLE Promotions ALTER COLUMN MinQuantity INT NULL;
+" );
+            // Phase 2: data migration — separate batch so new columns are visible at parse time
+            migrationBuilder.Sql(@"
 IF OBJECT_ID('Coupons', 'U') IS NOT NULL AND OBJECT_ID('Promotions', 'U') IS NOT NULL
 BEGIN
     INSERT INTO Promotions (Name, Slug, Description, PromotionType, DiscountType, DiscountValue, MaxDiscountAmount, MinOrderAmount, CouponCode, StartDate, EndDate, UsageLimit, UsedCount, IsActive, IsFeatured, Priority, BannerImage, BackgroundColor, CreatedAt, UpdatedAt)

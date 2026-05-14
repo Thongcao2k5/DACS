@@ -214,7 +214,7 @@ namespace MotoShop.Controllers
             var order = await GetOrderByIdSafe(id);
             if (order == null) return Json(new { success = false, message = "Không tìm thấy đơn hàng hoặc bạn không có quyền hủy đơn này" });
 
-            if (order.Status != "Pending" && order.Status != "DangXuLy")
+            if (order.Status != "Pending" && order.Status != "DangXuLy" && order.Status != "Processing")
             {
                 return Json(new { success = false, message = "Không thể hủy đơn đang giao hoặc đã hoàn thành" });
             }

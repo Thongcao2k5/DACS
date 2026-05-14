@@ -28,16 +28,16 @@ namespace MotoShop.Business.Services
         {
             if (_layoutHtml == null)
             {
-                var path = Path.Combine(Directory.GetCurrentDirectory(), "..", "MotoShop.Business", "Templates", "EmailLayout.html");
+                // AppContext.BaseDirectory = thư mục chứa DLL, hoạt động cả dev lẫn production
+                var path = Path.Combine(AppContext.BaseDirectory, "Templates", "EmailLayout.html");
+                // Fallback cho môi trường dev khi chạy dotnet run từ thư mục source
+                if (!File.Exists(path))
+                    path = Path.Combine(Directory.GetCurrentDirectory(), "..", "MotoShop.Business", "Templates", "EmailLayout.html");
+
                 if (File.Exists(path))
-                {
                     _layoutHtml = await File.ReadAllTextAsync(path);
-                }
                 else
-                {
-                    // Fallback if file not found
                     return bodyContent;
-                }
             }
             return _layoutHtml.Replace("{{BodyContent}}", bodyContent);
         }

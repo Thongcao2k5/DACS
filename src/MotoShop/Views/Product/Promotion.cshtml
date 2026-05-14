@@ -16,21 +16,28 @@
 
 <main class="container">
     <!-- HERO BANNER -->
-    <section class="promo-hero mb-5">
-        <div class="promo-banner-large rounded-4 overflow-hidden position-relative shadow-sm">
-            <img src="/assets/img/backgrounds/promo-banner.jpg" onerror="this.src='https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1600&q=80'" class="w-100 h-100 object-fit-cover" style="min-height: 350px;" alt="Promo">
-            <div class="hero-overlay-gradient position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="background: linear-gradient(to right, rgba(0,0,0,0.8), transparent);">
-                <div class="container p-5">
+    <section class="promo-hero mb-4">
+        <div class="promo-banner-large rounded-4 overflow-hidden position-relative shadow-sm" style="height:420px;">
+            <img src="/assets/img/backgrounds/promo-banner.jpg" onerror="this.src='https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1600&q=80'" class="w-100 h-100" style="object-fit:cover;" alt="Promo">
+            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="background:linear-gradient(to right,rgba(0,0,0,0.75),rgba(0,0,0,0.15));">
+                <div class="container px-4">
                     <div class="col-lg-6">
-                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3">LIMITED OFFER</span>
-                        <h1 class="display-3 fw-bolder text-white mb-3">ĐẠI TIỆC<br><span class="text-danger">PHỤ TÙNG</span></h1>
-                        <p class="fs-5 text-white-50 mb-4">Giảm giá lên đến 50% cho tất cả sản phẩm chính hãng. Chỉ trong tuần này!</p>
-                        <a href="#discountGridSection" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold">SĂN DEAL NGAY</a>
+                        <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold mb-3 small">LIMITED OFFER</span>
+                        <h1 class="fw-bolder text-white mb-2" style="font-size:2.2rem;line-height:1.2;">ĐẠI TIỆC<br><span class="text-danger">PHỤ TÙNG</span></h1>
+                        <p class="text-white-50 mb-3" style="font-size:0.95rem;">Giảm giá lên đến 50% cho tất cả sản phẩm chính hãng. Chỉ trong tuần này!</p>
+                        <a href="#discountGridSection" class="btn btn-danger rounded-pill px-4 py-2 fw-bold" style="font-size:0.88rem;">SĂN DEAL NGAY</a>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+    <style>
+        @@media (max-width: 575px) {
+            .promo-banner-large { height: 240px !important; }
+            .promo-banner-large h1 { font-size: 1.4rem !important; }
+            .promo-banner-large p { display: none; }
+        }
+    </style>
 
     <!-- FLASH SALE SECTION -->
     <section class="flash-sale-section mb-5 p-4 rounded-4 bg-white shadow-sm border border-danger border-opacity-25">
