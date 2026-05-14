@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
+using MotoShop.Data.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace MotoShop.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Authorize(Roles = "Admin")]
+    [Route("Admin/[controller]")]
     public class ChatController : Controller
     {
         private readonly MotoShopDbContext _context;
@@ -20,61 +22,83 @@ namespace MotoShop.Areas.Admin.Controllers
             _context = context;
         }
 
-        // Trang chính quản lý Chat
+        // Trang chính quản lý Chat (View)
+        [HttpGet]
         public IActionResult Index()
         {
             return View();
         }
 
-        // Lấy danh sách các cuộc hội thoại gần đây
-        [HttpGet]
-        public async Task<IActionResult> GetSessions()
-        {
-            var sessions = await _context.Database.SqlQueryRaw<ChatSessionDto>(@"
-                SELECT SessionId, MAX(CreatedAt) as LastMsgTime, 
-                (SELECT TOP 1 Message FROM ChatMessages WHERE SessionId = t.SessionId ORDER BY CreatedAt DESC) as LastMessage,
-                (SELECT COUNT(*) FROM ChatMessages WHERE SessionId = t.SessionId AND IsRead = 0 AND IsFromAdmin = 0) as UnreadCount
-                FROM ChatMessages t
-                GROUP BY SessionId
-                ORDER BY LastMsgTime DESC").ToListAsync();
+        // ── ADMIN API ───────────────────────────────────────────
 
-            return Json(sessions);
+        // GET /api/admin/chat/conversations
+        [HttpGet("/api/admin/chat/conversations")]
+        public async Task<IActionResult> GetConversations()
+        {
+            var conversations = await _context.ChatConversations
+                .Where(c => !c.IsClosed)
+                .OrderByDescending(c => c.LastMessageAt)
+                .Select(c => new {
+                    c.Id,
+                    c.CustomerName,
+                    c.LastMessage,
+                    c.LastMessageAt,
+                    c.UnreadByAdminCount,
+                    c.IsClosed
+                })
+                .ToListAsync();
+
+            return Ok(new { success = true, data = conversations });
         }
 
-        // Lấy nội dung chat của một session cụ thể
-        [HttpGet]
-        public async Task<IActionResult> GetMessages(string sessionId)
+        // GET /api/admin/chat/conversations/{id}/messages
+        [HttpGet("/api/admin/chat/conversations/{id}/messages")]
+        public async Task<IActionResult> GetMessages(int id)
         {
-            if (string.IsNullOrEmpty(sessionId)) return Json(new List<ChatMessageDto>());
+            var messages = await _context.ChatMessages
+                .Where(m => m.ConversationId == id)
+                .OrderBy(m => m.CreatedAt)
+                .Select(m => new {
+                    m.Id,
+                    m.ConversationId,
+                    m.Message,
+                    m.SenderType,
+                    m.SenderName,
+                    m.IsRead,
+                    m.CreatedAt
+                })
+                .ToListAsync();
 
-            var messages = await _context.Database.SqlQueryRaw<ChatMessageDto>(
-                "SELECT Message, CreatedAt, IsFromAdmin FROM ChatMessages WHERE SessionId = {0} ORDER BY CreatedAt ASC", 
-                sessionId).ToListAsync();
-
-            // Đánh dấu đã đọc
-            await _context.Database.ExecuteSqlRawAsync("UPDATE ChatMessages SET IsRead = 1 WHERE SessionId = {0} AND IsFromAdmin = 0", sessionId);
-
-            return Json(messages);
+            return Ok(new { success = true, data = messages });
         }
 
-        // Admin trả lời tin nhắn
-        [HttpPost]
-        [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> Reply([FromBody] ReplyRequest request)
+        // POST /api/admin/chat/conversations/{id}/read
+        [HttpPost("/api/admin/chat/conversations/{id}/read")]
+        public async Task<IActionResult> MarkAsRead(int id)
         {
-            if (string.IsNullOrEmpty(request.SessionId) || string.IsNullOrEmpty(request.Message))
-                return Json(new { success = false });
+            var conversation = await _context.ChatConversations.FindAsync(id);
+            if (conversation != null)
+            {
+                conversation.UnreadByAdminCount = 0;
+                var unreadMessages = await _context.ChatMessages
+                    .Where(m => m.ConversationId == id && m.SenderType == "Customer" && !m.IsRead)
+                    .ToListAsync();
+                foreach (var msg in unreadMessages) msg.IsRead = true;
+                await _context.SaveChangesAsync();
+            }
+            return Ok(new { success = true });
+        }
 
-            string sql = "INSERT INTO ChatMessages (SessionId, Message, CreatedAt, IsFromAdmin, IsRead) VALUES ({0}, {1}, {2}, 1, 1)";
-            object[] parameters = new object[] { request.SessionId, request.Message, DateTime.Now };
+        // DELETE /api/admin/chat/conversations/{id}
+        [HttpDelete("/api/admin/chat/conversations/{id}")]
+        public async Task<IActionResult> CloseConversation(int id)
+        {
+            var conversation = await _context.ChatConversations.FindAsync(id);
+            if (conversation == null) return NotFound();
             
-            await _context.Database.ExecuteSqlRawAsync(sql, parameters);
-
-            return Json(new { success = true });
+            conversation.IsClosed = true;
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
         }
-
-        public class ChatSessionDto { public string SessionId { get; set; } = ""; public DateTime LastMsgTime { get; set; } public string LastMessage { get; set; } = ""; public int UnreadCount { get; set; } }
-        public class ChatMessageDto { public string Message { get; set; } = ""; public DateTime CreatedAt { get; set; } public bool IsFromAdmin { get; set; } }
-        public class ReplyRequest { public string? SessionId { get; set; } public string? Message { get; set; } }
     }
 }

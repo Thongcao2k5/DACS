@@ -28,6 +28,9 @@ namespace MotoShop.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index(string? searchTerm, string? status, int page = 1, int pageSize = 10)
         {
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 100);
+            
             var query = GetFilteredCustomersQuery(searchTerm, status);
 
             var totalItems = await query.CountAsync();

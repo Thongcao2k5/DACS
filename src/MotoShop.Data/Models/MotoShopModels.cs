@@ -79,9 +79,9 @@ namespace MotoShop.Data.Models
         public virtual ICollection<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
         public virtual ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
         public virtual ICollection<ProductReview> Reviews { get; set; } = new List<ProductReview>();
-        public virtual ICollection<FlashSaleProduct> FlashSaleProducts { get; set; } = new List<FlashSaleProduct>();
+        public virtual ICollection<FlashSaleProduct> OldFlashSaleProducts { get; set; } = new List<FlashSaleProduct>();
+        public virtual ICollection<PromotionProduct> PromotionProducts { get; set; } = new List<PromotionProduct>();
         public virtual ICollection<ProductSpecification> Specifications { get; set; } = new List<ProductSpecification>();
-        public virtual ICollection<ProductTag> Tags { get; set; } = new List<ProductTag>();
     }
 
     public class Unit
@@ -126,22 +126,7 @@ namespace MotoShop.Data.Models
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
         public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
         public virtual ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();
-        public virtual ICollection<ProductVariantAttributeValue> VariantAttributeValues { get; set; } = new List<ProductVariantAttributeValue>();
         public virtual ICollection<VariantImage> VariantImages { get; set; } = new List<VariantImage>();
-    }
-
-    [Table("ProductVariantAttributeValue")]
-    public class ProductVariantAttributeValue
-    {
-        [Key]
-        public int Id { get; set; }
-        public int ProductVariantId { get; set; }
-        public int ValueId { get; set; }
-
-        [ForeignKey("ProductVariantId")]
-        public virtual ProductVariant? ProductVariant { get; set; }
-        [ForeignKey("ValueId")]
-        public virtual AttributeValue? AttributeValue { get; set; }
     }
 
     public class ProductImage
@@ -191,18 +176,6 @@ namespace MotoShop.Data.Models
         public virtual Product? Product { get; set; }
     }
 
-    public class ProductTag
-    {
-        [Key]
-        public int TagId { get; set; }
-        public int ProductId { get; set; }
-        [Required, StringLength(100)]
-        public string TagName { get; set; } = string.Empty;
-
-        [ForeignKey("ProductId")]
-        public virtual Product? Product { get; set; }
-    }
-
     public class Customer
     {
         [Key]
@@ -217,10 +190,9 @@ namespace MotoShop.Data.Models
         public string? Phone { get; set; }
         [StringLength(500)]
         public string? Address { get; set; }
-
         public string? AvatarUrl { get; set; }
-
-        public DateTime CreatedDate { get; set; } = DateTime.Now;        public bool IsLocked { get; set; } = false;
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public bool IsLocked { get; set; } = false;
 
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
         public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
@@ -309,7 +281,6 @@ namespace MotoShop.Data.Models
         [Column(TypeName = "decimal(18, 2)")]
         public decimal? OriginalPrice { get; set; }
         public int? Duration { get; set; } = 30;
-
         public string? Slug { get; set; }
         public string? ShortDescription { get; set; }
         public string? Description { get; set; }
@@ -320,11 +291,9 @@ namespace MotoShop.Data.Models
         [Column(TypeName = "decimal(3, 1)")]
         public decimal AverageRating { get; set; } = 0;
         public int TotalReviews { get; set; } = 0;
-
         public int? CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         public virtual ServiceCategory? ServiceCategory { get; set; }
-
         [StringLength(500)]
         public string? ImageUrl { get; set; }
         public bool? IsActive { get; set; } = true;
@@ -401,10 +370,8 @@ namespace MotoShop.Data.Models
     {
         [Key]
         public int BookingId { get; set; }
-        
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public string? BookingCode { get; private set; }
-
         public int? CustomerId { get; set; }
         public int? ServiceId { get; set; }
         public int? ComboId { get; set; }
@@ -414,7 +381,6 @@ namespace MotoShop.Data.Models
         public DateTime? ServiceDate { get; set; }
         [StringLength(50)]
         public string? Status { get; set; } 
-        
         [StringLength(200)]
         public string? CustomerFullName { get; set; }
         [StringLength(50)]
@@ -428,9 +394,7 @@ namespace MotoShop.Data.Models
         public int? VehicleYear { get; set; }
         [StringLength(50)]
         public string? LicensePlate { get; set; }
-
         public string? Notes { get; set; }
-
         [Column(TypeName = "decimal(18, 2)")]
         public decimal DepositAmount { get; set; } = 0;
         [StringLength(50)]
@@ -463,7 +427,6 @@ namespace MotoShop.Data.Models
         public int Rating { get; set; }
         public string? Comment { get; set; } = string.Empty;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
-        
         [StringLength(20)]
         public string Status { get; set; } = "Pending"; 
 
@@ -488,38 +451,30 @@ namespace MotoShop.Data.Models
         public virtual ProductReview? Review { get; set; }
     }
 
-    public class Promotion
+    public class OldPromotion
     {
         [Key]
         public int PromotionId { get; set; }
         [Required, StringLength(255)]
         public string PromotionName { get; set; } = string.Empty;
         public string? Description { get; set; }
-        
         [Required, StringLength(20)]
         public string DiscountType { get; set; } = string.Empty;
-        
         [Column(TypeName = "decimal(5, 2)")]
         public decimal DiscountPercentage { get; set; }
-        
         [Column(TypeName = "decimal(18, 2)")]
         public decimal DiscountAmount { get; set; }
-
         [Column(TypeName = "decimal(18, 2)")]
         public decimal? MinOrderValue { get; set; } 
         public int? MinQuantity { get; set; } 
-
         public DateTime StartDate { get; set; } = DateTime.Now;
         public DateTime EndDate { get; set; } = DateTime.Now.AddDays(7);
         public bool IsActive { get; set; } = true;
 
-        public virtual ICollection<PromotionProduct> PromotionProducts { get; set; } = new List<PromotionProduct>();
-        
-        [NotMapped]
-        public int ProductCount => PromotionProducts?.Count ?? 0;
+        public virtual ICollection<OldPromotionProduct> PromotionProducts { get; set; } = new List<OldPromotionProduct>();
     }
 
-    public class PromotionProduct
+    public class OldPromotionProduct
     {
         [Key]
         public int Id { get; set; }
@@ -527,10 +482,12 @@ namespace MotoShop.Data.Models
         public int ProductId { get; set; }
 
         [ForeignKey("PromotionId")]
-        public virtual Promotion? Promotion { get; set; }
+        public virtual OldPromotion? Promotion { get; set; }
         [ForeignKey("ProductId")]
         public virtual Product? Product { get; set; }
     }
+
+    // ── NEW UNIFIED PROMOTION SYSTEM (Stage 1) ──────────────────
 
     public class FlashSale
     {
@@ -552,7 +509,6 @@ namespace MotoShop.Data.Models
         public int Id { get; set; }
         public int FlashSaleId { get; set; }
         public int ProductId { get; set; }
-        
         [Column(TypeName = "decimal(18, 2)")]
         public decimal FlashSalePrice { get; set; }
         public int Quantity { get; set; }
@@ -631,11 +587,11 @@ namespace MotoShop.Data.Models
         public int CartId { get; set; }
         public int? CustomerId { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public string UserId { get; set; } = string.Empty;
 
         [ForeignKey("CustomerId")]
         public virtual Customer? Customer { get; set; }
         public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
-        public string UserId { get; set; } = string.Empty;
     }
 
     public class CartItem
@@ -645,12 +601,13 @@ namespace MotoShop.Data.Models
         public int CartId { get; set; }
         public int ProductVariantId { get; set; }
         public int Quantity { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal Price { get; set; }
 
         [ForeignKey("CartId")]
         public virtual Cart? Cart { get; set; }
         [ForeignKey("ProductVariantId")]
         public virtual ProductVariant? ProductVariant { get; set; }
-        public decimal Price { get; set; }
     }
 
     public class Payment
@@ -694,54 +651,6 @@ namespace MotoShop.Data.Models
 
         [ForeignKey("ProductVariantId")]
         public virtual ProductVariant? ProductVariant { get; set; }
-    }
-
-    public class Wishlist
-    {
-        [Key]
-        public int WishlistId { get; set; }
-        public int? CustomerId { get; set; }
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
-
-        [ForeignKey("CustomerId")]
-        public virtual Customer? Customer { get; set; }
-        public virtual ICollection<WishlistItem> WishlistItems { get; set; } = new List<WishlistItem>();
-    }
-
-    public class WishlistItem
-    {
-        [Key]
-        public int WishlistItemId { get; set; }
-        public int? WishlistId { get; set; }
-        public int? ProductId { get; set; }
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
-
-        [ForeignKey("WishlistId")]
-        public virtual Wishlist? Wishlist { get; set; }
-        [ForeignKey("ProductId")]
-        public virtual Product? Product { get; set; }
-    }
-
-    public class ProductAttribute
-    {
-        [Key]
-        public int AttributeId { get; set; }
-        [Required, StringLength(200)]
-        public string AttributeName { get; set; } = string.Empty;
-
-        public virtual ICollection<AttributeValue> AttributeValues { get; set; } = new List<AttributeValue>();
-    }
-
-    public class AttributeValue
-    {
-        [Key]
-        public int ValueId { get; set; }
-        public int? AttributeId { get; set; }
-        [StringLength(200)]
-        public string? Value { get; set; }
-
-        [ForeignKey("AttributeId")]
-        public virtual ProductAttribute? ProductAttribute { get; set; }
     }
 
     public class StoreSetting
@@ -791,7 +700,6 @@ namespace MotoShop.Data.Models
         public int Status { get; set; } = 0; 
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? UpdatedDate { get; set; }
-
         public string? MetaTitle { get; set; }
         public string? MetaDescription { get; set; }
         public bool IsPublished { get; set; } = false;
@@ -830,12 +738,11 @@ namespace MotoShop.Data.Models
         public int UsedCount { get; set; } = 0;
         public DateTime ExpiryDate { get; set; } = DateTime.Now.AddMonths(1);
         public bool IsActive { get; set; } = true;
-
-        // New fields for targeting
         public bool? IsAllProducts { get; set; } = true;
-        public string? AppliedCategoryIds { get; set; } // Comma separated IDs
-        public string? AppliedProductIds { get; set; }  // Comma separated IDs
+        public string? AppliedCategoryIds { get; set; }
+        public string? AppliedProductIds { get; set; }
     }
+
     public class ShippingMethod
     {
         [Key]
@@ -850,8 +757,6 @@ namespace MotoShop.Data.Models
         public bool IsActive { get; set; } = true;
     }
 
-    // --- NEW MODELS FOR SMART FEATURES ---
-    
     [Table("WishlistsNew")]
     public class WishlistNew
     {
@@ -878,23 +783,48 @@ namespace MotoShop.Data.Models
         public string? Ward { get; set; }
         public string? Street { get; set; }
         public bool IsDefault { get; set; } = false;
-        
         [NotMapped]
         public string Address => $"{Street}, {Ward}, {District}, {Province}";
+    }
+
+    public class ChatConversation
+    {
+        [Key]
+        public int Id { get; set; }
+        public string? UserId { get; set; }
+        public string? GuestSessionId { get; set; }
+        [StringLength(200)]
+        public string? CustomerName { get; set; }
+        [StringLength(255)]
+        public string? CustomerEmail { get; set; }
+        public string? LastMessage { get; set; }
+        public DateTime? LastMessageAt { get; set; }
+        public int UnreadByAdminCount { get; set; } = 0;
+        public int UnreadByCustomerCount { get; set; } = 0;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime UpdatedAt { get; set; } = DateTime.Now;
+        public bool IsClosed { get; set; } = false;
+
+        public virtual ICollection<ChatMessage> Messages { get; set; } = new List<ChatMessage>();
     }
 
     public class ChatMessage
     {
         [Key]
         public int Id { get; set; }
+        public int ConversationId { get; set; }
+        [Required, StringLength(20)]
+        public string SenderType { get; set; } = "Customer"; // Customer or Admin
         public string? SenderId { get; set; }
-        [Required]
-        public string SessionId { get; set; } = string.Empty;
+        [StringLength(200)]
+        public string? SenderName { get; set; }
         [Required]
         public string Message { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public bool IsFromAdmin { get; set; } = false;
         public bool IsRead { get; set; } = false;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        [ForeignKey("ConversationId")]
+        public virtual ChatConversation? Conversation { get; set; }
     }
 
     public class AuditLog

@@ -16,49 +16,56 @@ public class HomeController : Controller
     private readonly ILogger<HomeController> _logger;
     private readonly IProductService _productService;
     private readonly ICategoryService _categoryService;
+    private readonly IPromotionService _promotionService;
     private readonly IMemoryCache _cache;
 
-    public HomeController(ILogger<HomeController> logger, IProductService productService, ICategoryService categoryService, IMemoryCache cache)
+    public HomeController(ILogger<HomeController> logger, IProductService productService, ICategoryService categoryService, IPromotionService promotionService, IMemoryCache cache)
     {
         _logger = logger;
         _productService = productService;
         _categoryService = categoryService;
+        _promotionService = promotionService;
         _cache = cache;
     }
 
     public async Task<IActionResult> Index()
     {
-        var categories = await _cache.GetOrCreateAsync("home_categories", e => {
+        var categories = await _cache.GetOrCreateAsync(MotoShop.Data.Constants.CacheKeys.HomeCategories, e => {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
             return _categoryService.GetAllAsync();
         }) ?? await _categoryService.GetAllAsync();
 
-        var featuredProducts = await _cache.GetOrCreateAsync("home_featured_8", e => {
+        var featuredProducts = await _cache.GetOrCreateAsync(MotoShop.Data.Constants.CacheKeys.HomeFeatured, e => {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
             return _productService.GetRandomProductsAsync(8);
         }) ?? await _productService.GetRandomProductsAsync(8);
 
-        var bestSellingProducts = await _cache.GetOrCreateAsync("home_bestselling_4", e => {
+        var bestSellingProducts = await _cache.GetOrCreateAsync(MotoShop.Data.Constants.CacheKeys.HomeBestSelling, e => {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
             return _productService.GetRandomProductsAsync(4);
         }) ?? await _productService.GetRandomProductsAsync(4);
 
-        var newProducts = await _cache.GetOrCreateAsync("home_new_products", e => {
+        var newProducts = await _cache.GetOrCreateAsync(MotoShop.Data.Constants.CacheKeys.HomeNewProducts, e => {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
             return _productService.GetPagedProductsAsync(null, null, null, "newest", 1, 4);
         }) ?? await _productService.GetPagedProductsAsync(null, null, null, "newest", 1, 4);
 
-        var flashSale = await _cache.GetOrCreateAsync("home_flash_sale", e => {
+        var flashSaleProducts = await _cache.GetOrCreateAsync(MotoShop.Data.Constants.CacheKeys.HomeFlashSale, e => {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2);
-            return _productService.GetActiveFlashSaleAsync();
-        });
+            return _promotionService.GetFlashSaleProductsAsync(8);
+        }) ?? await _promotionService.GetFlashSaleProductsAsync(8);
 
-        var brandProducts = await _cache.GetOrCreateAsync("home_brand_products", e => {
+        var featuredPromotions = await _cache.GetOrCreateAsync("home_featured_promotions", e => {
+            e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+            return _promotionService.GetFeaturedAsync();
+        }) ?? await _promotionService.GetFeaturedAsync();
+
+        var brandProducts = await _cache.GetOrCreateAsync(MotoShop.Data.Constants.CacheKeys.HomeBrandProducts, e => {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15);
             return _productService.GetBrandWithProductsAsync(4, 6);
         }) ?? await _productService.GetBrandWithProductsAsync(4, 6);
 
-        var categoryProducts = await _cache.GetOrCreateAsync("home_category_products", e => {
+        var categoryProducts = await _cache.GetOrCreateAsync(MotoShop.Data.Constants.CacheKeys.HomeCategoryProducts, e => {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15);
             return _productService.GetCategoryWithProductsAsync(4, 4);
         }) ?? await _productService.GetCategoryWithProductsAsync(4, 4);
@@ -68,7 +75,8 @@ public class HomeController : Controller
             .Take(5)
             .ToList();
 
-        ViewBag.FlashSale = flashSale;
+        ViewBag.FlashSaleProducts = flashSaleProducts;
+        ViewBag.FeaturedPromotions = featuredPromotions;
         ViewBag.BrandWithProducts = brandProducts;
         ViewBag.CategoryWithProducts = categoryProducts;
 

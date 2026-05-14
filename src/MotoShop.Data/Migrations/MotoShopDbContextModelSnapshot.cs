@@ -1332,25 +1332,37 @@ namespace MotoShop.Data.Migrations
 
             modelBuilder.Entity("MotoShop.Data.Models.Promotion", b =>
                 {
-                    b.Property<int>("PromotionId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PromotionId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BackgroundColor")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("BannerImage")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("CouponCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("DiscountAmount")
-                        .HasColumnType("decimal(18, 2)");
-
-                    b.Property<decimal>("DiscountPercentage")
-                        .HasColumnType("decimal(5, 2)");
 
                     b.Property<string>("DiscountType")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<decimal>("DiscountValue")
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
@@ -1358,21 +1370,47 @@ namespace MotoShop.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<decimal?>("MinOrderValue")
+                    b.Property<bool>("IsFeatured")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal?>("MaxDiscountAmount")
                         .HasColumnType("decimal(18, 2)");
 
-                    b.Property<int?>("MinQuantity")
+                    b.Property<decimal?>("MinOrderAmount")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("Priority")
                         .HasColumnType("int");
 
-                    b.Property<string>("PromotionName")
+                    b.Property<string>("PromotionType")
                         .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Slug")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("PromotionId");
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UsageLimit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UsedCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CouponCode");
 
                     b.ToTable("Promotions");
                 });

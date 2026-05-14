@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MotoShop.Business.DTOs;
 using MotoShop.Business.Helpers;
 using MotoShop.Business.Interfaces;
+using MotoShop.Data.Enums;
 using MotoShop.Data.Interfaces;
 using MotoShop.Data.Models;
 using System;
@@ -275,25 +276,31 @@ namespace MotoShop.Business.Services
 
         public async Task<IEnumerable<CouponDto>> GetVouchersForProductAsync(int productId)
         {
-            var product = await _uow.Repository<Product>().Find(p => p.ProductId == productId).AsNoTracking().FirstOrDefaultAsync();
-            if (product == null) return Enumerable.Empty<CouponDto>();
-
-            var allActiveCoupons = await _uow.Repository<Coupon>().Find(c => c.IsActive 
-                && c.ExpiryDate >= DateTime.Now 
-                && (c.UsageLimit == 0 || c.UsedCount < c.UsageLimit))
+            var now = DateTime.Now;
+            var vouchers = await _uow.Repository<Promotion>()
+                .Find(p => p.PromotionType == PromotionType.Voucher
+                    && p.IsActive
+                    && p.StartDate <= now
+                    && p.EndDate >= now
+                    && (!p.UsageLimit.HasValue || p.UsedCount < p.UsageLimit.Value))
                 .AsNoTracking()
+                .OrderByDescending(p => p.Priority)
+                .ThenByDescending(p => p.DiscountValue)
+                .Take(3)
                 .ToListAsync();
 
-            var filteredCoupons = allActiveCoupons.Where(c => 
-                c.IsAllProducts == true || 
-                (!string.IsNullOrEmpty(c.AppliedProductIds) && c.AppliedProductIds.Split(',').Contains(productId.ToString())) ||
-                (product.CategoryId.HasValue && !string.IsNullOrEmpty(c.AppliedCategoryIds) && c.AppliedCategoryIds.Split(',').Contains(product.CategoryId.Value.ToString()))
-            )
-            .OrderByDescending(c => c.DiscountValue)
-            .Take(3)
-            .ToList();
-
-            return _mapper.Map<IEnumerable<CouponDto>>(filteredCoupons);
+            return vouchers.Select(v => new CouponDto
+            {
+                Id = v.Id,
+                Code = v.CouponCode ?? string.Empty,
+                DiscountValue = v.DiscountValue,
+                DiscountType = v.DiscountType == DiscountType.Percent ? "Percentage" : "Fixed",
+                MinOrderValue = v.MinOrderAmount,
+                UsageLimit = v.UsageLimit ?? 0,
+                UsedCount = v.UsedCount,
+                ExpiryDate = v.EndDate,
+                IsActive = v.IsActive
+            });
         }
 
         public async Task<bool> CanUserReviewProductAsync(string userId, int productId)
@@ -328,45 +335,53 @@ namespace MotoShop.Business.Services
         {
             var now = DateTime.Now;
 
-            var flashSale = await _uow.Repository<FlashSale>().Find(fs =>
-                fs.IsActive &&
-                fs.StartDate <= now &&
-                fs.EndDate >= now)
+            var flashSale = await _uow.Repository<Promotion>().Find(p =>
+                p.PromotionType == PromotionType.FlashSale &&
+                p.IsActive &&
+                p.StartDate <= now &&
+                p.EndDate >= now)
                 .AsNoTracking()
                 .AsSplitQuery()
-                .Include(fs => fs.FlashSaleProducts)
-                    .ThenInclude(fsp => fsp.Product)
+                .Include(p => p.PromotionProducts)
+                    .ThenInclude(pp => pp.Product)
                         .ThenInclude(p => p!.Variants)
-                .Include(fs => fs.FlashSaleProducts)
-                    .ThenInclude(fsp => fsp.Product)
+                .Include(p => p.PromotionProducts)
+                    .ThenInclude(pp => pp.Product)
                         .ThenInclude(p => p!.Images)
-                .OrderByDescending(fs => fs.StartDate)
+                .OrderByDescending(p => p.Priority)
+                .ThenByDescending(p => p.StartDate)
                 .FirstOrDefaultAsync();
 
             if (flashSale == null) return null;
 
             return new FlashSaleViewModel
             {
-                FlashSaleId = flashSale.FlashSaleId,
-                Title = flashSale.Title,
+                FlashSaleId = flashSale.Id,
+                Title = flashSale.Name,
                 EndDate = flashSale.EndDate,
-                Products = flashSale.FlashSaleProducts
-                    .Where(fsp => fsp.Quantity > fsp.SoldQuantity && fsp.Product != null)
-                    .Select(fsp => new HomeFlashSaleProductDto
+                Products = flashSale.PromotionProducts
+                    .Where(pp => pp.Product != null)
+                    .Select(pp =>
                     {
-                        ProductId = fsp.ProductId,
-                        ProductName = fsp.Product!.ProductName,
-                        Slug = fsp.Product.Slug,
-                        ImageUrl = fsp.Product.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault() 
-                                   ?? fsp.Product.Images.Select(i => i.ImageUrl).FirstOrDefault(),
-                        FlashSalePrice = fsp.FlashSalePrice,
-                        OriginalPrice = fsp.Product.Variants.Any() ? fsp.Product.Variants.Min(v => v.Price) : 0,
-                        DiscountPercent = (fsp.Product.Variants.Any() && fsp.Product.Variants.Min(v => v.Price) > 0)
-                            ? (int)Math.Round((1 - fsp.FlashSalePrice / fsp.Product.Variants.Min(v => v.Price)) * 100)
-                            : 0,
-                        Quantity = fsp.Quantity,
-                        SoldQuantity = fsp.SoldQuantity,
-                        SoldPercent = fsp.Quantity > 0 ? (int)Math.Round((decimal)fsp.SoldQuantity / fsp.Quantity * 100) : 0
+                        var originalPrice = pp.Product!.Variants.Any() ? pp.Product.Variants.Min(v => v.Price) : 0;
+                        var salePrice = flashSale.DiscountType == DiscountType.Percent
+                            ? originalPrice * (1 - flashSale.DiscountValue / 100m)
+                            : Math.Max(0, originalPrice - flashSale.DiscountValue);
+
+                        return new HomeFlashSaleProductDto
+                        {
+                            ProductId = pp.ProductId,
+                            ProductName = pp.Product.ProductName,
+                            Slug = pp.Product.Slug,
+                            ImageUrl = pp.Product.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault()
+                                       ?? pp.Product.Images.Select(i => i.ImageUrl).FirstOrDefault(),
+                            FlashSalePrice = salePrice,
+                            OriginalPrice = originalPrice,
+                            DiscountPercent = originalPrice > 0 ? (int)Math.Round((1 - salePrice / originalPrice) * 100) : 0,
+                            Quantity = 0,
+                            SoldQuantity = 0,
+                            SoldPercent = 0
+                        };
                     })
                     .ToList()
             };
@@ -409,10 +424,10 @@ namespace MotoShop.Business.Services
                     decimal basePrice = item.MinOriginalPrice ?? item.MinPrice;
                     decimal discountedPrice = basePrice;
 
-                    if (p.DiscountType == "Percentage")
-                        discountedPrice = basePrice * (1 - p.DiscountPercentage / 100);
+                    if (p.DiscountType == DiscountType.Percent)
+                        discountedPrice = basePrice * (1 - p.DiscountValue / 100);
                     else
-                        discountedPrice = Math.Max(0, basePrice - p.DiscountAmount);
+                        discountedPrice = Math.Max(0, basePrice - p.DiscountValue);
 
                     // Chỉ áp dụng nếu giá Promotion thực sự rẻ hơn
                     if (discountedPrice < item.MinPrice || item.MinOriginalPrice == null)

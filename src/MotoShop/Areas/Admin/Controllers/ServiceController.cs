@@ -26,6 +26,9 @@ namespace MotoShop.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index(string? searchTerm, int? categoryId, string? status, int page = 1, int pageSize = 10)
         {
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 100);
+
             var query = _context.Services.AsNoTracking().AsQueryable();
 
             if (!string.IsNullOrEmpty(searchTerm))

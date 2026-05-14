@@ -15,7 +15,7 @@
                 @if (Model.MinPrice > 0)
                 {
                     <h3 class="text-danger fw-bold mb-0">@Model.MinPrice.ToString("N0")đ</h3>
-                    @if (Model.MinOriginalPrice.HasValue && Model.MinOriginalPrice > Model.MinPrice)
+                    @if (Model.MinOriginalPrice != null && Model.MinOriginalPrice > Model.MinPrice)
                     {
                         <del class="text-muted">@Model.MinOriginalPrice.Value.ToString("N0")đ</del>
                     }

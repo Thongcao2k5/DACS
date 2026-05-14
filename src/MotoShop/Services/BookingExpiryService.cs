@@ -10,6 +10,7 @@ namespace MotoShop.Services
     public class BookingExpiryService : BackgroundService
     {
         private readonly IServiceProvider _provider;
+        private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         public BookingExpiryService(IServiceProvider provider)
         {
@@ -20,16 +21,20 @@ namespace MotoShop.Services
         {
             while (!ct.IsCancellationRequested)
             {
-                using (var scope = _provider.CreateScope())
+                if (await _semaphore.WaitAsync(0))
                 {
-                    var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
                     try
                     {
-                        await bookingService.CancelExpiredBookingsAsync();
+                        using (var scope = _provider.CreateScope())
+                        {
+                            var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
+                            await bookingService.CancelExpiredBookingsAsync();
+                        }
                     }
-                    catch (Exception)
+                    catch (Exception) { /* Log error */ }
+                    finally
                     {
-                        // Log error if needed
+                        _semaphore.Release();
                     }
                 }
 

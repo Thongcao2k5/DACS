@@ -24,6 +24,7 @@ namespace MotoShop.Areas.Admin.Controllers
         private readonly IGenericRepository<Brand> _brandRepository;
         private readonly IAuditLogService _auditLogService;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly Microsoft.Extensions.Caching.Memory.IMemoryCache _cache;
 
         public ProductController(
             IProductRepository productRepository, 
@@ -31,7 +32,8 @@ namespace MotoShop.Areas.Admin.Controllers
             IGenericRepository<Category> categoryRepository,
             IGenericRepository<Brand> brandRepository,
             IAuditLogService auditLogService,
-            UserManager<IdentityUser> userManager)
+            UserManager<IdentityUser> userManager,
+            Microsoft.Extensions.Caching.Memory.IMemoryCache cache)
         {
             _productRepository = productRepository;
             _fileService = fileService;
@@ -39,10 +41,23 @@ namespace MotoShop.Areas.Admin.Controllers
             _brandRepository = brandRepository;
             _auditLogService = auditLogService;
             _userManager = userManager;
+            _cache = cache;
+        }
+
+        private void ClearHomeCache()
+        {
+            _cache.Remove(MotoShop.Data.Constants.CacheKeys.HomeFeatured);
+            _cache.Remove(MotoShop.Data.Constants.CacheKeys.HomeBestSelling);
+            _cache.Remove(MotoShop.Data.Constants.CacheKeys.HomeNewProducts);
+            _cache.Remove(MotoShop.Data.Constants.CacheKeys.HomeCategoryProducts);
+            _cache.Remove(MotoShop.Data.Constants.CacheKeys.HomeFlashSale);
         }
 
         public async Task<IActionResult> Index(string? searchTerm, int? categoryId, int? brandId, string? status, string? sort, int page = 1, int pageSize = 10)
         {
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 100);
+
             var query = _productRepository.Find(p => !p.IsDeleted)
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
@@ -192,6 +207,7 @@ namespace MotoShop.Areas.Admin.Controllers
 
                 await _productRepository.AddAsync(product);
                 await _productRepository.SaveChangesAsync();
+                ClearHomeCache();
 
                 var userId = _userManager.GetUserId(User);
                 await _auditLogService.LogActionAsync(userId, "Create", "Product", product.ProductId.ToString(),
@@ -335,6 +351,7 @@ namespace MotoShop.Areas.Admin.Controllers
                 }
 
                 await _productRepository.SaveChangesAsync();
+                ClearHomeCache();
 
                 var userId = _userManager.GetUserId(User);
                 await _auditLogService.LogActionAsync(userId, "Update", "Product", ProductId.ToString(),
@@ -394,6 +411,7 @@ namespace MotoShop.Areas.Admin.Controllers
                 product.IsDeleted = true;
                 _productRepository.Update(product);
                 await _productRepository.SaveChangesAsync();
+                ClearHomeCache();
 
                 var userId = _userManager.GetUserId(User);
                 await _auditLogService.LogActionAsync(userId, "Delete", "Product", id.ToString(), null, $"Đã xóa mềm sản phẩm: {product.ProductName}", HttpContext.Connection.RemoteIpAddress?.ToString());
@@ -426,6 +444,7 @@ namespace MotoShop.Areas.Admin.Controllers
                 }
 
                 await _productRepository.SaveChangesAsync();
+                ClearHomeCache();
 
                 return Json(new { success = true, message = $"Đã xóa {products.Count} sản phẩm thành công" });
             }
@@ -455,4 +474,3 @@ namespace MotoShop.Areas.Admin.Controllers
         }
     }
 }
-

@@ -13,10 +13,18 @@ namespace MotoShop.Areas.Admin.Controllers
     public class CategoryController : Controller
     {
         private readonly MotoShopDbContext _context;
+        private readonly Microsoft.Extensions.Caching.Memory.IMemoryCache _cache;
 
-        public CategoryController(MotoShopDbContext context)
+        public CategoryController(MotoShopDbContext context, Microsoft.Extensions.Caching.Memory.IMemoryCache cache)
         {
             _context = context;
+            _cache = cache;
+        }
+
+        private void ClearHomeCache()
+        {
+            _cache.Remove(MotoShop.Data.Constants.CacheKeys.HomeCategories);
+            _cache.Remove(MotoShop.Data.Constants.CacheKeys.HomeCategoryProducts);
         }
 
         // GET: Admin/Category
@@ -82,6 +90,7 @@ namespace MotoShop.Areas.Admin.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+                ClearHomeCache();
                 return Json(new { success = true, message = "Lưu danh mục thành công!" });
             }
             catch (Exception ex)
@@ -109,8 +118,8 @@ namespace MotoShop.Areas.Admin.Controllers
 
             _context.Categories.Remove(category);
             await _context.SaveChangesAsync();
+            ClearHomeCache();
             return Json(new { success = true, message = "Đã xóa danh mục thành công!" });
         }
     }
 }
-

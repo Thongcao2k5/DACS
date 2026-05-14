@@ -17,13 +17,15 @@ namespace MotoShop.Business.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly MotoShopDbContext _context;
         private readonly IEmailService _emailService;
+        private readonly IPromotionService _promotionService;
         private readonly ILogger<OrderService> _logger;
 
-        public OrderService(IUnitOfWork unitOfWork, MotoShopDbContext context, IEmailService emailService, ILogger<OrderService> logger)
+        public OrderService(IUnitOfWork unitOfWork, MotoShopDbContext context, IEmailService emailService, IPromotionService promotionService, ILogger<OrderService> logger)
         {
             _unitOfWork = unitOfWork;
             _context = context;
             _emailService = emailService;
+            _promotionService = promotionService;
             _logger = logger;
         }
 
@@ -52,7 +54,9 @@ namespace MotoShop.Business.Services
                         if (variant == null || variant.StockQuantity < checkoutData.DirectQuantity)
                             return (false, "Sản phẩm không đủ tồn kho.", 0);
                         
-                        decimal directPrice = await GetDiscountedPrice(variant);
+                        decimal directPrice = variant.ProductId.HasValue
+                            ? await _promotionService.CalculateDiscountAsync(variant.ProductId.Value, variant.Price)
+                            : variant.Price;
 
                         orderItemsToCreate.Add(new OrderItem {
                             ProductVariantId = variant.ProductVariantId,
@@ -72,13 +76,16 @@ namespace MotoShop.Business.Services
                             if (variant == null || variant.StockQuantity < item.Quantity)
                                 return (false, $"Sản phẩm '{item.ProductVariant?.VariantName}' không đủ tồn kho.", 0);
 
-                            // SỬ DỤNG GIÁ ĐÃ LƯU TRONG GIỎ HÀNG (GIÁ KHUYẾN MÃI TẠI THỜI ĐIỂM THÊM)
+                            var productVariant = item.ProductVariant ?? variant;
+                            var discountedPrice = productVariant.ProductId.HasValue
+                                ? await _promotionService.CalculateDiscountAsync(productVariant.ProductId.Value, productVariant.Price)
+                                : productVariant.Price;
                             orderItemsToCreate.Add(new OrderItem {
                                 ProductVariantId = item.ProductVariantId,
                                 Quantity = item.Quantity,
-                                Price = item.Price
+                                Price = discountedPrice
                             });
-                            subTotal += item.Price * item.Quantity;
+                            subTotal += discountedPrice * item.Quantity;
                         }
                     }
 
@@ -112,17 +119,19 @@ namespace MotoShop.Business.Services
 
                     // 3. TÍNH TOÁN GIẢM GIÁ & SHIP
                     decimal discountAmount = 0;
+                    decimal discountedSubTotal = await _promotionService.CalculateOrderDiscountAsync(subTotal, new List<CartItem>());
+                    discountAmount += subTotal - discountedSubTotal;
+
                     if (!string.IsNullOrEmpty(checkoutData.CouponCode))
                     {
-                        var coupon = await _context.Coupons.FirstOrDefaultAsync(c => c.Code == checkoutData.CouponCode && c.IsActive && c.ExpiryDate >= DateTime.Now);
-                        if (coupon != null && (coupon.UsageLimit == 0 || coupon.UsedCount < coupon.UsageLimit))
+                        checkoutData.CouponId = null;
+
+                        var voucherValidation = await _promotionService.ValidateVoucherAsync(checkoutData.CouponCode, discountedSubTotal);
+                        if (voucherValidation.IsValid)
                         {
-                            if (subTotal >= coupon.MinOrderValue)
-                            {
-                                discountAmount = coupon.DiscountType == "Percentage" ? subTotal * (coupon.DiscountValue / 100) : coupon.DiscountValue;
-                                checkoutData.CouponId = coupon.Id;
-                                coupon.UsedCount++;
-                            }
+                            var totalAfterVoucher = await _promotionService.ApplyVoucherAsync(checkoutData.CouponCode, discountedSubTotal);
+                            discountAmount += discountedSubTotal - totalAfterVoucher;
+                            discountedSubTotal = totalAfterVoucher;
                         }
                     }
 
@@ -135,7 +144,7 @@ namespace MotoShop.Business.Services
 
                     // 4. TẠO ĐƠN HÀNG
                     var order = new Order {
-                        CustomerId = customer.CustomerId, OrderDate = DateTime.Now, TotalAmount = subTotal + shippingCost - discountAmount,
+                        CustomerId = customer.CustomerId, OrderDate = DateTime.Now, TotalAmount = discountedSubTotal + shippingCost,
                         Status = MotoShop.Data.Constants.OrderStatusConst.Pending, PaymentStatus = "Unpaid", DiscountAmount = discountAmount,
                         ShippingAddress = $"{finalFullName} | {finalPhone} | {finalAddressStr}",
                         Note = checkoutData.Note, ShippingMethodId = checkoutData.ShippingMethodId, CouponId = checkoutData.CouponId,
@@ -160,20 +169,6 @@ namespace MotoShop.Business.Services
                         if (dbVar.Product != null)
                         {
                             dbVar.Product.SoldCount += item.Quantity;
-                            
-                            var now = DateTime.Now;
-                            var flashSaleProd = await _context.FlashSaleProducts
-                                .Include(f => f.FlashSale)
-                                .FirstOrDefaultAsync(f => f.ProductId == dbVar.ProductId 
-                                    && f.FlashSale != null 
-                                    && f.FlashSale.IsActive 
-                                    && f.FlashSale.StartDate <= now 
-                                    && f.FlashSale.EndDate >= now);
-                                    
-                            if (flashSaleProd != null)
-                            {
-                                flashSaleProd.SoldQuantity += item.Quantity;
-                            }
                         }
 
                         _context.InventoryTransactions.Add(new InventoryTransaction {
@@ -269,12 +264,6 @@ namespace MotoShop.Business.Services
                     if (order == null || !cancellable.Contains(order.Status)) return false;
 
                     order.Status = MotoShop.Data.Constants.OrderStatusConst.Cancelled;
-                    if (order.CouponId.HasValue)
-                    {
-                        var coupon = await _context.Coupons.FindAsync(order.CouponId.Value);
-                        if (coupon != null && coupon.UsedCount > 0) coupon.UsedCount--;
-                    }
-
                     foreach (var item in order.OrderItems)
                     {
                         if (item.ProductVariant != null)
@@ -285,20 +274,6 @@ namespace MotoShop.Business.Services
                             if (dbProduct != null)
                             {
                                 dbProduct.SoldCount = Math.Max(0, dbProduct.SoldCount - item.Quantity);
-                                
-                                var now = DateTime.Now;
-                                var flashSaleProd = await _context.FlashSaleProducts
-                                    .Include(f => f.FlashSale)
-                                    .FirstOrDefaultAsync(f => f.ProductId == dbProduct.ProductId 
-                                        && f.FlashSale != null 
-                                        && f.FlashSale.IsActive 
-                                        && f.FlashSale.StartDate <= now 
-                                        && f.FlashSale.EndDate >= now);
-                                        
-                                if (flashSaleProd != null)
-                                {
-                                    flashSaleProd.SoldQuantity = Math.Max(0, flashSaleProd.SoldQuantity - item.Quantity);
-                                }
                             }
 
                             _context.InventoryTransactions.Add(new InventoryTransaction {
@@ -329,9 +304,5 @@ namespace MotoShop.Business.Services
             return await _unitOfWork.CompleteAsync() > 0;
         }
 
-        private async Task<decimal> GetDiscountedPrice(ProductVariant variant)
-        {
-            return await MotoShop.Business.Helpers.PromotionHelper.GetDiscountedPriceAsync(_context, variant);
-        }
     }
 }

@@ -148,18 +148,6 @@
                         <div>Khuyến mãi</div>
                     </a>
                 </li>
-                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "FlashSale" ? "active" : "")">
-                    <a asp-area="Admin" asp-controller="FlashSale" asp-action="Index" class="menu-link">
-                        <i class="menu-icon tf-icons bx bx-bolt-circle text-warning"></i>
-                        <div>Flash Sale</div>
-                    </a>
-                </li>
-                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Coupon" ? "active" : "")">
-                    <a asp-area="Admin" asp-controller="Coupon" asp-action="Index" class="menu-link">
-                        <i class="menu-icon tf-icons bx bx-purchase-tag"></i>
-                        <div>Mã giảm giá</div>
-                    </a>
-                </li>
                 
                 <!-- KHÁCH HÀNG & PHẢN HỒI -->
                 <li class="menu-header small text-uppercase"><span class="menu-header-text">Khách hàng & Phản hồi</span></li>

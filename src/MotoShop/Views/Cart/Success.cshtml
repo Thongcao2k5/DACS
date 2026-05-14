@@ -28,29 +28,9 @@
                         </div>
                         <div>
                             <span class="info-label">Phương thức thanh toán</span>
-                            <span class="info-value">@(Model.Payments?.FirstOrDefault()?.PaymentMethod ?? "Thanh toán khi nhận hàng (COD)")</span>
+                            <span class="info-value">@(Model.PaymentMethod == "VNPay" ? "Thanh toán VNPay" : (Model.PaymentMethod ?? "Thanh toán khi nhận hàng (COD)"))</span>
                         </div>
-                        <div>
-                            <span class="info-label">Trạng thái</span>
-                            @{
-                                var statusClass = Model.Status switch {
-                                    "Pending" => "bg-warning text-dark",
-                                    "Processing" => "bg-info text-white",
-                                    "Shipped" => "bg-primary text-white",
-                                    "Delivered" => "bg-success text-white",
-                                    _ => "bg-secondary text-white"
-                                };
-                                var statusText = Model.Status switch {
-                                    "Pending" => "Đang chờ xử lý",
-                                    "Processing" => "Đang xử lý",
-                                    "Shipped" => "Đang giao hàng",
-                                    "Delivered" => "Đã giao hàng",
-                                    _ => Model.Status ?? "Chưa xác định"
-                                };
-                            }
-                            <span class="badge @statusClass fw-bold">@statusText</span>
-                        </div>
-                    </div>
+
                     <div class="mt-4 pt-4 border-top">
                         <span class="info-label">Địa chỉ giao hàng</span>
                         <span class="info-value">@Model.ShippingAddress</span>
@@ -115,7 +95,7 @@
                         {
                             <div class="d-flex justify-content-between mb-2 text-success">
                                 <span class="fw-bold">
-                                    <i class='bx bxs-coupon me-1'></i> Giảm giá Voucher @(Model.Coupon != null ? $"({Model.Coupon.Code})" : "")
+                                    <i class='bx bxs-coupon me-1'></i> Giảm giá Voucher
                                 </span>
                                 <span class="fw-bold">-@Model.DiscountAmount.ToString("N0")đ</span>
                             </div>

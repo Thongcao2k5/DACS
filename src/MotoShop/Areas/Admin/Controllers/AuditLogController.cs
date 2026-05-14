@@ -30,6 +30,9 @@ namespace MotoShop.Areas.Admin.Controllers
             int page = 1,
             int pageSize = 20)
         {
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 100);
+
             var query = _context.AuditLogs.AsQueryable();
 
             if (!string.IsNullOrEmpty(action))

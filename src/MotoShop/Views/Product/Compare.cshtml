@@ -204,7 +204,7 @@
                             {
                                 <td class="@(p.MinPrice == minPrice && products.Count > 1 ? "cmp-best" : "")">
                                     <div class="cmp-price-main">@p.MinPrice.ToString("N0")₫</div>
-                                    @if (p.MinOriginalPrice.HasValue && p.MinOriginalPrice > p.MinPrice)
+                                    @if (p.MinOriginalPrice != null && p.MinOriginalPrice > p.MinPrice)
                                     {
                                         <div class="cmp-price-old">@p.MinOriginalPrice.Value.ToString("N0")₫</div>
                                     }

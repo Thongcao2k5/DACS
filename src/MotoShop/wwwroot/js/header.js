@@ -62,7 +62,6 @@ Object.assign(window.UI, {
 
 document.addEventListener('DOMContentLoaded', function() {
     const headerWrapper = document.getElementById('mainHeaderWrapper');
-    const backToTop = document.getElementById('backToTop');
     const pageLoader = document.getElementById('pageLoader');
     let isShrunk = false;
 
@@ -94,25 +93,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         }
-
-        // Back to Top Logic
-        if (backToTop) {
-            if (currentScroll > 400) {
-                backToTop.classList.add('active');
-            } else {
-                backToTop.classList.remove('active');
-            }
-        }
-    }
-
-    // 3. Back to Top Click
-    if (backToTop) {
-        backToTop.addEventListener('click', function() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        });
     }
 
     // Passive listener để tối ưu performance

@@ -34,4 +34,15 @@ namespace MotoShop.Data.Constants
         public const string Completed = "Completed";
         public const string Cancelled = "Cancelled";
     }
+
+    public static class CacheKeys
+    {
+        public const string HomeCategories = "home_categories";
+        public const string HomeFeatured = "home_featured_8";
+        public const string HomeBestSelling = "home_bestselling_4";
+        public const string HomeNewProducts = "home_new_products";
+        public const string HomeFlashSale = "home_flash_sale";
+        public const string HomeBrandProducts = "home_brand_products";
+        public const string HomeCategoryProducts = "home_category_products";
+    }
 }

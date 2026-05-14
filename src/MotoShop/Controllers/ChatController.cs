@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
+using MotoShop.Data.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,9 @@ using Microsoft.AspNetCore.Identity;
 
 namespace MotoShop.Controllers
 {
-    public class ChatController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ChatController : ControllerBase
     {
         private readonly MotoShopDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
@@ -20,45 +23,136 @@ namespace MotoShop.Controllers
             _userManager = userManager;
         }
 
-        // Khách gửi tin nhắn
-        [HttpPost]
-        [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> SendMessage([FromBody] ChatMessageRequest request)
+        // POST api/chat/send
+        [HttpPost("send")]
+        public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.Message)) return BadRequest("Message cannot be empty.");
+
             var userId = _userManager.GetUserId(User);
-            string sessionId = userId ?? Request.Cookies["ChatSessionId"] ?? Guid.NewGuid().ToString();
-            
-            if (userId == null && !Request.Cookies.ContainsKey("ChatSessionId"))
+            ChatConversation? conversation = null;
+
+            if (!string.IsNullOrEmpty(userId))
             {
-                Response.Cookies.Append("ChatSessionId", sessionId, new Microsoft.AspNetCore.Http.CookieOptions { Expires = DateTime.Now.AddDays(7) });
+                conversation = await _context.ChatConversations.FirstOrDefaultAsync(c => c.UserId == userId && !c.IsClosed);
+            }
+            else if (!string.IsNullOrEmpty(request.GuestSessionId))
+            {
+                conversation = await _context.ChatConversations.FirstOrDefaultAsync(c => c.GuestSessionId == request.GuestSessionId && !c.IsClosed);
             }
 
-            string sql = "INSERT INTO ChatMessages (SenderId, SessionId, Message, CreatedAt, IsFromAdmin) VALUES ({0}, {1}, {2}, {3}, 0)";
-            object[] parameters = new object[] { userId ?? (object)DBNull.Value, sessionId, request.Message ?? "", DateTime.Now };
-            
-            await _context.Database.ExecuteSqlRawAsync(sql, parameters);
+            if (conversation == null)
+            {
+                conversation = new ChatConversation
+                {
+                    UserId = userId,
+                    GuestSessionId = string.IsNullOrEmpty(userId) ? request.GuestSessionId : null,
+                    CustomerName = User.Identity?.IsAuthenticated == true ? User.Identity.Name : "Khách vãng lai",
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                };
+                _context.ChatConversations.Add(conversation);
+                await _context.SaveChangesAsync();
+            }
 
-            return Json(new { success = true });
+            var chatMessage = new ChatMessage
+            {
+                ConversationId = conversation.Id,
+                SenderType = "Customer",
+                SenderId = userId,
+                SenderName = conversation.CustomerName,
+                Message = request.Message.Trim(),
+                IsRead = false,
+                CreatedAt = DateTime.Now
+            };
+
+            conversation.LastMessage = chatMessage.Message;
+            conversation.LastMessageAt = chatMessage.CreatedAt;
+            conversation.UnreadByAdminCount++;
+            conversation.UpdatedAt = DateTime.Now;
+
+            _context.ChatMessages.Add(chatMessage);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { 
+                success = true, 
+                conversationId = conversation.Id,
+                message = new {
+                    chatMessage.Id,
+                    chatMessage.ConversationId,
+                    chatMessage.SenderType,
+                    chatMessage.SenderName,
+                    chatMessage.Message,
+                    chatMessage.CreatedAt
+                }
+            });
         }
 
-        // Lấy lịch sử chat
-        [HttpGet]
-        public async Task<IActionResult> GetMessages()
+        // GET api/chat/messages?guestSessionId=...
+        [HttpGet("messages")]
+        public async Task<IActionResult> GetMessages(string? guestSessionId)
         {
             var userId = _userManager.GetUserId(User);
-            string? sessionId = userId ?? Request.Cookies["ChatSessionId"];
-            
-            if (string.IsNullOrEmpty(sessionId)) return Json(new List<ChatMessageView>());
+            ChatConversation? conversation = null;
 
-            // Sử dụng FromSqlRaw để lấy dữ liệu thay vì SqlQueryRaw nếu gặp lỗi mapping
-            var messages = await _context.Database.SqlQueryRaw<ChatMessageView>(
-                "SELECT Message, CreatedAt, IsFromAdmin FROM ChatMessages WHERE SenderId = {0} OR SessionId = {1} ORDER BY CreatedAt ASC", 
-                userId ?? (object)DBNull.Value, sessionId).ToListAsync();
+            if (!string.IsNullOrEmpty(userId))
+            {
+                conversation = await _context.ChatConversations.FirstOrDefaultAsync(c => c.UserId == userId && !c.IsClosed);
+            }
+            else if (!string.IsNullOrEmpty(guestSessionId))
+            {
+                conversation = await _context.ChatConversations.FirstOrDefaultAsync(c => c.GuestSessionId == guestSessionId && !c.IsClosed);
+            }
 
-            return Json(messages);
+            if (conversation == null) return Ok(new { success = true, data = new List<object>() });
+
+            var messages = await _context.ChatMessages
+                .Where(m => m.ConversationId == conversation.Id)
+                .OrderBy(m => m.CreatedAt)
+                .Select(m => new {
+                    m.Id,
+                    m.Message,
+                    m.SenderType,
+                    m.SenderName,
+                    m.CreatedAt
+                })
+                .ToListAsync();
+
+            return Ok(new { success = true, data = messages, conversationId = conversation.Id });
         }
 
-        public class ChatMessageRequest { public string? Message { get; set; } }
-        public class ChatMessageView { public string Message { get; set; } = ""; public DateTime CreatedAt { get; set; } public bool IsFromAdmin { get; set; } }
+        // POST api/chat/read
+        [HttpPost("read")]
+        public async Task<IActionResult> MarkAsRead(string? guestSessionId)
+        {
+            var userId = _userManager.GetUserId(User);
+            ChatConversation? conversation = null;
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                conversation = await _context.ChatConversations.FirstOrDefaultAsync(c => c.UserId == userId && !c.IsClosed);
+            }
+            else if (!string.IsNullOrEmpty(guestSessionId))
+            {
+                conversation = await _context.ChatConversations.FirstOrDefaultAsync(c => c.GuestSessionId == guestSessionId && !c.IsClosed);
+            }
+
+            if (conversation != null)
+            {
+                conversation.UnreadByCustomerCount = 0;
+                var unreadMessages = await _context.ChatMessages
+                    .Where(m => m.ConversationId == conversation.Id && m.SenderType == "Admin" && !m.IsRead)
+                    .ToListAsync();
+                foreach (var msg in unreadMessages) msg.IsRead = true;
+                await _context.SaveChangesAsync();
+            }
+            return Ok(new { success = true });
+        }
+
+        public class SendMessageRequest
+        {
+            public string? GuestSessionId { get; set; }
+            public string Message { get; set; } = string.Empty;
+        }
     }
 }

@@ -5,6 +5,8 @@
     ViewData["Title"] = "Thanh toán";
     var cartItems = ViewBag.CartItems as List<CartItemDto> ?? new List<CartItemDto>();
     var totalAmount = (decimal)ViewBag.TotalAmount;
+    var originalTotal = cartItems.Sum(i => i.TotalOriginal);
+    var productDiscountTotal = cartItems.Sum(i => i.TotalDiscount);
     var shippingMethods = ViewBag.ShippingMethods as List<ShippingMethod> ?? new List<ShippingMethod>();
     var savedAddresses = ViewBag.SavedAddresses as List<AddressNew> ?? new List<AddressNew>();
     var defaultAddr = savedAddresses.FirstOrDefault(a => a.IsDefault) ?? savedAddresses.FirstOrDefault();
@@ -144,10 +146,6 @@
                         <input type="radio" asp-for="PaymentMethod" value="COD" id="pay1" checked>
                         <div class="method-info"><label for="pay1" class="name">Tiền mặt (COD)</label></div>
                     </div>
-                    <div class="method-card mt-2" onclick="setPayment('BankTransfer', this)">
-                        <input type="radio" asp-for="PaymentMethod" value="BankTransfer" id="pay2">
-                        <div class="method-info"><label for="pay2" class="name">Chuyển khoản</label></div>
-                    </div>
                     <div class="method-card mt-2" onclick="setPayment('VNPay', this)">
                         <input type="radio" asp-for="PaymentMethod" value="VNPay" id="pay3">
                         <div class="method-info">
@@ -193,8 +191,15 @@
                     </ul>
                     <div class="summary-total d-flex justify-content-between align-items-center mb-2">
                         <span class="fw-bold">Tạm tính</span>
-                        <span class="fw-bold">@totalAmount.ToString("N0")đ</span>
+                        <span class="fw-bold">@originalTotal.ToString("N0")đ</span>
                     </div>
+                    @if (productDiscountTotal > 0)
+                    {
+                        <div class="summary-total d-flex justify-content-between align-items-center mb-2 text-success">
+                            <span class="fw-bold">Flash Sale / Sale</span>
+                            <span class="fw-bold">-@productDiscountTotal.ToString("N0")đ</span>
+                        </div>
+                    }
 
                     <!-- Voucher Section -->
                     <div class="voucher-section mb-4 p-3 bg-light rounded-3">
@@ -206,7 +211,7 @@
                         <div id="couponMessage" class="small mt-2" style="display:none;"></div>
                         
                         <div id="discountRow" class="justify-content-between align-items-center mt-3 text-success fw-bold" style="display:none;">
-                            <span>Giảm giá:</span>
+                            <span>Voucher <span id="appliedVoucherCode"></span>:</span>
                             <span id="discountAmount">-0đ</span>
                         </div>
                     </div>
@@ -412,6 +417,7 @@
                 if (data.success) {
                     window.currentDiscountAmount = data.discountAmount;
                     discAmtEl.innerText = '-' + data.discountAmount.toLocaleString('vi-VN') + 'đ';
+                    document.getElementById('appliedVoucherCode').innerText = code.toUpperCase();
                     discRow.style.display = 'flex';
                     msgEl.innerText = data.message;
                     msgEl.className = 'small mt-2 text-success';
@@ -419,6 +425,7 @@
                     updateTotal();
                 } else {
                     window.currentDiscountAmount = 0;
+                    document.getElementById('appliedVoucherCode').innerText = '';
                     discRow.style.display = 'none';
                     msgEl.innerText = data.message;
                     msgEl.className = 'small mt-2 text-danger';

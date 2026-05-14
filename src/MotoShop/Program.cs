@@ -132,6 +132,7 @@ builder.Services.ConfigureApplicationCookie(options => {
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
@@ -142,11 +143,12 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
-builder.Services.AddScoped<IFlashSaleService, FlashSaleService>();
+builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddHostedService<BookingExpiryService>();
 builder.Services.AddHostedService<PendingPaymentCleanupService>();
+builder.Services.AddHostedService<PromotionBackgroundService>();
 
 var app = builder.Build();
 
@@ -162,7 +164,109 @@ using (var scope = app.Services.CreateScope())
         // Tăng timeout lên 5 phút cho toàn bộ startup SQL
         context.Database.SetCommandTimeout(300);
         Log.Information("Updating Database Schema...");
-        
+        await context.Database.MigrateAsync();
+
+        await context.Database.ExecuteSqlRawAsync(@"
+            IF OBJECT_ID('Promotions', 'U') IS NULL
+            BEGIN
+                CREATE TABLE Promotions
+                (
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Promotions PRIMARY KEY,
+                    Name NVARCHAR(255) NOT NULL,
+                    Slug NVARCHAR(255) NULL,
+                    Description NVARCHAR(MAX) NULL,
+                    PromotionType NVARCHAR(50) NOT NULL CONSTRAINT DF_Promotions_PromotionType DEFAULT('ProductDiscount'),
+                    DiscountType NVARCHAR(20) NOT NULL CONSTRAINT DF_Promotions_DiscountType DEFAULT('Percent'),
+                    DiscountValue DECIMAL(18,2) NOT NULL CONSTRAINT DF_Promotions_DiscountValue DEFAULT(0),
+                    MaxDiscountAmount DECIMAL(18,2) NULL,
+                    MinOrderAmount DECIMAL(18,2) NULL,
+                    CouponCode NVARCHAR(100) NULL,
+                    StartDate DATETIME NOT NULL CONSTRAINT DF_Promotions_StartDate DEFAULT(GETDATE()),
+                    EndDate DATETIME NOT NULL CONSTRAINT DF_Promotions_EndDate DEFAULT(DATEADD(day, 7, GETDATE())),
+                    UsageLimit INT NULL,
+                    UsedCount INT NOT NULL CONSTRAINT DF_Promotions_UsedCount DEFAULT(0),
+                    IsActive BIT NOT NULL CONSTRAINT DF_Promotions_IsActive DEFAULT(1),
+                    IsFeatured BIT NOT NULL CONSTRAINT DF_Promotions_IsFeatured DEFAULT(0),
+                    Priority INT NOT NULL CONSTRAINT DF_Promotions_Priority DEFAULT(0),
+                    BannerImage NVARCHAR(500) NULL,
+                    BackgroundColor NVARCHAR(50) NULL,
+                    CreatedAt DATETIME NOT NULL CONSTRAINT DF_Promotions_CreatedAt DEFAULT(GETDATE()),
+                    UpdatedAt DATETIME NULL
+                );
+            END
+            ELSE
+            BEGIN
+                IF COL_LENGTH('Promotions', 'PromotionId') IS NOT NULL AND COL_LENGTH('Promotions', 'Id') IS NULL
+                    EXEC sp_rename 'Promotions.PromotionId', 'Id', 'COLUMN';
+
+                IF COL_LENGTH('Promotions', 'PromotionName') IS NOT NULL AND COL_LENGTH('Promotions', 'Name') IS NULL
+                    EXEC sp_rename 'Promotions.PromotionName', 'Name', 'COLUMN';
+
+                IF COL_LENGTH('Promotions', 'Id') IS NULL
+                    ALTER TABLE Promotions ADD Id INT IDENTITY(1,1) NOT NULL;
+                IF COL_LENGTH('Promotions', 'Name') IS NULL
+                    ALTER TABLE Promotions ADD Name NVARCHAR(255) NOT NULL CONSTRAINT DF_Promotions_Name DEFAULT('');
+                IF COL_LENGTH('Promotions', 'Slug') IS NULL
+                    ALTER TABLE Promotions ADD Slug NVARCHAR(255) NULL;
+                IF COL_LENGTH('Promotions', 'Description') IS NULL
+                    ALTER TABLE Promotions ADD Description NVARCHAR(MAX) NULL;
+                IF COL_LENGTH('Promotions', 'PromotionType') IS NULL
+                    ALTER TABLE Promotions ADD PromotionType NVARCHAR(50) NOT NULL CONSTRAINT DF_Promotions_PromotionType DEFAULT('ProductDiscount');
+                IF COL_LENGTH('Promotions', 'DiscountType') IS NULL
+                    ALTER TABLE Promotions ADD DiscountType NVARCHAR(20) NOT NULL CONSTRAINT DF_Promotions_DiscountType DEFAULT('Percent');
+                IF COL_LENGTH('Promotions', 'DiscountValue') IS NULL
+                    ALTER TABLE Promotions ADD DiscountValue DECIMAL(18,2) NOT NULL CONSTRAINT DF_Promotions_DiscountValue DEFAULT(0);
+                IF COL_LENGTH('Promotions', 'MaxDiscountAmount') IS NULL
+                    ALTER TABLE Promotions ADD MaxDiscountAmount DECIMAL(18,2) NULL;
+                IF COL_LENGTH('Promotions', 'MinOrderAmount') IS NULL
+                    ALTER TABLE Promotions ADD MinOrderAmount DECIMAL(18,2) NULL;
+                IF COL_LENGTH('Promotions', 'CouponCode') IS NULL
+                    ALTER TABLE Promotions ADD CouponCode NVARCHAR(100) NULL;
+                IF COL_LENGTH('Promotions', 'StartDate') IS NULL
+                    ALTER TABLE Promotions ADD StartDate DATETIME NOT NULL CONSTRAINT DF_Promotions_StartDate DEFAULT(GETDATE());
+                IF COL_LENGTH('Promotions', 'EndDate') IS NULL
+                    ALTER TABLE Promotions ADD EndDate DATETIME NOT NULL CONSTRAINT DF_Promotions_EndDate DEFAULT(DATEADD(day, 7, GETDATE()));
+                IF COL_LENGTH('Promotions', 'UsageLimit') IS NULL
+                    ALTER TABLE Promotions ADD UsageLimit INT NULL;
+                IF COL_LENGTH('Promotions', 'UsedCount') IS NULL
+                    ALTER TABLE Promotions ADD UsedCount INT NOT NULL CONSTRAINT DF_Promotions_UsedCount DEFAULT(0);
+                IF COL_LENGTH('Promotions', 'IsActive') IS NULL
+                    ALTER TABLE Promotions ADD IsActive BIT NOT NULL CONSTRAINT DF_Promotions_IsActive DEFAULT(1);
+                IF COL_LENGTH('Promotions', 'IsFeatured') IS NULL
+                    ALTER TABLE Promotions ADD IsFeatured BIT NOT NULL CONSTRAINT DF_Promotions_IsFeatured DEFAULT(0);
+                IF COL_LENGTH('Promotions', 'Priority') IS NULL
+                    ALTER TABLE Promotions ADD Priority INT NOT NULL CONSTRAINT DF_Promotions_Priority DEFAULT(0);
+                IF COL_LENGTH('Promotions', 'BannerImage') IS NULL
+                    ALTER TABLE Promotions ADD BannerImage NVARCHAR(500) NULL;
+                IF COL_LENGTH('Promotions', 'BackgroundColor') IS NULL
+                    ALTER TABLE Promotions ADD BackgroundColor NVARCHAR(50) NULL;
+                IF COL_LENGTH('Promotions', 'CreatedAt') IS NULL
+                    ALTER TABLE Promotions ADD CreatedAt DATETIME NOT NULL CONSTRAINT DF_Promotions_CreatedAt DEFAULT(GETDATE());
+                IF COL_LENGTH('Promotions', 'UpdatedAt') IS NULL
+                    ALTER TABLE Promotions ADD UpdatedAt DATETIME NULL;
+
+                -- Drop legacy columns if they exist to prevent NULL constraint errors
+                IF COL_LENGTH('Promotions', 'DiscountPercentage') IS NOT NULL
+                    ALTER TABLE Promotions DROP COLUMN DiscountPercentage;
+                IF COL_LENGTH('Promotions', 'DiscountAmount') IS NOT NULL
+                    ALTER TABLE Promotions DROP COLUMN DiscountAmount;
+                IF COL_LENGTH('Promotions', 'MinOrderValue') IS NOT NULL
+                    ALTER TABLE Promotions DROP COLUMN MinOrderValue;
+                IF COL_LENGTH('Promotions', 'MinQuantity') IS NOT NULL
+                    ALTER TABLE Promotions DROP COLUMN MinQuantity;
+            END
+
+            IF OBJECT_ID('PromotionProducts', 'U') IS NULL
+            BEGIN
+                CREATE TABLE PromotionProducts
+                (
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_PromotionProducts PRIMARY KEY,
+                    PromotionId INT NOT NULL,
+                    ProductId INT NOT NULL
+                );
+            END
+        ");
+
         await context.Database.ExecuteSqlRawAsync(@"
             IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ServiceCategories')
             BEGIN
@@ -245,24 +349,59 @@ using (var scope = app.Services.CreateScope())
             IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'PaymentMethod')
                 ALTER TABLE Orders ADD PaymentMethod NVARCHAR(100) NULL;
 
-            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'IsAllProducts')
-                ALTER TABLE Coupons ADD IsAllProducts BIT DEFAULT 1;
-            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'AppliedCategoryIds')
-                ALTER TABLE Coupons ADD AppliedCategoryIds NVARCHAR(MAX) NULL;
-            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'AppliedProductIds')
-                ALTER TABLE Coupons ADD AppliedProductIds NVARCHAR(MAX) NULL;
-
-            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'FlashSales')
-                CREATE TABLE FlashSales (FlashSaleId INT IDENTITY PRIMARY KEY, Title NVARCHAR(255) NOT NULL, Description NVARCHAR(MAX), StartDate DATETIME NOT NULL, EndDate DATETIME NOT NULL, IsActive BIT DEFAULT 1);
-            
-            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'FlashSaleProducts')
-                CREATE TABLE FlashSaleProducts (Id INT IDENTITY PRIMARY KEY, FlashSaleId INT NOT NULL, ProductId INT NOT NULL, FlashSalePrice DECIMAL(18,2) NOT NULL, Quantity INT NOT NULL, SoldQuantity INT DEFAULT 0);
-            
             IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AuditLogs')
                 CREATE TABLE AuditLogs (Id INT IDENTITY PRIMARY KEY, UserId NVARCHAR(450) NULL, Action NVARCHAR(255) NOT NULL, EntityName NVARCHAR(255) NOT NULL, EntityId NVARCHAR(100) NULL, OldValues NVARCHAR(MAX) NULL, NewValues NVARCHAR(MAX) NULL, IpAddress NVARCHAR(50) NULL, CreatedAt DATETIME DEFAULT GETDATE());
             
             IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ProductReviewImages')
                 CREATE TABLE ProductReviewImages (Id INT IDENTITY PRIMARY KEY, ReviewId INT NOT NULL, ImageUrl NVARCHAR(500) NOT NULL);
+
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ChatConversations')
+                CREATE TABLE ChatConversations (
+                    Id INT IDENTITY PRIMARY KEY,
+                    UserId NVARCHAR(450) NULL,
+                    GuestSessionId NVARCHAR(100) NULL,
+                    CustomerName NVARCHAR(200) NULL,
+                    CustomerEmail NVARCHAR(255) NULL,
+                    LastMessage NVARCHAR(MAX) NULL,
+                    LastMessageAt DATETIME NULL,
+                    UnreadByAdminCount INT DEFAULT 0,
+                    UnreadByCustomerCount INT DEFAULT 0,
+                    CreatedAt DATETIME DEFAULT GETDATE(),
+                    UpdatedAt DATETIME DEFAULT GETDATE(),
+                    IsClosed BIT DEFAULT 0
+                );
+
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ChatMessages')
+            BEGIN
+                CREATE TABLE ChatMessages (
+                    Id INT IDENTITY PRIMARY KEY,
+                    ConversationId INT NOT NULL,
+                    SenderType NVARCHAR(20) NOT NULL,
+                    SenderId NVARCHAR(450) NULL,
+                    SenderName NVARCHAR(200) NULL,
+                    Message NVARCHAR(MAX) NOT NULL,
+                    IsRead BIT DEFAULT 0,
+                    CreatedAt DATETIME DEFAULT GETDATE()
+                );
+            END
+            ELSE
+            BEGIN
+                -- Nếu bảng đã tồn tại kiểu cũ, xóa và tạo lại để khớp schema mới (vì dữ liệu chat cũ thường không quan trọng)
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ChatMessages') AND name = 'ConversationId')
+                BEGIN
+                    DROP TABLE ChatMessages;
+                    CREATE TABLE ChatMessages (
+                        Id INT IDENTITY PRIMARY KEY,
+                        ConversationId INT NOT NULL,
+                        SenderType NVARCHAR(20) NOT NULL,
+                        SenderId NVARCHAR(450) NULL,
+                        SenderName NVARCHAR(200) NULL,
+                        Message NVARCHAR(MAX) NOT NULL,
+                        IsRead BIT DEFAULT 0,
+                        CreatedAt DATETIME DEFAULT GETDATE()
+                    );
+                END
+            END
         ");
 
         await context.Database.ExecuteSqlRawAsync(@"

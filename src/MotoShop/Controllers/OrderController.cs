@@ -107,7 +107,7 @@ namespace MotoShop.Controllers
                 Status = o.Status ?? "DangXuLy",
                 TotalAmount = o.TotalAmount,
                 PaymentStatus = o.PaymentStatus,
-                PaymentMethod = o.Payments?.FirstOrDefault()?.PaymentMethod ?? "Tiền mặt (COD)",
+                PaymentMethod = o.PaymentMethod == "BankTransfer" ? "Chuyển khoản" : (o.PaymentMethod == "VNPay" ? "VNPay" : (o.PaymentMethod ?? "Tiền mặt (COD)")),
                 Note = o.Note,
                 Items = (o.OrderItems ?? new List<OrderItem>()).Take(2).Select(oi => new OrderItemViewModel
                 {
@@ -164,7 +164,6 @@ namespace MotoShop.Controllers
                     .ThenInclude(oi => oi.ProductVariant!)
                         .ThenInclude(pv => pv.Product!)
                 .Include(o => o.ShippingMethod)
-                .Include(o => o.Coupon)
                 .Include(o => o.StatusHistories)
                 .Include(o => o.Payments)
                 .FirstOrDefaultAsync(o => o.OrderId == orderId && o.CustomerId == customer.CustomerId);
@@ -181,7 +180,7 @@ namespace MotoShop.Controllers
                 OrderInfo = MapToOrderCard(order),
                 ShippingAddress = order.ShippingAddress ?? "",
                 ShippingFee = order.ShippingMethod?.Cost ?? 0,
-                VoucherCode = order.Coupon?.Code,
+                VoucherCode = null,
                 Discount = order.DiscountAmount,
                 Timeline = order.StatusHistories.Select(h => new OrderStatusStepViewModel
                 {
@@ -259,9 +258,15 @@ namespace MotoShop.Controllers
             });
         }
 
+        [HttpGet]
+        public IActionResult Tracking(int id)
+        {
+            return RedirectToAction("Detail", new { id = id });
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Tracking(int id)
+        public async Task<IActionResult> Tracking(int id, bool isPost) // Dummy isPost to distinguish from GET if needed, but [HttpPost] attribute should suffice
         {
             var order = await GetOrderByIdSafe(id);
             if (order == null) return Json(new { success = false, message = "Không tìm thấy đơn hàng" });

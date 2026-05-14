@@ -22,6 +22,9 @@ namespace MotoShop.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index(string? searchTerm, string? status, int? stars, int page = 1, int pageSize = 10)
         {
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 100);
+
             var query = GetFilteredReviewsQuery(searchTerm, status, stars);
 
             var totalItems = await query.CountAsync();
@@ -78,7 +81,7 @@ namespace MotoShop.Areas.Admin.Controllers
             review.Status = status;
             await _context.SaveChangesAsync();
 
-            string msg = status == "Approved" ? "Đã duyệt đánh giá" : "Đã ẩn đánh giá";
+            string msg = status == MotoShop.Data.Constants.ReviewStatusConst.Approved ? "Đã duyệt đánh giá" : "Đã ẩn đánh giá";
             return Json(new { success = true, message = msg });
         }
 

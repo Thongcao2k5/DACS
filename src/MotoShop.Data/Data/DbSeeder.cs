@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using MotoShop.Data.Enums;
 using MotoShop.Data.Models;
 using System;
 using System.Collections.Generic;
@@ -570,15 +571,85 @@ namespace MotoShop.Data.Data
                     await context.SaveChangesAsync();
                 }
 
-                // 13. SEED COUPONS
-                if (!context.Coupons.Any())
+                // 14. SEED NEW PROMOTIONS VOUCHERS
+                if (!context.Promotions.Any(p => p.PromotionType == PromotionType.Voucher))
                 {
-                    context.Coupons.AddRange(
-                        new Coupon { Code = "WELCOME10",  DiscountValue = 10, DiscountType = "percent", MinOrderValue = 200000,  UsageLimit = 100, UsedCount = 23, ExpiryDate = DateTime.Now.AddMonths(3),  IsActive = true },
-                        new Coupon { Code = "MOTOSHOP50", DiscountValue = 50000, DiscountType = "fixed",  MinOrderValue = 500000,  UsageLimit = 50,  UsedCount = 8,  ExpiryDate = DateTime.Now.AddMonths(2),  IsActive = true },
-                        new Coupon { Code = "SUMMER20",   DiscountValue = 20, DiscountType = "percent", MinOrderValue = 300000,  UsageLimit = 200, UsedCount = 67, ExpiryDate = DateTime.Now.AddMonths(1),  IsActive = true },
-                        new Coupon { Code = "VIP100K",    DiscountValue = 100000, DiscountType = "fixed", MinOrderValue = 1000000, UsageLimit = 20,  UsedCount = 3,  ExpiryDate = DateTime.Now.AddMonths(6),  IsActive = true },
-                        new Coupon { Code = "FREESHIP",   DiscountValue = 30000, DiscountType = "fixed",  MinOrderValue = 150000,  UsageLimit = 500, UsedCount = 134,ExpiryDate = DateTime.Now.AddMonths(1),  IsActive = true }
+                    context.Promotions.AddRange(
+                        new Promotion
+                        {
+                            Name = "WELCOME10",
+                            Slug = "welcome10",
+                            PromotionType = PromotionType.Voucher,
+                            DiscountType = DiscountType.Percent,
+                            DiscountValue = 10,
+                            MinOrderAmount = 200000,
+                            CouponCode = "WELCOME10",
+                            StartDate = DateTime.Now.AddDays(-1),
+                            EndDate = DateTime.Now.AddMonths(3),
+                            UsageLimit = 100,
+                            UsedCount = 23,
+                            IsActive = true
+                        },
+                        new Promotion
+                        {
+                            Name = "MOTOSHOP50",
+                            Slug = "motoshop50",
+                            PromotionType = PromotionType.Voucher,
+                            DiscountType = DiscountType.Fixed,
+                            DiscountValue = 50000,
+                            MinOrderAmount = 500000,
+                            CouponCode = "MOTOSHOP50",
+                            StartDate = DateTime.Now.AddDays(-1),
+                            EndDate = DateTime.Now.AddMonths(2),
+                            UsageLimit = 50,
+                            UsedCount = 8,
+                            IsActive = true
+                        },
+                        new Promotion
+                        {
+                            Name = "SUMMER20",
+                            Slug = "summer20",
+                            PromotionType = PromotionType.Voucher,
+                            DiscountType = DiscountType.Percent,
+                            DiscountValue = 20,
+                            MinOrderAmount = 300000,
+                            CouponCode = "SUMMER20",
+                            StartDate = DateTime.Now.AddDays(-1),
+                            EndDate = DateTime.Now.AddMonths(1),
+                            UsageLimit = 200,
+                            UsedCount = 67,
+                            IsActive = true
+                        },
+                        new Promotion
+                        {
+                            Name = "VIP100K",
+                            Slug = "vip100k",
+                            PromotionType = PromotionType.Voucher,
+                            DiscountType = DiscountType.Fixed,
+                            DiscountValue = 100000,
+                            MinOrderAmount = 1000000,
+                            CouponCode = "VIP100K",
+                            StartDate = DateTime.Now.AddDays(-1),
+                            EndDate = DateTime.Now.AddMonths(6),
+                            UsageLimit = 20,
+                            UsedCount = 3,
+                            IsActive = true
+                        },
+                        new Promotion
+                        {
+                            Name = "FREESHIP",
+                            Slug = "freeship",
+                            PromotionType = PromotionType.Voucher,
+                            DiscountType = DiscountType.Fixed,
+                            DiscountValue = 30000,
+                            MinOrderAmount = 150000,
+                            CouponCode = "FREESHIP",
+                            StartDate = DateTime.Now.AddDays(-1),
+                            EndDate = DateTime.Now.AddMonths(1),
+                            UsageLimit = 500,
+                            UsedCount = 134,
+                            IsActive = true
+                        }
                     );
                     await context.SaveChangesAsync();
                 }

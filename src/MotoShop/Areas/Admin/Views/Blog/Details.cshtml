@@ -51,9 +51,8 @@
                         </li>
                         <li class="mb-3">
                             <span class="fw-bold">Ngày cập nhật:</span>
-                            @(Model.UpdatedDate.HasValue ? Model.UpdatedDate.Value.ToString("dd/MM/yyyy HH:mm") : "Chưa cập nhật")
-                        </li>
-                    </ul>
+                            @(Model.UpdatedDate != null ? Model.UpdatedDate.Value.ToString("dd/MM/yyyy HH:mm") : "Chưa cập nhật")
+                            </li>                    </ul>
                     <hr>
                     <div class="d-grid gap-2">
                         <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Chỉnh sửa</a>

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using MotoShop.Data.Enums;
 using MotoShop.Data.Models;
 
 namespace MotoShop.Data.Data
@@ -17,7 +18,6 @@ namespace MotoShop.Data.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<Unit> Units { get; set; }
         public DbSet<ProductVariant> ProductVariants { get; set; }
-        public DbSet<ProductVariantAttributeValue> ProductVariantAttributeValues { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Order> Orders { get; set; }
@@ -27,10 +27,13 @@ namespace MotoShop.Data.Data
         public DbSet<ServiceComboItem> ServiceComboItems { get; set; }
         public DbSet<ServiceBooking> ServiceBookings { get; set; }
         public DbSet<ProductReview> ProductReviews { get; set; }
+        public DbSet<OldPromotion> OldPromotions { get; set; }
+        public DbSet<OldPromotionProduct> OldPromotionProducts { get; set; }
         public DbSet<Promotion> Promotions { get; set; }
         public DbSet<PromotionProduct> PromotionProducts { get; set; }
         public DbSet<FlashSale> FlashSales { get; set; }
         public DbSet<FlashSaleProduct> FlashSaleProducts { get; set; }
+        public DbSet<ChatConversation> ChatConversations { get; set; }
         public DbSet<Store> Stores { get; set; }
         public DbSet<Staff> Staffs { get; set; }
         public DbSet<Banner> Banners { get; set; }
@@ -42,8 +45,6 @@ namespace MotoShop.Data.Data
         public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
         public DbSet<WishlistNew> WishlistsNew { get; set; }
         public DbSet<AddressNew> AddressesNew { get; set; }
-        public DbSet<ProductAttribute> ProductAttributes { get; set; }
-        public DbSet<AttributeValue> AttributeValues { get; set; }
         public DbSet<StoreSetting> StoreSettings { get; set; }
         public DbSet<BlogCategory> BlogCategories { get; set; }
         public DbSet<Blog> Blogs { get; set; }
@@ -56,13 +57,31 @@ namespace MotoShop.Data.Data
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<VariantImage> VariantImages { get; set; }
         public DbSet<ProductSpecification> ProductSpecifications { get; set; }
-        public DbSet<ProductTag> ProductTags { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<ProductReviewImage> ProductReviewImages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<Promotion>()
+                .Property(p => p.PromotionType)
+                .HasConversion<string>()
+                .HasMaxLength(50);
+
+            builder.Entity<Promotion>()
+                .Property(p => p.DiscountType)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+
+            builder.Entity<Promotion>()
+                .HasIndex(p => p.CouponCode);
+
+            builder.Entity<PromotionProduct>()
+                .HasIndex(pp => pp.PromotionId);
+
+            builder.Entity<PromotionProduct>()
+                .HasIndex(pp => pp.ProductId);
 
             // Configure OrderCode as computed column
             builder.Entity<Order>()

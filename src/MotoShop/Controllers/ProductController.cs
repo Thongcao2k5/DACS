@@ -8,6 +8,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Models;
+using MotoShop.Data.Enums;
 using MotoShop.Data.Interfaces;
 using System;
 using Microsoft.Extensions.Caching.Memory;
@@ -18,27 +19,22 @@ namespace MotoShop.Controllers
     {
         private readonly IProductService _productService;
         private readonly ICategoryService _categoryService;
-        private readonly IFlashSaleService _flashSaleService;
+        private readonly IPromotionService _promotionService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IMemoryCache _cache;
 
-        private static readonly MemoryCacheEntryOptions _shortCache = new MemoryCacheEntryOptions()
-            .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
-        private static readonly MemoryCacheEntryOptions _longCache = new MemoryCacheEntryOptions()
-            .SetAbsoluteExpiration(TimeSpan.FromHours(1));
-
         public ProductController(
             IProductService productService,
             ICategoryService categoryService,
-            IFlashSaleService flashSaleService,
+            IPromotionService promotionService,
             IUnitOfWork unitOfWork,
             UserManager<IdentityUser> userManager,
             IMemoryCache cache)
         {
             _productService = productService;
             _categoryService = categoryService;
-            _flashSaleService = flashSaleService;
+            _promotionService = promotionService;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _cache = cache;
@@ -59,39 +55,29 @@ namespace MotoShop.Controllers
             page = Math.Max(1, page);
             pageSize = Math.Clamp(pageSize, 1, 100);
 
-            // Chạy tuần tự để tránh lỗi "A second operation was started on this context..."
-            
-            // 1. Lấy dữ liệu phân trang
             var pagedProducts = await _productService.GetPagedProductsAsync(
                 searchTerm, categoryId, brandId, sort, page, pageSize, minPrice, maxPrice, inStock, onSale
             );
 
-            // 2. Lấy danh mục và thương hiệu (cache 1 giờ)
-            var categories = await _cache.GetOrCreateAsync("all_categories", e =>
-            {
+            var categories = await _cache.GetOrCreateAsync("all_categories", e => {
                 e.SetAbsoluteExpiration(TimeSpan.FromHours(1));
                 return _categoryService.GetAllAsync();
             }) ?? await _categoryService.GetAllAsync();
 
-            var brands = await _cache.GetOrCreateAsync("all_brands", e =>
-            {
+            var brands = await _cache.GetOrCreateAsync("all_brands", e => {
                 e.SetAbsoluteExpiration(TimeSpan.FromHours(1));
                 return _productService.GetAllBrandsAsync();
             }) ?? await _productService.GetAllBrandsAsync();
 
-            // 3. Lấy số lượng sản phẩm (cache 5 phút)
-            ViewBag.CategoryProductCount = await _cache.GetOrCreateAsync("product_count_by_category", e =>
-            {
+            ViewBag.CategoryProductCount = await _cache.GetOrCreateAsync("product_count_by_category", e => {
                 e.SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
                 return _productService.GetProductCountByCategoryAsync();
             });
-            ViewBag.BrandProductCount = await _cache.GetOrCreateAsync("product_count_by_brand", e =>
-            {
+            ViewBag.BrandProductCount = await _cache.GetOrCreateAsync("product_count_by_brand", e => {
                 e.SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
                 return _productService.GetProductCountByBrandAsync();
             });
 
-            // 4. Chuẩn bị SelectList và ListItems cho Sidebar
             ViewBag.CategoryListItems = categories.ToList();
             ViewBag.BrandListItems = brands.ToList();
 
@@ -116,36 +102,19 @@ namespace MotoShop.Controllers
                 new SelectListItem { Value = "za", Text = "Tên Z-A", Selected = (sort == "za") }
             };
 
-            // 5. Tính toán số lượng hiển thị (FIX 5)
-            int from = pagedProducts.TotalCount > 0 ? (page - 1) * pageSize + 1 : 0;
-            int to = Math.Min(page * pageSize, pagedProducts.TotalCount);
-            ViewBag.From = from;
-            ViewBag.To = to;
+            ViewBag.From = pagedProducts.TotalCount > 0 ? (page - 1) * pageSize + 1 : 0;
+            ViewBag.To = Math.Min(page * pageSize, pagedProducts.TotalCount);
             ViewBag.TotalProducts = pagedProducts.TotalCount;
+            ViewBag.CategoryName = categories.FirstOrDefault(c => c.CategoryId == categoryId)?.CategoryName;
+            ViewBag.BrandName = brands.FirstOrDefault(b => b.BrandId == brandId)?.BrandName;
 
-            // 6. Tiêu đề động (FIX 1)
-            var currentCat = categories.FirstOrDefault(c => c.CategoryId == categoryId);
-            var currentBrand = brands.FirstOrDefault(b => b.BrandId == brandId);
-            ViewBag.CategoryName = currentCat?.CategoryName;
-            ViewBag.BrandName = currentBrand?.BrandName;
-
-            // 7. Giá lớn nhất cho Slider (cache 1 giờ)
-            ViewBag.MaxPriceLimit = await _cache.GetOrCreateAsync("max_product_price", e =>
-            {
+            ViewBag.MaxPriceLimit = await _cache.GetOrCreateAsync("max_product_price", e => {
                 e.SetAbsoluteExpiration(TimeSpan.FromHours(1));
                 return _productService.GetMaxProductPriceAsync();
             });
             ViewBag.SelectedMinPrice = minPrice ?? 0;
             ViewBag.SelectedMaxPrice = maxPrice ?? ViewBag.MaxPriceLimit;
 
-            // 8. Gợi ý từ khóa nếu không có kết quả (TÍNH NĂNG 7)
-            if (pagedProducts.TotalCount == 0 && !string.IsNullOrEmpty(searchTerm))
-            {
-                // Logic đơn giản: lấy các từ khóa phổ biến
-                ViewBag.Suggestions = new List<string> { "Nhớt Motul", "Vỏ xe", "Nhông sên dĩa" }; 
-            }
-
-            // Giữ lại các tham số lọc
             ViewBag.SearchTerm = searchTerm;
             ViewBag.CurrentCategoryId = categoryId;
             ViewBag.CurrentBrandId = brandId;
@@ -153,11 +122,7 @@ namespace MotoShop.Controllers
             ViewBag.InStock = inStock;
             ViewBag.OnSale = onSale;
 
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-            {
-                return PartialView("_ProductGridPartial", pagedProducts);
-            }
-
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return PartialView("_ProductGridPartial", pagedProducts);
             return View(pagedProducts);
         }
 
@@ -225,144 +190,57 @@ namespace MotoShop.Controllers
         {
             var product = await _productService.GetProductBySlugAsync(slug);
             if (product == null) return NotFound();
-
             return PartialView("_QuickViewPartial", product);
+        }
+
+        public async Task<IActionResult> Promotion()
+        {
+            var products = await _promotionService.GetFlashSaleProductsAsync(15);
+            return View(products);
         }
 
         [HttpGet]
         public async Task<IActionResult> Compare(string ids)
         {
             if (string.IsNullOrEmpty(ids)) return RedirectToAction("Index");
-
-            var idList = ids.Split(',')
-                .Select(s => int.TryParse(s.Trim(), out var n) ? n : 0)
-                .Where(n => n > 0)
-                .Distinct()
-                .Take(3)
-                .ToList();
-
+            var idList = ids.Split(',').Select(s => int.TryParse(s.Trim(), out var n) ? n : 0).Where(n => n > 0).Distinct().Take(3).ToList();
             if (idList.Count < 2) return RedirectToAction("Index");
 
-            var rawProducts = await _unitOfWork.Repository<Product>()
-                .Find(x => idList.Contains(x.ProductId) && x.IsActive)
-                .Include(x => x.Variants)
-                .Include(x => x.Images)
-                .Include(x => x.Brand)
-                .Include(x => x.Category)
-                .Include(x => x.Specifications)
-                .Include(x => x.Reviews)
-                .AsNoTracking()
-                .ToListAsync();
+            var rawProducts = await _unitOfWork.Repository<Product>().Find(x => idList.Contains(x.ProductId) && x.IsActive)
+                .Include(x => x.Variants).Include(x => x.Images).Include(x => x.Brand).Include(x => x.Category).Include(x => x.Specifications).Include(x => x.Reviews)
+                .AsNoTracking().ToListAsync();
 
             if (rawProducts.Count < 2) return RedirectToAction("Index");
-
-            // Validate: all products must be in the same category
-            var distinctCategoryIds = rawProducts.Select(p => p.CategoryId).Distinct().ToList();
-            if (distinctCategoryIds.Count > 1)
-            {
+            if (rawProducts.Select(p => p.CategoryId).Distinct().Count() > 1) {
                 TempData["CompareError"] = "Chỉ có thể so sánh sản phẩm cùng danh mục.";
                 return RedirectToAction("Index");
             }
 
-            var categoryName = rawProducts.First().Category?.CategoryName ?? string.Empty;
-            var categoryId   = rawProducts.First().CategoryId;
-
-            var specsMap  = new Dictionary<int, Dictionary<string, string>>();
+            var specsMap = new Dictionary<int, Dictionary<string, string>>();
             var ratingMap = new Dictionary<int, double>();
 
-            var products = rawProducts.Select(p =>
-            {
-                specsMap[p.ProductId] = p.Specifications
-                    .OrderBy(s => s.DisplayOrder)
-                    .ToDictionary(s => s.SpecName, s => s.SpecValue);
-
+            var products = rawProducts.Select(p => {
+                specsMap[p.ProductId] = p.Specifications.OrderBy(s => s.DisplayOrder).ToDictionary(s => s.SpecName, s => s.SpecValue);
                 var approvedReviews = p.Reviews.Where(r => r.Status == "Approved").ToList();
-                ratingMap[p.ProductId] = approvedReviews.Any()
-                    ? Math.Round(approvedReviews.Average(r => r.Rating), 1)
-                    : 0;
-
-                return new ProductDto
-                {
-                    ProductId        = p.ProductId,
-                    ProductName      = p.ProductName,
-                    Slug             = p.Slug ?? string.Empty,
-                    BrandName        = p.Brand?.BrandName ?? string.Empty,
-                    BrandLogoUrl     = p.Brand?.LogoUrl ?? string.Empty,
-                    CategoryName     = p.Category?.CategoryName ?? string.Empty,
-                    CategoryId       = p.CategoryId,
-                    PrimaryImageUrl  = p.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault()
-                                       ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? string.Empty,
-                    MinPrice         = p.Variants.Any() ? p.Variants.Min(v => v.Price) : 0,
+                ratingMap[p.ProductId] = approvedReviews.Any() ? Math.Round(approvedReviews.Average(r => r.Rating), 1) : 0;
+                return new ProductDto {
+                    ProductId = p.ProductId, ProductName = p.ProductName, Slug = p.Slug ?? string.Empty,
+                    BrandName = p.Brand?.BrandName ?? string.Empty, BrandLogoUrl = p.Brand?.LogoUrl ?? string.Empty,
+                    CategoryName = p.Category?.CategoryName ?? string.Empty, CategoryId = p.CategoryId,
+                    PrimaryImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault() ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? string.Empty,
+                    MinPrice = p.Variants.Any() ? p.Variants.Min(v => v.Price) : 0,
                     MinOriginalPrice = p.Variants.OrderBy(v => v.Price).Select(v => v.OriginalPrice).FirstOrDefault(),
-                    IsInStock        = p.Variants.Any(v => v.StockQuantity > 0),
-                    StockCount       = p.Variants.Sum(v => v.StockQuantity),
-                    SoldCount        = p.SoldCount,
-                    IsFeatured       = p.IsFeatured
+                    IsInStock = p.Variants.Any(v => v.StockQuantity > 0),
+                    StockCount = p.Variants.Sum(v => v.StockQuantity), SoldCount = p.SoldCount, IsFeatured = p.IsFeatured
                 };
             }).OrderBy(p => idList.IndexOf(p.ProductId)).ToList();
 
-            // Category spec template (ordered), then append any extra DB specs not in template
-            var categorySpecTemplate = GetSpecsForCategory(categoryName);
-            var allSpecNames = new List<string>(categorySpecTemplate);
-            foreach (var key in specsMap.Values.SelectMany(d => d.Keys).Distinct())
-            {
-                if (!allSpecNames.Contains(key))
-                    allSpecNames.Add(key);
-            }
-
-            // Related products: same category, not in comparison, ordered by popularity
-            var compareIds   = products.Select(p => p.ProductId).ToList();
-            var relatedRaw   = await _unitOfWork.Repository<Product>()
-                .Find(p => p.CategoryId == categoryId && !compareIds.Contains(p.ProductId) && p.IsActive)
-                .Include(p => p.Images)
-                .Include(p => p.Variants)
-                .OrderByDescending(p => p.SoldCount)
-                .Take(4)
-                .AsNoTracking()
-                .ToListAsync();
-
-            ViewBag.RelatedProducts = relatedRaw.Select(p => new ProductDto
-            {
-                ProductId        = p.ProductId,
-                ProductName      = p.ProductName,
-                Slug             = p.Slug ?? string.Empty,
-                CategoryName     = categoryName,
-                PrimaryImageUrl  = p.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault()
-                                   ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? string.Empty,
-                MinPrice         = p.Variants.Any() ? p.Variants.Min(v => v.Price) : 0,
-                MinOriginalPrice = p.Variants.OrderBy(v => v.Price).Select(v => v.OriginalPrice).FirstOrDefault(),
-                IsInStock        = p.Variants.Any(v => v.StockQuantity > 0),
-                SoldCount        = p.SoldCount
-            }).ToList();
-
-            ViewBag.SpecNames    = allSpecNames;
-            ViewBag.SpecsMap     = specsMap;
-            ViewBag.RatingMap    = ratingMap;
-            ViewBag.CategoryName = categoryName;
+            ViewBag.SpecNames = products.SelectMany(p => specsMap[p.ProductId].Keys).Distinct().ToList();
+            ViewBag.SpecsMap = specsMap;
+            ViewBag.RatingMap = ratingMap;
+            ViewBag.CategoryName = rawProducts.First().Category?.CategoryName;
 
             return View(products);
-        }
-
-        private static List<string> GetSpecsForCategory(string categoryName)
-        {
-            if (categoryName.Contains("Dầu") || categoryName.Contains("nhớt") || categoryName.Contains("Bôi trơn"))
-                return new List<string> { "Độ nhớt", "Loại dầu", "Dung tích", "Tiêu chuẩn API", "Xuất xứ", "Chu kỳ thay" };
-            if (categoryName.Contains("Lốp") || categoryName.Contains("Vành"))
-                return new List<string> { "Kích thước", "Loại lốp", "Tải trọng tối đa", "Chỉ số tốc độ", "Xuất xứ", "Tuổi thọ" };
-            if (categoryName.Contains("phanh") || categoryName.Contains("Phanh"))
-                return new List<string> { "Loại phanh", "Vật liệu má", "Tương thích xe", "Vị trí", "Xuất xứ", "Bảo hành" };
-            if (categoryName.Contains("Giảm xóc"))
-                return new List<string> { "Loại", "Hành trình", "Tương thích xe", "Điều chỉnh được", "Xuất xứ", "Bảo hành" };
-            if (categoryName.Contains("Ắc quy") || categoryName.Contains("Điện"))
-                return new List<string> { "Điện áp", "Dung lượng (Ah)", "Loại", "Kích thước", "Xuất xứ", "Bảo hành" };
-            if (categoryName.Contains("Mũ") || categoryName.Contains("Bảo hộ"))
-                return new List<string> { "Loại", "Size", "Tiêu chuẩn an toàn", "Vật liệu vỏ", "Trọng lượng", "Xuất xứ" };
-            return new List<string> { "Tương thích xe", "Vật liệu", "Xuất xứ", "Bảo hành", "Chính hãng" };
-        }
-
-        public IActionResult Category(int id)
-        {
-            return RedirectToAction("Index", new { categoryId = id });
         }
 
         public async Task<IActionResult> Details(string slug)
@@ -370,116 +248,58 @@ namespace MotoShop.Controllers
             var product = await _productService.GetProductBySlugAsync(slug);
             if (product == null) return NotFound();
 
-            // FIX: Lấy tất cả thuộc tính của các biến thể
-            var allAttributes = product.Variants
-                .SelectMany(v => v.VariantAttributeValues)
-                .ToList();
-
-            if (allAttributes.Any())
-            {
-                // Nếu có thuộc tính cấu trúc (Màu sắc, Dung tích...), group theo AttributeName
-                ViewBag.AttributeGroups = allAttributes
-                    .GroupBy(av => av.AttributeName ?? "Thuộc tính")
-                    .ToDictionary(
-                        g => g.Key,
-                        g => g.Select(av => av.Value).Distinct().ToList()
-                    );
-            }
-            else if (product.Variants.Count > 1)
-            {
-                // Nếu không có thuộc tính cấu trúc nhưng có nhiều biến thể, group theo "Phiên bản" dùng VariantName
-                ViewBag.AttributeGroups = new Dictionary<string, List<string>>
-                {
-                    { "Phiên bản", product.Variants.Select(v => v.VariantName).Distinct().ToList() }
-                };
-            }
-            else
-            {
-                ViewBag.AttributeGroups = new Dictionary<string, List<string>>();
-            }
-
-            ViewBag.DefaultVariant = product.Variants
-                .OrderByDescending(v => v.StockQuantity > 0)
-                .FirstOrDefault() ?? product.Variants.FirstOrDefault();
-
+            ViewBag.DefaultVariant = product.Variants.OrderByDescending(v => v.StockQuantity > 0).FirstOrDefault() ?? product.Variants.FirstOrDefault();
             ViewBag.MaxStock = product.Variants.Max(v => (int?)v.StockQuantity) ?? 0;
 
             var userId = _userManager.GetUserId(User);
-            
             bool isWishlisted = false;
-            if (!string.IsNullOrEmpty(userId))
-            {
-                var customer = await _unitOfWork.Repository<Customer>().Find(c => c.UserId == userId).FirstOrDefaultAsync();
-                if (customer != null)
-                {
-                    isWishlisted = await _unitOfWork.Repository<WishlistNew>().Find(w => w.UserId == customer.CustomerId && w.ProductId == product.ProductId).AnyAsync();
-                }
-            }
-            ViewBag.IsWishlisted = isWishlisted;
-
-            bool canReview = !string.IsNullOrEmpty(userId) && await _productService.CanUserReviewProductAsync(userId, product.ProductId);
             bool hasReviewed = false;
-            if (!string.IsNullOrEmpty(userId))
-            {
+            bool canReview = false;
+            bool isLoggedIn = !string.IsNullOrEmpty(userId);
+
+            if (isLoggedIn) {
                 var customer = await _unitOfWork.Repository<Customer>().Find(c => c.UserId == userId).FirstOrDefaultAsync();
-                if (customer != null)
-                {
+                if (customer != null) {
+                    isWishlisted = await _unitOfWork.Repository<WishlistNew>().Find(w => w.UserId == customer.CustomerId && w.ProductId == product.ProductId).AnyAsync();
                     hasReviewed = await _unitOfWork.Repository<ProductReview>().Find(r => r.CustomerId == customer.CustomerId && r.ProductId == product.ProductId).AnyAsync();
                 }
+                canReview = await _productService.CanUserReviewProductAsync(userId!, product.ProductId);
             }
-            ViewBag.CanReview = canReview;
+
+            ViewBag.IsWishlisted = isWishlisted;
             ViewBag.HasReviewed = hasReviewed;
-            ViewBag.IsLoggedIn = !string.IsNullOrEmpty(userId);
+            ViewBag.CanReview = canReview;
+            ViewBag.IsLoggedIn = isLoggedIn;
 
-            var relatedProducts = await _productService.GetRelatedProductsAsync(
-                product.ProductId,
-                product.CategoryId ?? 0,
-                product.BrandId ?? 0,
-                8);
+            ViewBag.RelatedProducts = await _productService.GetRelatedProductsAsync(product.ProductId, product.CategoryId ?? 0, product.BrandId ?? 0, 8);
+            ViewBag.Vouchers = await _productService.GetVouchersForProductAsync(product.ProductId);
 
-            var vouchers = await _productService.GetVouchersForProductAsync(product.ProductId);
+            var now = DateTime.Now;
+            var promoProduct = await _unitOfWork.Repository<PromotionProduct>()
+                .Find(pp => pp.ProductId == product.ProductId
+                    && pp.Promotion != null
+                    && pp.Promotion.IsActive
+                    && pp.Promotion.StartDate <= now
+                    && pp.Promotion.EndDate >= now
+                    && (pp.Promotion.PromotionType == PromotionType.FlashSale || pp.Promotion.PromotionType == PromotionType.ProductDiscount))
+                .Include(pp => pp.Promotion)
+                .OrderByDescending(pp => pp.Promotion!.PromotionType == PromotionType.FlashSale ? 2 : 1)
+                .ThenByDescending(pp => pp.Promotion!.Priority)
+                .FirstOrDefaultAsync();
 
-            ViewBag.RelatedProducts = relatedProducts;
-            ViewBag.Vouchers = vouchers;
-
-            // Fix #3: Tính FlashSalePercent (MappingProfile không tính được do phép chia phức tạp)
-            if (product.IsFlashSale && product.FlashSalePrice.HasValue && product.MinPrice > 0)
-                product.FlashSalePercent = (int)Math.Round((1 - product.FlashSalePrice.Value / product.MinPrice) * 100);
-
-            // Fix #2: Áp dụng giá Promotion nếu sản phẩm đang trong chương trình ưu đãi
-            if (!product.IsFlashSale)
-            {
-                var now = DateTime.Now;
-                var promoProduct = await _unitOfWork.Repository<PromotionProduct>()
-                    .Find(pp => pp.ProductId == product.ProductId &&
-                                pp.Promotion != null &&
-                                pp.Promotion.IsActive &&
-                                pp.Promotion.StartDate <= now &&
-                                pp.Promotion.EndDate >= now)
-                    .Include(pp => pp.Promotion)
-                    .FirstOrDefaultAsync();
-
-                if (promoProduct?.Promotion != null)
-                {
-                    var promo = promoProduct.Promotion;
-                    var defaultVar = product.Variants
-                        .OrderByDescending(v => v.StockQuantity > 0)
-                        .FirstOrDefault() ?? product.Variants.FirstOrDefault();
-
-                    if (defaultVar != null)
-                    {
-                        decimal basePrice = defaultVar.OriginalPrice ?? defaultVar.Price;
-                        decimal discountedPrice = promo.DiscountType == "Percentage"
-                            ? basePrice * (1 - promo.DiscountPercentage / 100m)
-                            : Math.Max(0, basePrice - promo.DiscountAmount);
-
-                        if (discountedPrice < defaultVar.Price)
-                        {
-                            ViewBag.PromotionPrice = discountedPrice;
-                            ViewBag.PromotionOriginalPrice = basePrice;
-                            ViewBag.PromotionPercent = (int)Math.Round((1 - discountedPrice / basePrice) * 100);
-                            ViewBag.PromotionName = promo.PromotionName;
-                        }
+            if (promoProduct?.Promotion != null) {
+                var promo = promoProduct.Promotion;
+                var defaultVar = product.Variants.OrderByDescending(v => v.StockQuantity > 0).FirstOrDefault() ?? product.Variants.FirstOrDefault();
+                if (defaultVar != null) {
+                    decimal basePrice = defaultVar.OriginalPrice ?? defaultVar.Price;
+                    decimal discountedPrice = promo.DiscountType == DiscountType.Percent ? basePrice * (1 - promo.DiscountValue / 100m) : Math.Max(0, basePrice - promo.DiscountValue);
+                    if (discountedPrice < basePrice) {
+                        ViewBag.PromotionPrice = discountedPrice;
+                        ViewBag.PromotionOriginalPrice = basePrice;
+                        ViewBag.PromotionPercent = basePrice > 0 ? (int)Math.Round((1 - discountedPrice / basePrice) * 100) : 0;
+                        ViewBag.PromotionName = promo.Name;
+                        ViewBag.PromotionType = promo.PromotionType.ToString();
+                        ViewBag.PromotionEndDate = promo.EndDate;
                     }
                 }
             }
@@ -487,22 +307,12 @@ namespace MotoShop.Controllers
             return View(product);
         }
 
-        public IActionResult Promotion()
-        {
-            return View();
-        }
-
         [HttpGet]
         public async Task<IActionResult> GetPromotionProductsJson(int count = 12)
         {
-            var activeSales = await _flashSaleService.GetActiveFlashSalesAsync();
-            if (activeSales == null || !activeSales.Any())
-            {
-                return Json(new List<ProductDto>());
-            }
-            
-            var products = activeSales.SelectMany(s => s.Products).Take(count).ToList();
-            return Json(products);
+            var activeSales = await _promotionService.GetFlashSaleProductsAsync(count);
+            if (activeSales == null || !activeSales.Any()) return Json(new List<ProductDto>());
+            return Json(activeSales.Take(count).ToList());
         }
     }
 }

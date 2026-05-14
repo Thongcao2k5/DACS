@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MotoShop.Business.DTOs;
 using MotoShop.Business.Interfaces;
 using MotoShop.Business.Services;
+using MotoShop.Data.Enums;
 using MotoShop.Data.Data;
 using MotoShop.Data.Interfaces;
 using MotoShop.Data.Models;
@@ -12,6 +13,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
 using System;
+using Microsoft.AspNetCore.Http;
 
 namespace MotoShop.Controllers
 {
@@ -22,19 +24,22 @@ namespace MotoShop.Controllers
         private readonly ICartService _cartService;
         private readonly IOrderService _orderService;
         private readonly MotoShopDbContext _context;
+        private readonly IPromotionService _promotionService;
 
         public CartController(
             IUnitOfWork unitOfWork,
             UserManager<IdentityUser> userManager,
             ICartService cartService,
             IOrderService orderService,
-            MotoShopDbContext context)
+            MotoShopDbContext context,
+            IPromotionService promotionService)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _cartService = cartService;
             _orderService = orderService;
             _context = context;
+            _promotionService = promotionService;
         }
 
         private string GetCartUserId()
@@ -52,7 +57,6 @@ namespace MotoShop.Controllers
             string guestId = Guid.NewGuid().ToString();
             Response.Cookies.Append(guestCookieName, guestId, new Microsoft.AspNetCore.Http.CookieOptions
             {
-                // KHÔNG đặt Expires -> Sẽ bị xóa khi đóng trình duyệt
                 Path = "/",
                 HttpOnly = true,
                 IsEssential = true,
@@ -104,46 +108,17 @@ namespace MotoShop.Controllers
             List<CartItemDto> finalItems;
             if (variantId.HasValue)
             {
-                // MUA NGAY: Chỉ lấy sản phẩm được chọn
                 var variant = await _context.ProductVariants
                     .Include(v => v.Product)
                     .FirstOrDefaultAsync(v => v.ProductVariantId == variantId.Value);
 
                 if (variant == null) return RedirectToAction("Index");
 
-                // TÍNH TOÁN GIÁ KHUYẾN MÃI THỰC TẾ
-                var now = DateTime.Now;
-                decimal displayPrice = variant.Price;
-                decimal originalPrice = variant.OriginalPrice ?? variant.Price;
-
-                // 1. Check Flash Sale
-                var flashSale = await _context.FlashSaleProducts.AsNoTracking()
-                    .Include(fsp => fsp.FlashSale)
-                    .FirstOrDefaultAsync(fsp => fsp.ProductId == variant.ProductId && fsp.FlashSale != null && fsp.FlashSale.IsActive && fsp.FlashSale.StartDate <= now && fsp.FlashSale.EndDate >= now && fsp.Quantity > fsp.SoldQuantity);
-
-                if (flashSale != null)
-                {
-                    displayPrice = flashSale.FlashSalePrice;
-                    originalPrice = variant.Price;
-                }
-                else
-                {
-                    // 2. Check Promotion
-                    var promotion = await _context.PromotionProducts.AsNoTracking()
-                        .Include(pp => pp.Promotion)
-                        .Where(pp => pp.ProductId == variant.ProductId && pp.Promotion != null && pp.Promotion.IsActive && pp.Promotion.StartDate <= now && pp.Promotion.EndDate >= now)
-                        .Select(pp => pp.Promotion)
-                        .FirstOrDefaultAsync();
-
-                    if (promotion != null)
-                    {
-                        originalPrice = variant.Price;
-                        if (promotion.DiscountType == "Percentage")
-                            displayPrice = variant.Price * (1 - (promotion.DiscountPercentage / 100));
-                        else
-                            displayPrice = Math.Max(0, variant.Price - promotion.DiscountAmount);
-                    }
-                }
+                // SỬ DỤNG PromotionHelper ĐÃ REFACTOR ĐỂ TÍNH GIÁ ĐÚNG
+                decimal displayPrice = variant.ProductId.HasValue
+                    ? await _promotionService.CalculateDiscountAsync(variant.ProductId.Value, variant.Price)
+                    : variant.Price;
+                decimal originalPrice = variant.Price;
 
                 finalItems = new List<CartItemDto> {
                     new CartItemDto {
@@ -162,7 +137,6 @@ namespace MotoShop.Controllers
             }
             else
             {
-                // THANH TOÁN GIỎ HÀNG: Lấy toàn bộ như cũ
                 if (Request.Cookies.ContainsKey("MotoShop_GuestId"))
                 {
                     var guestId = Request.Cookies["MotoShop_GuestId"];
@@ -174,7 +148,7 @@ namespace MotoShop.Controllers
                 ViewBag.IsDirectCheckout = false;
             }
 
-            var shippingMethods = await _unitOfWork.Repository<ShippingMethod>().Find(s => s.IsActive == true).ToListAsync();
+            var shippingMethods = await _context.ShippingMethods.Where(s => s.IsActive == true).ToListAsync();
 
             ViewBag.CartItems = finalItems;
             ViewBag.TotalAmount = finalItems.Sum(i => i.Total);
@@ -202,7 +176,6 @@ namespace MotoShop.Controllers
             var userId = _userManager.GetUserId(User);
             if (string.IsNullOrEmpty(userId)) return Json(new { success = false, message = "Vui lòng đăng nhập." });
 
-            // Nếu không có AddressId (tức là đang nhập mới) thì mới bắt buộc FullName, Phone, Province
             if (!model.AddressId.HasValue)
             {
                 if (string.IsNullOrEmpty(model.FullName) || string.IsNullOrEmpty(model.Phone) || string.IsNullOrEmpty(model.Province) || string.IsNullOrEmpty(model.Address))
@@ -253,38 +226,32 @@ namespace MotoShop.Controllers
                 return Json(new { success = false, message = "Giá trị đơn hàng không hợp lệ." });
             }
 
-            var coupon = await _unitOfWork.Repository<Coupon>()
-                .Find(c => c.Code.ToLower() == code.ToLower() && c.IsActive && (c.ExpiryDate >= DateTime.Now))
-                .FirstOrDefaultAsync();
-            
-            if (coupon == null) return Json(new { success = false, message = "Mã giảm giá không hợp lệ." });
-
-            if (coupon.UsageLimit > 0 && coupon.UsedCount >= coupon.UsageLimit)
-                return Json(new { success = false, message = "Mã giảm giá đã hết lượt sử dụng." });
-
-            decimal discountAmount = coupon.DiscountType == "Percentage" ? val * (coupon.DiscountValue / 100) : coupon.DiscountValue;
-            return Json(new { success = true, message = "Áp dụng thành công", discountAmount = discountAmount });
+            var result = await _promotionService.ValidateVoucherAsync(code, val);
+            return Json(new
+            {
+                success = result.IsValid,
+                message = result.Message,
+                discountAmount = result.DiscountAmount
+            });
         }
 
         public async Task<IActionResult> Success(int id)
         {
-            var order = await _unitOfWork.Repository<Order>()
-                .Find(o => o.OrderId == id)
+            var order = await _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.ProductVariant!)
                         .ThenInclude(pv => pv.Product!)
                 .Include(o => o.ShippingMethod)
-                .Include(o => o.Coupon)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(o => o.OrderId == id);
 
             if (order == null) return NotFound();
             return View(order);
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddQuick([FromBody] AddQuickRequest request)
         {
-            // Lấy variant đầu tiên còn hàng
             var variant = await _context.ProductVariants
                 .Where(v => v.ProductId == request.ProductId && v.StockQuantity > 0)
                 .OrderByDescending(v => v.StockQuantity)
@@ -293,16 +260,13 @@ namespace MotoShop.Controllers
             if (variant == null)
                 return Json(new { success = false, message = "Sản phẩm đã hết hàng" });
 
-            // Gọi CartService thêm vào giỏ
             var userId = GetCartUserId();
             var success = await _cartService.AddToCartAsync(userId, variant.ProductVariantId, request.Quantity);
 
             if (!success)
                 return Json(new { success = false, message = "Không thể thêm sản phẩm." });
 
-            // Lấy tổng số lượng giỏ hàng
             var cartCount = await _cartService.GetCartCountAsync(userId);
-
             return Json(new { success = true, cartCount, message = "Đã thêm vào giỏ hàng!" });
         }
 

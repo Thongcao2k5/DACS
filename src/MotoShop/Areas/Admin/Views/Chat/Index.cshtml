@@ -6,28 +6,31 @@
 <div class="container-xxl flex-grow-1 container-p-y">
     <div class="card overflow-hidden" style="height: calc(100vh - 200px);">
         <div class="row g-0 h-100">
-            <!-- Sidebar: Danh sách phiên chat -->
+            <!-- Sidebar: Danh sách hội thoại -->
             <div class="col-4 border-end h-100 d-flex flex-column">
                 <div class="p-3 border-bottom bg-light d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold"><i class='bx bx-message-square-dots me-2'></i>Hội thoại</h5>
                     <span id="hubStatusDot" class="rounded-circle d-inline-block" style="width:10px;height:10px;background:#fbb;" title="Đang kết nối..."></span>
                 </div>
-                <div class="flex-grow-1 overflow-auto" id="sessionList">
-                    <div class="text-center p-5 text-muted">Đang tải danh sách...</div>
+                <div class="flex-grow-1 overflow-auto" id="conversationList">
+                    <div class="text-center p-5 text-muted" id="sidebarLoading">Đang tải danh sách...</div>
                 </div>
             </div>
 
             <!-- Main: Khung Chat chi tiết -->
             <div class="col-8 h-100 d-flex flex-column bg-white">
                 <div id="chatHeader" class="p-3 border-bottom d-none">
-                    <div class="d-flex align-items-center">
-                        <div class="avatar avatar-online me-2">
-                            <img src="~/assets/img/avatars/1.png" class="rounded-circle" style="width:38px;height:38px;object-fit:cover;">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar avatar-online me-2">
+                                <img src="/assets/img/avatars/1.png" class="rounded-circle" style="width:38px;height:38px;object-fit:cover;">
+                            </div>
+                            <div>
+                                <h6 class="mb-0" id="currentCustomerName">Khách hàng</h6>
+                                <small class="text-muted" id="currentConversationId"></small>
+                            </div>
                         </div>
-                        <div>
-                            <h6 class="mb-0" id="currentClientName">Khách hàng</h6>
-                            <small class="text-muted" id="currentSessionId"></small>
-                        </div>
+                        <button class="btn btn-outline-danger btn-sm" id="btnCloseConv">Đóng hội thoại</button>
                     </div>
                 </div>
 
@@ -39,7 +42,7 @@
 
                 <div id="chatFooter" class="p-3 border-top d-none">
                     <div class="input-group">
-                        <input type="text" id="replyInput" class="form-control" placeholder="Nhập tin nhắn phản hồi...">
+                        <input type="text" id="replyInput" class="form-control border-0 shadow-none" placeholder="Nhập tin nhắn phản hồi...">
                         <button class="btn btn-primary" id="btnReply"><i class='bx bxs-send'></i></button>
                     </div>
                 </div>
@@ -49,216 +52,175 @@
 </div>
 
 @section Scripts {
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"
-        integrity="sha512-R9HBWzlbf1W3dUJc/vKGJxSi9VIoH0/HFJpMR5vUSgYoovqxf1T/cFQB5gQU6AxHPq7N4YdTCPNc7qbEU8hQ=="
-        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
 <script>
 (function () {
     'use strict';
 
-    let currentSessionId = null;
-    // sessions: Map<sessionId, { lastMessage, lastMsgTime, unreadCount }>
-    const sessions = new Map();
+    let activeConvId = null;
+    let conversations = [];
 
-    // ── SignalR ──────────────────────────────────────────────────
     const connection = new signalR.HubConnectionBuilder()
         .withUrl('/chatHub')
-        .withAutomaticReconnect([0, 2000, 5000, 15000])
-        .configureLogging(signalR.LogLevel.Warning)
+        .withAutomaticReconnect()
         .build();
 
-    connection.on('NewMessage', function (sessionId, text, time) {
-        const s = sessions.get(sessionId) || { unreadCount: 0 };
-        s.lastMessage = text;
-        s.lastMsgTime = new Date(time);
-        s.unreadCount = (sessionId === currentSessionId) ? 0 : (s.unreadCount || 0) + 1;
-        sessions.set(sessionId, s);
-        renderSessionList();
-
-        if (sessionId === currentSessionId) {
-            appendBubble(text, false, new Date(time));
+    // ── SignalR Events ──────────────────────────────────────────
+    connection.on('ReceiveMessage', function (msg) {
+        if (msg.conversationId === activeConvId) {
+            appendBubble(msg.message, msg.senderType === 'Admin', new Date(msg.createdAt));
+            markAsRead(activeConvId);
         }
     });
 
-    connection.on('AdminMessageSent', function (sessionId, text, time) {
-        // Sync own message across other admin tabs
-        if (sessionId === currentSessionId) {
-            appendBubble(text, true, new Date(time));
+    connection.on('ConversationUpdated', function (conv) {
+        const index = conversations.findIndex(c => c.id === conv.id);
+        if (index !== -1) {
+            conversations[index].lastMessage = conv.lastMessage;
+            conversations[index].lastMessageAt = conv.lastMessageAt;
+            conversations[index].unreadByAdminCount = conv.unreadByAdminCount;
+        } else {
+            conversations.unshift(conv);
         }
+        renderSidebar();
     });
 
-    connection.onreconnecting(function () { setHubStatus(false); });
-    connection.onreconnected(function () {
-        setHubStatus(true);
-        connection.invoke('JoinAdminRoom').catch(function () {});
+    connection.on('ConversationRead', function(id) {
+        const conv = conversations.find(c => c.id === id);
+        if (conv) {
+            conv.unreadByAdminCount = 0;
+            renderSidebar();
+        }
     });
-    connection.onclose(function () { setHubStatus(false); });
 
     async function startHub() {
         try {
             await connection.start();
-            await connection.invoke('JoinAdminRoom');
+            await connection.invoke('AdminJoinDashboard');
             setHubStatus(true);
         } catch (e) {
+            setTimeout(startHub, 5000);
             setHubStatus(false);
         }
     }
 
     function setHubStatus(online) {
-        var dot = document.getElementById('hubStatusDot');
-        if (dot) {
-            dot.style.background = online ? '#68d391' : '#fc8181';
-            dot.title = online ? 'Đang kết nối' : 'Mất kết nối';
+        const dot = document.getElementById('hubStatusDot');
+        if (dot) dot.style.background = online ? '#68d391' : '#fc8181';
+    }
+
+    // ── API Calls ────────────────────────────────────────────────
+    async function loadConversations() {
+        try {
+            const res = await fetch('/api/admin/chat/conversations');
+            const result = await res.json();
+            conversations = result.data || [];
+            renderSidebar();
+        } catch (e) {
+            document.getElementById('conversationList').innerHTML = '<div class="text-center p-5 text-danger">Lỗi kết nối API.</div>';
         }
     }
 
-    // ── Load initial session list via HTTP ───────────────────────
-    async function loadSessions() {
-        try {
-            const res = await fetch('/Admin/Chat/GetSessions');
-            if (!res.ok) return;
-            const data = await res.json();
-            sessions.clear();
-            data.forEach(function (s) {
-                sessions.set(s.sessionId, {
-                    lastMessage: s.lastMessage,
-                    lastMsgTime: new Date(s.lastMsgTime),
-                    unreadCount: s.unreadCount || 0
-                });
-            });
-            renderSessionList();
-        } catch (e) {}
-    }
-
-    function renderSessionList() {
-        var list = document.getElementById('sessionList');
+    function renderSidebar() {
+        const list = document.getElementById('conversationList');
         if (!list) return;
-        if (sessions.size === 0) {
+        if (conversations.length === 0) {
             list.innerHTML = '<div class="text-center p-5 text-muted">Chưa có hội thoại nào</div>';
             return;
         }
-
-        // Sort by lastMsgTime descending
-        const sorted = Array.from(sessions.entries()).sort(function (a, b) {
-            return (b[1].lastMsgTime || 0) - (a[1].lastMsgTime || 0);
-        });
-
+        conversations.sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt));
         list.innerHTML = '';
-        sorted.forEach(function ([sid, info]) {
-            var div = document.createElement('div');
-            div.className = 'p-3 border-bottom session-item' + (sid === currentSessionId ? ' bg-label-primary' : '');
+        conversations.forEach(c => {
+            const div = document.createElement('div');
+            div.className = `p-3 border-bottom session-item ${c.id === activeConvId ? 'bg-label-primary' : ''}`;
             div.style.cursor = 'pointer';
-            var timeStr = info.lastMsgTime ? info.lastMsgTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '';
-            div.innerHTML =
-                '<div class="d-flex justify-content-between align-items-center mb-1">' +
-                    '<strong class="text-truncate" style="max-width:150px;">Khách ' + sid.substring(0, 8) + '</strong>' +
-                    '<small class="text-muted">' + timeStr + '</small>' +
-                '</div>' +
-                '<div class="d-flex justify-content-between">' +
-                    '<small class="text-muted text-truncate w-75">' + escHtml(info.lastMessage || '') + '</small>' +
-                    (info.unreadCount > 0 ? '<span class="badge bg-danger rounded-pill">' + info.unreadCount + '</span>' : '') +
-                '</div>';
-            div.onclick = function () { selectSession(sid); };
+            const time = c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' }) : '';
+            div.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong class="text-truncate">${esc(c.customerName || 'Khách hàng')}</strong>
+                    <small class="text-muted">${time}</small>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <small class="text-muted text-truncate w-75">${esc(c.lastMessage || '...')}</small>
+                    ${c.unreadByAdminCount > 0 ? `<span class="badge bg-danger rounded-pill">${c.unreadByAdminCount}</span>` : ''}
+                </div>`;
+            div.onclick = () => selectConversation(c.id);
             list.appendChild(div);
         });
     }
 
-    // ── Select session ───────────────────────────────────────────
-    async function selectSession(sessionId) {
-        currentSessionId = sessionId;
-
-        // Clear unread
-        if (sessions.has(sessionId)) {
-            sessions.get(sessionId).unreadCount = 0;
-        }
-
+    async function selectConversation(id) {
+        activeConvId = id;
+        const conv = conversations.find(c => c.id === id);
         document.getElementById('chatHeader').classList.remove('d-none');
         document.getElementById('chatFooter').classList.remove('d-none');
-        document.getElementById('currentSessionId').innerText = sessionId;
-        document.getElementById('currentClientName').innerText = 'Khách hàng #' + sessionId.substring(0, 8);
-        renderSessionList();
+        document.getElementById('currentCustomerName').innerText = conv?.customerName || 'Khách hàng';
+        document.getElementById('currentConversationId').innerText = '#' + id;
+        
+        renderSidebar();
+        await connection.invoke('AdminJoinConversation', id);
+        markAsRead(id);
 
-        // Load full message history for this session
+        const container = document.getElementById('adminChatMsgs');
+        container.innerHTML = '<div class="text-center p-5 text-muted">Đang tải tin nhắn...</div>';
+        
         try {
-            const res = await fetch('/Admin/Chat/GetMessages?sessionId=' + encodeURIComponent(sessionId));
-            if (!res.ok) return;
-            const msgs = await res.json();
-            const container = document.getElementById('adminChatMsgs');
+            const res = await fetch(`/api/admin/chat/conversations/${id}/messages`);
+            const result = await res.json();
+            const msgs = result.data || [];
             container.innerHTML = '';
-            msgs.forEach(function (m) {
-                appendBubble(m.message, m.isFromAdmin, new Date(m.createdAt));
-            });
-        } catch (e) {}
+            msgs.forEach(m => appendBubble(m.message, m.senderType === 'Admin', new Date(m.createdAt)));
+        } catch (e) {
+            container.innerHTML = '<div class="text-center p-5 text-danger">Lỗi tải tin nhắn.</div>';
+        }
     }
 
-    // ── Append bubble ────────────────────────────────────────────
     function appendBubble(text, isAdmin, time) {
-        var container = document.getElementById('adminChatMsgs');
-        if (!container) return;
-
-        var hint = document.getElementById('emptyHint');
+        const container = document.getElementById('adminChatMsgs');
+        const hint = document.getElementById('emptyHint');
         if (hint) hint.remove();
 
-        var wrapper = document.createElement('div');
-        wrapper.className = isAdmin ? 'msg-admin-reply' : 'msg-client-reply';
-
-        var timeStr = time.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-        var bubble = document.createElement('div');
-        bubble.className = 'msg-bubble ' + (isAdmin ? 'bg-primary text-white ms-auto' : 'bg-white border');
-        bubble.style.cssText = 'max-width:70%;padding:10px 15px;border-radius:15px;font-size:14px;';
-        bubble.innerHTML = escHtml(text) +
-            '<div class="text-end mt-1" style="font-size:10px;opacity:.7;">' + timeStr + '</div>';
-
-        wrapper.appendChild(bubble);
+        const wrapper = document.createElement('div');
+        wrapper.className = 'w-100 d-flex ' + (isAdmin ? 'justify-content-end' : 'justify-content-start');
+        const timeStr = time.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        
+        wrapper.innerHTML = `
+            <div class="p-3 rounded-3 shadow-sm ${isAdmin ? 'bg-primary text-white' : 'bg-white border'}" style="max-width: 75%;">
+                <div style="word-break: break-word;">${esc(text)}</div>
+                <div class="text-end mt-1 small opacity-75" style="font-size: 0.7rem;">${timeStr}</div>
+            </div>`;
         container.appendChild(wrapper);
         container.scrollTop = container.scrollHeight;
     }
 
-    function escHtml(s) {
-        return String(s)
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    // ── Admin reply ──────────────────────────────────────────────
-    async function adminReply() {
-        var input = document.getElementById('replyInput');
-        var msg = (input ? input.value : '').trim();
-        if (!msg || !currentSessionId) return;
+    async function sendReply() {
+        const input = document.getElementById('replyInput');
+        const msg = input.value.trim();
+        if (!msg || !activeConvId) return;
         input.value = '';
-
-        if (connection.state === signalR.HubConnectionState.Connected) {
-            try {
-                // Hub will broadcast AdminMessageSent back — no optimistic append
-                await connection.invoke('AdminReply', msg, currentSessionId);
-                return;
-            } catch (e) {}
-        }
-
-        // Fallback: HTTP POST + optimistic append
-        appendBubble(msg, true, new Date());
         try {
-            await fetch('/Admin/Chat/Reply', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sessionId: currentSessionId, message: msg })
-            });
-        } catch (e) {}
+            await connection.invoke('AdminSendMessage', activeConvId, msg, 'Quản trị viên');
+        } catch (e) { alert('Lỗi gửi tin nhắn!'); }
     }
 
-    document.getElementById('btnReply').onclick = adminReply;
-    document.getElementById('replyInput').onkeypress = function (e) {
-        if (e.key === 'Enter') adminReply();
-    };
+    async function markAsRead(id) {
+        try {
+            await fetch(`/api/admin/chat/conversations/${id}/read`, { method: 'POST' });
+            await connection.invoke('MarkAsRead', id, 'Admin');
+        } catch(e){}
+    }
 
-    // Boot
+    function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    document.getElementById('btnReply').onclick = sendReply;
+    document.getElementById('replyInput').onkeypress = e => { if (e.key === 'Enter') sendReply(); };
+
     startHub();
-    loadSessions();
+    loadConversations();
 }());
 </script>
 <style>
-    .msg-admin-reply  { display:flex; justify-content:flex-end;   width:100%; }
-    .msg-client-reply { display:flex; justify-content:flex-start;  width:100%; }
-    .session-item:hover { background:#f8f9fa; }
+    .session-item:hover { background: rgba(0,0,0,0.03); }
+    .bg-label-primary { background-color: #e7e7ff !important; border-left: 4px solid #696cff; }
 </style>
 }

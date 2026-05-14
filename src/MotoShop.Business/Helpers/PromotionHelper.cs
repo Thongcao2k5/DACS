@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
+using MotoShop.Data.Enums;
 using MotoShop.Data.Models;
 using System;
 using System.Linq;
@@ -14,30 +15,45 @@ namespace MotoShop.Business.Helpers
             decimal finalPrice = variant.Price;
             var now = DateTime.Now;
 
-            // 1. Kiểm tra Flash Sale
-            var flashSaleProduct = await context.FlashSaleProducts.AsNoTracking()
-                .Include(fsp => fsp.FlashSale)
-                .FirstOrDefaultAsync(fsp => fsp.ProductId == variant.ProductId && fsp.FlashSale != null && fsp.FlashSale.IsActive && fsp.FlashSale.StartDate <= now && fsp.FlashSale.EndDate >= now && fsp.Quantity > fsp.SoldQuantity);
+            // 1. Kiểm tra Flash Sale (theo schema mới)
+            var flashSaleProduct = await context.PromotionProducts.AsNoTracking()
+                .Include(pp => pp.Promotion)
+                .FirstOrDefaultAsync(pp => pp.ProductId == variant.ProductId 
+                    && pp.Promotion != null 
+                    && pp.Promotion.PromotionType == PromotionType.FlashSale
+                    && pp.Promotion.DiscountValue > 0
+                    && pp.Promotion.IsActive 
+                    && pp.Promotion.StartDate <= now 
+                    && pp.Promotion.EndDate >= now);
 
             if (flashSaleProduct != null)
             {
-                finalPrice = flashSaleProduct.FlashSalePrice;
+                var promo = flashSaleProduct.Promotion!;
+                if (promo.DiscountType == DiscountType.Percent)
+                    finalPrice = variant.Price * (1 - (promo.DiscountValue / 100));
+                else
+                    finalPrice = variant.Price - promo.DiscountValue;
             }
             else
             {
-                // 2. Kiểm tra Khuyến mãi thường
+                // 2. Kiểm tra Khuyến mãi thường (ProductDiscount)
                 var activePromotion = await context.PromotionProducts.AsNoTracking()
                     .Include(pp => pp.Promotion)
-                    .Where(pp => pp.ProductId == variant.ProductId && pp.Promotion != null && pp.Promotion.IsActive && pp.Promotion.StartDate <= now && pp.Promotion.EndDate >= now)
+                    .Where(pp => pp.ProductId == variant.ProductId 
+                        && pp.Promotion != null 
+                        && pp.Promotion.PromotionType == PromotionType.ProductDiscount
+                        && pp.Promotion.IsActive 
+                        && pp.Promotion.StartDate <= now 
+                        && pp.Promotion.EndDate >= now)
                     .Select(pp => pp.Promotion)
                     .FirstOrDefaultAsync();
 
                 if (activePromotion != null)
                 {
-                    if (activePromotion.DiscountType == "Percentage")
-                        finalPrice = variant.Price * (1 - (activePromotion.DiscountPercentage / 100));
-                    else if (activePromotion.DiscountType == "FixedAmount")
-                        finalPrice = variant.Price - activePromotion.DiscountAmount;
+                    if (activePromotion.DiscountType == DiscountType.Percent)
+                        finalPrice = variant.Price * (1 - (activePromotion.DiscountValue / 100));
+                    else if (activePromotion.DiscountType == DiscountType.Fixed)
+                        finalPrice = variant.Price - activePromotion.DiscountValue;
                 }
             }
 

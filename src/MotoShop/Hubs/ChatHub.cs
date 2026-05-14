@@ -1,6 +1,10 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
+using MotoShop.Data.Models;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace MotoShop.Hubs
 {
@@ -13,64 +17,135 @@ namespace MotoShop.Hubs
             _context = context;
         }
 
-        // Khách join vào room riêng của phiên mình
-        public async Task JoinSession(string sessionId)
+        // Người dùng tham gia vào cuộc hội thoại của họ
+        public async Task JoinConversation(int conversationId)
         {
-            if (!string.IsNullOrWhiteSpace(sessionId))
-                await Groups.AddToGroupAsync(Context.ConnectionId, $"chat_{sessionId}");
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"Conversation_{conversationId}");
         }
 
-        // Admin join room giám sát tất cả phiên
-        public async Task JoinAdminRoom()
+        // Admin tham gia để nhận thông báo cập nhật danh sách
+        public async Task AdminJoinDashboard()
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, "admins");
+            await Groups.AddToGroupAsync(Context.ConnectionId, "AdminDashboard");
         }
 
-        // Khách gửi tin nhắn
-        public async Task SendMessage(string message, string sessionId)
+        // Admin tham gia vào một cuộc hội thoại cụ thể
+        public async Task AdminJoinConversation(int conversationId)
         {
-            if (string.IsNullOrWhiteSpace(message) || string.IsNullOrWhiteSpace(sessionId))
-                return;
-
-            var now = DateTime.Now;
-            var text = message.Trim();
-
-            // Lưu DB
-            await _context.Database.ExecuteSqlRawAsync(
-                "INSERT INTO ChatMessages (SessionId, Message, CreatedAt, IsFromAdmin, IsRead) VALUES ({0}, {1}, {2}, 0, 0)",
-                sessionId, text, now);
-
-            // Echo lại cho khách (xác nhận đã gửi)
-            await Clients.Group($"chat_{sessionId}").SendAsync("ReceiveMessage", text, false, now);
-
-            // Thông báo tất cả admin
-            await Clients.Group("admins").SendAsync("NewMessage", sessionId, text, now);
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"Conversation_{conversationId}");
         }
 
-        // Admin phản hồi một phiên cụ thể
-        public async Task AdminReply(string message, string sessionId)
+        // Gửi tin nhắn từ phía Admin
+        public async Task AdminSendMessage(int conversationId, string message, string adminName)
         {
-            if (string.IsNullOrWhiteSpace(message) || string.IsNullOrWhiteSpace(sessionId))
-                return;
+            if (string.IsNullOrWhiteSpace(message)) return;
 
-            var now = DateTime.Now;
-            var text = message.Trim();
+            var conversation = await _context.ChatConversations.FindAsync(conversationId);
+            if (conversation == null) return;
 
-            // Lưu DB
-            await _context.Database.ExecuteSqlRawAsync(
-                "INSERT INTO ChatMessages (SessionId, Message, CreatedAt, IsFromAdmin, IsRead) VALUES ({0}, {1}, {2}, 1, 1)",
-                sessionId, text, now);
+            var chatMessage = new ChatMessage
+            {
+                ConversationId = conversationId,
+                Message = message.Trim(),
+                SenderType = "Admin",
+                SenderName = adminName,
+                CreatedAt = DateTime.Now,
+                IsRead = true
+            };
 
-            // Đẩy tin đến khách
-            await Clients.Group($"chat_{sessionId}").SendAsync("ReceiveMessage", text, true, now);
+            conversation.LastMessage = chatMessage.Message;
+            conversation.LastMessageAt = chatMessage.CreatedAt;
+            conversation.UnreadByCustomerCount++;
+            conversation.UpdatedAt = DateTime.Now;
 
-            // Phát cho tất cả admin để đồng bộ nhiều tab
-            await Clients.Group("admins").SendAsync("AdminMessageSent", sessionId, text, now);
+            _context.ChatMessages.Add(chatMessage);
+            await _context.SaveChangesAsync();
+
+            // Gửi realtime cho các bên trong group Conversation
+            await Clients.Group($"Conversation_{conversationId}").SendAsync("ReceiveMessage", new {
+                chatMessage.Id,
+                chatMessage.ConversationId,
+                chatMessage.Message,
+                chatMessage.SenderType,
+                chatMessage.SenderName,
+                chatMessage.CreatedAt
+            });
+
+            // Cập nhật Dashboard Admin
+            await Clients.Group("AdminDashboard").SendAsync("ConversationUpdated", new {
+                Id = conversation.Id,
+                conversation.LastMessage,
+                conversation.LastMessageAt,
+                conversation.UnreadByAdminCount,
+                conversation.CustomerName
+            });
         }
 
-        public override async Task OnDisconnectedAsync(Exception? exception)
+        // Gửi tin nhắn từ phía Người dùng
+        public async Task UserSendMessage(int conversationId, string message, string customerName)
         {
-            await base.OnDisconnectedAsync(exception);
+            if (string.IsNullOrWhiteSpace(message)) return;
+
+            var conversation = await _context.ChatConversations.FindAsync(conversationId);
+            if (conversation == null) return;
+
+            var chatMessage = new ChatMessage
+            {
+                ConversationId = conversationId,
+                Message = message.Trim(),
+                SenderType = "Customer",
+                SenderName = customerName,
+                CreatedAt = DateTime.Now,
+                IsRead = false
+            };
+
+            conversation.LastMessage = chatMessage.Message;
+            conversation.LastMessageAt = chatMessage.CreatedAt;
+            conversation.UnreadByAdminCount++;
+            conversation.UpdatedAt = DateTime.Now;
+
+            _context.ChatMessages.Add(chatMessage);
+            await _context.SaveChangesAsync();
+
+            await Clients.Group($"Conversation_{conversationId}").SendAsync("ReceiveMessage", new {
+                chatMessage.Id,
+                chatMessage.ConversationId,
+                chatMessage.Message,
+                chatMessage.SenderType,
+                chatMessage.SenderName,
+                chatMessage.CreatedAt
+            });
+
+            await Clients.Group("AdminDashboard").SendAsync("ConversationUpdated", new {
+                Id = conversation.Id,
+                conversation.LastMessage,
+                conversation.LastMessageAt,
+                conversation.UnreadByAdminCount,
+                conversation.CustomerName
+            });
+        }
+
+        // Đánh dấu đã đọc
+        public async Task MarkAsRead(int conversationId, string senderType)
+        {
+            var conversation = await _context.ChatConversations.FindAsync(conversationId);
+            if (conversation != null)
+            {
+                if (senderType == "Admin")
+                {
+                    conversation.UnreadByAdminCount = 0;
+                    var unread = await _context.ChatMessages.Where(m => m.ConversationId == conversationId && m.SenderType == "Customer" && !m.IsRead).ToListAsync();
+                    foreach (var m in unread) m.IsRead = true;
+                }
+                else
+                {
+                    conversation.UnreadByCustomerCount = 0;
+                    var unread = await _context.ChatMessages.Where(m => m.ConversationId == conversationId && m.SenderType == "Admin" && !m.IsRead).ToListAsync();
+                    foreach (var m in unread) m.IsRead = true;
+                }
+                await _context.SaveChangesAsync();
+                await Clients.Group("AdminDashboard").SendAsync("ConversationRead", conversationId);
+            }
         }
     }
 }

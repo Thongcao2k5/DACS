@@ -1,25 +1,24 @@
-using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Business.DTOs;
+using MotoShop.Business.Interfaces;
 using MotoShop.Data.Interfaces;
 using MotoShop.Data.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MotoShop.Business.Interfaces;
 
 namespace MotoShop.Business.Services
 {
     public class CartService : ICartService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly MotoShop.Data.Data.MotoShopDbContext _context;
+        private readonly IPromotionService _promotionService;
 
-        public CartService(IUnitOfWork unitOfWork, MotoShop.Data.Data.MotoShopDbContext context)
+        public CartService(IUnitOfWork unitOfWork, IPromotionService promotionService)
         {
             _unitOfWork = unitOfWork;
-            _context = context;
+            _promotionService = promotionService;
         }
 
         public async Task<bool> AddToCartAsync(string userId, int variantId, int quantity)
@@ -31,8 +30,9 @@ namespace MotoShop.Business.Services
 
             if (variant == null || variant.StockQuantity < quantity) return false;
 
-            // TÍNH GIÁ KHUYẾN MÃI (NẾU CÓ)
-            decimal finalPrice = await MotoShop.Business.Helpers.PromotionHelper.GetDiscountedPriceAsync(_context, variant);
+            decimal finalPrice = variant.ProductId.HasValue
+                ? await _promotionService.CalculateDiscountAsync(variant.ProductId.Value, variant.Price)
+                : variant.Price;
 
             var cart = await _unitOfWork.Repository<MotoShop.Data.Models.Cart>()
                 .Find(c => c.UserId == userId)

@@ -22,9 +22,9 @@
     var roundedRating = (int)Math.Round(avgRating);
 
     decimal savingAmount = 0;
-    if (Model.IsFlashSale && Model.FlashSalePrice.HasValue)
+    if (Model.IsFlashSale && Model.FlashSalePrice != null)
         savingAmount = Model.MinPrice - Model.FlashSalePrice.Value;
-    else if (Model.MinOriginalPrice.HasValue && Model.MinOriginalPrice > Model.MinPrice)
+    else if (Model.MinOriginalPrice != null && Model.MinOriginalPrice > Model.MinPrice)
         savingAmount = Model.MinOriginalPrice.Value - Model.MinPrice;
     var savingK = (int)Math.Round((double)savingAmount / 1000.0);
 }
@@ -107,7 +107,7 @@
 
         @* Giá *@
         <div class="pc-price-row">
-            @if (Model.IsFlashSale && Model.FlashSalePrice.HasValue)
+            @if (Model.IsFlashSale && Model.FlashSalePrice != null)
             {
                 <span class="pc-price">@Model.FlashSalePrice.Value.ToString("N0")đ</span>
                 <del class="pc-old-price">@Model.MinPrice.ToString("N0")đ</del>
@@ -119,7 +119,7 @@
             else
             {
                 <span class="pc-price">@(Model.MinPrice > 0 ? Model.MinPrice.ToString("N0") + "đ" : "Liên hệ")</span>
-                @if (Model.MinOriginalPrice.HasValue && Model.MinOriginalPrice > Model.MinPrice)
+                @if (Model.MinOriginalPrice != null && Model.MinOriginalPrice > Model.MinPrice)
                 {
                     <del class="pc-old-price">@Model.MinOriginalPrice.Value.ToString("N0")đ</del>
                     @if (savingK > 0)

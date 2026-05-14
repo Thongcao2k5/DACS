@@ -1,63 +1,91 @@
+using ClosedXML.Excel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using MotoShop.Data.Data;
-using MotoShop.Data.Models;
-using System.Linq;
-using System.Threading.Tasks;
-using ClosedXML.Excel;
-using System.IO;
-
 using MotoShop.Business.DTOs;
+using MotoShop.Business.Interfaces;
+using MotoShop.Data.Data;
+using MotoShop.Data.Enums;
+using MotoShop.Data.Models;
+using System;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace MotoShop.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public class PromotionController : Controller
     {
         private readonly MotoShopDbContext _context;
-        private readonly MotoShop.Business.Interfaces.IEmailService _emailService;
+        private readonly IEmailService _emailService;
 
-        public PromotionController(MotoShopDbContext context, MotoShop.Business.Interfaces.IEmailService emailService)
+        public PromotionController(MotoShopDbContext context, IEmailService emailService)
         {
             _context = context;
             _emailService = emailService;
         }
 
-        public async Task<IActionResult> Index(string? searchTerm, string? status, decimal? minDiscount, string? discountUnit, int page = 1, int pageSize = 10)
+        public async Task<IActionResult> Index(string? searchTerm, string? type, string? isActive, string? timeStatus, int page = 1, int pageSize = 10)
         {
-            var query = GetFilteredPromotionsQuery(searchTerm, status, minDiscount, discountUnit);
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 100);
 
+            var query = GetFilteredPromotionsQuery(searchTerm, type, isActive, timeStatus);
             var totalItems = await query.CountAsync();
             var now = DateTime.Now;
 
             var promotions = await query
-                .OrderByDescending(p => p.StartDate)
+                .OrderByDescending(p => p.Priority)
+                .ThenByDescending(p => p.StartDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(p => new PromotionDto
                 {
-                    PromotionId = p.PromotionId,
-                    PromotionName = p.PromotionName,
+                    Id = p.Id,
+                    Name = p.Name,
+                    Slug = p.Slug,
                     Description = p.Description,
-                    DiscountType = p.DiscountType,
-                    DiscountPercentage = p.DiscountPercentage,
-                    DiscountAmount = p.DiscountAmount,
-                    MinOrderValue = p.MinOrderValue,
-                    MinQuantity = p.MinQuantity,
-                    StartDate = p.StartDate.ToString("yyyy-MM-dd"),
-                    EndDate = p.EndDate.ToString("yyyy-MM-dd"),
+                    PromotionType = p.PromotionType.ToString(),
+                    DiscountType = p.DiscountType.ToString(),
+                    DiscountValue = p.DiscountValue,
+                    MaxDiscountAmount = p.MaxDiscountAmount,
+                    MinOrderAmount = p.MinOrderAmount,
+                    CouponCode = p.CouponCode,
+                    StartDate = p.StartDate.ToString("yyyy-MM-ddTHH:mm"),
+                    EndDate = p.EndDate.ToString("yyyy-MM-ddTHH:mm"),
+                    UsageLimit = p.UsageLimit,
+                    UsedCount = p.UsedCount,
                     IsActive = p.IsActive,
+                    IsFeatured = p.IsFeatured,
+                    Priority = p.Priority,
+                    BannerImage = p.BannerImage,
+                    BackgroundColor = p.BackgroundColor,
                     ProductCount = p.PromotionProducts.Count,
-                    StatusText = !p.IsActive ? "Tạm dừng" : (p.StartDate > now ? "Sắp diễn ra" : (p.EndDate < now ? "Đã kết thúc" : "Đang áp dụng")),
-                    StatusClass = !p.IsActive ? "badge-paused" : (p.StartDate > now ? "badge-upcoming" : (p.EndDate < now ? "badge-expired" : "badge-active"))
+                    ProductIds = p.PromotionProducts.Select(pp => pp.ProductId).ToList(),
+                    StatusText = !p.IsActive ? "Tam dung" : p.StartDate > now ? "Sap dien ra" : p.EndDate < now ? "Da ket thuc" : "Dang ap dung",
+                    StatusClass = !p.IsActive ? "badge-paused" : p.StartDate > now ? "badge-upcoming" : p.EndDate < now ? "badge-expired" : "badge-active"
+                })
+                .ToListAsync();
+
+            ViewBag.Products = await _context.Products
+                .AsNoTracking()
+                .Where(p => !p.IsDeleted)
+                .OrderBy(p => p.ProductName)
+                .Select(p => new
+                {
+                    p.ProductId,
+                    p.ProductName,
+                    Price = p.Variants.OrderBy(v => v.Price).Select(v => v.Price).FirstOrDefault()
                 })
                 .ToListAsync();
 
             ViewBag.SearchTerm = searchTerm;
-            ViewBag.Status = status;
-            ViewBag.MinDiscount = minDiscount;
-            ViewBag.DiscountUnit = discountUnit ?? "Amount"; // Mặc định là VNĐ
+            ViewBag.Type = type;
+            ViewBag.IsActive = isActive;
+            ViewBag.TimeStatus = timeStatus;
             ViewBag.CurrentPage = page;
             ViewBag.PageSize = pageSize;
             ViewBag.TotalItems = totalItems;
@@ -66,37 +94,33 @@ namespace MotoShop.Areas.Admin.Controllers
             return View(promotions);
         }
 
-        private IQueryable<Promotion> GetFilteredPromotionsQuery(string? searchTerm, string? status, decimal? minDiscount, string? discountUnit)
+        private IQueryable<Promotion> GetFilteredPromotionsQuery(string? searchTerm, string? type, string? isActive, string? timeStatus)
         {
             var query = _context.Promotions.AsNoTracking().AsQueryable();
 
-            if (!string.IsNullOrEmpty(searchTerm))
+            if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                query = query.Where(p => p.PromotionName.Contains(searchTerm));
+                query = query.Where(p => p.Name.Contains(searchTerm) || (p.CouponCode != null && p.CouponCode.Contains(searchTerm)));
             }
 
-            if (minDiscount.HasValue)
+            if (!string.IsNullOrWhiteSpace(type) && Enum.TryParse<PromotionType>(type, true, out var promotionType))
             {
-                var val = minDiscount.Value;
-                if (discountUnit == "Percentage")
-                {
-                    query = query.Where(p => p.DiscountType == "Percentage" && p.DiscountPercentage >= val);
-                }
-                else
-                {
-                    query = query.Where(p => p.DiscountType == "FixedAmount" && p.DiscountAmount >= val);
-                }
+                query = query.Where(p => p.PromotionType == promotionType);
             }
 
-            if (!string.IsNullOrEmpty(status))
+            if (!string.IsNullOrWhiteSpace(isActive) && bool.TryParse(isActive, out var active))
+            {
+                query = query.Where(p => p.IsActive == active);
+            }
+
+            if (!string.IsNullOrWhiteSpace(timeStatus))
             {
                 var now = DateTime.Now;
-                query = status switch
+                query = timeStatus switch
                 {
-                    "Active" => query.Where(p => p.IsActive && p.StartDate <= now && p.EndDate >= now),
-                    "Upcoming" => query.Where(p => p.IsActive && p.StartDate > now),
-                    "Expired" => query.Where(p => p.EndDate < now),
-                    "Paused" => query.Where(p => !p.IsActive),
+                    "running" => query.Where(p => p.StartDate <= now && p.EndDate >= now),
+                    "upcoming" => query.Where(p => p.StartDate > now),
+                    "expired" => query.Where(p => p.EndDate < now),
                     _ => query
                 };
             }
@@ -105,75 +129,113 @@ namespace MotoShop.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Save(Promotion promotion)
+        public async Task<IActionResult> Save(Promotion promotion, int[] productIds)
         {
-            bool isNew = promotion.PromotionId == 0;
-
-            if (promotion.DiscountType == "Percentage")
+            if (string.IsNullOrWhiteSpace(promotion.Name))
             {
-                promotion.DiscountAmount = 0;
-            }
-            else
-            {
-                promotion.DiscountPercentage = 0;
+                return Json(new { success = false, message = "Tên khuyến mãi là bắt buộc." });
             }
 
-            if (isNew)
-            {
-                _context.Promotions.Add(promotion);
-            }
-            else
-            {
-                var existing = await _context.Promotions.FindAsync(promotion.PromotionId);
-                if (existing == null) return Json(new { success = false, message = "Không tìm thấy chương trình" });
+            var isNew = promotion.Id == 0;
+            promotion.Slug = string.IsNullOrWhiteSpace(promotion.Slug) ? GenerateSlug(promotion.Name) : promotion.Slug;
+            promotion.CouponCode = string.IsNullOrWhiteSpace(promotion.CouponCode) ? null : promotion.CouponCode.Trim().ToUpperInvariant();
 
-                existing.PromotionName = promotion.PromotionName;
-                existing.Description = promotion.Description;
-                existing.DiscountType = promotion.DiscountType;
-                existing.DiscountPercentage = promotion.DiscountPercentage;
-                existing.DiscountAmount = promotion.DiscountAmount;
-                existing.MinOrderValue = promotion.MinOrderValue;
-                existing.MinQuantity = promotion.MinQuantity;
-                existing.StartDate = promotion.StartDate;
-                existing.EndDate = promotion.EndDate;
-                existing.IsActive = promotion.IsActive;
+            if (promotion.PromotionType != PromotionType.Voucher)
+            {
+                promotion.CouponCode = null;
             }
 
-            await _context.SaveChangesAsync();
-
-            // TỰ ĐỘNG BÁO MAIL KHI CÓ KHUYẾN MÃI MỚI
-            if (isNew && promotion.IsActive)
+            if (promotion.PromotionType != PromotionType.Voucher && promotion.PromotionType != PromotionType.OrderDiscount)
             {
-                System.Console.WriteLine($"[PROMOTION] Bắt đầu quét danh sách email để thông báo khuyến mãi: {promotion.PromotionName}");
-                
-                _ = Task.Run(async () =>
+                promotion.MinOrderAmount = null;
+            }
+
+            if (promotion.PromotionType != PromotionType.Campaign)
+            {
+                promotion.BannerImage = null;
+                promotion.BackgroundColor = null;
+            }
+
+            var strategy = _context.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try
                 {
-                    try
+                    Promotion saved;
+                    if (isNew)
                     {
-                        // Cách lấy email an toàn
-                        var subscribers = await _context.Database.SqlQueryRaw<string>("SELECT Email FROM NewsletterSubscriptions WHERE IsActive = 1").ToListAsync();
-                        
-                        System.Console.WriteLine($"[PROMOTION] Tìm thấy {subscribers.Count} email đăng ký.");
+                        promotion.CreatedAt = DateTime.Now;
+                        promotion.UpdatedAt = DateTime.Now;
+                        _context.Promotions.Add(promotion);
+                        saved = promotion;
+                    }
+                    else
+                    {
+                        saved = await _context.Promotions.FirstOrDefaultAsync(p => p.Id == promotion.Id)
+                            ?? throw new InvalidOperationException("Không tìm thấy chương trình khuyến mãi.");
 
-                        foreach (var email in subscribers)
+                        saved.Name = promotion.Name;
+                        saved.Slug = promotion.Slug;
+                        saved.Description = promotion.Description;
+                        saved.PromotionType = promotion.PromotionType;
+                        saved.DiscountType = promotion.DiscountType;
+                        saved.DiscountValue = promotion.DiscountValue;
+                        saved.MaxDiscountAmount = promotion.MaxDiscountAmount;
+                        saved.MinOrderAmount = promotion.MinOrderAmount;
+                        saved.CouponCode = promotion.CouponCode;
+                        saved.StartDate = promotion.StartDate;
+                        saved.EndDate = promotion.EndDate;
+                        saved.UsageLimit = promotion.UsageLimit;
+                        saved.IsActive = promotion.IsActive;
+                        saved.IsFeatured = promotion.IsFeatured;
+                        saved.Priority = promotion.Priority;
+                        saved.BannerImage = promotion.BannerImage;
+                        saved.BackgroundColor = promotion.BackgroundColor;
+                        saved.UpdatedAt = DateTime.Now;
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    var existingLinks = _context.PromotionProducts.Where(pp => pp.PromotionId == saved.Id);
+                    _context.PromotionProducts.RemoveRange(existingLinks);
+
+                    if (saved.PromotionType == PromotionType.FlashSale || saved.PromotionType == PromotionType.ProductDiscount)
+                    {
+                        if (productIds != null && productIds.Length > 0)
                         {
-                            await _emailService.SendPromotionEmailAsync(
-                                email,
-                                promotion.PromotionName,
-                                promotion.Description ?? "Ưu đãi cực hot vừa ra mắt tại MotoShop!",
-                                promotion.StartDate.ToString("dd/MM/yyyy"),
-                                promotion.EndDate.ToString("dd/MM/yyyy")
-                            );
+                            foreach (var productId in productIds.Distinct())
+                            {
+                                _context.PromotionProducts.Add(new PromotionProduct { PromotionId = saved.Id, ProductId = productId });
+                            }
                         }
                     }
-                    catch (System.Exception ex)
-                    {
-                        System.Console.WriteLine($"[PROMOTION ERROR] Lỗi trong quá trình chuẩn bị gửi mail: {ex.Message}");
-                    }
-                });
-            }
 
-            return Json(new { success = true, message = isNew ? "Thêm thành công" : "Cập nhật thành công" });
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    if (isNew && saved.IsActive)
+                    {
+                        await SendPromotionNewsletterAsync(saved);
+                    }
+
+                return Json(new { success = true, message = isNew ? "Thêm khuyến mãi thành công." : "Cập nhật khuyến mãi thành công." });
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    var errorMsg = ex.Message;
+                    if (ex.InnerException != null)
+                    {
+                        errorMsg += " | Inner: " + ex.InnerException.Message;
+                        if (ex.InnerException.InnerException != null)
+                        {
+                            errorMsg += " | Details: " + ex.InnerException.InnerException.Message;
+                        }
+                    }
+                    return Json(new { success = false, message = "Lỗi khi lưu khuyến mãi: " + errorMsg });
+                }
+            });
         }
 
         [HttpGet]
@@ -194,11 +256,12 @@ namespace MotoShop.Areas.Admin.Controllers
 
             if (!string.IsNullOrEmpty(searchTerm))
                 productsQuery = productsQuery.Where(p => p.ProductName.Contains(searchTerm));
-            
+
             if (categoryId.HasValue)
                 productsQuery = productsQuery.Where(p => p.CategoryId == categoryId);
 
-            var products = await productsQuery.Select(p => new {
+            var products = await productsQuery.Select(p => new
+            {
                 p.ProductId,
                 p.ProductName,
                 IsAssigned = assignedProductIds.Contains(p.ProductId),
@@ -206,8 +269,8 @@ namespace MotoShop.Areas.Admin.Controllers
                 Stock = p.Variants.Sum(v => v.StockQuantity)
             }).ToListAsync();
 
-            // Tính toán giá sau giảm ở phía Client hoặc Server
-            var result = products.Select(p => new {
+            var result = products.Select(p => new
+            {
                 p.ProductId,
                 p.ProductName,
                 p.IsAssigned,
@@ -219,77 +282,63 @@ namespace MotoShop.Areas.Admin.Controllers
             return Json(result);
         }
 
-        private static decimal CalculateDiscount(decimal price, Promotion p)
-        {
-            if (p.DiscountType == "Percentage")
-                return price * (1 - p.DiscountPercentage / 100);
-            return Math.Max(0, price - p.DiscountAmount);
-        }
-
         [HttpPost]
         public async Task<IActionResult> BulkDelete(int[] ids)
         {
             if (ids == null || ids.Length == 0) return Json(new { success = false });
-            var promos = await _context.Promotions.Where(p => ids.Contains(p.PromotionId)).ToListAsync();
+
+            var links = _context.PromotionProducts.Where(pp => ids.Contains(pp.PromotionId));
+            _context.PromotionProducts.RemoveRange(links);
+
+            var promos = await _context.Promotions.Where(p => ids.Contains(p.Id)).ToListAsync();
             _context.Promotions.RemoveRange(promos);
             await _context.SaveChangesAsync();
-            return Json(new { success = true, message = $"Đã xóa {promos.Count} chương trình" });
+
+            return Json(new { success = true, message = $"Da xoa {promos.Count} khuyen mai." });
         }
 
         [HttpPost]
         public async Task<IActionResult> Deactivate(int id)
         {
             var promo = await _context.Promotions.FindAsync(id);
-            if (promo != null && promo.IsActive)
-            {
-                promo.IsActive = false;
-                await _context.SaveChangesAsync();
-                return Json(new { success = true });
-            }
-            return Json(new { success = false });
+            if (promo == null) return Json(new { success = false });
+
+            promo.IsActive = false;
+            promo.UpdatedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
         }
 
-        public async Task<IActionResult> ExportExcel(string? searchTerm, string? status, decimal? minDiscount, string? discountUnit)
+        public async Task<IActionResult> ExportExcel(string? searchTerm, string? type, string? isActive, string? timeStatus)
         {
-            var promotions = await GetFilteredPromotionsQuery(searchTerm, status, minDiscount, discountUnit)
+            var promotions = await GetFilteredPromotionsQuery(searchTerm, type, isActive, timeStatus)
                 .Include(p => p.PromotionProducts)
                 .ToListAsync();
 
-            using (var workbook = new XLWorkbook())
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Khuyen mai");
+
+            string[] headers = { "Ten", "Loai", "Giam gia", "Bat dau", "Ket thuc", "Luot dung", "Trang thai" };
+            for (var i = 0; i < headers.Length; i++) worksheet.Cell(1, i + 1).Value = headers[i];
+
+            var row = 1;
+            var now = DateTime.Now;
+            foreach (var p in promotions)
             {
-                var worksheet = workbook.Worksheets.Add("Khuyến mãi");
-                var currentRow = 1;
-
-                string[] headers = { "Tên chương trình", "Loại giảm", "Giá trị", "Bắt đầu", "Kết thúc", "Sản phẩm áp dụng", "Trạng thái" };
-                for (int i = 0; i < headers.Length; i++) worksheet.Cell(1, i + 1).Value = headers[i];
-
-                var headerRange = worksheet.Range(1, 1, 1, headers.Length);
-                headerRange.Style.Font.Bold = true;
-                headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#E24B4A");
-                headerRange.Style.Font.FontColor = XLColor.White;
-
-                foreach (var p in promotions)
-                {
-                    currentRow++;
-                    worksheet.Cell(currentRow, 1).Value = p.PromotionName;
-                    worksheet.Cell(currentRow, 2).Value = p.DiscountType == "Percentage" ? "Phần trăm" : "Tiền mặt";
-                    worksheet.Cell(currentRow, 3).Value = p.DiscountType == "Percentage" ? p.DiscountPercentage + "%" : p.DiscountAmount.ToString("N0") + "đ";
-                    worksheet.Cell(currentRow, 4).Value = p.StartDate.ToString("dd/MM/yyyy");
-                    worksheet.Cell(currentRow, 5).Value = p.EndDate.ToString("dd/MM/yyyy");
-                    worksheet.Cell(currentRow, 6).Value = p.PromotionProducts.Count;
-
-                    var now = DateTime.Now;
-                    var statusText = !p.IsActive ? "Tạm dừng" : (p.StartDate > now ? "Sắp diễn ra" : (p.EndDate < now ? "Hết hạn" : "Đang hoạt động"));
-                    worksheet.Cell(currentRow, 7).Value = statusText;
-                }
-
-                worksheet.Columns().AdjustToContents();
-                using (var stream = new MemoryStream())
-                {
-                    workbook.SaveAs(stream);
-                    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"KhuyenMai_{DateTime.Now:yyyyMMdd}.xlsx");
-                }
+                row++;
+                worksheet.Cell(row, 1).Value = p.Name;
+                worksheet.Cell(row, 2).Value = p.PromotionType.ToString();
+                worksheet.Cell(row, 3).Value = p.DiscountType == DiscountType.Percent ? p.DiscountValue + "%" : p.DiscountValue.ToString("N0") + "d";
+                worksheet.Cell(row, 4).Value = p.StartDate.ToString("dd/MM/yyyy HH:mm");
+                worksheet.Cell(row, 5).Value = p.EndDate.ToString("dd/MM/yyyy HH:mm");
+                worksheet.Cell(row, 6).Value = p.UsageLimit.HasValue ? $"{p.UsedCount}/{p.UsageLimit}" : p.UsedCount.ToString();
+                worksheet.Cell(row, 7).Value = !p.IsActive ? "Tam dung" : p.StartDate > now ? "Sap dien ra" : p.EndDate < now ? "Da ket thuc" : "Dang ap dung";
             }
+
+            worksheet.Columns().AdjustToContents();
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"KhuyenMai_{DateTime.Now:yyyyMMdd}.xlsx");
         }
 
         [HttpPost]
@@ -297,14 +346,52 @@ namespace MotoShop.Areas.Admin.Controllers
         {
             var existing = _context.PromotionProducts.Where(pp => pp.PromotionId == promotionId);
             _context.PromotionProducts.RemoveRange(existing);
-            if (productIds != null)
+
+            foreach (var productId in productIds.Distinct())
             {
-                foreach (var pid in productIds)
-                    _context.PromotionProducts.Add(new PromotionProduct { PromotionId = promotionId, ProductId = pid });
+                _context.PromotionProducts.Add(new PromotionProduct { PromotionId = promotionId, ProductId = productId });
             }
+
             await _context.SaveChangesAsync();
-            return Json(new { success = true, message = "Cập nhật sản phẩm áp dụng thành công" });
+            return Json(new { success = true, message = "Cap nhat san pham ap dung thanh cong." });
+        }
+
+        private async Task SendPromotionNewsletterAsync(Promotion promotion)
+        {
+            try
+            {
+                var subscribers = await _context.Database.SqlQueryRaw<string>("SELECT Email FROM NewsletterSubscriptions WHERE IsActive = 1").ToListAsync();
+                foreach (var email in subscribers)
+                {
+                    await _emailService.SendPromotionEmailAsync(
+                        email,
+                        promotion.Name,
+                        promotion.Description ?? "Uu dai moi tai MotoShop.",
+                        promotion.StartDate.ToString("dd/MM/yyyy"),
+                        promotion.EndDate.ToString("dd/MM/yyyy"));
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        private static decimal CalculateDiscount(decimal price, Promotion promotion)
+        {
+            var discounted = promotion.DiscountType == DiscountType.Percent
+                ? price * (1 - promotion.DiscountValue / 100m)
+                : price - promotion.DiscountValue;
+
+            return Math.Clamp(discounted, 0, price);
+        }
+
+        private static string GenerateSlug(string name)
+        {
+            var slug = name.Trim().ToLowerInvariant();
+            slug = Regex.Replace(slug, @"[^a-z0-9\s-]", string.Empty);
+            slug = Regex.Replace(slug, @"\s+", "-");
+            slug = Regex.Replace(slug, @"-+", "-");
+            return string.IsNullOrWhiteSpace(slug) ? $"promotion-{Guid.NewGuid():N}" : slug.Trim('-');
         }
     }
 }
-

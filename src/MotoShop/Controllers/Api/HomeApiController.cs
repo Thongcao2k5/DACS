@@ -17,7 +17,7 @@ namespace MotoShop.Controllers.Api
         private readonly IProductService _productService;
         private readonly ICategoryService _categoryService;
         private readonly ICartService _cartService;
-        private readonly IFlashSaleService _flashSaleService;
+        private readonly IPromotionService _promotionService;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly MotoShopDbContext _context;
 
@@ -25,14 +25,14 @@ namespace MotoShop.Controllers.Api
             IProductService productService, 
             ICategoryService categoryService,
             ICartService cartService,
-            IFlashSaleService flashSaleService,
+            IPromotionService promotionService,
             UserManager<IdentityUser> userManager,
             MotoShopDbContext context)
         {
             _productService = productService;
             _categoryService = categoryService;
             _cartService = cartService;
-            _flashSaleService = flashSaleService;
+            _promotionService = promotionService;
             _userManager = userManager;
             _context = context;
         }
@@ -70,7 +70,7 @@ namespace MotoShop.Controllers.Api
         [HttpGet("promotions")]
         public async Task<IActionResult> GetPromotionProducts()
         {
-            var activeSales = await _flashSaleService.GetActiveFlashSalesAsync();
+            var activeSales = await _promotionService.GetFlashSalesAsync();
             return Ok(activeSales);
         }
 

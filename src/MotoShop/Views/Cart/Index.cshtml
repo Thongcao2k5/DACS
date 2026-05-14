@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = "Giỏ hàng";
     var totalAmount = Model.Sum(i => i.Total);
+    var originalTotal = Model.Sum(i => i.TotalOriginal);
+    var productDiscountTotal = Model.Sum(i => i.TotalDiscount);
 }
 
 <div class="breadcrumb-wrapper">
@@ -72,7 +74,26 @@
                     <h5 class="fw-bold mb-4 text-uppercase">TỔNG ĐƠN HÀNG</h5>
                     <div class="summary-item d-flex justify-content-between mb-3 pb-3 border-bottom">
                         <span class="text-muted">Tạm tính</span>
-                        <span class="fw-bold" id="totalSubtotal">@totalAmount.ToString("N0")đ</span>
+                        <span class="fw-bold" id="totalSubtotal" data-base="@totalAmount.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)">@originalTotal.ToString("N0")đ</span>
+                    </div>
+                    @if (productDiscountTotal > 0)
+                    {
+                        <div class="summary-item d-flex justify-content-between mb-3 pb-3 border-bottom text-success">
+                            <span>Flash Sale / Sale</span>
+                            <span class="fw-bold">-@productDiscountTotal.ToString("N0")đ</span>
+                        </div>
+                    }
+                    <div class="summary-item mb-3 pb-3 border-bottom">
+                        <label class="form-label small fw-bold text-uppercase">Mã giảm giá</label>
+                        <div class="input-group">
+                            <input type="text" id="cartVoucherCode" class="form-control" placeholder="Nhập mã voucher">
+                            <button type="button" id="btnApplyCartVoucher" class="btn btn-outline-danger">Áp dụng</button>
+                        </div>
+                        <div id="cartVoucherMessage" class="small mt-2" style="display:none;"></div>
+                        <div id="cartVoucherDiscount" class="d-flex justify-content-between mt-2 text-success fw-bold" style="display:none;">
+                            <span>Voucher <span id="cartVoucherAppliedCode"></span></span>
+                            <span id="cartVoucherDiscountAmount">-0đ</span>
+                        </div>
                     </div>
                     <div class="summary-item d-flex justify-content-between mb-3">
                         <span class="text-muted">Phí vận chuyển</span>
@@ -177,9 +198,38 @@
             });
             
             const formatted = total.toLocaleString('vi-VN') + 'đ';
-            document.getElementById('totalSubtotal').innerText = formatted;
+            document.getElementById('totalSubtotal').dataset.base = total.toFixed(2);
             document.getElementById('totalFinal').innerText = formatted;
             if (typeof updateCartBadge === "function") updateCartBadge();
         }
+
+        document.getElementById('btnApplyCartVoucher')?.addEventListener('click', async function () {
+            const code = document.getElementById('cartVoucherCode').value.trim();
+            const baseTotal = document.getElementById('totalSubtotal').dataset.base;
+            const message = document.getElementById('cartVoucherMessage');
+            const discountRow = document.getElementById('cartVoucherDiscount');
+            if (!code) return;
+
+            try {
+                const response = await fetch(`/Cart/CheckCoupon?code=${encodeURIComponent(code)}&orderValue=${baseTotal}`);
+                const data = await response.json();
+                if (data.success) {
+                    const discount = Number(data.discountAmount || 0);
+                    document.getElementById('cartVoucherAppliedCode').innerText = code.toUpperCase();
+                    document.getElementById('cartVoucherDiscountAmount').innerText = '-' + discount.toLocaleString('vi-VN') + 'đ';
+                    document.getElementById('totalFinal').innerText = Math.max(0, Number(baseTotal) - discount).toLocaleString('vi-VN') + 'đ';
+                    discountRow.style.display = 'flex';
+                    message.className = 'small mt-2 text-success';
+                } else {
+                    discountRow.style.display = 'none';
+                    document.getElementById('totalFinal').innerText = Number(baseTotal).toLocaleString('vi-VN') + 'đ';
+                    message.className = 'small mt-2 text-danger';
+                }
+                message.innerText = data.message;
+                message.style.display = 'block';
+            } catch (error) {
+                console.error(error);
+            }
+        });
     </script>
 }

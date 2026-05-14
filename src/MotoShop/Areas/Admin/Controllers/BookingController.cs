@@ -26,6 +26,9 @@ namespace MotoShop.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index(string? searchTerm, string? status, DateTime? fromDate, DateTime? toDate, int? staffId, int page = 1, int pageSize = 10)
         {
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 100);
+
             var query = _context.ServiceBookings
                 .Include(b => b.Customer)
                 .Include(b => b.Service)
@@ -147,7 +150,7 @@ namespace MotoShop.Areas.Admin.Controllers
             var booking = await _context.ServiceBookings.FindAsync(bookingId);
             if (booking == null) return Json(new { success = false });
 
-            booking.Status = "Cancelled";
+            booking.Status = MotoShop.Data.Constants.BookingStatusConst.Cancelled;
             booking.CancelReason = reason;
             booking.DepositStatus = "Rejected";
             await _context.SaveChangesAsync();

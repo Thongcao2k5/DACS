@@ -1,6 +1,7 @@
 using AutoMapper;
 using MotoShop.Business.DTOs;
 using MotoShop.Data.Models;
+using System;
 using System.Linq;
 
 namespace MotoShop.Business.Mappings
@@ -20,9 +21,10 @@ namespace MotoShop.Business.Mappings
                 .ForMember(dest => dest.DiscountPercent, opt => opt.MapFrom(src => 0)) // Calculated in DTO property
                 .ForMember(dest => dest.DefaultVariantId, opt => opt.MapFrom(src => src.Variants.OrderBy(v => v.Price).Select(v => v.ProductVariantId).FirstOrDefault()))
                 .ForMember(dest => dest.PrimaryImageUrl, opt => opt.MapFrom(src => src.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault() ?? src.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? string.Empty))
-                .ForMember(dest => dest.IsFlashSale, opt => opt.MapFrom(src => src.FlashSaleProducts.Any(fsp => fsp.FlashSale != null && fsp.FlashSale.IsActive && fsp.FlashSale.StartDate <= DateTime.Now && fsp.FlashSale.EndDate >= DateTime.Now && fsp.Quantity > fsp.SoldQuantity)))
-                .ForMember(dest => dest.FlashSalePrice, opt => opt.MapFrom(src => src.FlashSaleProducts.Where(fsp => fsp.FlashSale != null && fsp.FlashSale.IsActive && fsp.FlashSale.StartDate <= DateTime.Now && fsp.FlashSale.EndDate >= DateTime.Now && fsp.Quantity > fsp.SoldQuantity).Select(fsp => (decimal?)fsp.FlashSalePrice).FirstOrDefault()))
-                .ForMember(dest => dest.FlashSaleEndDate, opt => opt.MapFrom(src => src.FlashSaleProducts.Where(fsp => fsp.FlashSale != null && fsp.FlashSale.IsActive && fsp.FlashSale.StartDate <= DateTime.Now && fsp.FlashSale.EndDate >= DateTime.Now && fsp.Quantity > fsp.SoldQuantity).Select(fsp => (DateTime?)fsp.FlashSale.EndDate).FirstOrDefault()))
+                // Dùng hệ thống cũ (đã đổi tên collection) cho Mapping tạm thời trong Stage 1
+                .ForMember(dest => dest.IsFlashSale, opt => opt.MapFrom(src => false))
+                .ForMember(dest => dest.FlashSalePrice, opt => opt.MapFrom(src => (decimal?)null))
+                .ForMember(dest => dest.FlashSaleEndDate, opt => opt.MapFrom(src => (DateTime?)null))
                 .ForMember(dest => dest.StockCount, opt => opt.MapFrom(src => src.Variants.Sum(v => v.StockQuantity)))
                 .ForMember(dest => dest.IsInStock,  opt => opt.MapFrom(src => src.Variants.Any(v => v.StockQuantity > 0)));
 
@@ -35,11 +37,6 @@ namespace MotoShop.Business.Mappings
 
             // ProductVariant Mapping
             CreateMap<ProductVariant, ProductVariantDto>();
-
-            // ProductVariantAttributeValue Mapping
-            CreateMap<ProductVariantAttributeValue, VariantAttributeDto>()
-                .ForMember(dest => dest.AttributeName, opt => opt.MapFrom(src => src.AttributeValue != null && src.AttributeValue.ProductAttribute != null ? src.AttributeValue.ProductAttribute.AttributeName : "Thuộc tính"))
-                .ForMember(dest => dest.Value, opt => opt.MapFrom(src => src.AttributeValue != null ? src.AttributeValue.Value : string.Empty));
 
             // ProductImage Mapping
             CreateMap<ProductImage, ProductImageDto>();
@@ -57,11 +54,10 @@ namespace MotoShop.Business.Mappings
             CreateMap<MotorbikeModel, MotorbikeModelDto>()
                 .ForMember(dest => dest.ParentModelName, opt => opt.MapFrom(src => src.ParentModel != null ? src.ParentModel.ModelName : string.Empty));
 
-            // Coupon Mapping
-            CreateMap<Coupon, CouponDto>();
-
             // Promotion Mapping
             CreateMap<Promotion, PromotionDto>()
+                .ForMember(dest => dest.PromotionType, opt => opt.MapFrom(src => src.PromotionType.ToString()))
+                .ForMember(dest => dest.DiscountType, opt => opt.MapFrom(src => src.DiscountType.ToString()))
                 .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.StartDate.ToString("dd/MM/yyyy")))
                 .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.EndDate.ToString("dd/MM/yyyy")))
                 .ForMember(dest => dest.ProductCount, opt => opt.MapFrom(src => src.PromotionProducts != null ? src.PromotionProducts.Count : 0))

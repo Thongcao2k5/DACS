@@ -41,7 +41,7 @@
 
         @* Giá *@
         <div class="mb-2">
-            @if (Model.IsFlashSale && Model.FlashSalePrice.HasValue)
+            @if (Model.IsFlashSale && Model.FlashSalePrice != null)
             {
                 <span class="qv-price">@Model.FlashSalePrice.Value.ToString("N0")đ</span>
                 <span class="qv-old-price">@Model.MinPrice.ToString("N0")đ</span>
@@ -50,7 +50,7 @@
             else
             {
                 <span class="qv-price">@(Model.MinPrice > 0 ? Model.MinPrice.ToString("N0") + "đ" : "Liên hệ")</span>
-                @if (Model.MinOriginalPrice.HasValue && Model.MinOriginalPrice > Model.MinPrice)
+                @if (Model.MinOriginalPrice != null && Model.MinOriginalPrice > Model.MinPrice)
                 {
                     <span class="qv-old-price">@Model.MinOriginalPrice.Value.ToString("N0")đ</span>
                     <span class="badge bg-danger ms-2" style="font-size:0.7rem">-@discPct%</span>
