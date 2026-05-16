@@ -44,7 +44,7 @@
             @if (Model.IsFlashSale && Model.FlashSalePrice != null)
             {
                 <span class="qv-price">@Model.FlashSalePrice.Value.ToString("N0")đ</span>
-                <span class="qv-old-price">@Model.MinPrice.ToString("N0")đ</span>
+                <span class="qv-old-price">@((Model.MinOriginalPrice ?? Model.MinPrice).ToString("N0"))đ</span>
                 <span class="badge bg-danger ms-2" style="font-size:0.7rem">Flash Sale</span>
             }
             else

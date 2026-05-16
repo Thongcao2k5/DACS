@@ -96,8 +96,9 @@
                             @foreach (var cat in ViewBag.CategoryListItems as List<CategoryDto> ?? new List<CategoryDto>())
                             {
                                 var count = catCount.GetValueOrDefault(cat.CategoryId, 0);
+                                if (count == 0) continue;
                                 <option value="@cat.CategoryId" selected="@(ViewBag.CurrentCategoryId?.ToString() == cat.CategoryId.ToString())">
-                                    @cat.CategoryName @(count > 0 ? $"({count})" : "")
+                                    @cat.CategoryName (@count)
                                 </option>
                             }
                         </select>
@@ -425,7 +426,6 @@
 </style>
 
 @section Scripts {
-    <script src="~/js/cart-handler.js"></script>
     <script>
         function selectBrand(id) {
             document.getElementById('brandIdInput').value = id;

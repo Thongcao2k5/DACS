@@ -300,7 +300,14 @@ namespace MotoShop.Controllers
 
         [HttpGet]
         [Authorize]
-        public IActionResult ChangePassword() => View();
+        public async Task<IActionResult> ChangePassword()
+        {
+            var userId = _userManager.GetUserId(User);
+            var customer = await _context.Customers.AsNoTracking()
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+            ViewBag.Customer = customer;
+            return View();
+        }
 
         [HttpPost]
         [Authorize]

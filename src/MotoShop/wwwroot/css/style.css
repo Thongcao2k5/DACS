@@ -1023,7 +1023,7 @@ section { padding: 60px 0; }
    ========================================================= */
 
 /* 1. Gallery System */
-.product-gallery { position: sticky; top: 100px; }
+.product-gallery { position: static; }
 .main-img-wrapper { 
     width: 100%; 
     background: #f9f9f9; 
@@ -1097,7 +1097,7 @@ section { padding: 60px 0; }
 .btn-buy-now:hover { background: var(--primary-hover); transform: translateY(-3px); }
 
 /* 3. Custom Tabs */
-.product-tabs-wrapper { margin-top: 80px; }
+.product-tabs-wrapper { margin-top: 0; }
 .nav-tabs-custom { border-bottom: 2px solid #eee; display: flex; gap: 40px; list-style: none; padding: 0; margin-bottom: 30px; }
 .nav-tabs-custom li a { 
     text-decoration: none; 
@@ -1126,7 +1126,6 @@ section { padding: 60px 0; }
 .rating-stars { color: #ffc107; font-size: 14px; }
 
 @media (max-width: 991px) {
-    .product-gallery { position: static; margin-bottom: 40px; }
     .product-detail-info .product-name { font-size: 1.5rem; }
     .btn-buy-group { flex-direction: column; }
     .nav-tabs-custom { gap: 20px; }

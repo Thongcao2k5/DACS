@@ -163,6 +163,7 @@ namespace MotoShop.Areas.Admin.Controllers
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.ProductVariant!)
                         .ThenInclude(pv => pv.Product!)
+                .Include(o => o.StatusHistories)
                 .FirstOrDefaultAsync(o => o.OrderId == id);
 
             if (order == null) return NotFound();
@@ -204,6 +205,14 @@ namespace MotoShop.Areas.Admin.Controllers
                 order.Status = status;
                 await _context.SaveChangesAsync();
             }
+
+            _context.OrderStatusHistory.Add(new MotoShop.Data.Models.OrderStatusHistory
+            {
+                OrderId = id,
+                Status = status,
+                ChangedDate = DateTime.Now
+            });
+            await _context.SaveChangesAsync();
 
             // Gửi email thông báo trạng thái đơn hàng
             if (status == "Shipping" || status == "Completed")

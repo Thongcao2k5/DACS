@@ -23,7 +23,7 @@
 
     decimal savingAmount = 0;
     if (Model.IsFlashSale && Model.FlashSalePrice != null)
-        savingAmount = Model.MinPrice - Model.FlashSalePrice.Value;
+        savingAmount = (Model.MinOriginalPrice ?? Model.MinPrice) - Model.FlashSalePrice.Value;
     else if (Model.MinOriginalPrice != null && Model.MinOriginalPrice > Model.MinPrice)
         savingAmount = Model.MinOriginalPrice.Value - Model.MinPrice;
     var savingK = (int)Math.Round((double)savingAmount / 1000.0);
@@ -110,7 +110,7 @@
             @if (Model.IsFlashSale && Model.FlashSalePrice != null)
             {
                 <span class="pc-price">@Model.FlashSalePrice.Value.ToString("N0")đ</span>
-                <del class="pc-old-price">@Model.MinPrice.ToString("N0")đ</del>
+                <del class="pc-old-price">@((Model.MinOriginalPrice ?? Model.MinPrice).ToString("N0"))đ</del>
                 @if (savingK > 0)
                 {
                     <span class="saving-pill">Tiết kiệm @(savingK)k</span>

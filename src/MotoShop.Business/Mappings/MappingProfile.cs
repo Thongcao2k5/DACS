@@ -36,7 +36,15 @@ namespace MotoShop.Business.Mappings
                 .ForMember(dest => dest.IsApproved, opt => opt.MapFrom(src => src.Status == "Approved"));
 
             // ProductVariant Mapping
-            CreateMap<ProductVariant, ProductVariantDto>();
+            CreateMap<ProductVariant, ProductVariantDto>()
+                .ForMember(dest => dest.VariantAttributeValues,
+                    opt => opt.MapFrom(src => src.VariantAttributeValues));
+
+            CreateMap<ProductVariantAttributeValue, VariantAttributeDto>()
+                .ForMember(dest => dest.AttributeName,
+                    opt => opt.MapFrom(src => src.AttributeValue.ProductAttribute.AttributeName))
+                .ForMember(dest => dest.Value,
+                    opt => opt.MapFrom(src => src.AttributeValue.Value));
 
             // ProductImage Mapping
             CreateMap<ProductImage, ProductImageDto>();

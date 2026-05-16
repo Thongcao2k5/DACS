@@ -120,6 +120,7 @@ namespace MotoShop.Business.Services
                 }
 
                 var basePrice = GetBasePrice(product);
+                if (basePrice <= 0) continue;
                 var discountedPrice = ApplyDiscount(basePrice, promo);
                 var primaryImage = product.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault()
                     ?? product.Images.Select(i => i.ImageUrl).FirstOrDefault()

@@ -56,6 +56,9 @@ namespace MotoShop.Data.Data
         public DbSet<ServiceImage> ServiceImages { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<VariantImage> VariantImages { get; set; }
+        public DbSet<ProductAttribute> ProductAttributes { get; set; }
+        public DbSet<AttributeValue> AttributeValues { get; set; }
+        public DbSet<ProductVariantAttributeValue> ProductVariantAttributeValues { get; set; }
         public DbSet<ProductSpecification> ProductSpecifications { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<ProductReviewImage> ProductReviewImages { get; set; }

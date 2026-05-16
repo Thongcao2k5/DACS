@@ -271,7 +271,7 @@ namespace MotoShop.Controllers
                 });
             }
 
-            var customerId = GetCurrentCustomerId();
+            var customerId = await GetCurrentCustomerIdAsync();
             var (success, message, bookingId) = await _bookingService.CreateBookingAsync(model, customerId);
 
             if (!success)
@@ -300,8 +300,8 @@ namespace MotoShop.Controllers
 
             if (booking == null) return NotFound();
             
-            // Nếu đã thanh toán rồi thì về trang thành công luôn
-            if (booking.DepositStatus == "Paid" || booking.DepositStatus == "Confirmed")
+            // Nếu đã thanh toán hoặc đã chọn "Trả sau" thì về trang thành công
+            if (booking.DepositStatus == "Paid" || booking.DepositStatus == "PayLater")
             {
                 return RedirectToAction("BookingSuccess", new { id = booking.BookingId });
             }
@@ -356,6 +356,23 @@ namespace MotoShop.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PayLater(int bookingId)
+        {
+            var booking = await _context.ServiceBookings.FirstOrDefaultAsync(b => b.BookingId == bookingId);
+            if (booking == null)
+                return Json(new { success = false, message = "Lịch hẹn không tồn tại." });
+
+            if (booking.DepositStatus == "Paid" || booking.DepositStatus == "PayLater")
+                return Json(new { success = false, message = "Lịch hẹn đã được xử lý." });
+
+            booking.DepositStatus = "PayLater";
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ConfirmDeposit(int bookingId, IFormFile transferProof)
         {
             if (transferProof == null || transferProof.Length == 0)
@@ -398,7 +415,10 @@ namespace MotoShop.Controllers
 
             var bookings = await _context.ServiceBookings
                 .Include(b => b.Service)
-                .Where(b => b.CustomerId == customer.CustomerId)
+                .Where(b => b.CustomerId == customer.CustomerId
+                         || (b.CustomerId == null
+                             && customer.Email != null
+                             && b.CustomerEmail == customer.Email))
                 .OrderByDescending(b => b.BookingDate)
                 .ToListAsync();
 
@@ -406,14 +426,13 @@ namespace MotoShop.Controllers
             return View(bookings);
         }
 
-        private int? GetCurrentCustomerId()
+        private async Task<int?> GetCurrentCustomerIdAsync()
         {
-            var customerIdClaim = User.FindFirst("CustomerId")?.Value;
-            if (customerIdClaim != null && int.TryParse(customerIdClaim, out int customerId))
-            {
-                return customerId;
-            }
-            return null;
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrEmpty(userId)) return null;
+            var customer = await _context.Customers.AsNoTracking()
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+            return customer?.CustomerId;
         }
     }
 }

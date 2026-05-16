@@ -75,6 +75,16 @@
                                 <button type="button" class="btn btn-dark py-3 rounded-3 fw-bold" data-bs-toggle="modal" data-bs-target="#bankTransferModal">
                                     <i class='bx bx-transfer me-2'></i> Chuyển khoản ngân hàng
                                 </button>
+
+                                <div class="text-center position-relative my-2">
+                                    <hr>
+                                    <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 small text-muted">HOẶC</span>
+                                </div>
+
+                                <!-- Option 3: Pay Later -->
+                                <button type="button" class="btn btn-outline-secondary w-100 py-3 rounded-3 fw-bold" id="btnPayLater" onclick="payLater()">
+                                    <i class='bx bx-time me-2'></i> Thanh toán khi hoàn thành dịch vụ
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -141,7 +151,41 @@
             window.location.href = `/Payment/CreateServiceDeposit?bookingId=@Model.BookingId`;
         }
 
-        // 2. Gửi bằng chứng chuyển khoản
+        // 2. Thanh toán khi hoàn thành dịch vụ
+        async function payLater() {
+            const btn = document.getElementById('btnPayLater');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang xử lý...';
+
+            try {
+                const res = await fetch('/Service/PayLater', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value },
+                    body: `bookingId=@Model.BookingId`
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Đã xác nhận!',
+                        text: 'Lịch hẹn đã được ghi nhận. Bạn sẽ thanh toán khi hoàn thành dịch vụ.',
+                        icon: 'success'
+                    }).then(() => {
+                        window.location.href = `/Service/BookingSuccess?id=@Model.BookingId`;
+                    });
+                } else {
+                    Swal.fire('Lỗi', data.message, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bx bx-time me-2"></i> Thanh toán khi hoàn thành dịch vụ';
+                }
+            } catch (err) {
+                Swal.fire('Lỗi', 'Không thể kết nối máy chủ.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bx bx-time me-2"></i> Thanh toán khi hoàn thành dịch vụ';
+            }
+        }
+
+        // 3. Gửi bằng chứng chuyển khoản
         async function submitProof() {
             const form = document.getElementById('proofForm');
             const file = form.transferProof.files[0];

@@ -251,6 +251,12 @@ namespace MotoShop.Controllers
             ViewBag.DefaultVariant = product.Variants.OrderByDescending(v => v.StockQuantity > 0).FirstOrDefault() ?? product.Variants.FirstOrDefault();
             ViewBag.MaxStock = product.Variants.Max(v => (int?)v.StockQuantity) ?? 0;
 
+            var attrGroups = product.Variants
+                .SelectMany(v => v.VariantAttributeValues)
+                .GroupBy(a => a.AttributeName)
+                .ToDictionary(g => g.Key, g => g.Select(a => a.Value).Distinct().ToList());
+            ViewBag.AttributeGroups = attrGroups.Any() ? attrGroups : null;
+
             var userId = _userManager.GetUserId(User);
             bool isWishlisted = false;
             bool hasReviewed = false;
@@ -272,7 +278,6 @@ namespace MotoShop.Controllers
             ViewBag.IsLoggedIn = isLoggedIn;
 
             ViewBag.RelatedProducts = await _productService.GetRelatedProductsAsync(product.ProductId, product.CategoryId ?? 0, product.BrandId ?? 0, 8);
-            ViewBag.Vouchers = await _productService.GetVouchersForProductAsync(product.ProductId);
 
             var now = DateTime.Now;
             var promoProduct = await _unitOfWork.Repository<PromotionProduct>()

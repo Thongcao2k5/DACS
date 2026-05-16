@@ -127,6 +127,7 @@ namespace MotoShop.Data.Models
         public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
         public virtual ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();
         public virtual ICollection<VariantImage> VariantImages { get; set; } = new List<VariantImage>();
+        public virtual ICollection<ProductVariantAttributeValue> VariantAttributeValues { get; set; } = new List<ProductVariantAttributeValue>();
     }
 
     public class ProductImage
@@ -843,5 +844,39 @@ namespace MotoShop.Data.Models
         [StringLength(50)]
         public string? IpAddress { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+    }
+
+    public class ProductAttribute
+    {
+        [Key]
+        public int AttributeId { get; set; }
+        [Required, StringLength(200)]
+        public string AttributeName { get; set; } = string.Empty;
+        public virtual ICollection<AttributeValue> AttributeValues { get; set; } = new List<AttributeValue>();
+    }
+
+    public class AttributeValue
+    {
+        [Key]
+        public int ValueId { get; set; }
+        public int AttributeId { get; set; }
+        [Required, StringLength(200)]
+        public string Value { get; set; } = string.Empty;
+        [ForeignKey("AttributeId")]
+        public virtual ProductAttribute ProductAttribute { get; set; } = null!;
+        public virtual ICollection<ProductVariantAttributeValue> VariantAttributeValues { get; set; } = new List<ProductVariantAttributeValue>();
+    }
+
+    [Table("ProductVariantAttributeValue")]
+    public class ProductVariantAttributeValue
+    {
+        [Key]
+        public int Id { get; set; }
+        public int ProductVariantId { get; set; }
+        public int ValueId { get; set; }
+        [ForeignKey("ProductVariantId")]
+        public virtual ProductVariant ProductVariant { get; set; } = null!;
+        [ForeignKey("ValueId")]
+        public virtual AttributeValue AttributeValue { get; set; } = null!;
     }
 }

@@ -115,9 +115,10 @@
                             <div class="text-danger small fw-500">Cọc: @item.DepositAmount.ToString("N0")đ</div>
                             @{
                                 var (dClass, dText) = item.DepositStatus switch {
-                                    "Paid" => ("success", "Đã cọc"),
-                                    "Rejected" => ("danger", "Từ chối"),
-                                    _ => ("warning", "Chưa cọc")
+                                    "Paid"      => ("success", "Đã cọc"),
+                                    "Rejected"  => ("danger",  "Từ chối"),
+                                    "PayLater"  => ("info",    "Trả sau"),
+                                    _           => ("warning", "Chưa cọc")
                                 };
                             }
                             <span class="badge bg-@dClass" style="font-size: 9px;">@dText</span>
