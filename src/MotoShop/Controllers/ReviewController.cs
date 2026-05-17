@@ -30,6 +30,7 @@ namespace MotoShop.Controllers
             if (customer == null) return Json(new { success = false, message = "Không tìm thấy thông tin khách hàng." });
 
             if (rating < 1 || rating > 5) return Json(new { success = false, message = "Số sao không hợp lệ." });
+            if (string.IsNullOrWhiteSpace(comment) || comment.Length < 10) return Json(new { success = false, message = "Nội dung đánh giá tối thiểu 10 ký tự." });
 
             var review = new ProductReview
             {
