@@ -16,7 +16,7 @@ namespace MotoShop.Controllers
         }
 
         [HttpPost]
-        [IgnoreAntiforgeryToken]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Submit([FromBody] ConsultationRequest request)
         {
             if (string.IsNullOrEmpty(request.Phone)) 

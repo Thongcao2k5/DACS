@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Business.Interfaces;
+using MotoShop.Data.Constants;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 using MotoShop.Models.ViewModels;
@@ -66,15 +67,14 @@ namespace MotoShop.Controllers
 
             if (status != "all")
             {
-                // Hỗ trợ lọc cả 2 định danh trạng thái để tránh sót dữ liệu
-                if (status == "DangXuLy")
-                    query = query.Where(o => o.Status == "DangXuLy" || o.Status == "Pending");
-                else if (status == "DangGiao")
-                    query = query.Where(o => o.Status == "DangGiao" || o.Status == "Shipping");
-                else if (status == "DaHoanThanh")
-                    query = query.Where(o => o.Status == "DaHoanThanh" || o.Status == "Completed");
-                else if (status == "DaHuy")
-                    query = query.Where(o => o.Status == "DaHuy" || o.Status == "Cancelled");
+                if (status == OrderStatusConst.DangXuLy)
+                    query = query.Where(o => o.Status == OrderStatusConst.DangXuLy || o.Status == OrderStatusConst.Pending);
+                else if (status == OrderStatusConst.DangGiao)
+                    query = query.Where(o => o.Status == OrderStatusConst.DangGiao || o.Status == OrderStatusConst.Shipping);
+                else if (status == OrderStatusConst.DaHoanThanh)
+                    query = query.Where(o => o.Status == OrderStatusConst.DaHoanThanh || o.Status == OrderStatusConst.Completed);
+                else if (status == OrderStatusConst.DaHuy)
+                    query = query.Where(o => o.Status == OrderStatusConst.DaHuy || o.Status == OrderStatusConst.Cancelled);
                 else
                     query = query.Where(o => o.Status == status);
             }
@@ -104,7 +104,7 @@ namespace MotoShop.Controllers
                 Id = o.OrderId,
                 OrderCode = o.OrderCode ?? $"MS-{o.OrderId}",
                 OrderDate = o.OrderDate,
-                Status = o.Status ?? "DangXuLy",
+                Status = o.Status ?? OrderStatusConst.DangXuLy,
                 TotalAmount = o.TotalAmount,
                 PaymentStatus = o.PaymentStatus,
                 PaymentMethod = o.PaymentMethod == "BankTransfer" ? "Chuyển khoản" : (o.PaymentMethod == "VNPay" ? "VNPay" : (o.PaymentMethod ?? "Tiền mặt (COD)")),
@@ -121,26 +121,26 @@ namespace MotoShop.Controllers
             // Gán Label và Badge class (PHẦN 3)
             switch (card.Status)
             {
-                case "DangXuLy":
-                case "Pending":
+                case OrderStatusConst.DangXuLy:
+                case OrderStatusConst.Pending:
                     card.StatusLabel = "Đang xử lý";
                     card.StatusBadgeClass = "badge-warning";
                     card.CanCancel = true;
                     break;
-                case "DangGiao":
-                case "Shipping":
+                case OrderStatusConst.DangGiao:
+                case OrderStatusConst.Shipping:
                     card.StatusLabel = "Đang giao hàng";
                     card.StatusBadgeClass = "badge-info";
                     card.CanTrack = true;
                     break;
-                case "DaHoanThanh":
-                case "Completed":
+                case OrderStatusConst.DaHoanThanh:
+                case OrderStatusConst.Completed:
                     card.StatusLabel = "Đã hoàn thành";
                     card.StatusBadgeClass = "badge-success";
                     card.CanReorder = true;
                     break;
-                case "DaHuy":
-                case "Cancelled":
+                case OrderStatusConst.DaHuy:
+                case OrderStatusConst.Cancelled:
                     card.StatusLabel = "Đã hủy";
                     card.StatusBadgeClass = "badge-danger";
                     break;
@@ -198,11 +198,11 @@ namespace MotoShop.Controllers
         {
             return status switch
             {
-                "Pending" or "DangXuLy" => "Đơn hàng đã được tiếp nhận và đang chờ xử lý.",
+                OrderStatusConst.Pending or OrderStatusConst.DangXuLy => "Đơn hàng đã được tiếp nhận và đang chờ xử lý.",
                 "Confirmed" => "Đơn hàng đã được xác nhận.",
-                "Shipping" or "DangGiao" => "Đơn hàng đang được vận chuyển đến bạn.",
-                "Completed" or "DaHoanThanh" => "Đơn hàng đã được giao thành công.",
-                "Cancelled" or "DaHuy" => "Đơn hàng đã bị hủy.",
+                OrderStatusConst.Shipping or OrderStatusConst.DangGiao => "Đơn hàng đang được vận chuyển đến bạn.",
+                OrderStatusConst.Completed or OrderStatusConst.DaHoanThanh => "Đơn hàng đã được giao thành công.",
+                OrderStatusConst.Cancelled or OrderStatusConst.DaHuy => "Đơn hàng đã bị hủy.",
                 _ => "Trạng thái đơn hàng đã thay đổi."
             };
         }
@@ -219,7 +219,7 @@ namespace MotoShop.Controllers
                 return Json(new { success = false, message = "Không thể hủy đơn đang giao hoặc đã hoàn thành" });
             }
 
-            var success = await _orderService.CancelOrderAsync(id, reason);
+            var success = await _orderService.CancelOrderAsync(id, GetUserId());
             if (success)
             {
                 return Json(new { success = true, message = "Đã hủy đơn hàng thành công" });

@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using MotoShop.Business.DTOs;
 using MotoShop.Business.Interfaces;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Formats.Jpeg;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,112 +23,90 @@ namespace MotoShop.Business.Services
             _environment = environment;
         }
 
-        public async Task<string?> SaveFileAsync(IFormFile file, string subFolder)
+        public async Task<FileUploadResult> SaveFileAsync(IFormFile file, string subFolder)
         {
-            if (file == null) return null;
+            if (file == null) return FileUploadResult.Fail("Không có file.");
 
-            // 1. Validate Extension
             var extension = Path.GetExtension(file.FileName).ToLower();
             if (!_allowedExtensions.Contains(extension))
-                throw new InvalidOperationException("Invalid file type.");
+                return FileUploadResult.Fail("Định dạng file không được hỗ trợ. Chỉ chấp nhận JPG, PNG, WEBP.");
 
-            // 2. Validate MIME Type
             if (!_allowedMimeTypes.Contains(file.ContentType.ToLower()))
-                throw new InvalidOperationException("Invalid MIME type.");
+                return FileUploadResult.Fail("Loại MIME không hợp lệ.");
 
-            // 3. Validate File Size (Max 5MB)
             if (file.Length > 5 * 1024 * 1024)
-                throw new InvalidOperationException("File size exceeds 5MB limit.");
+                return FileUploadResult.Fail("Kích thước file tối đa là 5MB.");
 
             var wwwrootPath = _environment.WebRootPath;
             var folderPath = Path.Combine(wwwrootPath, "uploads", subFolder);
-
-            if (!Directory.Exists(folderPath))
-                Directory.CreateDirectory(folderPath);
+            if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
 
             var fileName = $"{Guid.NewGuid()}{extension}";
             var fullPath = Path.Combine(folderPath, fileName);
 
-            // 4. Validate Magic Bytes (File Signature)
-            using (var ms = new MemoryStream())
-            {
-                await file.CopyToAsync(ms);
-                var bytes = ms.ToArray();
-                if (!IsValidImage(bytes))
-                    throw new InvalidOperationException("Invalid image content.");
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            var bytes = ms.ToArray();
 
-                ms.Position = 0;
-                using (var stream = new FileStream(fullPath, FileMode.Create))
-                {
-                    await ms.CopyToAsync(stream);
-                }
-            }
+            if (!IsValidImage(bytes))
+                return FileUploadResult.Fail("Nội dung file không phải ảnh hợp lệ.");
 
-            return $"/uploads/{subFolder}/{fileName}";
+            ms.Position = 0;
+            using var stream = new FileStream(fullPath, FileMode.Create);
+            await ms.CopyToAsync(stream);
+
+            return FileUploadResult.Success($"/uploads/{subFolder}/{fileName}");
         }
 
-        public async Task<Dictionary<string, string>?> SaveProductImageAsync(IFormFile file, string subFolder)
+        public async Task<FileUploadResult> SaveProductImageAsync(IFormFile file, string subFolder)
         {
-            if (file == null) return null;
+            if (file == null) return FileUploadResult.Fail("Không có file.");
 
-            // 1. Validate Extension
             var extension = Path.GetExtension(file.FileName).ToLower();
             if (!_allowedExtensions.Contains(extension))
-                throw new InvalidOperationException("Định dạng file không được hỗ trợ.");
+                return FileUploadResult.Fail("Định dạng file không được hỗ trợ. Chỉ chấp nhận JPG, PNG, WEBP.");
 
-            // 2. Validate MIME Type
             if (!_allowedMimeTypes.Contains(file.ContentType.ToLower()))
-                throw new InvalidOperationException("Loại MIME không hợp lệ.");
+                return FileUploadResult.Fail("Loại MIME không hợp lệ.");
 
-            // 3. Validate File Size (Max 5MB)
             if (file.Length > 5 * 1024 * 1024)
-                throw new InvalidOperationException("Kích thước file tối đa là 5MB.");
+                return FileUploadResult.Fail("Kích thước file tối đa là 5MB.");
 
-            // 4. Validate Magic Bytes (File Signature)
-            using (var ms = new MemoryStream())
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            var bytes = ms.ToArray();
+
+            if (!IsValidImage(bytes))
+                return FileUploadResult.Fail("Nội dung file không phải ảnh hợp lệ.");
+
+            ms.Position = 0;
+
+            var fileName = $"{Guid.NewGuid()}{extension}";
+            var wwwrootPath = _environment.WebRootPath;
+            var baseFolder = Path.Combine("uploads", subFolder);
+            var folderPath = Path.Combine(wwwrootPath, baseFolder);
+            if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+
+            var fullPath = Path.Combine(folderPath, fileName);
+            var relativePath = $"/{baseFolder}/{fileName}".Replace("\\", "/");
+
+            using (var image = await Image.LoadAsync(ms))
             {
-                await file.CopyToAsync(ms);
-                var bytes = ms.ToArray();
-                if (!IsValidImage(bytes))
-                    throw new InvalidOperationException("Nội dung file không phải là ảnh hợp lệ.");
-                
-                // Reset stream for Image.LoadAsync
-                ms.Position = 0;
-                
-                var fileName = $"{Guid.NewGuid()}{extension}";
-                var wwwrootPath = _environment.WebRootPath;
-                var baseFolder = Path.Combine("uploads", subFolder);
-                var folderPath = Path.Combine(wwwrootPath, baseFolder);
-
-                if (!Directory.Exists(folderPath))
-                    Directory.CreateDirectory(folderPath);
-
-                var fullPath = Path.Combine(folderPath, fileName);
-                var relativePath = $"/{baseFolder}/{fileName}".Replace("\\", "/");
-
-                using (var image = await Image.LoadAsync(ms))
+                if (image.Width > 800 || image.Height > 800)
                 {
-                    // Resize nếu ảnh quá lớn (giới hạn 800px)
-                    if (image.Width > 800 || image.Height > 800)
+                    image.Mutate(x => x.Resize(new ResizeOptions
                     {
-                        image.Mutate(x => x.Resize(new ResizeOptions
-                        {
-                            Size = new Size(800, 800),
-                            Mode = ResizeMode.Max
-                        }));
-                    }
-                    await image.SaveAsync(fullPath);
+                        Size = new Size(800, 800),
+                        Mode = ResizeMode.Max
+                    }));
                 }
-
-                var results = new Dictionary<string, string>
-                {
-                    { "Full", relativePath },
-                    { "Medium", relativePath },
-                    { "Thumb", relativePath }
-                };
-
-                return results;
+                await image.SaveAsync(fullPath);
             }
+
+            return FileUploadResult.SuccessWithPaths(new Dictionary<string, string>
+            {
+                { "Full", relativePath }, { "Medium", relativePath }, { "Thumb", relativePath }
+            });
         }
 
         private bool IsValidImage(byte[] bytes)

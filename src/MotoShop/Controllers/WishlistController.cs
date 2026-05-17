@@ -68,6 +68,7 @@ namespace MotoShop.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Toggle([FromBody] WishlistRequest req)
         {
             if (req == null) return Json(new { success = false });
@@ -114,6 +115,7 @@ namespace MotoShop.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Add([FromBody] int productId)
         {
             var userId = _userManager.GetUserId(User);

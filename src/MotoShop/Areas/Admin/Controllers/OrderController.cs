@@ -202,8 +202,25 @@ namespace MotoShop.Areas.Admin.Controllers
             }
             else
             {
-                order.Status = status;
-                await _context.SaveChangesAsync();
+                try
+                {
+                    var strategy = _context.Database.CreateExecutionStrategy();
+                    await strategy.ExecuteAsync(async () =>
+                    {
+                        using var tx = await _context.Database.BeginTransactionAsync();
+                        order.Status = status;
+                        await _context.SaveChangesAsync();
+                        // Cập nhật SoldCount khi đơn hoàn thành — trong cùng transaction
+                        if (status == "Completed" || status == "DaHoanThanh")
+                            await _orderService.CompleteOrderAsync(id);
+                        await tx.CommitAsync();
+                    });
+                }
+                catch (System.Exception ex)
+                {
+                    _logger.LogError(ex, "UpdateStatus transaction failed for order {OrderId} → {Status}", id, ex.Message);
+                    return Json(new { success = false, message = "Lỗi cập nhật trạng thái đơn hàng." });
+                }
             }
 
             _context.OrderStatusHistory.Add(new MotoShop.Data.Models.OrderStatusHistory

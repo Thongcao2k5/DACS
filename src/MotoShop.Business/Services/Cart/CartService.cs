@@ -183,14 +183,19 @@ namespace MotoShop.Business.Services
                 await _unitOfWork.CompleteAsync(); 
             }
 
-            // 3. Sao chép items
+            // 3. Sao chép items — giới hạn số lượng không vượt tồn kho hiện tại
             var guestItems = guestCart.CartItems.ToList();
             foreach (var guestItem in guestItems)
             {
+                var stock = await _unitOfWork.Repository<ProductVariant>()
+                    .Find(v => v.ProductVariantId == guestItem.ProductVariantId)
+                    .Select(v => v.StockQuantity)
+                    .FirstOrDefaultAsync();
+
                 var userItem = userCart.CartItems.FirstOrDefault(i => i.ProductVariantId == guestItem.ProductVariantId);
                 if (userItem != null)
                 {
-                    userItem.Quantity += guestItem.Quantity;
+                    userItem.Quantity = Math.Min(userItem.Quantity + guestItem.Quantity, Math.Max(stock, 1));
                     _unitOfWork.Repository<CartItem>().Update(userItem);
                 }
                 else
@@ -199,7 +204,7 @@ namespace MotoShop.Business.Services
                     {
                         CartId = userCart.CartId,
                         ProductVariantId = guestItem.ProductVariantId,
-                        Quantity = guestItem.Quantity,
+                        Quantity = Math.Min(guestItem.Quantity, Math.Max(stock, 1)),
                         Price = guestItem.Price
                     };
                     await _unitOfWork.Repository<CartItem>().AddAsync(newItem);

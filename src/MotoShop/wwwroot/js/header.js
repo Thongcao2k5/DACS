@@ -58,7 +58,7 @@ Object.assign(window.UI, {
             setTimeout(() => toast.remove(), 400);
         }, 3500);
     }
-};
+});
 
 document.addEventListener('DOMContentLoaded', function() {
     const headerWrapper = document.getElementById('mainHeaderWrapper');

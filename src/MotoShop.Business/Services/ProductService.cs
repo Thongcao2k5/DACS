@@ -189,8 +189,8 @@ namespace MotoShop.Business.Services
                     SoldCount = p.SoldCount,
                     CreatedDate = p.CreatedDate,
                     MinPrice = p.Variants.Select(v => v.Price).OrderBy(x => x).FirstOrDefault(),
-                    MinOriginalPrice = p.Variants.OrderBy(v => v.Price).Select(v => v.OriginalPrice).FirstOrDefault(),
-                    OldPrice = p.Variants.OrderBy(v => v.Price).Select(v => v.OriginalPrice).FirstOrDefault(),
+                    MinOriginalPrice = p.Variants.OrderBy(v => v.Price).Select(v => (decimal?)(v.OriginalPrice ?? v.Price)).FirstOrDefault(),
+                    OldPrice = p.Variants.OrderBy(v => v.Price).Select(v => (decimal?)(v.OriginalPrice ?? v.Price)).FirstOrDefault(),
                     DefaultVariantId = p.Variants.OrderBy(v => v.Price).Select(v => v.ProductVariantId).FirstOrDefault(),
                     PrimaryImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault()
                         ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? string.Empty,
@@ -201,6 +201,11 @@ namespace MotoShop.Business.Services
 
             return pool.OrderBy(_ => Guid.NewGuid()).Take(count).ToList();
         }
+
+        private static decimal ApplyDiscount(decimal originalPrice, MotoShop.Data.Enums.DiscountType discountType, decimal discountValue)
+            => discountType == MotoShop.Data.Enums.DiscountType.Percent
+                ? originalPrice * (1 - discountValue / 100m)
+                : Math.Max(0, originalPrice - discountValue);
 
         public async Task<ProductDto?> GetProductBySlugAsync(string slug)
         {
@@ -335,11 +340,9 @@ namespace MotoShop.Business.Services
         {
             var now = DateTime.Now;
 
-            var flashSale = await _uow.Repository<Promotion>().Find(p =>
+            var baseQuery = _uow.Repository<Promotion>().Find(p =>
                 p.PromotionType == PromotionType.FlashSale &&
-                p.IsActive &&
-                p.StartDate <= now &&
-                p.EndDate >= now)
+                p.IsActive)
                 .AsNoTracking()
                 .AsSplitQuery()
                 .Include(p => p.PromotionProducts)
@@ -347,10 +350,22 @@ namespace MotoShop.Business.Services
                         .ThenInclude(p => p!.Variants)
                 .Include(p => p.PromotionProducts)
                     .ThenInclude(pp => pp.Product)
-                        .ThenInclude(p => p!.Images)
+                        .ThenInclude(p => p!.Images);
+
+            // Ưu tiên flash sale đang trong thời gian hiệu lực
+            var flashSale = await baseQuery
+                .Where(p => p.StartDate <= now && p.EndDate >= now)
                 .OrderByDescending(p => p.Priority)
                 .ThenByDescending(p => p.StartDate)
                 .FirstOrDefaultAsync();
+
+            // Fallback: lấy flash sale active gần nhất nếu không có cái nào đang chạy
+            if (flashSale == null)
+            {
+                flashSale = await baseQuery
+                    .OrderByDescending(p => p.StartDate)
+                    .FirstOrDefaultAsync();
+            }
 
             if (flashSale == null) return null;
 
@@ -364,9 +379,7 @@ namespace MotoShop.Business.Services
                     .Select(pp =>
                     {
                         var originalPrice = pp.Product!.Variants.Any() ? pp.Product.Variants.Min(v => v.Price) : 0;
-                        var salePrice = flashSale.DiscountType == DiscountType.Percent
-                            ? originalPrice * (1 - flashSale.DiscountValue / 100m)
-                            : Math.Max(0, originalPrice - flashSale.DiscountValue);
+                        var salePrice = ApplyDiscount(originalPrice, flashSale.DiscountType, flashSale.DiscountValue);
 
                         return new HomeFlashSaleProductDto
                         {
@@ -424,10 +437,7 @@ namespace MotoShop.Business.Services
                     decimal basePrice = item.MinOriginalPrice ?? item.MinPrice;
                     decimal discountedPrice = basePrice;
 
-                    if (p.DiscountType == DiscountType.Percent)
-                        discountedPrice = basePrice * (1 - p.DiscountValue / 100);
-                    else
-                        discountedPrice = Math.Max(0, basePrice - p.DiscountValue);
+                    discountedPrice = ApplyDiscount(basePrice, p.DiscountType, p.DiscountValue);
 
                     // Chỉ áp dụng nếu giá Promotion thực sự rẻ hơn
                     if (discountedPrice < item.MinPrice || item.MinOriginalPrice == null)

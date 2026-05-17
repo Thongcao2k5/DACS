@@ -8,6 +8,7 @@ using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 using System;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace MotoShop.Controllers.Api
@@ -52,7 +53,7 @@ namespace MotoShop.Controllers.Api
                 return BadRequest(new { message = "Email này đã được sử dụng." });
 
             // Tạo mã OTP ngẫu nhiên 6 chữ số
-            string otpCode = new Random().Next(100000, 999999).ToString();
+            string otpCode = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
 
             // Lưu thông tin đăng ký và mã OTP vào Cache (hết hạn sau 10 phút)
             var cacheKey = $"Reg_{model.Email}";
@@ -179,7 +180,7 @@ namespace MotoShop.Controllers.Api
             if (user == null)
                 return BadRequest(new { message = "Email không tồn tại trong hệ thống." });
 
-            string otpCode = new Random().Next(100000, 999999).ToString();
+            string otpCode = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
             var cacheKey = $"Forgot_{model.Email}";
             _cache.Set(cacheKey, otpCode, TimeSpan.FromMinutes(10));
 

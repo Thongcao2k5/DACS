@@ -131,7 +131,9 @@
         .flash-old-price { color: #aaa; text-decoration: line-through; font-size: 12px; margin-left: 5px; }
         .flash-progress { height: 5px; background: #f0f0f0; border-radius: 3px; overflow: hidden; margin: 8px 0 4px; }
         .flash-progress-bar { height: 100%; background: linear-gradient(90deg, #E24B4A, #ff6b6b); }
-        .flash-sold { font-size: 11px; color: #888; }
+        .flash-sold { font-size: 11px; color: #888; margin-bottom: 8px; }
+        .flash-buy-btn { display: block; width: 100%; padding: 7px 0; background: var(--ms-red); color: #fff; font-size: 12px; font-weight: 700; text-align: center; text-decoration: none; border-radius: 6px; transition: background 0.2s; }
+        .flash-buy-btn:hover { background: #c63d3c; color: #fff; }
         .flash-nav { 
             position: absolute; 
             top: 50%; 
@@ -210,10 +212,18 @@
             try {
                 const res = await fetch('/api/HomeApi/flash-sale');
                 const data = await res.json();
-                if (data && data.products && data.products.length > 0) {
-                    $('.flash-title h3').text(data.title || 'FLASH SALE');
-                    if (data.endDate) startCountdown(new Date(data.endDate));
-                    
+
+                if (!data) {
+                    // Không có flash sale nào đang active
+                    $('.flash-sale-section').hide();
+                    return;
+                }
+
+                // Cập nhật tiêu đề và countdown
+                $('.flash-title h3').text(data.title || 'FLASH SALE');
+                if (data.endDate) startCountdown(new Date(data.endDate));
+
+                if (data.products && data.products.length > 0) {
                     let html = '';
                     data.products.forEach(p => {
                         const fsPrice = p.flashSalePrice;
@@ -233,12 +243,20 @@
                                 </div>
                                 <div class="flash-progress"><div class="flash-progress-bar" style="width: ${soldPercent}%"></div></div>
                                 <div class="flash-sold">Đã bán ${p.soldQuantity || 0}/${p.quantity || 0}</div>
+                                <a href="/Product/Details?slug=${p.slug}" class="flash-buy-btn">MUA NGAY</a>
                             </div>
                         </div>`;
                     });
                     $('#flashSaleTrack').html(html);
-                } else { $('.flash-sale-section').hide(); }
-            } catch (e) { console.error('Flash Sale Error:', e); $('.flash-sale-section').hide(); }
+                } else {
+                    // Flash sale tồn tại nhưng chưa có sản phẩm
+                    $('#flashSaleTrack').html('<div class="w-100 text-center py-4 text-muted"><i class="bx bx-package fs-1 d-block mb-2"></i>Chưa có sản phẩm Flash Sale. Vui lòng quay lại sau.</div>');
+                    $('.flash-nav').hide();
+                }
+            } catch (e) {
+                console.error('Flash Sale Error:', e);
+                $('.flash-sale-section').hide();
+            }
         }
 
         async function loadPromotionProducts(page) {

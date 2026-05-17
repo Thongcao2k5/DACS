@@ -235,8 +235,13 @@ namespace MotoShop.Controllers
             });
         }
 
+        [Microsoft.AspNetCore.Authorization.Authorize]
         public async Task<IActionResult> Success(int id)
         {
+            var userId = _userManager.GetUserId(User);
+            var customer = await _context.Customers.AsNoTracking()
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.ProductVariant!)
@@ -245,6 +250,7 @@ namespace MotoShop.Controllers
                 .FirstOrDefaultAsync(o => o.OrderId == id);
 
             if (order == null) return NotFound();
+            if (customer == null || order.CustomerId != customer.CustomerId) return Forbid();
             return View(order);
         }
 

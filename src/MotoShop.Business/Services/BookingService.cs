@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MotoShop.Business.DTOs;
 using MotoShop.Business.Interfaces;
+using MotoShop.Data.Data;
 using MotoShop.Data.Interfaces;
 using MotoShop.Data.Models;
 
@@ -15,13 +16,15 @@ namespace MotoShop.Business.Services
     public class BookingService : IBookingService
     {
         private readonly IUnitOfWork _uow;
+        private readonly MotoShopDbContext _context;
         private readonly IConfiguration _config;
         private readonly IEmailService _emailService;
         private readonly ILogger<BookingService> _logger;
 
-        public BookingService(IUnitOfWork uow, IConfiguration config, IEmailService emailService, ILogger<BookingService> logger)
+        public BookingService(IUnitOfWork uow, MotoShopDbContext context, IConfiguration config, IEmailService emailService, ILogger<BookingService> logger)
         {
             _uow = uow;
+            _context = context;
             _config = config;
             _emailService = emailService;
             _logger = logger;
@@ -43,13 +46,6 @@ namespace MotoShop.Business.Services
             var staffCount = await _uow.Repository<Staff>().Find(s => true).CountAsync();
             if (staffCount > 0 && maxConcurrent < staffCount) maxConcurrent = staffCount;
 
-            var currentBookings = await _uow.Repository<ServiceBooking>()
-                .Find(b => b.ServiceDate == serviceDatetime && b.Status != "Cancelled")
-                .CountAsync();
-
-            if (currentBookings >= maxConcurrent)
-                return (false, $"Khung giờ {model.TimeSlot} đã đầy chỗ phục vụ. Vui lòng chọn giờ khác hoặc ngày khác.", 0);
-
             // 2. Lấy thông tin dịch vụ
             var service = await _uow.Repository<Service>().GetByIdAsync(model.ServiceId);
             if (service == null)
@@ -57,18 +53,16 @@ namespace MotoShop.Business.Services
 
             // 3. Tính tiền cọc 30%
             decimal depositRate = _config.GetValue<decimal>("Payment:DepositRate", 0.3m);
-            decimal depositAmount = Math.Ceiling(service.Price * depositRate / 1000) * 1000; // Làm tròn lên 1000đ
+            decimal depositAmount = Math.Ceiling(service.Price * depositRate / 1000) * 1000;
 
-            // 4. Tạo booking
+            // 4. Tạo booking trong transaction — kiểm tra lại slot bên trong để tránh race condition
             var booking = new ServiceBooking
             {
                 CustomerId = customerId,
                 ServiceId = model.ServiceId,
                 BookingDate = DateTime.Now,
                 ServiceDate = serviceDatetime,
-                Status = "Pending",
-                
-                // Lưu thông tin chi tiết vào các cột mới
+                Status = MotoShop.Data.Constants.BookingStatusConst.Pending,
                 CustomerFullName = model.FullName,
                 CustomerPhone = model.Phone,
                 CustomerEmail = model.Email,
@@ -76,15 +70,35 @@ namespace MotoShop.Business.Services
                 VehicleModel = model.VehicleModel,
                 VehicleYear = model.VehicleYear,
                 LicensePlate = model.LicensePlate,
-                
                 Notes = model.Note,
                 DepositAmount = depositAmount,
                 DepositStatus = "Unpaid",
                 ExpireAt = DateTime.Now.AddHours(_config.GetValue<int>("Booking:ExpireAfterHours", 2))
             };
 
-            await _uow.Repository<ServiceBooking>().AddAsync(booking);
-            await _uow.CompleteAsync();
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // Re-check slot count bên trong transaction để tránh race condition
+                var currentBookings = await _context.ServiceBookings
+                    .CountAsync(b => b.ServiceDate == serviceDatetime && b.Status != MotoShop.Data.Constants.BookingStatusConst.Cancelled);
+
+                if (currentBookings >= maxConcurrent)
+                {
+                    await transaction.RollbackAsync();
+                    return (false, $"Khung giờ {model.TimeSlot} đã đầy chỗ phục vụ. Vui lòng chọn giờ khác hoặc ngày khác.", 0);
+                }
+
+                _context.ServiceBookings.Add(booking);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "CreateBookingAsync failed for service {ServiceId}", model.ServiceId);
+                return (false, "Lỗi hệ thống khi đặt lịch.", 0);
+            }
 
             // Gửi email xác nhận — không block nếu lỗi
             var confirmedBookingId = booking.BookingId;
@@ -206,9 +220,16 @@ namespace MotoShop.Business.Services
             var booking = await _uow.Repository<ServiceBooking>().GetByIdAsync(bookingId);
             if (booking == null) return false;
 
-            // Nếu customerId được truyền vào, kiểm tra quyền sở hữu
-            if (customerId.HasValue && booking.CustomerId != customerId.Value)
-                return false;
+            // Bắt buộc kiểm tra ownership — customerId null nghĩa là guest, chỉ cho hủy booking guest (CustomerId == null)
+            if (customerId.HasValue)
+            {
+                if (booking.CustomerId != customerId.Value) return false;
+            }
+            else
+            {
+                // Guest chỉ được hủy booking không có customerId (booking ẩn danh)
+                if (booking.CustomerId.HasValue) return false;
+            }
 
             // Chỉ cho phép hủy khi đang ở trạng thái Chờ cọc hoặc Đã xác nhận
             if (booking.Status != "Pending" && booking.Status != "Confirmed")

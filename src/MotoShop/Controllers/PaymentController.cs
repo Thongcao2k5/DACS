@@ -160,14 +160,16 @@ namespace MotoShop.Controllers
                     return View();
                 }
 
-                // Idempotency: callback có thể gọi 2 lần
-                if (booking.DepositStatus != "Paid")
-                {
-                    booking.Status = "Confirmed";
-                    booking.DepositStatus = "Paid";
-                    booking.ConfirmedAt = DateTime.Now;
-                    await _context.SaveChangesAsync();
+                // Atomic idempotency — tránh race condition khi VNPay gọi callback 2 lần
+                var bookingRows = await _context.ServiceBookings
+                    .Where(b => b.BookingId == bookingId && b.DepositStatus != "Paid")
+                    .ExecuteUpdateAsync(b => b
+                        .SetProperty(x => x.Status, "Confirmed")
+                        .SetProperty(x => x.DepositStatus, "Paid")
+                        .SetProperty(x => x.ConfirmedAt, DateTime.Now));
 
+                if (bookingRows > 0)
+                {
                     _logger.LogInformation("VNPay booking deposit paid. BookingId={BookingId}, TxnNo={TxnNo}", bookingId, vnpayTxnNo);
                     await _auditLogService.LogActionAsync(
                         _userManager.GetUserId(User), "PAYMENT_SUCCESS", "Booking", bookingId.ToString(),
@@ -211,6 +213,23 @@ namespace MotoShop.Controllers
                     return View();
                 }
 
+                // C4: Kiểm tra ownership — nếu user đang đăng nhập phải là chủ đơn
+                var currentUserId = _userManager.GetUserId(User);
+                if (!string.IsNullOrEmpty(currentUserId))
+                {
+                    var ownerCustomerId = await _context.Customers
+                        .Where(c => c.UserId == currentUserId)
+                        .Select(c => (int?)c.CustomerId)
+                        .FirstOrDefaultAsync();
+                    if (ownerCustomerId == null || order.CustomerId != ownerCustomerId)
+                    {
+                        _logger.LogWarning("VNPay callback ownership mismatch. OrderId={OrderId}, OwnerId={OwnerId}, RequestUser={UserId}", orderId, order.CustomerId, currentUserId);
+                        ViewBag.Status = "error";
+                        ViewBag.Message = "Bạn không có quyền truy cập đơn hàng này.";
+                        return View();
+                    }
+                }
+
                 long expectedAmount = (long)(order.TotalAmount * 100);
                 if (expectedAmount != receivedAmount)
                 {
@@ -220,10 +239,10 @@ namespace MotoShop.Controllers
                     return View();
                 }
 
-                // Idempotency: callback có thể gọi 2 lần
-                if (order.PaymentStatus != "Paid")
+                // C1: Atomic idempotency — UpdatePaymentStatusAsync dùng WHERE PaymentStatus != 'Paid'
+                if (order.PaymentStatus != MotoShop.Data.Constants.PaymentStatusConst.Paid)
                 {
-                    await _orderService.UpdatePaymentStatusAsync(orderId, "Paid");
+                    await _orderService.UpdatePaymentStatusAsync(orderId, MotoShop.Data.Constants.PaymentStatusConst.Paid);
                     _logger.LogInformation("VNPay order paid. OrderId={OrderId}, TxnNo={TxnNo}", orderId, vnpayTxnNo);
                     await _auditLogService.LogActionAsync(
                         _userManager.GetUserId(User), "PAYMENT_SUCCESS", "Order", orderId.ToString(),

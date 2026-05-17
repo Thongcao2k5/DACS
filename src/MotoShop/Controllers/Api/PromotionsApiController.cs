@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MotoShop.Business.Interfaces;
 using System.Threading.Tasks;
@@ -33,12 +34,15 @@ namespace MotoShop.Controllers.Api
             public decimal OrderTotal { get; set; }
         }
 
+        // Chỉ VALIDATE — không gọi ApplyVoucherAsync để tránh double-increment UsedCount
+        // ApplyVoucherAsync được gọi đúng một lần khi tạo đơn trong OrderService.CreateOrderAsync
+        [Authorize]
         [HttpPost("apply-voucher")]
         public async Task<IActionResult> ApplyVoucher([FromBody] ApplyVoucherRequest request)
         {
             var validation = await _promotionService.ValidateVoucherAsync(request.Code, request.OrderTotal);
             var finalTotal = validation.IsValid
-                ? await _promotionService.ApplyVoucherAsync(request.Code, request.OrderTotal)
+                ? request.OrderTotal - validation.DiscountAmount
                 : request.OrderTotal;
 
             return Ok(new

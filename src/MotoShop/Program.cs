@@ -413,8 +413,14 @@ using (var scope = app.Services.CreateScope())
                 CREATE INDEX IX_Products_Active_Deleted ON Products (IsActive, IsDeleted)
                 INCLUDE (ProductId, CategoryId, BrandId, IsFeatured, SoldCount, CreatedDate, ProductName, Slug);
 
+            -- Upgrade non-unique IX_Products_Slug to unique (drop old first if it's not already unique)
+            IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Products_Slug' AND object_id = OBJECT_ID('Products') AND is_unique = 0)
+                DROP INDEX IX_Products_Slug ON Products;
             IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Products_Slug' AND object_id = OBJECT_ID('Products'))
-                CREATE INDEX IX_Products_Slug ON Products (Slug);
+            BEGIN
+                IF NOT EXISTS (SELECT Slug FROM Products WHERE Slug IS NOT NULL GROUP BY Slug HAVING COUNT(*) > 1)
+                    CREATE UNIQUE INDEX IX_Products_Slug ON Products (Slug) WHERE Slug IS NOT NULL;
+            END
 
             IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Products_CategoryId' AND object_id = OBJECT_ID('Products'))
                 CREATE INDEX IX_Products_CategoryId ON Products (CategoryId, IsActive, IsDeleted);
@@ -435,9 +441,17 @@ using (var scope = app.Services.CreateScope())
             IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Orders_CustomerId' AND object_id = OBJECT_ID('Orders'))
                 CREATE INDEX IX_Orders_CustomerId ON Orders (CustomerId, OrderDate DESC);
 
-            -- OrderItems: index cho join với Orders
+            -- OrderItems: index cho join với Orders và ProductVariants
             IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_OrderItems_OrderId' AND object_id = OBJECT_ID('OrderItems'))
                 CREATE INDEX IX_OrderItems_OrderId ON OrderItems (OrderId)
+                INCLUDE (ProductVariantId, Quantity, Price);
+
+            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_OrderItems_ProductVariantId' AND object_id = OBJECT_ID('OrderItems'))
+                CREATE INDEX IX_OrderItems_ProductVariantId ON OrderItems (ProductVariantId);
+
+            -- CartItems: index cho join với Carts
+            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_CartItems_CartId' AND object_id = OBJECT_ID('CartItems'))
+                CREATE INDEX IX_CartItems_CartId ON CartItems (CartId)
                 INCLUDE (ProductVariantId, Quantity, Price);
 
             -- ServiceBookings: index cho customer và status
@@ -447,6 +461,13 @@ using (var scope = app.Services.CreateScope())
             -- Customers: index cho UserId (link với IdentityUser)
             IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Customers_UserId' AND object_id = OBJECT_ID('Customers'))
                 CREATE INDEX IX_Customers_UserId ON Customers (UserId);
+
+            -- Blogs: unique slug (only if no duplicates exist)
+            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Blogs_Slug' AND object_id = OBJECT_ID('Blogs'))
+            BEGIN
+                IF NOT EXISTS (SELECT Slug FROM Blogs WHERE Slug IS NOT NULL GROUP BY Slug HAVING COUNT(*) > 1)
+                    CREATE UNIQUE INDEX IX_Blogs_Slug ON Blogs (Slug) WHERE Slug IS NOT NULL;
+            END
         ");
 
         await context.Database.ExecuteSqlRawAsync(@"
@@ -490,6 +511,13 @@ using (var scope = app.Services.CreateScope())
             UPDATE Brands SET LogoUrl = '/uploads/brands/ct_cytracing.png' WHERE BrandName = N'CYT RACING';
         ");
 
+        // Dọn bảng cũ — code đã chuyển sang WishlistsNew và AddressesNew hoàn toàn
+        // Không migrate data: Wishlists.UserId là string IdentityUserId, WishlistsNew.UserId là int CustomerId (không tương thích)
+        await context.Database.ExecuteSqlRawAsync(@"
+            IF OBJECT_ID('Wishlists', 'U') IS NOT NULL DROP TABLE Wishlists;
+            IF OBJECT_ID('Addresses', 'U') IS NOT NULL DROP TABLE Addresses;
+        ");
+
         Log.Information("Seeding Data...");
         await context.Database.ExecuteSqlRawAsync(@"
             IF EXISTS (SELECT * FROM sys.tables WHERE name = 'ServiceCategories') AND NOT EXISTS (SELECT * FROM ServiceCategories)
@@ -503,7 +531,7 @@ using (var scope = app.Services.CreateScope())
             END
         ");
 
-        await DbSeeder.SeedAsync(context, userManager, roleManager);
+await DbSeeder.SeedAsync(context, userManager, roleManager);
     }
     catch (Exception ex) { 
         Log.Error("Startup Error: {Message}", ex.Message); 

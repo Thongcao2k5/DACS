@@ -177,10 +177,10 @@ namespace MotoShop.Areas.Admin.Controllers
                     int order = 1;
                     foreach (var file in model.Images)
                     {
-                        var paths = await _fileService.SaveProductImageAsync(file, "products");
-                        if (paths != null && paths.ContainsKey("Full"))
+                        var uploadResult = await _fileService.SaveProductImageAsync(file, "products");
+                        if (uploadResult.IsSuccess && uploadResult.ImagePaths?.ContainsKey("Full") == true)
                         {
-                            product.Images.Add(new ProductImage { ImageUrl = paths["Full"], IsPrimary = (order == 1), DisplayOrder = order++ });
+                            product.Images.Add(new ProductImage { ImageUrl = uploadResult.ImagePaths["Full"], IsPrimary = (order == 1), DisplayOrder = order++ });
                         }
                     }
                 }
@@ -337,12 +337,12 @@ namespace MotoShop.Areas.Admin.Controllers
                     int maxOrder = existingProduct.Images.Any() ? existingProduct.Images.Max(i => i.DisplayOrder) : 0;
                     foreach (var file in NewImages)
                     {
-                        var paths = await _fileService.SaveProductImageAsync(file, "products");
-                        if (paths != null && paths.ContainsKey("Full"))
+                        var uploadResult = await _fileService.SaveProductImageAsync(file, "products");
+                        if (uploadResult.IsSuccess && uploadResult.ImagePaths?.ContainsKey("Full") == true)
                         {
                             existingProduct.Images.Add(new ProductImage
                             {
-                                ImageUrl = paths["Full"],
+                                ImageUrl = uploadResult.ImagePaths["Full"],
                                 DisplayOrder = ++maxOrder,
                                 IsPrimary = (maxOrder == 1)
                             });

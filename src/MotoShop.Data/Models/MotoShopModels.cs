@@ -786,6 +786,9 @@ namespace MotoShop.Data.Models
         public bool IsDefault { get; set; } = false;
         [NotMapped]
         public string Address => $"{Street}, {Ward}, {District}, {Province}";
+
+        [ForeignKey("CustomerId")]
+        public virtual Customer? Customer { get; set; }
     }
 
     public class ChatConversation

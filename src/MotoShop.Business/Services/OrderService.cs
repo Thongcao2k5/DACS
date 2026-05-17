@@ -72,11 +72,10 @@ namespace MotoShop.Business.Services
 
                         foreach (var item in cart.CartItems)
                         {
-                            var variant = await _context.ProductVariants.FirstOrDefaultAsync(v => v.ProductVariantId == item.ProductVariantId);
-                            if (variant == null || variant.StockQuantity < item.Quantity)
-                                return (false, $"Sản phẩm '{item.ProductVariant?.VariantName}' không đủ tồn kho.", 0);
+                            var productVariant = item.ProductVariant;
+                            if (productVariant == null || productVariant.StockQuantity < item.Quantity)
+                                return (false, $"Sản phẩm '{productVariant?.VariantName}' không đủ tồn kho.", 0);
 
-                            var productVariant = item.ProductVariant ?? variant;
                             var discountedPrice = productVariant.ProductId.HasValue
                                 ? await _promotionService.CalculateDiscountAsync(productVariant.ProductId.Value, productVariant.Price)
                                 : productVariant.Price;
@@ -96,7 +95,9 @@ namespace MotoShop.Business.Services
 
                     if (checkoutData.AddressId.HasValue)
                     {
-                        var savedAddr = await _context.AddressesNew.FindAsync(checkoutData.AddressId.Value);
+                        // IDOR: chỉ lấy địa chỉ thuộc về customer hiện tại
+                        var savedAddr = await _context.AddressesNew
+                            .FirstOrDefaultAsync(a => a.Id == checkoutData.AddressId.Value && a.CustomerId == customer.CustomerId);
                         if (savedAddr != null)
                         {
                             finalFullName = savedAddr.FullName ?? finalFullName;
@@ -154,25 +155,51 @@ namespace MotoShop.Business.Services
                     _context.Orders.Add(order);
                     await _context.SaveChangesAsync();
 
-                    // 5. LƯU CHI TIẾT VÀ TRỪ KHO
+                    // 5. LƯU CHI TIẾT VÀ TRỪ KHO (atomic — tránh oversell)
                     foreach (var item in orderItemsToCreate)
                     {
-                        var dbVar = await _context.ProductVariants
-                            .Include(v => v.Product)
-                            .FirstOrDefaultAsync(v => v.ProductVariantId == item.ProductVariantId);
-                            
-                        if (dbVar == null || dbVar.StockQuantity < item.Quantity) throw new Exception("Sản phẩm hết hàng.");
-                        item.OrderId = order.OrderId;
-                        _context.OrderItems.Add(item);
-                        dbVar.StockQuantity -= item.Quantity;
-                        
-                        if (dbVar.Product != null)
+                        // Atomic check-and-decrement: chỉ trừ khi còn đủ hàng
+                        var stockRows = await _context.ProductVariants
+                            .Where(v => v.ProductVariantId == item.ProductVariantId && v.StockQuantity >= item.Quantity)
+                            .ExecuteUpdateAsync(v => v.SetProperty(p => p.StockQuantity, p => p.StockQuantity - item.Quantity));
+
+                        if (stockRows == 0)
+                            throw new Exception("Sản phẩm vừa hết hàng, vui lòng thử lại.");
+
+                        var productId = await _context.ProductVariants
+                            .Where(v => v.ProductVariantId == item.ProductVariantId)
+                            .Select(v => v.ProductId)
+                            .FirstOrDefaultAsync();
+
+                        if (productId.HasValue)
                         {
-                            dbVar.Product.SoldCount += item.Quantity;
+                            // Kiểm tra và trừ FlashSale.SoldQuantity nếu sản phẩm đang trong flash sale
+                            var flashSaleProduct = await _context.FlashSaleProducts
+                                .Include(fsp => fsp.FlashSale)
+                                .Where(fsp => fsp.ProductId == productId.Value
+                                           && fsp.FlashSale != null
+                                           && fsp.FlashSale.IsActive
+                                           && fsp.FlashSale.StartDate <= DateTime.Now
+                                           && fsp.FlashSale.EndDate >= DateTime.Now)
+                                .FirstOrDefaultAsync();
+
+                            if (flashSaleProduct != null)
+                            {
+                                var flashRows = await _context.FlashSaleProducts
+                                    .Where(fsp => fsp.Id == flashSaleProduct.Id
+                                               && fsp.SoldQuantity + item.Quantity <= fsp.Quantity)
+                                    .ExecuteUpdateAsync(fsp => fsp.SetProperty(p => p.SoldQuantity, p => p.SoldQuantity + item.Quantity));
+
+                                if (flashRows == 0)
+                                    throw new Exception($"Sản phẩm đã hết số lượng trong Flash Sale.");
+                            }
                         }
 
+                        item.OrderId = order.OrderId;
+                        _context.OrderItems.Add(item);
+
                         _context.InventoryTransactions.Add(new InventoryTransaction {
-                            ProductVariantId = dbVar.ProductVariantId, Quantity = -item.Quantity,
+                            ProductVariantId = item.ProductVariantId, Quantity = -item.Quantity,
                             TransactionType = "OUT", TransactionDate = DateTime.Now, Note = $"Đơn hàng #{order.OrderId}"
                         });
                     }
@@ -259,7 +286,10 @@ namespace MotoShop.Business.Services
                 using var transaction = await _context.Database.BeginTransactionAsync();
                 try
                 {
-                    var order = await _context.Orders.Include(o => o.OrderItems).ThenInclude(oi => oi.ProductVariant).FirstOrDefaultAsync(o => o.OrderId == orderId);
+                    var order = await _context.Orders
+                        .Include(o => o.OrderItems).ThenInclude(oi => oi.ProductVariant)
+                        .Include(o => o.Customer)
+                        .FirstOrDefaultAsync(o => o.OrderId == orderId && o.Customer != null && o.Customer.UserId == userId);
                     var cancellable = new[] { MotoShop.Data.Constants.OrderStatusConst.Pending, MotoShop.Data.Constants.OrderStatusConst.Processing, MotoShop.Data.Constants.OrderStatusConst.DangXuLy };
                     if (order == null || !cancellable.Contains(order.Status)) return false;
 
@@ -268,12 +298,29 @@ namespace MotoShop.Business.Services
                     {
                         if (item.ProductVariant != null)
                         {
-                            item.ProductVariant.StockQuantity += item.Quantity;
-                            
-                            var dbProduct = await _context.Products.FindAsync(item.ProductVariant.ProductId);
-                            if (dbProduct != null)
+                            // Atomic stock restoration — tránh race condition khi nhiều cancel đồng thời
+                            await _context.ProductVariants
+                                .Where(v => v.ProductVariantId == item.ProductVariantId)
+                                .ExecuteUpdateAsync(v => v.SetProperty(p => p.StockQuantity, p => p.StockQuantity + item.Quantity));
+
+                            // Hoàn lại FlashSale.SoldQuantity nếu item thuộc flash sale đang active
+                            if (item.ProductVariant.ProductId.HasValue)
                             {
-                                dbProduct.SoldCount = Math.Max(0, dbProduct.SoldCount - item.Quantity);
+                                // Load ID trước (tránh navigation property trong ExecuteUpdateAsync WHERE)
+                                var fspId = await _context.FlashSaleProducts
+                                    .Where(fsp => fsp.ProductId == item.ProductVariant.ProductId.Value
+                                               && fsp.FlashSale!.IsActive
+                                               && fsp.SoldQuantity > 0)
+                                    .Select(fsp => (int?)fsp.Id)
+                                    .FirstOrDefaultAsync();
+
+                                if (fspId.HasValue)
+                                {
+                                    await _context.FlashSaleProducts
+                                        .Where(fsp => fsp.Id == fspId.Value)
+                                        .ExecuteUpdateAsync(fsp => fsp.SetProperty(p => p.SoldQuantity,
+                                            p => p.SoldQuantity >= item.Quantity ? p.SoldQuantity - item.Quantity : 0));
+                                }
                             }
 
                             _context.InventoryTransactions.Add(new InventoryTransaction {
@@ -286,9 +333,10 @@ namespace MotoShop.Business.Services
                     await transaction.CommitAsync();
                     return true;
                 }
-                catch
+                catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
+                    _logger.LogError(ex, "CancelOrderAsync failed for order {OrderId}", orderId);
                     return false;
                 }
             });
@@ -296,12 +344,37 @@ namespace MotoShop.Business.Services
 
         public async Task<bool> UpdatePaymentStatusAsync(int orderId, string status)
         {
-            var order = await _unitOfWork.Repository<Order>().GetByIdAsync(orderId);
-            if (order == null) return false;
-            order.PaymentStatus = status;
-            if (status == "Paid") order.Status = MotoShop.Data.Constants.OrderStatusConst.Processing;
-            _unitOfWork.Repository<Order>().Update(order);
-            return await _unitOfWork.CompleteAsync() > 0;
+            // Atomic: chỉ update nếu chưa ở trạng thái Paid — tránh race condition VNPay callback 2 lần
+            var rows = await _context.Orders
+                .Where(o => o.OrderId == orderId && o.PaymentStatus != MotoShop.Data.Constants.PaymentStatusConst.Paid)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(o => o.PaymentStatus, status)
+                    .SetProperty(o => o.Status, o => status == MotoShop.Data.Constants.PaymentStatusConst.Paid
+                        ? MotoShop.Data.Constants.OrderStatusConst.Processing
+                        : o.Status));
+            return rows > 0;
+        }
+
+        public async Task CompleteOrderAsync(int orderId)
+        {
+            // Join OrderItems → ProductVariants để lấy ProductId trong 1 query, tránh N+1
+            var soldCounts = await _context.OrderItems
+                .Where(oi => oi.OrderId == orderId)
+                .Join(_context.ProductVariants,
+                    oi => oi.ProductVariantId,
+                    pv => pv.ProductVariantId,
+                    (oi, pv) => new { pv.ProductId, oi.Quantity })
+                .Where(x => x.ProductId.HasValue)
+                .GroupBy(x => x.ProductId!.Value)
+                .Select(g => new { ProductId = g.Key, TotalQty = g.Sum(x => x.Quantity) })
+                .ToListAsync();
+
+            foreach (var item in soldCounts)
+            {
+                await _context.Products
+                    .Where(p => p.ProductId == item.ProductId)
+                    .ExecuteUpdateAsync(p => p.SetProperty(pp => pp.SoldCount, pp => pp.SoldCount + item.TotalQty));
+            }
         }
 
     }

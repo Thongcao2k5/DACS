@@ -478,6 +478,30 @@
 
 @section Scripts {
     <script>
+        async function toggleWishlist(productId) {
+            try {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                           || document.querySelector('meta[name="__RequestVerificationToken"]')?.content
+                           || '';
+                const res = await fetch('/Wishlist/Toggle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
+                    body: JSON.stringify({ productId: productId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const btn = document.getElementById('wishBtn');
+                    const icon = btn?.querySelector('i');
+                    if (icon) {
+                        icon.className = data.added ? 'bx bxs-heart fs-5' : 'bx bx-heart fs-5';
+                        btn.classList.toggle('active', data.added);
+                        btn.classList.toggle('text-danger', data.added);
+                    }
+                    if (typeof updateWishlistBadge === 'function') updateWishlistBadge();
+                }
+            } catch (e) { console.error('Wishlist error:', e); }
+        }
+
         const variants = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Variants.Select(v => new {
             v.ProductVariantId, v.Price, v.OriginalPrice, v.SKU, v.StockQuantity, v.ImageUrl,
             Attributes = v.VariantAttributeValues.Any()

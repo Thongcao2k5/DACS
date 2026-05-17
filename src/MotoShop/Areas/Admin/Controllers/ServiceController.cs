@@ -66,8 +66,9 @@ namespace MotoShop.Areas.Admin.Controllers
             {
                 if (imageFile != null)
                 {
-                    try { service.ImageUrl = await _fileService.SaveFileAsync(imageFile, "services"); }
-                    catch (Exception ex) { return Json(new { success = false, message = ex.Message }); }
+                    var uploadResult = await _fileService.SaveFileAsync(imageFile, "services");
+                    if (!uploadResult.IsSuccess) return Json(new { success = false, message = uploadResult.ErrorMessage });
+                    service.ImageUrl = uploadResult.FilePath;
                 }
                 
                 if (string.IsNullOrEmpty(service.Slug)) 
@@ -90,12 +91,10 @@ namespace MotoShop.Areas.Admin.Controllers
 
                 if (imageFile != null)
                 {
-                    try 
-                    {
-                        if (!string.IsNullOrEmpty(existing.ImageUrl)) _fileService.DeleteFile(existing.ImageUrl);
-                        existing.ImageUrl = await _fileService.SaveFileAsync(imageFile, "services");
-                    }
-                    catch (Exception ex) { return Json(new { success = false, message = ex.Message }); }
+                    var uploadResult = await _fileService.SaveFileAsync(imageFile, "services");
+                    if (!uploadResult.IsSuccess) return Json(new { success = false, message = uploadResult.ErrorMessage });
+                    if (!string.IsNullOrEmpty(existing.ImageUrl)) _fileService.DeleteFile(existing.ImageUrl);
+                    existing.ImageUrl = uploadResult.FilePath;
                 }
             }
 

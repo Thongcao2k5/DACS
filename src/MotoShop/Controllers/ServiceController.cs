@@ -18,14 +18,16 @@ namespace MotoShop.Controllers
         private readonly IUnitOfWork _uow;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IAuditLogService _auditLogService;
+        private readonly IFileService _fileService;
 
-        public ServiceController(MotoShopDbContext context, IBookingService bookingService, IUnitOfWork uow, UserManager<IdentityUser> userManager, IAuditLogService auditLogService)
+        public ServiceController(MotoShopDbContext context, IBookingService bookingService, IUnitOfWork uow, UserManager<IdentityUser> userManager, IAuditLogService auditLogService, IFileService fileService)
         {
             _context = context;
             _bookingService = bookingService;
             _uow = uow;
             _userManager = userManager;
             _auditLogService = auditLogService;
+            _fileService = fileService;
         }
 
         public async Task<IActionResult> Index(int? categoryId)
@@ -292,6 +294,7 @@ namespace MotoShop.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> DepositPayment(int id)
         {
             var booking = await _context.ServiceBookings
@@ -299,7 +302,11 @@ namespace MotoShop.Controllers
                 .FirstOrDefaultAsync(b => b.BookingId == id);
 
             if (booking == null) return NotFound();
-            
+
+            var currentCustomerId = await GetCurrentCustomerIdAsync();
+            if (booking.CustomerId.HasValue && booking.CustomerId != currentCustomerId)
+                return Forbid();
+
             // Nếu đã thanh toán hoặc đã chọn "Trả sau" thì về trang thành công
             if (booking.DepositStatus == "Paid" || booking.DepositStatus == "PayLater")
             {
@@ -355,12 +362,17 @@ namespace MotoShop.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PayLater(int bookingId)
         {
             var booking = await _context.ServiceBookings.FirstOrDefaultAsync(b => b.BookingId == bookingId);
             if (booking == null)
                 return Json(new { success = false, message = "Lịch hẹn không tồn tại." });
+
+            var currentCustomerId = await GetCurrentCustomerIdAsync();
+            if (booking.CustomerId.HasValue && booking.CustomerId != currentCustomerId)
+                return Json(new { success = false, message = "Bạn không có quyền thực hiện thao tác này." });
 
             if (booking.DepositStatus == "Paid" || booking.DepositStatus == "PayLater")
                 return Json(new { success = false, message = "Lịch hẹn đã được xử lý." });
@@ -372,26 +384,26 @@ namespace MotoShop.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ConfirmDeposit(int bookingId, IFormFile transferProof)
         {
+            var booking = await _context.ServiceBookings.FindAsync(bookingId);
+            if (booking == null)
+                return Json(new { success = false, message = "Lịch hẹn không tồn tại." });
+
+            var currentCustomerId = await GetCurrentCustomerIdAsync();
+            if (booking.CustomerId.HasValue && booking.CustomerId != currentCustomerId)
+                return Json(new { success = false, message = "Bạn không có quyền thực hiện thao tác này." });
+
             if (transferProof == null || transferProof.Length == 0)
-            {
                 return Json(new { success = false, message = "Vui lòng tải ảnh chuyển khoản lên." });
-            }
 
-            var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/deposits");
-            if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
+            var uploadResult = await _fileService.SaveFileAsync(transferProof, "deposits");
+            if (!uploadResult.IsSuccess)
+                return Json(new { success = false, message = uploadResult.ErrorMessage });
 
-            var fileName = $"deposit_{bookingId}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(transferProof.FileName)}";
-            var savePath = Path.Combine(uploadDir, fileName);
-
-            using (var stream = new FileStream(savePath, FileMode.Create))
-            {
-                await transferProof.CopyToAsync(stream);
-            }
-
-            var result = await _bookingService.ConfirmDepositAsync(bookingId, $"/uploads/deposits/{fileName}");
+            var result = await _bookingService.ConfirmDepositAsync(bookingId, uploadResult.FilePath!);
 
             if (!result)
             {

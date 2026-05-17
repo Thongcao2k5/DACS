@@ -4,27 +4,24 @@
 
 const CartUI = {
     showToast(message, icon = 'success') {
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-            customClass: {
-                popup: 'ms-toast-popup animate__animated animate__fadeInRight',
-                title: 'ms-toast-title',
-                icon: 'ms-toast-icon'
-            },
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer)
-                toast.addEventListener('mouseleave', Swal.resumeTimer)
-            }
-        });
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
 
-        Toast.fire({
-            icon: icon,
-            title: message
-        });
+        const colorMap = { success: '#22c55e', error: '#ef4444', warning: '#f59e0b', info: '#3b82f6' };
+        const iconMap  = { success: 'bx-check-circle', error: 'bx-error-circle', warning: 'bx-error', info: 'bx-info-circle' };
+        const bg       = colorMap[icon] || colorMap.success;
+        const ic       = iconMap[icon]  || iconMap.success;
+
+        const el = document.createElement('div');
+        el.style.cssText = `background:${bg};color:#fff;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;min-width:260px;max-width:340px;box-shadow:0 8px 24px rgba(0,0,0,0.18);animation:fadeInRight .35s ease forwards;font-size:14px;font-weight:600;pointer-events:auto;`;
+        el.innerHTML = `<i class="bx ${ic}" style="font-size:20px;flex-shrink:0"></i><span style="flex:1">${message}</span><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#fff;cursor:pointer;padding:0;line-height:1;opacity:.7;font-size:18px">&times;</button>`;
+        container.appendChild(el);
+
+        setTimeout(() => {
+            el.style.transition = 'opacity .3s';
+            el.style.opacity = '0';
+            setTimeout(() => el.remove(), 300);
+        }, 3000);
     }
 };
 

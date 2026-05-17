@@ -12,10 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 using Microsoft.AspNetCore.Http;
-using System.IO;
 using System.Collections.Generic;
 using System.Text.Json;
-using Microsoft.AspNetCore.Hosting;
 using System.Security.Claims;
 
 namespace MotoShop.Controllers
@@ -28,16 +26,16 @@ namespace MotoShop.Controllers
         private readonly IEmailSender _emailSender;
         private readonly ICartService _cartService;
         private readonly MotoShopDbContext _context;
-        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IFileService _fileService;
 
         public AccountController(
-            SignInManager<IdentityUser> signInManager, 
+            SignInManager<IdentityUser> signInManager,
             UserManager<IdentityUser> userManager,
             IMemoryCache cache,
             IEmailSender emailSender,
             ICartService cartService,
             MotoShopDbContext context,
-            IWebHostEnvironment webHostEnvironment)
+            IFileService fileService)
         {
             _signInManager = signInManager;
             _userManager = userManager;
@@ -45,7 +43,7 @@ namespace MotoShop.Controllers
             _emailSender = emailSender;
             _cartService = cartService;
             _context = context;
-            _webHostEnvironment = webHostEnvironment;
+            _fileService = fileService;
         }
 
         [HttpGet]
@@ -230,7 +228,7 @@ namespace MotoShop.Controllers
         }
 
         [HttpPost]
-        [IgnoreAntiforgeryToken]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleWishlist([FromBody] WishlistRequest request)
         {
             bool added = false;
@@ -337,28 +335,13 @@ namespace MotoShop.Controllers
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
             if (customer == null) return Json(new { success = false });
 
-            try
-            {
-                var uploads = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "avatars");
-                if (!Directory.Exists(uploads)) Directory.CreateDirectory(uploads);
+            var uploadResult = await _fileService.SaveFileAsync(file, "avatars");
+            if (!uploadResult.IsSuccess)
+                return Json(new { success = false, message = uploadResult.ErrorMessage });
 
-                var fileName = $"avatar_{customer.CustomerId}_{DateTime.Now.Ticks}{Path.GetExtension(file.FileName)}";
-                var filePath = Path.Combine(uploads, fileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await file.CopyToAsync(fileStream);
-                }
-
-                customer.AvatarUrl = $"/uploads/avatars/{fileName}";
-                await _context.SaveChangesAsync();
-
-                return Json(new { success = true, avatarUrl = customer.AvatarUrl });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
+            customer.AvatarUrl = uploadResult.FilePath;
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, avatarUrl = customer.AvatarUrl });
         }
 
         [HttpPost]

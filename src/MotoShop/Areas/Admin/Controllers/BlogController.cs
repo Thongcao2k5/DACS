@@ -68,17 +68,15 @@ namespace MotoShop.Areas.Admin.Controllers
 
                 if (thumbFile != null)
                 {
-                    try 
+                    var uploadResult = await _fileService.SaveFileAsync(thumbFile, "blog");
+                    if (!uploadResult.IsSuccess)
                     {
-                        if (!string.IsNullOrEmpty(blog.Thumbnail)) _fileService.DeleteFile(blog.Thumbnail);
-                        blog.Thumbnail = await _fileService.SaveFileAsync(thumbFile, "blog");
-                    }
-                    catch (Exception ex)
-                    {
-                        ModelState.AddModelError("Thumbnail", ex.Message);
+                        ModelState.AddModelError("Thumbnail", uploadResult.ErrorMessage!);
                         ViewBag.Categories = await _context.BlogCategories.ToListAsync();
                         return View(blog);
                     }
+                    if (!string.IsNullOrEmpty(blog.Thumbnail)) _fileService.DeleteFile(blog.Thumbnail);
+                    blog.Thumbnail = uploadResult.FilePath;
                 }
 
                 if (blog.Id == 0)

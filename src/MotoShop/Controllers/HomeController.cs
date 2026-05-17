@@ -50,16 +50,6 @@ public class HomeController : Controller
             return _productService.GetPagedProductsAsync(null, null, null, "newest", 1, 4);
         }) ?? await _productService.GetPagedProductsAsync(null, null, null, "newest", 1, 4);
 
-        var flashSaleProducts = await _cache.GetOrCreateAsync(MotoShop.Data.Constants.CacheKeys.HomeFlashSale, e => {
-            e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2);
-            return _promotionService.GetFlashSaleProductsAsync(8);
-        }) ?? await _promotionService.GetFlashSaleProductsAsync(8);
-
-        var featuredPromotions = await _cache.GetOrCreateAsync(MotoShop.Data.Constants.CacheKeys.HomeFeaturedPromotions, e => {
-            e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            return _promotionService.GetFeaturedAsync();
-        }) ?? await _promotionService.GetFeaturedAsync();
-
         var brandProducts = await _cache.GetOrCreateAsync(MotoShop.Data.Constants.CacheKeys.HomeBrandProducts, e => {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15);
             return _productService.GetBrandWithProductsAsync(4, 6);
@@ -75,8 +65,6 @@ public class HomeController : Controller
             .Take(5)
             .ToList();
 
-        ViewBag.FlashSaleProducts = flashSaleProducts;
-        ViewBag.FeaturedPromotions = featuredPromotions;
         ViewBag.BrandWithProducts = brandProducts;
         ViewBag.CategoryWithProducts = categoryProducts;
 

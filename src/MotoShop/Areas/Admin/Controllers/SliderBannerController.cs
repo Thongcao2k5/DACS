@@ -43,8 +43,9 @@ namespace MotoShop.Areas.Admin.Controllers
             {
                 if (imageFile != null)
                 {
-                    try { slider.ImageUrl = await _fileService.SaveFileAsync(imageFile, "sliders"); }
-                    catch (Exception ex) { return Json(new { success = false, message = ex.Message }); }
+                    var uploadResult = await _fileService.SaveFileAsync(imageFile, "sliders");
+                    if (!uploadResult.IsSuccess) return Json(new { success = false, message = uploadResult.ErrorMessage });
+                    slider.ImageUrl = uploadResult.FilePath;
                 }
                 _context.Sliders.Add(slider);
             }
@@ -58,12 +59,10 @@ namespace MotoShop.Areas.Admin.Controllers
                 existing.IsActive = slider.IsActive;
                 if (imageFile != null)
                 {
-                    try 
-                    {
-                        if (!string.IsNullOrEmpty(existing.ImageUrl)) _fileService.DeleteFile(existing.ImageUrl);
-                        existing.ImageUrl = await _fileService.SaveFileAsync(imageFile, "sliders");
-                    }
-                    catch (Exception ex) { return Json(new { success = false, message = ex.Message }); }
+                    var uploadResult = await _fileService.SaveFileAsync(imageFile, "sliders");
+                    if (!uploadResult.IsSuccess) return Json(new { success = false, message = uploadResult.ErrorMessage });
+                    if (!string.IsNullOrEmpty(existing.ImageUrl)) _fileService.DeleteFile(existing.ImageUrl);
+                    existing.ImageUrl = uploadResult.FilePath;
                 }
             }
 
@@ -114,8 +113,9 @@ namespace MotoShop.Areas.Admin.Controllers
             {
                 if (imageFile != null)
                 {
-                    try { banner.ImageUrl = await _fileService.SaveFileAsync(imageFile, "banners"); }
-                    catch (Exception ex) { return Json(new { success = false, message = ex.Message }); }
+                    var uploadResult = await _fileService.SaveFileAsync(imageFile, "banners");
+                    if (!uploadResult.IsSuccess) return Json(new { success = false, message = uploadResult.ErrorMessage });
+                    banner.ImageUrl = uploadResult.FilePath;
                 }
                 _context.Banners.Add(banner);
             }
@@ -129,12 +129,10 @@ namespace MotoShop.Areas.Admin.Controllers
                 existing.IsActive = banner.IsActive;
                 if (imageFile != null)
                 {
-                    try
-                    {
-                        if (!string.IsNullOrEmpty(existing.ImageUrl)) _fileService.DeleteFile(existing.ImageUrl);
-                        existing.ImageUrl = await _fileService.SaveFileAsync(imageFile, "banners");
-                    }
-                    catch (Exception ex) { return Json(new { success = false, message = ex.Message }); }
+                    var uploadResult = await _fileService.SaveFileAsync(imageFile, "banners");
+                    if (!uploadResult.IsSuccess) return Json(new { success = false, message = uploadResult.ErrorMessage });
+                    if (!string.IsNullOrEmpty(existing.ImageUrl)) _fileService.DeleteFile(existing.ImageUrl);
+                    existing.ImageUrl = uploadResult.FilePath;
                 }
             }
 

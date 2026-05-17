@@ -200,20 +200,23 @@ namespace MotoShop.Business.Services
         {
             var validation = await ValidateVoucherAsync(code, orderTotal);
             if (!validation.IsValid)
-            {
                 return Math.Max(0, orderTotal);
-            }
 
-            var promotion = await _promotionRepository.GetByCode(code);
-            if (promotion == null)
-            {
-                return Math.Max(0, orderTotal - validation.DiscountAmount);
-            }
+            // Atomic increment — chỉ tăng nếu chưa vượt giới hạn, tránh race condition
+            var normalizedCode = code.Trim().ToUpperInvariant();
+            var now = DateTime.Now;
+            var rows = await _context.Set<Promotion>()
+                .Where(p => p.CouponCode == normalizedCode
+                         && p.IsActive
+                         && p.StartDate <= now
+                         && p.EndDate >= now
+                         && (!p.UsageLimit.HasValue || p.UsedCount < p.UsageLimit.Value))
+                .ExecuteUpdateAsync(p => p
+                    .SetProperty(x => x.UsedCount, x => x.UsedCount + 1)
+                    .SetProperty(x => x.UpdatedAt, DateTime.Now));
 
-            promotion.UsedCount += 1;
-            promotion.UpdatedAt = DateTime.Now;
-            _promotionRepository.Update(promotion);
-            await _unitOfWork.CompleteAsync();
+            if (rows == 0)
+                return Math.Max(0, orderTotal); // Race condition: voucher vừa hết lượt
 
             return Math.Max(0, orderTotal - validation.DiscountAmount);
         }
