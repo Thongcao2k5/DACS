@@ -27,6 +27,7 @@ namespace MotoShop.Controllers
         private readonly ICartService _cartService;
         private readonly MotoShopDbContext _context;
         private readonly IFileService _fileService;
+        private readonly ILogger<AccountController> _logger;
 
         public AccountController(
             SignInManager<IdentityUser> signInManager,
@@ -35,7 +36,8 @@ namespace MotoShop.Controllers
             IEmailSender emailSender,
             ICartService cartService,
             MotoShopDbContext context,
-            IFileService fileService)
+            IFileService fileService,
+            ILogger<AccountController> logger)
         {
             _signInManager = signInManager;
             _userManager = userManager;
@@ -44,6 +46,7 @@ namespace MotoShop.Controllers
             _cartService = cartService;
             _context = context;
             _fileService = fileService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -87,18 +90,38 @@ namespace MotoShop.Controllers
                         var wishlistCookie = Request.Cookies["MotoShop_Wishlist_Items"];
                         if (!string.IsNullOrEmpty(wishlistCookie))
                         {
-                            try {
+                            try
+                            {
                                 var guestProductIds = JsonSerializer.Deserialize<List<int>>(wishlistCookie);
-                                if (guestProductIds != null && guestProductIds.Any()) {
-                                    foreach (var pId in guestProductIds) {
+                                if (guestProductIds != null && guestProductIds.Any())
+                                {
+                                    // [C3-FIX] Chỉ lấy ID hợp lệ (> 0), giới hạn 50, verify tồn tại trong DB
+                                    var candidateIds = guestProductIds
+                                        .Where(id => id > 0)
+                                        .Distinct()
+                                        .Take(50)
+                                        .ToList();
+
+                                    var validProductIds = await _context.Products
+                                        .Where(p => candidateIds.Contains(p.ProductId) && p.IsActive)
+                                        .Select(p => p.ProductId)
+                                        .ToListAsync();
+
+                                    foreach (var pId in validProductIds)
+                                    {
                                         var exists = await _context.WishlistsNew.AnyAsync(w => w.UserId == currentCustomer.CustomerId && w.ProductId == pId);
-                                        if (!exists) {
+                                        if (!exists)
+                                        {
                                             _context.WishlistsNew.Add(new WishlistNew { UserId = currentCustomer.CustomerId, ProductId = pId, CreatedAt = DateTime.Now });
                                         }
                                     }
                                     await _context.SaveChangesAsync();
                                 }
-                            } catch { }
+                            }
+                            catch (JsonException jex)
+                            {
+                                _logger.LogWarning("Invalid wishlist cookie JSON on login: {Message}", jex.Message);
+                            }
                             Response.Cookies.Delete("MotoShop_Wishlist_Items");
                         }
 

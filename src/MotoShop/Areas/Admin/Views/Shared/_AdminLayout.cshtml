@@ -40,6 +40,36 @@
         @@media (max-width: 1199.98px) {
             .layout-overlay.layout-menu-toggle { display: block !important; }
         }
+
+        /* Sidebar scrollable khi nội dung dài hơn màn hình */
+        @@media (min-width: 1200px) {
+            .layout-menu-fixed .layout-menu {
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+            .layout-menu-fixed .layout-menu .app-brand {
+                flex-shrink: 0;
+            }
+            .layout-menu-fixed .layout-menu .menu-inner-shadow {
+                flex-shrink: 0;
+            }
+            .layout-menu-fixed .layout-menu .menu-inner {
+                flex: 1 1 0;
+                height: 0;          /* flex trick: buộc scroll thay vì grow */
+                overflow-y: auto;
+                overflow-x: hidden;
+                scrollbar-width: thin;
+                scrollbar-color: rgba(0,0,0,0.15) transparent;
+            }
+            .layout-menu-fixed .layout-menu .menu-inner::-webkit-scrollbar {
+                width: 4px;
+            }
+            .layout-menu-fixed .layout-menu .menu-inner::-webkit-scrollbar-thumb {
+                background: rgba(0,0,0,0.15);
+                border-radius: 4px;
+            }
+        }
     </style>
     @await RenderSectionAsync("Styles", required: false)
   </head>
@@ -338,6 +368,7 @@
             });
         });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
   </body>
 </html>

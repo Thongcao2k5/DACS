@@ -385,9 +385,9 @@ body {
     justify-content: space-between; /* Äáº£m báº£o Logo bÃªn trÃ¡i, Icons bÃªn pháº£i */
 }
 
-/* áº¨n dÃ²ng Nav riÃªng biá»‡t bÃªn dÆ°á»›i */
+/* Nav luôn hiển thị khi scroll */
 .header-shrink .nav-header {
-    display: none !important;
+    display: block !important;
 }
 
 /* Hiá»‡n icon search thay tháº¿ */

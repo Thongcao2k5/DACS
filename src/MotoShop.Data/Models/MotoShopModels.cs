@@ -403,6 +403,7 @@ namespace MotoShop.Data.Models
         [StringLength(500)]
         public string? TransferProof { get; set; } 
         public DateTime? ConfirmedAt { get; set; }
+        public DateTime? CompletedAt { get; set; }
         public DateTime? ExpireAt { get; set; }
         public string? CancelReason { get; set; }
 

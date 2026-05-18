@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using MotoShop.Business.DTOs;
 using MotoShop.Business.Interfaces;
 using MotoShop.Data.Interfaces;
@@ -14,11 +15,13 @@ namespace MotoShop.Business.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPromotionService _promotionService;
+        private readonly ILogger<CartService> _logger;
 
-        public CartService(IUnitOfWork unitOfWork, IPromotionService promotionService)
+        public CartService(IUnitOfWork unitOfWork, IPromotionService promotionService, ILogger<CartService> logger)
         {
             _unitOfWork = unitOfWork;
             _promotionService = promotionService;
+            _logger = logger;
         }
 
         public async Task<bool> AddToCartAsync(string userId, int variantId, int quantity)
@@ -189,27 +192,40 @@ namespace MotoShop.Business.Services
             var guestItems = guestCart.CartItems.ToList();
             foreach (var guestItem in guestItems)
             {
-                var stock = await _unitOfWork.Repository<ProductVariant>()
+                var variant = await _unitOfWork.Repository<ProductVariant>()
                     .Find(v => v.ProductVariantId == guestItem.ProductVariantId)
-                    .Select(v => v.StockQuantity)
+                    .Select(v => new { v.StockQuantity, v.Price, v.ProductId })
                     .FirstOrDefaultAsync();
+
+                if (variant == null) continue;
+                int stock = variant.StockQuantity;
 
                 var userItem = userCart.CartItems.FirstOrDefault(i => i.ProductVariantId == guestItem.ProductVariantId);
                 if (userItem != null)
                 {
                     if (guestItem.Quantity < 1) continue;
-                    userItem.Quantity = Math.Min(userItem.Quantity + guestItem.Quantity, stock);
+                    int merged = userItem.Quantity + guestItem.Quantity;
+                    int capped = Math.Min(merged, stock);
+                    // [M1-FIX] Log khi quantity bị cap để dễ debug; UI hiển thị đúng số lượng trong cart
+                    if (capped < merged)
+                        _logger.LogInformation("Cart sync capped variantId={VariantId}: {Merged} → {Capped} (stock={Stock})",
+                            guestItem.ProductVariantId, merged, capped, stock);
+                    userItem.Quantity = capped;
                     _unitOfWork.Repository<CartItem>().Update(userItem);
                 }
                 else
                 {
                     if (guestItem.Quantity < 1 || stock < 1) continue;
+                    // [H1-FIX] Tính lại giá theo khuyến mãi hiện tại thay vì dùng giá cũ từ guest cart
+                    decimal currentPrice = variant.ProductId.HasValue
+                        ? await _promotionService.CalculateDiscountAsync(variant.ProductId.Value, variant.Price)
+                        : variant.Price;
                     var newItem = new CartItem
                     {
                         CartId = userCart.CartId,
                         ProductVariantId = guestItem.ProductVariantId,
                         Quantity = Math.Min(guestItem.Quantity, stock),
-                        Price = guestItem.Price
+                        Price = currentPrice
                     };
                     await _unitOfWork.Repository<CartItem>().AddAsync(newItem);
                 }

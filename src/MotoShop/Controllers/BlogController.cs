@@ -12,6 +12,12 @@ namespace MotoShop.Controllers
     public class BlogController : Controller
     {
         private readonly MotoShopDbContext _context;
+        private static readonly IReadOnlyDictionary<string, string> SlugAliases = new Dictionary<string, string>
+        {
+            ["bao-duong-noi"] = "cach-bao-duong-xe-may-dinh-ky",
+            ["phan-biet-nhot"] = "huong-dan-chon-dau-nhot-phu-hop",
+            ["top-5-lop-xe"] = "top-5-phu-tung-nang-cap"
+        };
 
         public BlogController(MotoShopDbContext context)
         {
@@ -46,13 +52,7 @@ namespace MotoShop.Controllers
                 .ToListAsync();
 
             // Sử dụng DTO thay vì kiểu nặc danh
-            ViewBag.Categories = await _context.BlogCategories
-                .Select(c => new BlogCategoryDto { 
-                    Id = c.Id, 
-                    Name = c.Name, 
-                    BlogCount = c.Blogs.Count(b => b.IsPublished || b.Status == 1) 
-                })
-                .ToListAsync();
+            ViewBag.Categories = await _context.BlogCategories.ToListAsync();
 
             ViewBag.RecentPosts = await _context.Blogs
                 .Where(b => b.IsPublished || b.Status == 1)
@@ -72,6 +72,8 @@ namespace MotoShop.Controllers
         public async Task<IActionResult> Detail(string slug)
         {
             if (string.IsNullOrWhiteSpace(slug)) return NotFound();
+            if (SlugAliases.TryGetValue(slug, out var canonicalSlug))
+                return RedirectToActionPermanent(nameof(Detail), new { slug = canonicalSlug });
 
             var blog = await _context.Blogs
                 .Include(b => b.Category)

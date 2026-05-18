@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MotoShop.Data.Constants;
 using MotoShop.Data.Data;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,6 +19,33 @@ namespace MotoShop.Areas.Admin.Controllers
             _context = context;
         }
 
+        private static readonly string[] CompletedBookingStatuses =
+        {
+            BookingStatusConst.Completed,
+            BookingStatusConst.DaHoanThanh
+        };
+
+        private IQueryable<ServiceRevenueRow> CompletedServiceRevenue()
+        {
+            return
+                from b in _context.ServiceBookings
+                join s0 in _context.Services on b.ServiceId equals s0.ServiceId into serviceJoin
+                from s in serviceJoin.DefaultIfEmpty()
+                join c0 in _context.ServiceCombos on b.ComboId equals c0.ComboId into comboJoin
+                from c in comboJoin.DefaultIfEmpty()
+                where CompletedBookingStatuses.Contains(b.Status!)
+                      && b.CompletedAt.HasValue
+                select new ServiceRevenueRow
+                {
+                    CompletedAt = b.CompletedAt!.Value,
+                    Amount = s != null
+                        ? s.Price
+                        : c != null
+                            ? (c.DiscountPrice > 0 ? c.DiscountPrice : c.TotalPrice)
+                            : 0m
+                };
+        }
+
         public async Task<IActionResult> Index()
         {
             var now = DateTime.Now;
@@ -26,33 +54,49 @@ namespace MotoShop.Areas.Admin.Controllers
             var firstDayOfMonth = new DateTime(now.Year, now.Month, 1);
             var firstDayOfLastMonth = firstDayOfMonth.AddMonths(-1);
 
-            // Card 1: Revenue Today & vs Yesterday
-            var revenueToday = await _context.Orders
-                .Where(o => o.OrderDate.Date == today && o.Status != "Cancelled")
+            // Card 1: Revenue Today & vs Yesterday (Orders Completed + Service Completed)
+            var orderRevenueToday = await _context.Orders
+                .Where(o => o.OrderDate.Date == today && o.Status == "Completed")
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            var svcRevenueToday = await CompletedServiceRevenue()
+                .Where(s => s.CompletedAt.Date == today)
+                .SumAsync(s => (decimal?)s.Amount) ?? 0;
+            var revenueToday = orderRevenueToday + svcRevenueToday;
 
-            var revenueYesterday = await _context.Orders
-                .Where(o => o.OrderDate.Date == yesterday && o.Status != "Cancelled")
+            var orderRevenueYesterday = await _context.Orders
+                .Where(o => o.OrderDate.Date == yesterday && o.Status == "Completed")
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            var svcRevenueYesterday = await CompletedServiceRevenue()
+                .Where(s => s.CompletedAt.Date == yesterday)
+                .SumAsync(s => (decimal?)s.Amount) ?? 0;
+            var revenueYesterday = orderRevenueYesterday + svcRevenueYesterday;
 
             ViewBag.RevenueToday = revenueToday;
-            ViewBag.RevenueVsYesterday = revenueYesterday > 0 
-                ? (double)((revenueToday - revenueYesterday) / revenueYesterday * 100) 
+            ViewBag.RevenueVsYesterday = revenueYesterday > 0
+                ? (double)((revenueToday - revenueYesterday) / revenueYesterday * 100)
                 : (revenueToday > 0 ? 100 : 0);
 
-            // Monthly Revenue & Growth
-            var revenueThisMonth = await _context.Orders
-                .Where(o => o.OrderDate >= firstDayOfMonth && (o.Status == "Completed" || o.Status == "DaHoanThanh" || o.Status == "Delivered"))
+            // Monthly Revenue & Growth (chỉ Completed)
+            var orderThisMonth = await _context.Orders
+                .Where(o => o.OrderDate >= firstDayOfMonth && o.Status == "Completed")
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            var svcThisMonth = await CompletedServiceRevenue()
+                .Where(s => s.CompletedAt >= firstDayOfMonth)
+                .SumAsync(s => (decimal?)s.Amount) ?? 0;
+            var revenueThisMonth = orderThisMonth + svcThisMonth;
 
-            var revenueLastMonth = await _context.Orders
-                .Where(o => o.OrderDate >= firstDayOfLastMonth && o.OrderDate < firstDayOfMonth && (o.Status == "Completed" || o.Status == "DaHoanThanh" || o.Status == "Delivered"))
+            var orderLastMonth = await _context.Orders
+                .Where(o => o.OrderDate >= firstDayOfLastMonth && o.OrderDate < firstDayOfMonth && o.Status == "Completed")
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            var svcLastMonth = await CompletedServiceRevenue()
+                .Where(s => s.CompletedAt >= firstDayOfLastMonth && s.CompletedAt < firstDayOfMonth)
+                .SumAsync(s => (decimal?)s.Amount) ?? 0;
+            var revenueLastMonth = orderLastMonth + svcLastMonth;
 
             ViewBag.RevenueThisMonth = revenueThisMonth;
             ViewBag.RevenueGrowth = revenueLastMonth > 0
                 ? Math.Round((double)((revenueThisMonth - revenueLastMonth) / revenueLastMonth * 100), 1)
-                : (revenueThisMonth > 0 ? 100 : 0);
+                : (revenueThisMonth > 0 ? 100.0 : 0.0);
 
             // Card 2: Orders Today
             var ordersTodayQuery = _context.Orders.Where(o => o.OrderDate.Date == today);
@@ -82,6 +126,12 @@ namespace MotoShop.Areas.Admin.Controllers
                 .ToListAsync();
 
             return View(recentOrders);
+        }
+
+        private sealed class ServiceRevenueRow
+        {
+            public DateTime CompletedAt { get; set; }
+            public decimal Amount { get; set; }
         }
     }
 }

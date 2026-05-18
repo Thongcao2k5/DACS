@@ -307,7 +307,8 @@ namespace MotoShop.Controllers
                 var defaultVar = product.Variants.OrderByDescending(v => v.StockQuantity > 0).FirstOrDefault() ?? product.Variants.FirstOrDefault();
                 if (defaultVar != null) {
                     decimal basePrice = defaultVar.OriginalPrice ?? defaultVar.Price;
-                    decimal discountedPrice = promo.DiscountType == DiscountType.Percent ? basePrice * (1 - promo.DiscountValue / 100m) : Math.Max(0, basePrice - promo.DiscountValue);
+                    // [M3-FIX] Dùng PromotionService thay vì tính tay — nhất quán với CartService/OrderService
+                    decimal discountedPrice = await _promotionService.CalculateDiscountAsync(product.ProductId, basePrice);
                     if (discountedPrice < basePrice) {
                         ViewBag.PromotionPrice = discountedPrice;
                         ViewBag.PromotionOriginalPrice = basePrice;

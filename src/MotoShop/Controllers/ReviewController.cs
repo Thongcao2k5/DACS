@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Constants;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
+using System.Text.RegularExpressions;
 
 namespace MotoShop.Controllers
 {
@@ -29,7 +30,12 @@ namespace MotoShop.Controllers
 
             if (customer == null) return Json(new { success = false, message = "Không tìm thấy thông tin khách hàng." });
             if (rating < 1 || rating > 5) return Json(new { success = false, message = "Số sao không hợp lệ." });
-            if (string.IsNullOrWhiteSpace(comment) || comment.Length < 10)
+
+            // [L2-FIX] Strip HTML tags để ngăn stored XSS
+            var sanitizedComment = Regex.Replace(comment ?? "", "<.*?>", " ", RegexOptions.Singleline).Trim();
+            sanitizedComment = Regex.Replace(sanitizedComment, @"\s{2,}", " ");
+
+            if (string.IsNullOrWhiteSpace(sanitizedComment) || sanitizedComment.Length < 10)
                 return Json(new { success = false, message = "Nội dung đánh giá tối thiểu 10 ký tự." });
 
             var completedStatuses = new[] { OrderStatusConst.Completed, OrderStatusConst.DaHoanThanh };
@@ -55,7 +61,7 @@ namespace MotoShop.Controllers
                 ProductVariantId = variantId,
                 CustomerId = customer.CustomerId,
                 Rating = rating,
-                Comment = comment,
+                Comment = sanitizedComment,
                 CreatedDate = DateTime.Now,
                 Status = ReviewStatusConst.Pending
             });

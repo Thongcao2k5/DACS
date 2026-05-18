@@ -14,6 +14,9 @@ namespace MotoShop.Business.Services
 {
     public class OrderService : IOrderService
     {
+        private static readonly HashSet<string> _allowedPaymentMethods =
+            new(StringComparer.OrdinalIgnoreCase) { "COD", "VNPay", "BankTransfer" };
+
         private readonly IUnitOfWork _unitOfWork;
         private readonly MotoShopDbContext _context;
         private readonly IEmailService _emailService;
@@ -155,7 +158,10 @@ namespace MotoShop.Business.Services
                         Status = MotoShop.Data.Constants.OrderStatusConst.Pending, PaymentStatus = "Unpaid", DiscountAmount = discountAmount,
                         ShippingAddress = $"{finalFullName} | {finalPhone} | {finalAddressStr}",
                         Note = checkoutData.Note, ShippingMethodId = checkoutData.ShippingMethodId, CouponId = checkoutData.CouponId,
-                        PaymentMethod = checkoutData.PaymentMethod
+                        // [M4-FIX] Validate payment method — fallback COD nếu giá trị không hợp lệ
+                        PaymentMethod = _allowedPaymentMethods.Contains(checkoutData.PaymentMethod ?? "")
+                            ? checkoutData.PaymentMethod!
+                            : "COD"
                     };
 
                     _context.Orders.Add(order);

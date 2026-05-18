@@ -124,9 +124,9 @@ namespace MotoShop.Data.Data
                 {
                     context.ShippingMethods.AddRange(new List<ShippingMethod>
                     {
-                        new ShippingMethod { Name = "Giao hĂ ng nhanh", Cost = 30000, EstimatedDays = "2-3 ngĂ y", IsActive = true },
-                        new ShippingMethod { Name = "Há»a tá»‘c 2H", Cost = 50000, EstimatedDays = "2 giá»", IsActive = true },
-                        new ShippingMethod { Name = "TiĂªu chuáº©n", Cost = 15000, EstimatedDays = "4-5 ngĂ y", IsActive = true }
+                        new ShippingMethod { Name = "Giao hàng nhanh", Cost = 30000, EstimatedDays = "2-3 ngày", IsActive = true },
+                        new ShippingMethod { Name = "Hỏa tốc 2H",     Cost = 50000, EstimatedDays = "2 giờ",    IsActive = true },
+                        new ShippingMethod { Name = "Tiêu chuẩn",     Cost = 15000, EstimatedDays = "4-5 ngày", IsActive = true }
                     });
                     await context.SaveChangesAsync();
                 }

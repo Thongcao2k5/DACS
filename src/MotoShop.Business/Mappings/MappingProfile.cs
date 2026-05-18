@@ -1,5 +1,6 @@
 using AutoMapper;
 using MotoShop.Business.DTOs;
+using MotoShop.Data.Enums;
 using MotoShop.Data.Models;
 using System;
 using System.Linq;
@@ -21,10 +22,64 @@ namespace MotoShop.Business.Mappings
                 .ForMember(dest => dest.DiscountPercent, opt => opt.MapFrom(src => 0)) // Calculated in DTO property
                 .ForMember(dest => dest.DefaultVariantId, opt => opt.MapFrom(src => src.Variants.OrderBy(v => v.Price).Select(v => v.ProductVariantId).FirstOrDefault()))
                 .ForMember(dest => dest.PrimaryImageUrl, opt => opt.MapFrom(src => src.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault() ?? src.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? string.Empty))
-                // Dùng hệ thống cũ (đã đổi tên collection) cho Mapping tạm thời trong Stage 1
-                .ForMember(dest => dest.IsFlashSale, opt => opt.MapFrom(src => false))
-                .ForMember(dest => dest.FlashSalePrice, opt => opt.MapFrom(src => (decimal?)null))
-                .ForMember(dest => dest.FlashSaleEndDate, opt => opt.MapFrom(src => (DateTime?)null))
+                .ForMember(dest => dest.IsFlashSale, opt => opt.MapFrom(src =>
+                    src.PromotionProducts.Any(pp =>
+                        pp.Promotion != null && pp.Promotion.IsActive &&
+                        pp.Promotion.PromotionType == PromotionType.FlashSale &&
+                        pp.Promotion.StartDate <= DateTime.Now && pp.Promotion.EndDate >= DateTime.Now &&
+                        (!pp.Quantity.HasValue || pp.SoldQuantity < pp.Quantity.Value))))
+                .ForMember(dest => dest.FlashSaleEndDate, opt => opt.MapFrom(src =>
+                    src.PromotionProducts
+                        .Where(pp => pp.Promotion != null && pp.Promotion.IsActive &&
+                                     pp.Promotion.PromotionType == PromotionType.FlashSale &&
+                                     pp.Promotion.StartDate <= DateTime.Now && pp.Promotion.EndDate >= DateTime.Now &&
+                                     (!pp.Quantity.HasValue || pp.SoldQuantity < pp.Quantity.Value))
+                        .OrderByDescending(pp => pp.Promotion!.Priority)
+                        .Select(pp => (DateTime?)pp.Promotion!.EndDate)
+                        .FirstOrDefault()))
+                .ForMember(dest => dest.FlashSaleQuantity, opt => opt.MapFrom(src =>
+                    src.PromotionProducts
+                        .Where(pp => pp.Promotion != null && pp.Promotion.IsActive &&
+                                     pp.Promotion.PromotionType == PromotionType.FlashSale &&
+                                     pp.Promotion.StartDate <= DateTime.Now && pp.Promotion.EndDate >= DateTime.Now &&
+                                     (!pp.Quantity.HasValue || pp.SoldQuantity < pp.Quantity.Value))
+                        .OrderByDescending(pp => pp.Promotion!.Priority)
+                        .Select(pp => (int?)pp.Quantity)
+                        .FirstOrDefault()))
+                .ForMember(dest => dest.FlashSaleSoldQuantity, opt => opt.MapFrom(src =>
+                    src.PromotionProducts
+                        .Where(pp => pp.Promotion != null && pp.Promotion.IsActive &&
+                                     pp.Promotion.PromotionType == PromotionType.FlashSale &&
+                                     pp.Promotion.StartDate <= DateTime.Now && pp.Promotion.EndDate >= DateTime.Now &&
+                                     (!pp.Quantity.HasValue || pp.SoldQuantity < pp.Quantity.Value))
+                        .OrderByDescending(pp => pp.Promotion!.Priority)
+                        .Select(pp => (int?)pp.SoldQuantity)
+                        .FirstOrDefault()))
+                .ForMember(dest => dest.FlashSalePrice, opt => opt.MapFrom(src =>
+                    src.PromotionProducts
+                        .Where(pp => pp.Promotion != null && pp.Promotion.IsActive &&
+                                     pp.Promotion.PromotionType == PromotionType.FlashSale &&
+                                     pp.Promotion.StartDate <= DateTime.Now && pp.Promotion.EndDate >= DateTime.Now &&
+                                     (!pp.Quantity.HasValue || pp.SoldQuantity < pp.Quantity.Value))
+                        .OrderByDescending(pp => pp.Promotion!.Priority)
+                        .Select(pp => (decimal?)(
+                            pp.Promotion!.DiscountType == DiscountType.Percent
+                                ? src.Variants.Min(v => v.Price) * (1 - pp.Promotion.DiscountValue / 100m)
+                                : src.Variants.Min(v => v.Price) > pp.Promotion.DiscountValue
+                                    ? src.Variants.Min(v => v.Price) - pp.Promotion.DiscountValue
+                                    : 0m))
+                        .FirstOrDefault()))
+                .ForMember(dest => dest.FlashSalePercent, opt => opt.MapFrom(src =>
+                    (int)src.PromotionProducts
+                        .Where(pp => pp.Promotion != null && pp.Promotion.IsActive &&
+                                     pp.Promotion.PromotionType == PromotionType.FlashSale &&
+                                     pp.Promotion.StartDate <= DateTime.Now && pp.Promotion.EndDate >= DateTime.Now &&
+                                     (!pp.Quantity.HasValue || pp.SoldQuantity < pp.Quantity.Value))
+                        .OrderByDescending(pp => pp.Promotion!.Priority)
+                        .Select(pp => pp.Promotion!.DiscountType == DiscountType.Percent
+                            ? pp.Promotion.DiscountValue
+                            : 0m)
+                        .FirstOrDefault()))
                 .ForMember(dest => dest.StockCount, opt => opt.MapFrom(src => src.Variants.Sum(v => v.StockQuantity)))
                 .ForMember(dest => dest.IsInStock,  opt => opt.MapFrom(src => src.Variants.Any(v => v.StockQuantity > 0)));
 

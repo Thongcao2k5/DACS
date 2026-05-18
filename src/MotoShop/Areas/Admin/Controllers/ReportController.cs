@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MotoShop.Data.Constants;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 
@@ -20,6 +21,33 @@ namespace MotoShop.Areas.Admin.Controllers
         public ReportController(MotoShopDbContext context)
         {
             _context = context;
+        }
+
+        private static readonly string[] CompletedBookingStatuses =
+        {
+            BookingStatusConst.Completed,
+            BookingStatusConst.DaHoanThanh
+        };
+
+        private IQueryable<ServiceRevenueRow> CompletedServiceRevenue()
+        {
+            return
+                from b in _context.ServiceBookings
+                join s0 in _context.Services on b.ServiceId equals s0.ServiceId into serviceJoin
+                from s in serviceJoin.DefaultIfEmpty()
+                join c0 in _context.ServiceCombos on b.ComboId equals c0.ComboId into comboJoin
+                from c in comboJoin.DefaultIfEmpty()
+                where CompletedBookingStatuses.Contains(b.Status!)
+                      && b.CompletedAt.HasValue
+                select new ServiceRevenueRow
+                {
+                    CompletedAt = b.CompletedAt!.Value,
+                    Amount = s != null
+                        ? s.Price
+                        : c != null
+                            ? (c.DiscountPrice > 0 ? c.DiscountPrice : c.TotalPrice)
+                            : 0m
+                };
         }
 
         // ───────────────────────── Helpers ─────────────────────────
@@ -116,36 +144,66 @@ namespace MotoShop.Areas.Admin.Controllers
             var lastMonStart  = startOfMonth.AddMonths(-1);
             var lastMonEnd    = startOfMonth.AddTicks(-1);
 
-            ViewBag.RevenueToday = await _context.Orders
-                .Where(o => o.OrderDate.Date == now.Date && o.Status != "Cancelled")
+            // Chỉ tính đơn hàng + dịch vụ ĐÃ HOÀN THÀNH, dùng CompletedAt làm mốc thời gian
+            decimal orderToday = await _context.Orders
+                .Where(o => o.OrderDate.Date == now.Date && o.Status == "Completed")
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0m;
-            ViewBag.RevenueMonth = await _context.Orders
-                .Where(o => o.OrderDate >= startOfMonth && o.Status != "Cancelled")
+            decimal svcToday = await CompletedServiceRevenue()
+                .Where(s => s.CompletedAt.Date == now.Date)
+                .SumAsync(s => (decimal?)s.Amount) ?? 0m;
+            ViewBag.RevenueToday = orderToday + svcToday;
+
+            decimal orderMonth = await _context.Orders
+                .Where(o => o.OrderDate >= startOfMonth && o.Status == "Completed")
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0m;
-            ViewBag.RevenueYear = await _context.Orders
-                .Where(o => o.OrderDate >= startOfYear && o.Status != "Cancelled")
+            decimal svcMonth = await CompletedServiceRevenue()
+                .Where(s => s.CompletedAt >= startOfMonth)
+                .SumAsync(s => (decimal?)s.Amount) ?? 0m;
+            ViewBag.RevenueMonth = orderMonth + svcMonth;
+
+            decimal orderYear = await _context.Orders
+                .Where(o => o.OrderDate >= startOfYear && o.Status == "Completed")
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0m;
-            decimal revLastMon = await _context.Orders
-                .Where(o => o.OrderDate >= lastMonStart && o.OrderDate <= lastMonEnd && o.Status != "Cancelled")
+            decimal svcYear = await CompletedServiceRevenue()
+                .Where(s => s.CompletedAt >= startOfYear)
+                .SumAsync(s => (decimal?)s.Amount) ?? 0m;
+            ViewBag.RevenueYear = orderYear + svcYear;
+
+            decimal orderLastMon = await _context.Orders
+                .Where(o => o.OrderDate >= lastMonStart && o.OrderDate <= lastMonEnd && o.Status == "Completed")
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0m;
+            decimal svcLastMon = await CompletedServiceRevenue()
+                .Where(s => s.CompletedAt >= lastMonStart && s.CompletedAt <= lastMonEnd)
+                .SumAsync(s => (decimal?)s.Amount) ?? 0m;
+            decimal revLastMon = orderLastMon + svcLastMon;
             ViewBag.GrowthMonth = revLastMon > 0
                 ? (double)(((decimal)ViewBag.RevenueMonth - revLastMon) / revLastMon * 100) : 0.0;
 
-            // Period comparison KPIs
+            // Period comparison KPIs — chỉ đơn hàng Completed
             var curRows = await _context.Orders
-                .Where(o => o.Status != "Cancelled" && o.OrderDate >= start && o.OrderDate <= end)
+                .Where(o => o.Status == "Completed" && o.OrderDate >= start && o.OrderDate <= end)
                 .Select(o => new { o.TotalAmount, o.OrderDate })
                 .ToListAsync();
             var prevRows = await _context.Orders
-                .Where(o => o.Status != "Cancelled" && o.OrderDate >= prevStart && o.OrderDate <= prevEnd)
+                .Where(o => o.Status == "Completed" && o.OrderDate >= prevStart && o.OrderDate <= prevEnd)
                 .Select(o => new { o.TotalAmount })
                 .ToListAsync();
 
-            decimal totalRevenue = curRows.Sum(o => o.TotalAmount);
-            int     totalOrders  = curRows.Count;
+            // Cộng thêm doanh thu dịch vụ hoàn thành trong kỳ (dùng CompletedAt)
+            var curSvcRows = await CompletedServiceRevenue()
+                .Where(s => s.CompletedAt >= start && s.CompletedAt <= end)
+                .Select(s => new { s.Amount, Date = s.CompletedAt })
+                .ToListAsync();
+            var prevSvcRows = await CompletedServiceRevenue()
+                .Where(s => s.CompletedAt >= prevStart && s.CompletedAt <= prevEnd)
+                .Select(s => new { s.Amount })
+                .ToListAsync();
+
+            decimal totalRevenue = curRows.Sum(o => o.TotalAmount) + curSvcRows.Sum(s => s.Amount);
+            int     totalOrders  = curRows.Count + curSvcRows.Count;
             decimal aov          = totalOrders > 0 ? totalRevenue / totalOrders : 0m;
-            decimal prevRevenue  = prevRows.Sum(o => o.TotalAmount);
-            int     prevOrders   = prevRows.Count;
+            decimal prevRevenue  = prevRows.Sum(o => o.TotalAmount) + prevSvcRows.Sum(s => s.Amount);
+            int     prevOrders   = prevRows.Count + prevSvcRows.Count;
             decimal prevAov      = prevOrders > 0 ? prevRevenue / prevOrders : 0m;
 
             ViewBag.TotalRevenue  = totalRevenue;
@@ -158,8 +216,11 @@ namespace MotoShop.Areas.Admin.Controllers
             ViewBag.AovGrowth     = prevAov > 0
                 ? (double)((aov - prevAov) / prevAov * 100) : 0.0;
 
-            var chartPts = BuildChart(
-                curRows.Select(o => (o.OrderDate, o.TotalAmount)).ToList(), period, start, end);
+            // Gộp order + service cho biểu đồ
+            var chartData = curRows.Select(o => (o.OrderDate, o.TotalAmount))
+                .Concat(curSvcRows.Select(s => (s.Date, s.Amount)))
+                .ToList();
+            var chartPts = BuildChart(chartData, period, start, end);
             ViewBag.ChartLabels = chartPts.Select(p => p.label).ToList();
             ViewBag.ChartValues = chartPts.Select(p => p.amount).ToList();
 
@@ -363,9 +424,9 @@ namespace MotoShop.Areas.Admin.Controllers
                 .Where(c => c.CreatedDate < start && cusInPeriod.Contains(c.CustomerId))
                 .CountAsync();
 
-            // Top 10 spenders — step 1: aggregate in SQL (anonymous type only)
+            // Top 10 spenders — chỉ tính đơn Completed
             var spenderAgg = await _context.Orders
-                .Where(o => o.Status != "Cancelled"
+                .Where(o => o.Status == "Completed"
                          && o.OrderDate >= start && o.OrderDate <= end
                          && o.CustomerId.HasValue)
                 .GroupBy(o => o.CustomerId)
@@ -473,4 +534,10 @@ namespace MotoShop.Areas.Admin.Controllers
     public sealed record ReportSpender(
         int? CustomerId, string FullName, string? Email,
         string? Phone, string? AvatarUrl, decimal TotalSpent, int OrderCount);
+
+    internal sealed class ServiceRevenueRow
+    {
+        public DateTime CompletedAt { get; set; }
+        public decimal Amount { get; set; }
+    }
 }

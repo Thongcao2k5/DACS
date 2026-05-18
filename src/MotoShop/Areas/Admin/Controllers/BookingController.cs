@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Business.Interfaces;
+using MotoShop.Data.Constants;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace MotoShop.Areas.Admin.Controllers
             _auditLogService = auditLogService;
         }
 
-        public async Task<IActionResult> Index(string? searchTerm, string? status, DateTime? fromDate, DateTime? toDate, int? staffId, int page = 1, int pageSize = 10)
+        public async Task<IActionResult> Index(string? searchTerm, string? status, DateTime? fromDate, DateTime? toDate, int page = 1, int pageSize = 10)
         {
             page = Math.Max(1, page);
             pageSize = Math.Clamp(pageSize, 1, 100);
@@ -32,7 +33,6 @@ namespace MotoShop.Areas.Admin.Controllers
             var query = _context.ServiceBookings
                 .Include(b => b.Customer)
                 .Include(b => b.Service)
-                .Include(b => b.AssignedStaff)
                 .AsNoTracking()
                 .AsQueryable();
 
@@ -44,7 +44,6 @@ namespace MotoShop.Areas.Admin.Controllers
 
             if (fromDate.HasValue) query = query.Where(b => b.ServiceDate >= fromDate);
             if (toDate.HasValue) query = query.Where(b => b.ServiceDate <= toDate);
-            if (staffId.HasValue) query = query.Where(b => b.AssignedStaffId == staffId);
 
             var totalItems = await query.CountAsync();
             var bookings = await query
@@ -53,25 +52,10 @@ namespace MotoShop.Areas.Admin.Controllers
                 .Take(pageSize)
                 .ToListAsync();
 
-            ViewBag.Staffs = await _context.Staffs.ToListAsync();
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
 
             return View(bookings);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> AssignStaff(int bookingId, int staffId, string? notes)
-        {
-            var booking = await _context.ServiceBookings.FindAsync(bookingId);
-            if (booking == null) return Json(new { success = false });
-
-            booking.AssignedStaffId = staffId;
-            booking.Notes = notes;
-            booking.Status = "Processing"; // Khi phân công thì tự động chuyển sang Đang thực hiện
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "Phân công thành công" });
         }
 
         [HttpPost]
@@ -82,6 +66,8 @@ namespace MotoShop.Areas.Admin.Controllers
 
             var oldStatus = booking.Status;
             booking.Status = status;
+            if ((status == BookingStatusConst.Completed || status == BookingStatusConst.DaHoanThanh) && !booking.CompletedAt.HasValue)
+                booking.CompletedAt = DateTime.Now;
             if (!string.IsNullOrEmpty(notes)) booking.Notes = notes;
             await _context.SaveChangesAsync();
 

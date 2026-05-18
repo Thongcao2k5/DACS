@@ -350,6 +350,9 @@ using (var scope = app.Services.CreateScope())
             IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ServiceBookings') AND name = 'DepositAmount')
                 ALTER TABLE ServiceBookings ADD DepositAmount DECIMAL(18,2) DEFAULT 0, DepositStatus NVARCHAR(50) DEFAULT 'Unpaid', TransferProof NVARCHAR(500) NULL, ConfirmedAt DATETIME NULL, ExpireAt DATETIME NULL, CancelReason NVARCHAR(500) NULL;
 
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ServiceBookings') AND name = 'CompletedAt')
+                ALTER TABLE ServiceBookings ADD CompletedAt DATETIME NULL;
+
             IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'OrderStatusHistory')
                 CREATE TABLE OrderStatusHistory (HistoryId INT IDENTITY PRIMARY KEY, OrderId INT NOT NULL, Status NVARCHAR(100) NOT NULL, ChangedDate DATETIME DEFAULT GETDATE(), Note NVARCHAR(MAX) NULL);
             

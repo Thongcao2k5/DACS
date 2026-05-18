@@ -125,7 +125,101 @@ namespace MotoShop.Business.Services
                 _ => query.OrderByDescending(p => p.CreatedDate)
             };
 
-            var dtoQuery = query.ProjectTo<ProductDto>(_mapper.ConfigurationProvider);
+            // Manual Select thay vì ProjectTo — cho phép tính Flash Sale price trực tiếp trong SQL,
+            // tránh subquery lồng phức tạp mà EF Core có thể không dịch được qua AutoMapper.
+            var now = DateTime.Now;
+            var dtoQuery = query.Select(p => new ProductDto
+            {
+                ProductId = p.ProductId,
+                ProductName = p.ProductName,
+                Slug = p.Slug ?? string.Empty,
+                CategoryName = p.Category != null ? p.Category.CategoryName : string.Empty,
+                CategoryId = p.CategoryId,
+                BrandName = p.Brand != null ? p.Brand.BrandName : string.Empty,
+                BrandLogoUrl = p.Brand != null ? (p.Brand.LogoUrl ?? string.Empty) : string.Empty,
+                BrandId = p.BrandId,
+                IsFeatured = p.IsFeatured,
+                SoldCount = p.SoldCount,
+                CreatedDate = p.CreatedDate,
+                StockCount = p.Variants.Sum(v => v.StockQuantity),
+                IsInStock = p.Variants.Any(v => v.StockQuantity > 0),
+                DefaultVariantId = p.Variants.OrderBy(v => v.Price).Select(v => v.ProductVariantId).FirstOrDefault(),
+                PrimaryImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault()
+                    ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? string.Empty,
+                MinOriginalPrice = p.Variants.OrderBy(v => v.Price).Select(v => (decimal?)(v.OriginalPrice ?? v.Price)).FirstOrDefault(),
+                OldPrice = p.Variants.OrderBy(v => v.Price).Select(v => (decimal?)(v.OriginalPrice ?? v.Price)).FirstOrDefault(),
+                IsFlashSale = p.PromotionProducts.Any(pp =>
+                    pp.Promotion != null && pp.Promotion.IsActive &&
+                    pp.Promotion.PromotionType == PromotionType.FlashSale &&
+                    pp.Promotion.StartDate <= now && pp.Promotion.EndDate >= now &&
+                    (!pp.Quantity.HasValue || pp.SoldQuantity < pp.Quantity.Value)),
+                FlashSaleEndDate = p.PromotionProducts
+                    .Where(pp => pp.Promotion != null && pp.Promotion.IsActive &&
+                                 pp.Promotion.PromotionType == PromotionType.FlashSale &&
+                                 pp.Promotion.StartDate <= now && pp.Promotion.EndDate >= now &&
+                                 (!pp.Quantity.HasValue || pp.SoldQuantity < pp.Quantity.Value))
+                    .OrderByDescending(pp => pp.Promotion!.Priority)
+                    .Select(pp => (DateTime?)pp.Promotion!.EndDate)
+                    .FirstOrDefault(),
+                FlashSaleQuantity = p.PromotionProducts
+                    .Where(pp => pp.Promotion != null && pp.Promotion.IsActive &&
+                                 pp.Promotion.PromotionType == PromotionType.FlashSale &&
+                                 pp.Promotion.StartDate <= now && pp.Promotion.EndDate >= now &&
+                                 (!pp.Quantity.HasValue || pp.SoldQuantity < pp.Quantity.Value))
+                    .OrderByDescending(pp => pp.Promotion!.Priority)
+                    .Select(pp => (int?)pp.Quantity)
+                    .FirstOrDefault(),
+                FlashSaleSoldQuantity = p.PromotionProducts
+                    .Where(pp => pp.Promotion != null && pp.Promotion.IsActive &&
+                                 pp.Promotion.PromotionType == PromotionType.FlashSale &&
+                                 pp.Promotion.StartDate <= now && pp.Promotion.EndDate >= now &&
+                                 (!pp.Quantity.HasValue || pp.SoldQuantity < pp.Quantity.Value))
+                    .OrderByDescending(pp => pp.Promotion!.Priority)
+                    .Select(pp => (int?)pp.SoldQuantity)
+                    .FirstOrDefault(),
+                FlashSalePrice = p.PromotionProducts
+                    .Where(pp => pp.Promotion != null && pp.Promotion.IsActive &&
+                                 pp.Promotion.PromotionType == PromotionType.FlashSale &&
+                                 pp.Promotion.StartDate <= now && pp.Promotion.EndDate >= now &&
+                                 (!pp.Quantity.HasValue || pp.SoldQuantity < pp.Quantity.Value))
+                    .OrderByDescending(pp => pp.Promotion!.Priority)
+                    .Select(pp => (decimal?)(
+                        pp.Promotion!.DiscountType == DiscountType.Percent
+                            ? p.Variants.Min(v => v.Price) * (1 - pp.Promotion.DiscountValue / 100m)
+                            : p.Variants.Min(v => v.Price) > pp.Promotion.DiscountValue
+                                ? p.Variants.Min(v => v.Price) - pp.Promotion.DiscountValue
+                                : 0m))
+                    .FirstOrDefault(),
+                FlashSalePercent = (int)p.PromotionProducts
+                    .Where(pp => pp.Promotion != null && pp.Promotion.IsActive &&
+                                 pp.Promotion.PromotionType == PromotionType.FlashSale &&
+                                 pp.Promotion.StartDate <= now && pp.Promotion.EndDate >= now &&
+                                 (!pp.Quantity.HasValue || pp.SoldQuantity < pp.Quantity.Value))
+                    .OrderByDescending(pp => pp.Promotion!.Priority)
+                    .Select(pp => pp.Promotion!.DiscountType == DiscountType.Percent
+                        ? pp.Promotion.DiscountValue : 0m)
+                    .FirstOrDefault(),
+                // MinPrice = Flash Sale price nếu đang có Flash Sale, ngược lại là giá gốc thấp nhất
+                MinPrice = p.PromotionProducts.Any(pp =>
+                    pp.Promotion != null && pp.Promotion.IsActive &&
+                    pp.Promotion.PromotionType == PromotionType.FlashSale &&
+                    pp.Promotion.StartDate <= now && pp.Promotion.EndDate >= now &&
+                    (!pp.Quantity.HasValue || pp.SoldQuantity < pp.Quantity.Value))
+                    ? (decimal)(p.PromotionProducts
+                        .Where(pp => pp.Promotion != null && pp.Promotion.IsActive &&
+                                     pp.Promotion.PromotionType == PromotionType.FlashSale &&
+                                     pp.Promotion.StartDate <= now && pp.Promotion.EndDate >= now &&
+                                     (!pp.Quantity.HasValue || pp.SoldQuantity < pp.Quantity.Value))
+                        .OrderByDescending(pp => pp.Promotion!.Priority)
+                        .Select(pp =>
+                            pp.Promotion!.DiscountType == DiscountType.Percent
+                                ? p.Variants.Min(v => v.Price) * (1 - pp.Promotion.DiscountValue / 100m)
+                                : p.Variants.Min(v => v.Price) > pp.Promotion.DiscountValue
+                                    ? p.Variants.Min(v => v.Price) - pp.Promotion.DiscountValue
+                                    : 0m)
+                        .FirstOrDefault())
+                    : p.Variants.Select(v => v.Price).OrderBy(x => x).FirstOrDefault(),
+            });
             return await PagedList<ProductDto>.CreateAsync(dtoQuery, page, pageSize);
         }
 

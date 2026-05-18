@@ -41,7 +41,7 @@ namespace MotoShop.Controllers
             var order = await _orderService.GetOrderDetailsAsync(orderId, userId);
             if (order == null) return NotFound();
 
-            return GenerateVnPayUrl(order.OrderId.ToString(), order.TotalAmount, "Thanh toan don hang: " + order.OrderId);
+            return GenerateVnPayUrl(order.OrderId.ToString(), order.TotalAmount, "Thanh toan don hang " + order.OrderId);
         }
 
         // Bước 1b: Tạo URL và Redirect sang VNPay cho Cọc dịch vụ
@@ -59,8 +59,8 @@ namespace MotoShop.Controllers
                 (!booking.CustomerId.HasValue && currentEmail != null && booking.CustomerEmail == currentEmail);
             if (!ownsBooking) return Forbid();
 
-            // Sử dụng prefix SB_ để phân biệt với Order
-            return GenerateVnPayUrl("SB_" + booking.BookingId, booking.DepositAmount, "Thanh toan coc dich vu: " + booking.BookingId);
+            // Prefix SB (không dấu gạch dưới) để phân biệt với Order
+            return GenerateVnPayUrl("SB" + booking.BookingId, booking.DepositAmount, "Thanh toan coc dich vu " + booking.BookingId);
         }
 
         private IActionResult GenerateVnPayUrl(string txnRef, decimal amount, string orderInfo)
@@ -75,19 +75,28 @@ namespace MotoShop.Controllers
                 return BadRequest("Lỗi hệ thống: Chưa cấu hình thông số thanh toán VnPay.");
             }
 
+            // Chỉ cho phép chữ cái và số trong TxnRef (VNPay spec không cho ký tự đặc biệt)
+            string safeTxnRef = System.Text.RegularExpressions.Regex.Replace(txnRef, "[^a-zA-Z0-9]", "");
+
+            // Map IPv6 loopback về 127.0.0.1 — VNPay không nhận ::1
+            var remoteIp = HttpContext.Connection.RemoteIpAddress;
+            if (remoteIp == null || remoteIp.ToString() == "::1" || remoteIp.IsIPv6LinkLocal)
+                remoteIp = System.Net.IPAddress.Loopback;
+            string ipAddr = remoteIp.ToString();
+
             VnPayLibrary vnpay = new VnPayLibrary();
             vnpay.AddRequestData("vnp_Version", "2.1.0");
             vnpay.AddRequestData("vnp_Command", "pay");
             vnpay.AddRequestData("vnp_TmnCode", vnp_TmnCode);
-            vnpay.AddRequestData("vnp_Amount", ((long)(amount * 100)).ToString()); 
+            vnpay.AddRequestData("vnp_Amount", ((long)(amount * 100)).ToString());
             vnpay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
             vnpay.AddRequestData("vnp_CurrCode", "VND");
-            vnpay.AddRequestData("vnp_IpAddr", HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1");
+            vnpay.AddRequestData("vnp_IpAddr", ipAddr);
             vnpay.AddRequestData("vnp_Locale", "vn");
             vnpay.AddRequestData("vnp_OrderInfo", orderInfo);
             vnpay.AddRequestData("vnp_OrderType", "other");
             vnpay.AddRequestData("vnp_ReturnUrl", vnp_Returnurl);
-            vnpay.AddRequestData("vnp_TxnRef", txnRef);
+            vnpay.AddRequestData("vnp_TxnRef", safeTxnRef);
 
             string paymentUrl = vnpay.CreateRequestUrl(vnp_Url, vnp_HashSecret);
             return Redirect(paymentUrl);
@@ -143,10 +152,10 @@ namespace MotoShop.Controllers
                 return View();
             }
 
-            if (txnRef.StartsWith("SB_"))
+            if (txnRef.StartsWith("SB"))
             {
                 // Xử lý cọc dịch vụ
-                if (!int.TryParse(txnRef.Replace("SB_", ""), out int bookingId))
+                if (!int.TryParse(txnRef.Replace("SB", ""), out int bookingId))
                 {
                     ViewBag.Status = "error";
                     ViewBag.Message = "Mã đặt lịch không hợp lệ.";
@@ -194,7 +203,7 @@ namespace MotoShop.Controllers
                         if (bookingForEmail?.CustomerEmail != null)
                             await _emailService.SendDepositConfirmedAsync(bookingForEmail, vnpayTxnNo);
                     }
-                    catch { /* email failure không ảnh hưởng kết quả */ }
+                    catch (Exception emailEx) { _logger.LogWarning(emailEx, "Email gửi xác nhận cọc thất bại. BookingId={BookingId}", bookingId); }
                 }
                 else
                 {
@@ -223,21 +232,26 @@ namespace MotoShop.Controllers
                     return View();
                 }
 
-                // C4: Kiểm tra ownership — nếu user đang đăng nhập phải là chủ đơn
+                // [C1-FIX] Bắt buộc phải đăng nhập — CreatePayment đã yêu cầu auth nên callback cũng phải có session
                 var currentUserId = _userManager.GetUserId(User);
-                if (!string.IsNullOrEmpty(currentUserId))
+                if (string.IsNullOrEmpty(currentUserId))
                 {
-                    var ownerCustomerId = await _context.Customers
-                        .Where(c => c.UserId == currentUserId)
-                        .Select(c => (int?)c.CustomerId)
-                        .FirstOrDefaultAsync();
-                    if (ownerCustomerId == null || order.CustomerId != ownerCustomerId)
-                    {
-                        _logger.LogWarning("VNPay callback ownership mismatch. OrderId={OrderId}, OwnerId={OwnerId}, RequestUser={UserId}", orderId, order.CustomerId, currentUserId);
-                        ViewBag.Status = "error";
-                        ViewBag.Message = "Bạn không có quyền truy cập đơn hàng này.";
-                        return View();
-                    }
+                    _logger.LogWarning("VNPay callback without authenticated session. OrderId={OrderId}", orderId);
+                    ViewBag.Status = "error";
+                    ViewBag.Message = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập và kiểm tra lịch sử đơn hàng.";
+                    return View();
+                }
+
+                var ownerCustomerId = await _context.Customers
+                    .Where(c => c.UserId == currentUserId)
+                    .Select(c => (int?)c.CustomerId)
+                    .FirstOrDefaultAsync();
+                if (ownerCustomerId == null || order.CustomerId != ownerCustomerId)
+                {
+                    _logger.LogWarning("VNPay callback ownership mismatch. OrderId={OrderId}, OwnerId={OwnerId}, RequestUser={UserId}", orderId, order.CustomerId, currentUserId);
+                    ViewBag.Status = "error";
+                    ViewBag.Message = "Bạn không có quyền truy cập đơn hàng này.";
+                    return View();
                 }
 
                 long expectedAmount = (long)(order.TotalAmount * 100);
@@ -249,15 +263,20 @@ namespace MotoShop.Controllers
                     return View();
                 }
 
-                // C1: Atomic idempotency — UpdatePaymentStatusAsync dùng WHERE PaymentStatus != 'Paid'
-                if (order.PaymentStatus != MotoShop.Data.Constants.PaymentStatusConst.Paid)
+                // [C2-FIX] Dùng return value của UpdatePaymentStatusAsync (atomic WHERE PaymentStatus != 'Paid')
+                // thay vì check stale in-memory object — tránh race condition khi VNPay callback 2 lần song song
+                var updated = await _orderService.UpdatePaymentStatusAsync(orderId, MotoShop.Data.Constants.PaymentStatusConst.Paid);
+                if (updated)
                 {
-                    await _orderService.UpdatePaymentStatusAsync(orderId, MotoShop.Data.Constants.PaymentStatusConst.Paid);
                     _logger.LogInformation("VNPay order paid. OrderId={OrderId}, TxnNo={TxnNo}", orderId, vnpayTxnNo);
                     await _auditLogService.LogActionAsync(
-                        _userManager.GetUserId(User), "PAYMENT_SUCCESS", "Order", orderId.ToString(),
+                        currentUserId, "PAYMENT_SUCCESS", "Order", orderId.ToString(),
                         null, $"VNPay thanh toán thành công: {order.TotalAmount:N0}₫, TxnNo={vnpayTxnNo}",
                         HttpContext.Connection.RemoteIpAddress?.ToString());
+
+                    // [Issue-6-FIX] Cập nhật SoldCount ngay khi VNPay xác nhận — không đợi admin thủ công
+                    try { await _orderService.CompleteOrderAsync(orderId); }
+                    catch (Exception ex) { _logger.LogWarning(ex, "CompleteOrderAsync failed for VNPay order {OrderId}", orderId); }
                 }
                 else
                 {

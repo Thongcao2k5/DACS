@@ -76,29 +76,37 @@ namespace MotoShop.Business.Services
                 ExpireAt = DateTime.Now.AddHours(_config.GetValue<int>("Booking:ExpireAfterHours", 2))
             };
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            bool slotFull = false;
             try
             {
-                // Re-check slot count bên trong transaction để tránh race condition
-                var currentBookings = await _context.ServiceBookings
-                    .CountAsync(b => b.ServiceDate == serviceDatetime && b.Status != MotoShop.Data.Constants.BookingStatusConst.Cancelled);
-
-                if (currentBookings >= maxConcurrent)
+                var strategy = _context.Database.CreateExecutionStrategy();
+                await strategy.ExecuteAsync(async () =>
                 {
-                    await transaction.RollbackAsync();
-                    return (false, $"Khung giờ {model.TimeSlot} đã đầy chỗ phục vụ. Vui lòng chọn giờ khác hoặc ngày khác.", 0);
-                }
+                    using var transaction = await _context.Database.BeginTransactionAsync();
 
-                _context.ServiceBookings.Add(booking);
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                    var currentBookings = await _context.ServiceBookings
+                        .CountAsync(b => b.ServiceDate == serviceDatetime && b.Status != MotoShop.Data.Constants.BookingStatusConst.Cancelled);
+
+                    if (currentBookings >= maxConcurrent)
+                    {
+                        slotFull = true;
+                        await transaction.RollbackAsync();
+                        return;
+                    }
+
+                    _context.ServiceBookings.Add(booking);
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                });
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
                 _logger.LogError(ex, "CreateBookingAsync failed for service {ServiceId}", model.ServiceId);
                 return (false, "Lỗi hệ thống khi đặt lịch.", 0);
             }
+
+            if (slotFull)
+                return (false, $"Khung giờ {model.TimeSlot} đã đầy chỗ phục vụ. Vui lòng chọn giờ khác hoặc ngày khác.", 0);
 
             // Gửi email xác nhận — không block nếu lỗi
             var confirmedBookingId = booking.BookingId;
