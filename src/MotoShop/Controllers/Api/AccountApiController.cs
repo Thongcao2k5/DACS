@@ -90,7 +90,7 @@ namespace MotoShop.Controllers.Api
             catch (Exception ex)
             {
                 _logger.LogError(ex, "RegisterStep1: Failed to send OTP to {Email}. Cause: {Error}", model.Email, ex.Message);
-                return StatusCode(500, new { message = "Không thể gửi email. Vui lòng kiểm tra lại địa chỉ email hoặc thử lại sau.", error = ex.Message });
+                return StatusCode(500, new { message = "Không thể gửi email. Vui lòng kiểm tra lại địa chỉ email hoặc thử lại sau." });
             }
         }
 
@@ -163,7 +163,7 @@ namespace MotoShop.Controllers.Api
             catch (Exception ex)
             {
                 _logger.LogError(ex, "VerifyOtp: Unexpected error for {Email}: {Error}", regModel.Email, ex.Message);
-                return StatusCode(500, new { message = "Có lỗi xảy ra trong quá trình xử lý.", error = ex.Message });
+                return StatusCode(500, new { message = "Có lỗi xảy ra trong quá trình xử lý." });
             }
 
             if (!succeeded)
@@ -178,7 +178,7 @@ namespace MotoShop.Controllers.Api
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
-                return BadRequest(new { message = "Email không tồn tại trong hệ thống." });
+                return Ok(new { success = true, message = "Nếu email tồn tại trong hệ thống, mã xác nhận sẽ được gửi đến email đó." });
 
             string otpCode = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
             var cacheKey = $"Forgot_{model.Email}";
@@ -204,7 +204,7 @@ namespace MotoShop.Controllers.Api
             catch (Exception ex)
             {
                 _logger.LogError(ex, "ForgotPasswordStep1: Failed to send OTP to {Email}. Cause: {Error}", model.Email, ex.Message);
-                return StatusCode(500, new { message = "Không thể gửi email. Vui lòng thử lại sau.", error = ex.Message });
+                return StatusCode(500, new { message = "Không thể gửi email. Vui lòng thử lại sau." });
             }
         }
 
@@ -227,7 +227,7 @@ namespace MotoShop.Controllers.Api
                 return BadRequest(new { message = "Phiên làm việc đã hết hạn. Vui lòng thực hiện lại từ đầu." });
 
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null) return BadRequest(new { message = "Người dùng không tồn tại." });
+            if (user == null) return BadRequest(new { message = "Phiên làm việc không hợp lệ. Vui lòng thực hiện lại từ đầu." });
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var result = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);

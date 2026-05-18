@@ -176,6 +176,13 @@ namespace MotoShop.Controllers
             var existed = await _context.ServiceReviews.AnyAsync(r => r.CustomerId == customer.CustomerId && r.ServiceId == serviceId);
             if (existed) return Json(new { success = false, message = "Bạn đã đánh giá dịch vụ này rồi." });
 
+            var hasCompletedBooking = await _context.ServiceBookings.AnyAsync(b =>
+                b.CustomerId == customer.CustomerId &&
+                b.ServiceId == serviceId &&
+                b.Status == MotoShop.Data.Constants.BookingStatusConst.Completed);
+            if (!hasCompletedBooking)
+                return Json(new { success = false, message = "Bạn chỉ có thể đánh giá dịch vụ đã hoàn thành." });
+
             var review = new ServiceReview
             {
                 ServiceId = serviceId,
@@ -318,8 +325,17 @@ namespace MotoShop.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> BookingSuccess(int id)
         {
+            var currentCustomerId = await GetCurrentCustomerIdAsync();
+            var currentEmail = User.Identity?.Name;
+            var ownsBooking = await _context.ServiceBookings.AnyAsync(b =>
+                b.BookingId == id &&
+                (b.CustomerId == currentCustomerId ||
+                 (!b.CustomerId.HasValue && currentEmail != null && b.CustomerEmail == currentEmail)));
+            if (!ownsBooking) return Forbid();
+
             var vm = await _bookingService.GetBookingSuccessAsync(id);
             if (vm == null) return NotFound();
 

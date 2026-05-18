@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MotoShop.Data.Constants;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
-using System;
-using System.Threading.Tasks;
 
 namespace MotoShop.Controllers
 {
@@ -25,14 +25,31 @@ namespace MotoShop.Controllers
         public async Task<IActionResult> SubmitReview(int productId, int? variantId, int rating, string comment)
         {
             var userId = _userManager.GetUserId(User);
-            var customer = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(_context.Customers, c => c.UserId == userId);
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (customer == null) return Json(new { success = false, message = "Không tìm thấy thông tin khách hàng." });
-
             if (rating < 1 || rating > 5) return Json(new { success = false, message = "Số sao không hợp lệ." });
-            if (string.IsNullOrWhiteSpace(comment) || comment.Length < 10) return Json(new { success = false, message = "Nội dung đánh giá tối thiểu 10 ký tự." });
+            if (string.IsNullOrWhiteSpace(comment) || comment.Length < 10)
+                return Json(new { success = false, message = "Nội dung đánh giá tối thiểu 10 ký tự." });
 
-            var review = new ProductReview
+            var completedStatuses = new[] { OrderStatusConst.Completed, OrderStatusConst.DaHoanThanh };
+            var hasPurchased = await _context.Orders
+                .AnyAsync(o => o.CustomerId == customer.CustomerId
+                    && completedStatuses.Contains(o.Status!)
+                    && o.OrderItems.Any(oi => oi.ProductVariant != null
+                        && oi.ProductVariant.ProductId == productId
+                        && (!variantId.HasValue || oi.ProductVariantId == variantId.Value)));
+            if (!hasPurchased)
+                return Json(new { success = false, message = "Bạn chỉ có thể đánh giá sản phẩm đã mua trong đơn hàng hoàn thành." });
+
+            var existed = await _context.ProductReviews
+                .AnyAsync(r => r.CustomerId == customer.CustomerId
+                    && r.ProductId == productId
+                    && r.ProductVariantId == variantId);
+            if (existed)
+                return Json(new { success = false, message = "Bạn đã đánh giá sản phẩm này rồi." });
+
+            _context.ProductReviews.Add(new ProductReview
             {
                 ProductId = productId,
                 ProductVariantId = variantId,
@@ -40,10 +57,9 @@ namespace MotoShop.Controllers
                 Rating = rating,
                 Comment = comment,
                 CreatedDate = DateTime.Now,
-                Status = "Approved" // Tự động duyệt hoặc để "Pending" nếu muốn kiểm duyệt
-            };
+                Status = ReviewStatusConst.Pending
+            });
 
-            _context.ProductReviews.Add(review);
             await _context.SaveChangesAsync();
 
             return Json(new { success = true, message = "Cảm ơn bạn đã đánh giá sản phẩm!" });

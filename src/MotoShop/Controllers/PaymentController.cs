@@ -5,6 +5,7 @@ using MotoShop.Business.Helpers;
 using MotoShop.Business.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Threading.Tasks;
 
@@ -44,10 +45,19 @@ namespace MotoShop.Controllers
         }
 
         // Bước 1b: Tạo URL và Redirect sang VNPay cho Cọc dịch vụ
+        [Authorize]
         public async Task<IActionResult> CreateServiceDeposit(int bookingId)
         {
             var booking = await _context.ServiceBookings.FindAsync(bookingId);
             if (booking == null) return NotFound();
+
+            var userId = _userManager.GetUserId(User);
+            var customer = await _context.Customers.AsNoTracking()
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+            var currentEmail = User.Identity?.Name;
+            var ownsBooking = booking.CustomerId == customer?.CustomerId ||
+                (!booking.CustomerId.HasValue && currentEmail != null && booking.CustomerEmail == currentEmail);
+            if (!ownsBooking) return Forbid();
 
             // Sử dụng prefix SB_ để phân biệt với Order
             return GenerateVnPayUrl("SB_" + booking.BookingId, booking.DepositAmount, "Thanh toan coc dich vu: " + booking.BookingId);

@@ -77,6 +77,9 @@ namespace MotoShop.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddToCart([FromForm] int variantId, [FromForm] int quantity = 1)
         {
+            if (quantity < 1)
+                return Json(new { success = false, message = "Số lượng không hợp lệ." });
+
             var userId = GetCartUserId();
             try
             {
@@ -93,6 +96,8 @@ namespace MotoShop.Controllers
         [HttpGet]
         public async Task<IActionResult> Checkout(int? variantId, int quantity = 1)
         {
+            if (quantity < 1) quantity = 1;
+
             var userId = _userManager.GetUserId(User);
             if (string.IsNullOrEmpty(userId)) 
                 return RedirectToAction("Login", "Account", new { returnUrl = Request.Path + Request.QueryString });
@@ -176,6 +181,9 @@ namespace MotoShop.Controllers
             var userId = _userManager.GetUserId(User);
             if (string.IsNullOrEmpty(userId)) return Json(new { success = false, message = "Vui lòng đăng nhập." });
 
+            if (model.DirectVariantId.HasValue && model.DirectQuantity < 1)
+                return Json(new { success = false, message = "Số lượng sản phẩm không hợp lệ." });
+
             if (!model.AddressId.HasValue)
             {
                 if (string.IsNullOrEmpty(model.FullName) || string.IsNullOrEmpty(model.Phone) || string.IsNullOrEmpty(model.Province) || string.IsNullOrEmpty(model.Address))
@@ -258,6 +266,9 @@ namespace MotoShop.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddQuick([FromBody] AddQuickRequest request)
         {
+            if (request == null || request.Quantity < 1)
+                return Json(new { success = false, message = "Số lượng không hợp lệ." });
+
             var variant = await _context.ProductVariants
                 .Where(v => v.ProductId == request.ProductId && v.StockQuantity > 0)
                 .OrderByDescending(v => v.StockQuantity)

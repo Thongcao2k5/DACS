@@ -38,9 +38,16 @@ builder.Services.AddCors(options =>
         policy =>
         {
             var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
-            if (builder.Environment.IsDevelopment() || allowedOrigins == null || allowedOrigins.Length == 0)
+            if (builder.Environment.IsDevelopment())
             {
                 policy.SetIsOriginAllowed(origin => true)
+                      .AllowAnyMethod()
+                      .AllowAnyHeader()
+                      .AllowCredentials();
+            }
+            else if (allowedOrigins == null || allowedOrigins.Length == 0)
+            {
+                policy.WithOrigins(builder.Configuration["AppUrl"] ?? "https://localhost")
                       .AllowAnyMethod()
                       .AllowAnyHeader()
                       .AllowCredentials();
@@ -55,7 +62,7 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
 builder.Services.AddDbContextPool<MotoShopDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -511,12 +518,8 @@ using (var scope = app.Services.CreateScope())
             UPDATE Brands SET LogoUrl = '/uploads/brands/ct_cytracing.png' WHERE BrandName = N'CYT RACING';
         ");
 
-        // Dọn bảng cũ — code đã chuyển sang WishlistsNew và AddressesNew hoàn toàn
-        // Không migrate data: Wishlists.UserId là string IdentityUserId, WishlistsNew.UserId là int CustomerId (không tương thích)
-        await context.Database.ExecuteSqlRawAsync(@"
-            IF OBJECT_ID('Wishlists', 'U') IS NOT NULL DROP TABLE Wishlists;
-            IF OBJECT_ID('Addresses', 'U') IS NOT NULL DROP TABLE Addresses;
-        ");
+        // Legacy Wishlists/Addresses cleanup must be handled by migrations or manual DBA steps,
+        // not by destructive startup SQL.
 
         Log.Information("Seeding Data...");
         await context.Database.ExecuteSqlRawAsync(@"

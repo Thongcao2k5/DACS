@@ -50,6 +50,9 @@ namespace MotoShop.Business.Services
 
                     if (checkoutData.DirectVariantId.HasValue)
                     {
+                        if (checkoutData.DirectQuantity < 1)
+                            return (false, "Số lượng sản phẩm không hợp lệ.", 0);
+
                         var variant = await _context.ProductVariants.FindAsync(checkoutData.DirectVariantId.Value);
                         if (variant == null || variant.StockQuantity < checkoutData.DirectQuantity)
                             return (false, "Sản phẩm không đủ tồn kho.", 0);
@@ -73,6 +76,9 @@ namespace MotoShop.Business.Services
                         foreach (var item in cart.CartItems)
                         {
                             var productVariant = item.ProductVariant;
+                            if (item.Quantity < 1)
+                                return (false, "Giỏ hàng có sản phẩm với số lượng không hợp lệ.", 0);
+
                             if (productVariant == null || productVariant.StockQuantity < item.Quantity)
                                 return (false, $"Sản phẩm '{productVariant?.VariantName}' không đủ tồn kho.", 0);
 
@@ -172,28 +178,7 @@ namespace MotoShop.Business.Services
                             .FirstOrDefaultAsync();
 
                         if (productId.HasValue)
-                        {
-                            // Kiểm tra và trừ FlashSale.SoldQuantity nếu sản phẩm đang trong flash sale
-                            var flashSaleProduct = await _context.FlashSaleProducts
-                                .Include(fsp => fsp.FlashSale)
-                                .Where(fsp => fsp.ProductId == productId.Value
-                                           && fsp.FlashSale != null
-                                           && fsp.FlashSale.IsActive
-                                           && fsp.FlashSale.StartDate <= DateTime.Now
-                                           && fsp.FlashSale.EndDate >= DateTime.Now)
-                                .FirstOrDefaultAsync();
-
-                            if (flashSaleProduct != null)
-                            {
-                                var flashRows = await _context.FlashSaleProducts
-                                    .Where(fsp => fsp.Id == flashSaleProduct.Id
-                                               && fsp.SoldQuantity + item.Quantity <= fsp.Quantity)
-                                    .ExecuteUpdateAsync(fsp => fsp.SetProperty(p => p.SoldQuantity, p => p.SoldQuantity + item.Quantity));
-
-                                if (flashRows == 0)
-                                    throw new Exception($"Sản phẩm đã hết số lượng trong Flash Sale.");
-                            }
-                        }
+                            await ReservePromotionQuantityAsync(productId.Value, item.Quantity);
 
                         item.OrderId = order.OrderId;
                         _context.OrderItems.Add(item);
@@ -303,25 +288,8 @@ namespace MotoShop.Business.Services
                                 .Where(v => v.ProductVariantId == item.ProductVariantId)
                                 .ExecuteUpdateAsync(v => v.SetProperty(p => p.StockQuantity, p => p.StockQuantity + item.Quantity));
 
-                            // Hoàn lại FlashSale.SoldQuantity nếu item thuộc flash sale đang active
                             if (item.ProductVariant.ProductId.HasValue)
-                            {
-                                // Load ID trước (tránh navigation property trong ExecuteUpdateAsync WHERE)
-                                var fspId = await _context.FlashSaleProducts
-                                    .Where(fsp => fsp.ProductId == item.ProductVariant.ProductId.Value
-                                               && fsp.FlashSale!.IsActive
-                                               && fsp.SoldQuantity > 0)
-                                    .Select(fsp => (int?)fsp.Id)
-                                    .FirstOrDefaultAsync();
-
-                                if (fspId.HasValue)
-                                {
-                                    await _context.FlashSaleProducts
-                                        .Where(fsp => fsp.Id == fspId.Value)
-                                        .ExecuteUpdateAsync(fsp => fsp.SetProperty(p => p.SoldQuantity,
-                                            p => p.SoldQuantity >= item.Quantity ? p.SoldQuantity - item.Quantity : 0));
-                                }
-                            }
+                                await ReleasePromotionQuantityAsync(item.ProductVariant.ProductId.Value, item.Quantity);
 
                             _context.InventoryTransactions.Add(new InventoryTransaction {
                                 ProductVariantId = item.ProductVariantId, Quantity = item.Quantity,
@@ -375,6 +343,56 @@ namespace MotoShop.Business.Services
                     .Where(p => p.ProductId == item.ProductId)
                     .ExecuteUpdateAsync(p => p.SetProperty(pp => pp.SoldCount, pp => pp.SoldCount + item.TotalQty));
             }
+        }
+
+        private async Task ReservePromotionQuantityAsync(int productId, int quantity)
+        {
+            var now = DateTime.Now;
+            var promotionProductId = await _context.PromotionProducts
+                .Where(pp => pp.ProductId == productId
+                    && pp.Promotion != null
+                    && pp.Promotion.PromotionType == MotoShop.Data.Enums.PromotionType.FlashSale
+                    && pp.Promotion.IsActive
+                    && pp.Promotion.StartDate <= now
+                    && pp.Promotion.EndDate >= now
+                    && pp.Quantity.HasValue)
+                .OrderByDescending(pp => pp.Promotion!.Priority)
+                .Select(pp => (int?)pp.Id)
+                .FirstOrDefaultAsync();
+
+            if (!promotionProductId.HasValue) return;
+
+            var rows = await _context.PromotionProducts
+                .Where(pp => pp.Id == promotionProductId.Value
+                    && pp.Quantity.HasValue
+                    && pp.SoldQuantity + quantity <= pp.Quantity.Value)
+                .ExecuteUpdateAsync(pp => pp.SetProperty(p => p.SoldQuantity, p => p.SoldQuantity + quantity));
+
+            if (rows == 0)
+                throw new Exception("Sản phẩm đã hết số lượng trong Flash Sale.");
+        }
+
+        private async Task ReleasePromotionQuantityAsync(int productId, int quantity)
+        {
+            var now = DateTime.Now;
+            var promotionProductId = await _context.PromotionProducts
+                .Where(pp => pp.ProductId == productId
+                    && pp.Promotion != null
+                    && pp.Promotion.PromotionType == MotoShop.Data.Enums.PromotionType.FlashSale
+                    && pp.Promotion.IsActive
+                    && pp.Promotion.StartDate <= now
+                    && pp.Promotion.EndDate >= now
+                    && pp.SoldQuantity > 0)
+                .OrderByDescending(pp => pp.Promotion!.Priority)
+                .Select(pp => (int?)pp.Id)
+                .FirstOrDefaultAsync();
+
+            if (!promotionProductId.HasValue) return;
+
+            await _context.PromotionProducts
+                .Where(pp => pp.Id == promotionProductId.Value)
+                .ExecuteUpdateAsync(pp => pp.SetProperty(p => p.SoldQuantity,
+                    p => p.SoldQuantity >= quantity ? p.SoldQuantity - quantity : 0));
         }
 
     }

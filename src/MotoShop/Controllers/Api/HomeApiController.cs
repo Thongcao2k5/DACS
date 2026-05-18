@@ -142,9 +142,9 @@ namespace MotoShop.Controllers.Api
                     products
                 });
             }
-            catch (Exception ex)
+            catch
             {
-                return StatusCode(500, new { error = ex.Message });
+                return StatusCode(500, new { error = "Không thể tải dữ liệu flash sale." });
             }
         }
 

@@ -255,6 +255,16 @@ namespace MotoShop.Controllers
                 .SelectMany(v => v.VariantAttributeValues)
                 .GroupBy(a => a.AttributeName)
                 .ToDictionary(g => g.Key, g => g.Select(a => a.Value).Distinct().ToList());
+
+            if (!attrGroups.Any() && product.Variants.Any())
+            {
+                var variantNames = product.Variants
+                    .Select(v => string.IsNullOrWhiteSpace(v.VariantName) ? "Mặc định" : v.VariantName)
+                    .Distinct()
+                    .ToList();
+                attrGroups.Add("Phiên bản", variantNames);
+            }
+
             ViewBag.AttributeGroups = attrGroups.Any() ? attrGroups : null;
 
             var userId = _userManager.GetUserId(User);

@@ -280,7 +280,11 @@ namespace MotoShop.Areas.Admin.Controllers
             if (ids == null || ids.Length == 0) return Json(new { success = false });
             
             var orders = await _context.Orders.Where(o => ids.Contains(o.OrderId)).ToListAsync();
-            // Optional: check if orders can be deleted (e.g. only Cancelled or Pending)
+            var deletableStatuses = new[] { "Cancelled", "DaHuy" };
+            var blocked = orders.Where(o => !deletableStatuses.Contains(o.Status)).Select(o => o.OrderId).ToList();
+            if (blocked.Any())
+                return Json(new { success = false, message = "Chỉ được xóa đơn đã hủy. Đơn không hợp lệ: " + string.Join(", ", blocked) });
+
             _context.Orders.RemoveRange(orders);
             await _context.SaveChangesAsync();
             

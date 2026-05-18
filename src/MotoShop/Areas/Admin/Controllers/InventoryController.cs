@@ -45,10 +45,16 @@ namespace MotoShop.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> UpdateStock(int variantId, int quantity, string note)
         {
+            if (quantity == 0)
+                return Json(new { success = false, message = "Số lượng điều chỉnh phải khác 0" });
+
             var variant = await _context.ProductVariants.FindAsync(variantId);
             if (variant == null) return Json(new { success = false, message = "Không tìm thấy sản phẩm" });
 
             // Cập nhật số lượng tồn (tính nhanh)
+            if (variant.StockQuantity + quantity < 0)
+                return Json(new { success = false, message = "Tồn kho không được âm" });
+
             variant.StockQuantity += quantity;
 
             // Lưu lịch sử giao dịch

@@ -191,6 +191,22 @@ namespace MotoShop.Controllers
             var userId = _userManager.GetUserId(User);
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
             if (customer != null) {
+                var identityUser = await _userManager.FindByIdAsync(userId!);
+                if (identityUser != null && !string.Equals(identityUser.Email, email, StringComparison.OrdinalIgnoreCase))
+                {
+                    var existingEmailUser = await _userManager.FindByEmailAsync(email);
+                    if (existingEmailUser != null && existingEmailUser.Id != identityUser.Id)
+                        return Json(new { success = false, message = "Email này đã được sử dụng." });
+
+                    identityUser.Email = email;
+                    identityUser.UserName = email;
+                    identityUser.NormalizedEmail = _userManager.NormalizeEmail(email);
+                    identityUser.NormalizedUserName = _userManager.NormalizeName(email);
+                    var updateResult = await _userManager.UpdateAsync(identityUser);
+                    if (!updateResult.Succeeded)
+                        return Json(new { success = false, message = "Không thể cập nhật email đăng nhập." });
+                }
+
                 customer.FullName = fullName;
                 customer.Phone = phone;
                 customer.Email = email;

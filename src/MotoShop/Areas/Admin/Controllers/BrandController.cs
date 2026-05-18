@@ -2,10 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
+using MotoShop.Business.Interfaces;
 
 namespace MotoShop.Areas.Admin.Controllers
 {
@@ -14,12 +13,12 @@ namespace MotoShop.Areas.Admin.Controllers
     public class BrandController : Controller
     {
         private readonly MotoShopDbContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileService _fileService;
 
-        public BrandController(MotoShopDbContext context, IWebHostEnvironment env)
+        public BrandController(MotoShopDbContext context, IFileService fileService)
         {
             _context = context;
-            _env = env;
+            _fileService = fileService;
         }
 
         public async Task<IActionResult> Index()
@@ -90,18 +89,10 @@ namespace MotoShop.Areas.Admin.Controllers
             if (file == null || file.Length == 0)
                 return string.IsNullOrWhiteSpace(fallbackUrl) ? null : fallbackUrl;
 
-            var uploadDir = Path.Combine(_env.WebRootPath, "uploads", "brands");
-            if (!Directory.Exists(uploadDir))
-                Directory.CreateDirectory(uploadDir);
+            var result = await _fileService.SaveFileAsync(file, "brands");
+            if (!result.IsSuccess) return fallbackUrl;
 
-            var ext      = Path.GetExtension(file.FileName).ToLowerInvariant();
-            var fileName = $"{Path.GetFileNameWithoutExtension(file.FileName).ToLowerInvariant().Replace(" ", "-")}_{System.DateTime.Now.Ticks}{ext}";
-            var filePath = Path.Combine(uploadDir, fileName);
-
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
-
-            return $"/uploads/brands/{fileName}";
+            return result.FilePath;
         }
     }
 }

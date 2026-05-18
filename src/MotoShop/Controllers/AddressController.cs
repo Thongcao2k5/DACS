@@ -21,23 +21,6 @@ namespace MotoShop.Controllers
         {
             _context = context;
             _userManager = userManager;
-            
-            // Đảm bảo bảng AddressesNew tồn tại
-            try {
-                _context.Database.ExecuteSqlRaw(@"
-                    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AddressesNew')
-                    CREATE TABLE AddressesNew (
-                        Id INT IDENTITY PRIMARY KEY,
-                        CustomerId INT NOT NULL,
-                        FullName NVARCHAR(200),
-                        Phone NVARCHAR(50),
-                        Province NVARCHAR(100),
-                        District NVARCHAR(100),
-                        Ward NVARCHAR(100),
-                        Street NVARCHAR(200),
-                        IsDefault BIT DEFAULT 0
-                    )");
-            } catch { }
         }
 
         private async Task<int> GetCurrentCustomerIdAsync()

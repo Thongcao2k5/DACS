@@ -45,6 +45,28 @@ namespace MotoShop.Controllers
             Response.Cookies.Append(WISHLIST_COOKIE, JsonSerializer.Serialize(items), options);
         }
 
+        private string GetCartUserId()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (!string.IsNullOrEmpty(userId)) return userId;
+
+            const string cartCookie = "MotoShop_GuestId";
+            var guestId = Request.Cookies[cartCookie];
+            if (!string.IsNullOrEmpty(guestId)) return guestId;
+
+            guestId = Guid.NewGuid().ToString();
+            Response.Cookies.Append(cartCookie, guestId, new Microsoft.AspNetCore.Http.CookieOptions
+            {
+                Expires = DateTimeOffset.Now.AddDays(30),
+                Path = "/",
+                HttpOnly = true,
+                IsEssential = true,
+                Secure = Request.IsHttps,
+                SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax
+            });
+            return guestId;
+        }
+
         [HttpGet]
         public IActionResult Index()
         {
@@ -195,7 +217,9 @@ namespace MotoShop.Controllers
             var variant = await _context.ProductVariants.FirstOrDefaultAsync(v => v.ProductId == req.ProductId && v.StockQuantity > 0);
             if (variant == null) return Json(new { success = false, message = "Hết hàng" });
             
-            var userId = _userManager.GetUserId(User) ?? Request.Cookies["MotoShop_GuestId"] ?? Guid.NewGuid().ToString();
+            if (req.Quantity < 1) return Json(new { success = false, message = "Số lượng không hợp lệ" });
+
+            var userId = GetCartUserId();
             var success = await _cartService.AddToCartAsync(userId, variant.ProductVariantId, req.Quantity);
             return Json(new { success = success, cartCount = await _cartService.GetCartCountAsync(userId) });
         }
@@ -204,7 +228,7 @@ namespace MotoShop.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddAllToCart()
         {
-            var userId = _userManager.GetUserId(User) ?? Request.Cookies["MotoShop_GuestId"] ?? Guid.NewGuid().ToString();
+            var userId = GetCartUserId();
             var items = new List<int>();
 
             var identityId = _userManager.GetUserId(User);

@@ -132,17 +132,9 @@ namespace MotoShop.Data.Data
                 }
 
                 // 8. SEED SERVICE CATEGORIES + SERVICES + COMBOS
-                // DisplayOrder > 0 = Ä‘Ă£ seed Ä‘Ăºng; = 0 = do SQL cÅ© trong Program.cs táº¡o thá»§ cĂ´ng â†’ cáº§n xĂ³a & seed láº¡i
-                if (!context.ServiceCategories.Any(c => c.DisplayOrder > 0))
+                // Chỉ seed khi chưa có danh mục. Không xóa dữ liệu dịch vụ/booking hiện có trong seeder.
+                if (!context.ServiceCategories.Any())
                 {
-                    // XĂ³a dá»¯ liá»‡u cÅ© (seeded bá»Ÿi SQL thá»§ cĂ´ng hoáº·c seed cÅ©) Ä‘á»ƒ trĂ¡nh conflict
-                    await context.Database.ExecuteSqlRawAsync("DELETE FROM ServiceComboItems");
-                    await context.Database.ExecuteSqlRawAsync("DELETE FROM ServiceImages");
-                    await context.Database.ExecuteSqlRawAsync("DELETE FROM ServiceCombos");
-                    await context.Database.ExecuteSqlRawAsync("DELETE FROM ServiceBookings WHERE ServiceId IS NOT NULL");
-                    await context.Database.ExecuteSqlRawAsync("DELETE FROM Services");
-                    await context.Database.ExecuteSqlRawAsync("DELETE FROM ServiceCategories");
-
                     // --- Danh má»¥c dá»‹ch vá»¥ ---
                     var scBaoDuong = new ServiceCategory { CategoryName = "Báº£o dÆ°á»¡ng", Slug = "bao-duong", Icon = "bx-wrench", DisplayOrder = 1 };
                     var scRuaXe   = new ServiceCategory { CategoryName = "Rá»­a xe",    Slug = "rua-xe",    Icon = "bx-droplet",    DisplayOrder = 2 };

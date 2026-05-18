@@ -23,6 +23,8 @@ namespace MotoShop.Business.Services
 
         public async Task<bool> AddToCartAsync(string userId, int variantId, int quantity)
         {
+            if (quantity < 1) return false;
+
             var variant = await _unitOfWork.Repository<ProductVariant>()
                 .Find(v => v.ProductVariantId == variantId)
                 .Include(v => v.Product)
@@ -195,16 +197,18 @@ namespace MotoShop.Business.Services
                 var userItem = userCart.CartItems.FirstOrDefault(i => i.ProductVariantId == guestItem.ProductVariantId);
                 if (userItem != null)
                 {
-                    userItem.Quantity = Math.Min(userItem.Quantity + guestItem.Quantity, Math.Max(stock, 1));
+                    if (guestItem.Quantity < 1) continue;
+                    userItem.Quantity = Math.Min(userItem.Quantity + guestItem.Quantity, stock);
                     _unitOfWork.Repository<CartItem>().Update(userItem);
                 }
                 else
                 {
+                    if (guestItem.Quantity < 1 || stock < 1) continue;
                     var newItem = new CartItem
                     {
                         CartId = userCart.CartId,
                         ProductVariantId = guestItem.ProductVariantId,
-                        Quantity = Math.Min(guestItem.Quantity, Math.Max(stock, 1)),
+                        Quantity = Math.Min(guestItem.Quantity, stock),
                         Price = guestItem.Price
                     };
                     await _unitOfWork.Repository<CartItem>().AddAsync(newItem);
