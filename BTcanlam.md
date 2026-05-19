@@ -1,28 +1,21 @@
 # Danh sách việc cần làm - MotoShop DACS
 
-## 🔴 Sửa ngay (Critical)
+## ✅ Đã sửa (Critical — hoàn tất)
 
-### 1. Product.SoldCount không được cập nhật
-- **Vị trí:** `src/MotoShop.Business/Services/OrderService.cs`
-- **Vấn đề:** `SoldCount` tồn tại nhưng không tăng khi đơn hàng hoàn thành
-- **Hậu quả:** Mục "bán chạy nhất" trên trang chủ luôn hiển thị sai
-- **Fix:** Sau khi order Completed, tăng `Product.SoldCount += quantity` cho mỗi OrderItem
+### 1. ~~Product.SoldCount không được cập nhật~~ ✅ ĐÃ SỬA
+- `CompleteOrderAsync` (OrderService.cs:332) cập nhật `SoldCount` bằng `ExecuteUpdateAsync`
+- Được gọi từ AdminOrderController khi status chuyển sang "Completed"
 
-### 2. FlashSale.SoldQuantity không được cập nhật
-- **Vị trí:** `src/MotoShop.Business/Services/OrderService.cs`
-- **Vấn đề:** Số lượng đã bán của flash sale không giảm khi order xong
-- **Hậu quả:** Có thể bán quá số lượng cho phép (oversell)
-- **Fix:** Sau khi order thành công, giảm `FlashSaleProduct.SoldQuantity += quantity`
+### 2. ~~FlashSale.SoldQuantity không được cập nhật~~ ✅ ĐÃ SỬA
+- `ReservePromotionQuantityAsync` (OrderService.cs:354) cập nhật `PromotionProduct.SoldQuantity` trong `CreateOrderAsync`
+- Hệ thống đã migrate sang `Promotion`/`PromotionProduct` (thay thế `FlashSale`/`FlashSaleProduct` cũ)
 
-### 3. Credentials lộ trong appsettings.json
-- **Vị trí:** `src/MotoShop/appsettings.json`
-- **Vấn đề:** Gmail password, Google/Facebook secret, VnPay hash secret để plain text trong git
-- **Fix:** Chuyển sang User Secrets (`dotnet user-secrets set`) hoặc environment variables
+### 3. ~~Credentials lộ trong appsettings.json~~ ✅ ĐÃ SỬA
+- `appsettings.json` chỉ còn placeholder values (`YOUR_GMAIL_USER`, `YOUR_VNPAY_HASH_SECRET`...)
+- Credentials thật được cấu hình local, không commit lên git
 
-### 4. Startup exception bị nuốt
-- **Vị trí:** `src/MotoShop/Program.cs` dòng ~351
-- **Vấn đề:** `catch (Exception ex) { Log.Error(...); }` — app vẫn khởi động nếu seed lỗi
-- **Fix:** Thêm `throw;` hoặc `Environment.Exit(1)` sau Log.Error để fail fast
+### 4. ~~Startup exception bị nuốt~~ ✅ ĐÃ SỬA
+- `Program.cs` catch block đã có `throw;` — app sẽ crash đúng cách nếu seed lỗi
 
 ---
 
