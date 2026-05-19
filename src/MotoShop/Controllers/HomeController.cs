@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using MotoShop.Business.Interfaces;
+using MotoShop.Data.Data;
+using MotoShop.Data.Models;
 using MotoShop.Models;
 using MotoShop.Models.ViewModels;
 using System;
@@ -18,14 +21,16 @@ public class HomeController : Controller
     private readonly ICategoryService _categoryService;
     private readonly IPromotionService _promotionService;
     private readonly IMemoryCache _cache;
+    private readonly MotoShopDbContext _context;
 
-    public HomeController(ILogger<HomeController> logger, IProductService productService, ICategoryService categoryService, IPromotionService promotionService, IMemoryCache cache)
+    public HomeController(ILogger<HomeController> logger, IProductService productService, ICategoryService categoryService, IPromotionService promotionService, IMemoryCache cache, MotoShopDbContext context)
     {
         _logger = logger;
         _productService = productService;
         _categoryService = categoryService;
         _promotionService = promotionService;
         _cache = cache;
+        _context = context;
     }
 
     public async Task<IActionResult> Index()
@@ -75,6 +80,27 @@ public class HomeController : Controller
             NewProducts = newProducts,
             TopCategories = topCategories
         };
+
+        var sliders = await _context.Sliders
+            .Where(s => s.IsActive)
+            .OrderBy(s => s.Position)
+            .ToListAsync();
+
+        var banners = await _context.Banners
+            .Where(b => b.IsActive)
+            .OrderBy(b => b.DisplayOrder)
+            .ToListAsync();
+
+        var recentBlogs = await _context.Blogs
+            .Where(b => b.IsPublished)
+            .OrderByDescending(b => b.CreatedDate)
+            .Take(3)
+            .ToListAsync();
+
+        ViewBag.Sliders     = sliders;
+        ViewBag.Banners     = banners;
+        ViewBag.RecentBlogs = recentBlogs;
+
         return View(model);
     }
 

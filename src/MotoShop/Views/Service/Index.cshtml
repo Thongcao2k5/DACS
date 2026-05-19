@@ -4,8 +4,11 @@
     var categories    = ViewBag.ServiceCategories as List<MotoShop.Data.Models.ServiceCategory>;
     var currentCatId  = ViewBag.CurrentCategoryId as int?;
     var svcCounts     = ViewBag.ServiceCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
-    var allSvc  = Model.ToList();
-    var heroSvc = allSvc.Take(3).ToList();
+    var allSvc      = Model.ToList();
+    var heroSvc     = allSvc.Take(3).ToList();
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var totalPages  = ViewBag.TotalPages  as int? ?? 1;
+    var totalCount  = ViewBag.TotalCount  as int? ?? allSvc.Count;
     var now     = DateTime.Now;
     var isOpen  = (now.DayOfWeek != DayOfWeek.Sunday && now.Hour >= 7 && now.Hour < 18)
                || (now.DayOfWeek == DayOfWeek.Sunday && now.Hour >= 8 && now.Hour < 12);
@@ -251,7 +254,7 @@
                         : "Tất cả dịch vụ")
                 </h5>
                 <div class="text-muted small">
-                    Tìm thấy <strong class="text-dark">@allSvc.Count</strong> dịch vụ
+                    Tìm thấy <strong class="text-dark">@totalCount</strong> dịch vụ
                 </div>
             </div>
 
@@ -352,6 +355,30 @@
                         </div>
                     }
                 </div>
+
+                @if (totalPages > 1)
+                {
+                    <nav class="mt-4 d-flex justify-content-center">
+                        <ul class="pagination">
+                            <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                                <a class="page-link" href="?categoryId=@ViewBag.CurrentCategoryId&page=@(currentPage - 1)">
+                                    <i class='bx bx-chevron-left'></i>
+                                </a>
+                            </li>
+                            @for (int p = 1; p <= totalPages; p++)
+                            {
+                                <li class="page-item @(p == currentPage ? "active" : "")">
+                                    <a class="page-link" href="?categoryId=@ViewBag.CurrentCategoryId&page=@p">@p</a>
+                                </li>
+                            }
+                            <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                                <a class="page-link" href="?categoryId=@ViewBag.CurrentCategoryId&page=@(currentPage + 1)">
+                                    <i class='bx bx-chevron-right'></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
             }
         </div>
     </div>

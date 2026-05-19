@@ -30,8 +30,11 @@ namespace MotoShop.Controllers
             _fileService = fileService;
         }
 
-        public async Task<IActionResult> Index(int? categoryId)
+        public async Task<IActionResult> Index(int? categoryId, int page = 1)
         {
+            page = Math.Max(1, page);
+            const int pageSize = 9;
+
             // 1. Lấy danh sách danh mục để hiển thị bộ lọc (Sidebar)
             var categories = await _context.ServiceCategories
                 .Where(c => c.IsActive)
@@ -60,9 +63,16 @@ namespace MotoShop.Controllers
                 ViewBag.CurrentCategoryId = categoryId.Value;
             }
 
+            var totalCount = await query.CountAsync();
             var services = await query
                 .OrderByDescending(s => s.TotalBookings)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages  = (int)Math.Ceiling(totalCount / (double)pageSize);
+            ViewBag.TotalCount  = totalCount;
 
             return View(services);
         }

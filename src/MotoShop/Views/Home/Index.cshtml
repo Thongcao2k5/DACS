@@ -4,48 +4,62 @@
 }
 
 <!-- 1. HERO SLIDER -->
+@{
+    var sliders = ViewBag.Sliders as List<MotoShop.Data.Models.Slider> ?? new List<MotoShop.Data.Models.Slider>();
+}
 <section class="hero-slider-section p-0">
     <div id="heroSlider" class="carousel slide carousel-fade"
          data-bs-ride="carousel" data-bs-pause="hover" data-bs-interval="4000">
 
         <div class="carousel-indicators">
-            <button type="button" data-bs-target="#heroSlider" data-bs-slide-to="0" class="active" aria-current="true"></button>
-            <button type="button" data-bs-target="#heroSlider" data-bs-slide-to="1"></button>
+            @for (int i = 0; i < sliders.Count; i++)
+            {
+                if (i == 0)
+                {
+                    <button type="button" data-bs-target="#heroSlider" data-bs-slide-to="@i" class="active" aria-current="true"></button>
+                }
+                else
+                {
+                    <button type="button" data-bs-target="#heroSlider" data-bs-slide-to="@i"></button>
+                }
+            }
         </div>
 
         <div class="carousel-inner">
-            <div class="carousel-item active">
-                <div class="hero-slide-bg" style="background-image:url('https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1600&q=80')">
-                    <div class="hero-slide-overlay"></div>
-                    <div class="container h-100 d-flex align-items-center">
-                        <div class="hero-slide-content">
-                            <span class="hero-slide-badge">NEW ARRIVAL 2026</span>
-                            <h1 class="hero-slide-title">PHỤ TÙNG XE MÁY<br><span class="hero-slide-accent">CHÍNH HÃNG</span></h1>
-                            <p class="hero-slide-desc">Chất lượng vượt trội cho xế yêu của bạn. Nhập khẩu trực tiếp từ Nhật Bản, Ý và Thái Lan.</p>
-                            <div class="hero-slide-ctas">
-                                <a asp-controller="Product" asp-action="Index" class="btn-hero-slide-primary">MUA NGAY</a>
-                                <a asp-controller="Product" asp-action="Index" class="btn-hero-slide-outline">XEM DANH MỤC</a>
+            @if (sliders.Any())
+            {
+                for (int i = 0; i < sliders.Count; i++)
+                {
+                    var s = sliders[i];
+                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                        <div class="hero-slide-bg" style="background-image:url('@s.ImageUrl')">
+                            <div class="hero-slide-overlay"></div>
+                            <div class="container h-100 d-flex align-items-center">
+                                <div class="hero-slide-content">
+                                    @if (!string.IsNullOrEmpty(s.Title))
+                                    {
+                                        <h1 class="hero-slide-title">@s.Title</h1>
+                                    }
+                                    @if (!string.IsNullOrEmpty(s.LinkUrl))
+                                    {
+                                        <div class="hero-slide-ctas">
+                                            <a href="@s.LinkUrl" class="btn-hero-slide-primary">XEM NGAY</a>
+                                        </div>
+                                    }
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            <div class="carousel-item">
-                <div class="hero-slide-bg" style="background-image:url('https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=1600&q=80')">
-                    <div class="hero-slide-overlay"></div>
-                    <div class="container h-100 d-flex align-items-center">
-                        <div class="hero-slide-content">
-                            <span class="hero-slide-badge">SIÊU ƯU ĐÃI</span>
-                            <h1 class="hero-slide-title">BẢO DƯỠNG TRỌN GÓI<br><span class="hero-slide-accent">TIẾT KIỆM 30%</span></h1>
-                            <p class="hero-slide-desc">Combo phụ tùng nồi – lọc gió – bugi cho mọi dòng xe tay ga. Duy nhất trong tháng.</p>
-                            <div class="hero-slide-ctas">
-                                <a asp-controller="Product" asp-action="Index" class="btn-hero-slide-primary">XEM SẢN PHẨM</a>
-                                <a asp-controller="Service" asp-action="Index" class="btn-hero-slide-outline">ĐẶT LỊCH BẢO DƯỠNG</a>
-                            </div>
-                        </div>
+                }
+            }
+            else
+            {
+                <div class="carousel-item active">
+                    <div class="hero-slide-bg" style="background-image:url('https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1600&q=80')">
+                        <div class="hero-slide-overlay"></div>
                     </div>
                 </div>
-            </div>
+            }
         </div>
 
         <button class="carousel-control-prev" type="button" data-bs-target="#heroSlider" data-bs-slide="prev">
@@ -113,29 +127,30 @@
     </div>
 </section>
 
-<!-- 3. PROMO BANNERS — Pure CSS, no images -->
-<section class="py-4 bg-light">
-    <div class="container">
-        <div class="row g-4">
-            <div class="col-md-6">
-                <div class="promo-card-v2 promo-red-v2">
-                    <span class="promo-tag-v2">ƯU ĐÃI HOT</span>
-                    <h3>ƯU ĐÃI THÁNG 5</h3>
-                    <p>Giảm ngay 200k cho đơn hàng bảo dưỡng trọn gói. Áp dụng đến hết tháng.</p>
-                    <a asp-controller="Product" asp-action="Promotion" class="btn-promo-white">NHẬN ƯU ĐÃI</a>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="promo-card-v2 promo-dark-v2">
-                    <span class="promo-tag-v2">MIỄN PHÍ</span>
-                    <h3>FREE SHIPPING</h3>
-                    <p>Miễn phí vận chuyển toàn quốc cho mọi đơn hàng phụ tùng trên 500k.</p>
-                    <a asp-controller="Info" asp-action="ShippingPolicy" class="btn-promo-white">XEM CHI TIẾT</a>
-                </div>
+<!-- 3. BANNERS -->
+@{
+    var banners = ViewBag.Banners as List<MotoShop.Data.Models.Banner> ?? new List<MotoShop.Data.Models.Banner>();
+    var homeTopBanners = banners.Where(b => b.Position == "home-top").ToList();
+    var homeMidBanners = banners.Where(b => b.Position == "home-mid").ToList();
+}
+@if (homeTopBanners.Any())
+{
+    <section class="py-3">
+        <div class="container">
+            <div class="row g-3">
+                @foreach (var b in homeTopBanners)
+                {
+                    <div class="col-md-@(homeTopBanners.Count == 1 ? "12" : "6")">
+                        <a href="@(b.LinkUrl ?? "#")">
+                            <img src="@b.ImageUrl" alt="@b.Title"
+                                 class="img-fluid rounded-3 w-100" style="object-fit:cover;max-height:180px;" />
+                        </a>
+                    </div>
+                }
             </div>
         </div>
-    </div>
-</section>
+    </section>
+}
 
 <!-- 4. FEATURED PRODUCTS -->
 <section class="bg-white">
@@ -294,45 +309,30 @@
 </section>
 
 <!-- 9. BLOG / NEWS -->
+@{
+    var recentBlogs = ViewBag.RecentBlogs as List<MotoShop.Data.Models.Blog> ?? new List<MotoShop.Data.Models.Blog>();
+}
 <section class="bg-light">
     <div class="container">
         <div class="section-title-wrapper text-center">
             <h2 class="section-title center text-uppercase">Tin tức & Kinh nghiệm</h2>
         </div>
         <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
-                    <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=600" class="card-img-top" alt="Blog">
-                    <div class="card-body p-4">
-                        <span class="text-danger small fw-bold">25 Tháng 12, 2025</span>
-                        <h5 class="fw-bold mt-2">Hướng dẫn bảo dưỡng nồi xe tay ga đúng cách</h5>
-                        <p class="text-muted small">Bảo dưỡng nồi định kỳ giúp xe vận hành êm ái và tiết kiệm xăng hơn...</p>
-                        <a asp-controller="Blog" asp-action="Detail" asp-route-slug="bao-duong-noi" class="text-danger fw-bold text-decoration-none small">ĐỌC TIẾP <i class='bx bx-right-arrow-alt'></i></a>
+            @foreach (var blog in recentBlogs)
+            {
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+                        <img src="@(blog.Thumbnail ?? "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=600")"
+                             class="card-img-top" alt="@blog.Title" style="height:200px;object-fit:cover;">
+                        <div class="card-body p-4">
+                            <span class="text-danger small fw-bold">@blog.CreatedDate.ToString("dd/MM/yyyy")</span>
+                            <h5 class="fw-bold mt-2">@blog.Title</h5>
+                            <a asp-controller="Blog" asp-action="Detail" asp-route-slug="@blog.Slug"
+                               class="text-danger fw-bold text-decoration-none small">ĐỌC TIẾP <i class='bx bx-right-arrow-alt'></i></a>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
-                    <img src="https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=600" class="card-img-top" alt="Blog">
-                    <div class="card-body p-4">
-                        <span class="text-danger small fw-bold">20 Tháng 12, 2025</span>
-                        <h5 class="fw-bold mt-2">Cách phân biệt nhớt Motul thật và giả</h5>
-                        <p class="text-muted small">Tránh mua phải hàng kém chất lượng làm hư hại động cơ xe của bạn...</p>
-                        <a asp-controller="Blog" asp-action="Detail" asp-route-slug="phan-biet-nhot" class="text-danger fw-bold text-decoration-none small">ĐỌC TIẾP <i class='bx bx-right-arrow-alt'></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
-                    <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=600" class="card-img-top" alt="Blog">
-                    <div class="card-body p-4">
-                        <span class="text-danger small fw-bold">15 Tháng 12, 2025</span>
-                        <h5 class="fw-bold mt-2">Top 5 loại lốp xe bền nhất cho Honda SH</h5>
-                        <p class="text-muted small">Lựa chọn lốp xe phù hợp giúp tăng độ bám đường và an toàn khi di chuyển...</p>
-                        <a asp-controller="Blog" asp-action="Detail" asp-route-slug="top-5-lop-xe" class="text-danger fw-bold text-decoration-none small">ĐỌC TIẾP <i class='bx bx-right-arrow-alt'></i></a>
-                    </div>
-                </div>
-            </div>
+            }
         </div>
     </div>
 </section>

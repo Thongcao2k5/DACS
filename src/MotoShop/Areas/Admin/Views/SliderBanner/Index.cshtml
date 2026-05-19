@@ -112,12 +112,25 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3 text-center">
-                        <img id="s_preview" src="/assets/img/elements/18.jpg" class="img-fluid rounded border" style="max-height: 150px; width: 100%; object-fit: cover;">
-                    </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Ảnh Slider *</label>
-                        <input type="file" name="imageFile" class="form-control" onchange="previewImg(this, 's_preview')">
+                        <label class="form-label fw-semibold" style="font-size:13px">Ảnh hiện tại</label>
+                        <div id="s_current_img_wrap" style="display:none;margin-bottom:8px">
+                            <img id="s_current_img" src="" alt="Ảnh hiện tại"
+                                 style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;border:1px solid #eeeeee" />
+                        </div>
+                        <label class="form-label fw-semibold" style="font-size:13px">
+                            Thay ảnh mới
+                            <span style="font-weight:400;color:#a1acb8">(để trống nếu không đổi)</span>
+                        </label>
+                        <input type="file" class="form-control" name="imageFile" accept="image/*"
+                               id="s_image_file" onchange="previewSliderImage(this)" />
+                        <div id="s_preview_wrap" style="display:none;margin-top:8px">
+                            <img id="s_preview_img" src="" alt="Preview"
+                                 style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;border:2px solid #E60023" />
+                            <div style="font-size:11px;color:#E60023;margin-top:4px">
+                                <i class='bx bx-check-circle'></i> Ảnh mới sẽ thay thế ảnh cũ
+                            </div>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Tiêu đề</label>
@@ -148,8 +161,9 @@
         function openSliderModal() {
             $('#sliderForm')[0].reset();
             $('#s_id').val(0);
-            $('#s_preview').attr('src', '/assets/img/elements/18.jpg');
             $('#sliderModalTitle').text('THÊM SLIDER MỚI');
+            document.getElementById('s_current_img_wrap').style.display = 'none';
+            document.getElementById('s_preview_wrap').style.display = 'none';
             sModal.show();
         }
 
@@ -157,9 +171,19 @@
             $('#s_id').val(s.SliderId);
             $('#s_title').val(s.Title);
             $('#s_link').val(s.LinkUrl);
-            $('#s_preview').attr('src', s.ImageUrl);
             $('#s_active').prop('checked', s.IsActive);
             $('#sliderModalTitle').text('CHỈNH SỬA SLIDER');
+            const imgWrap = document.getElementById('s_current_img_wrap');
+            const imgEl   = document.getElementById('s_current_img');
+            const imageUrl = s.ImageUrl;
+            if (imageUrl) {
+                imgEl.src = imageUrl;
+                imgWrap.style.display = 'block';
+            } else {
+                imgWrap.style.display = 'none';
+            }
+            document.getElementById('s_preview_wrap').style.display = 'none';
+            document.getElementById('s_image_file').value = '';
             sModal.show();
         }
 
@@ -192,6 +216,21 @@
 
         async function updateSliderPos(id, pos) {
             // Cập nhật vị trí trực tiếp nếu cần
+        }
+
+        function previewSliderImage(input) {
+            const wrap = document.getElementById('s_preview_wrap');
+            const img  = document.getElementById('s_preview_img');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    img.src = e.target.result;
+                    wrap.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                wrap.style.display = 'none';
+            }
         }
     </script>
     <style>
