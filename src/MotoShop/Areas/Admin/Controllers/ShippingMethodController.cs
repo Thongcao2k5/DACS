@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MotoShop.Business.Services;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 using System.Linq;
@@ -14,10 +15,12 @@ namespace MotoShop.Areas.Admin.Controllers
     public class ShippingMethodController : Controller
     {
         private readonly MotoShopDbContext _context;
+        private readonly IGhnService _ghn;
 
-        public ShippingMethodController(MotoShopDbContext context)
+        public ShippingMethodController(MotoShopDbContext context, IGhnService ghn)
         {
             _context = context;
+            _ghn = ghn;
         }
 
         [Route("")]
@@ -52,6 +55,14 @@ namespace MotoShop.Areas.Admin.Controllers
             method.IsActive = !method.IsActive;
             await _context.SaveChangesAsync();
             return Json(new { success = true });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Zones()
+        {
+            var provinces = await _ghn.GetProvincesAsync();
+            ViewBag.Provinces = provinces;
+            return View();
         }
 
         [HttpPost]

@@ -39,5 +39,8 @@ namespace MotoShop.Models.ViewModels
         public string Street { get; set; } = string.Empty;
 
         public bool IsDefault { get; set; }
+
+        public int? DistrictId { get; set; }
+        public string? WardCode { get; set; }
     }
 }

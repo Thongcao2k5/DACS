@@ -117,6 +117,16 @@
                                 <label class="form-label-custom small fw-bold">Địa chỉ chi tiết *</label>
                                 <input asp-for="Address" id="inputStreet" class="form-control form-control-custom" placeholder="Số nhà, tên đường..." value="@defaultAddr?.Street">
                             </div>
+                            <div class="col-md-12">
+                                <button type="button" id="btn-calc-ship"
+                                        onclick="saveAddressAndCalcShip()"
+                                        style="margin-top:10px;padding:9px 20px;background:#E60023;color:#fff;border:none;
+                                               border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;
+                                               display:flex;align-items:center;gap:6px;">
+                                    <i class='bx bx-map-pin'></i> Lưu & Tính phí ship
+                                </button>
+                                <div id="addr-save-status" style="font-size:12px;margin-top:6px;"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -128,16 +138,17 @@
 
                 <div class="checkout-section">
                     <h5 class="section-subtitle"><i class='bx bx-package'></i> VẬN CHUYỂN</h5>
-                    @foreach (var method in shippingMethods)
-                    {
-                        <div class="method-card @(shippingMethods.First() == method ? "active" : "") mb-2" onclick="setShippingMethod(@method.Id, @method.Cost, this)">
-                            <input type="radio" name="ShippingMethodId" value="@method.Id" id="ship_@method.Id" @(shippingMethods.First() == method ? "checked" : "")>
-                            <div class="method-info">
-                                <label for="ship_@method.Id" class="name">@method.Name - @(method.Cost == 0 ? "Miễn phí" : method.Cost.ToString("N0") + "đ")</label>
-                                <span class="desc x-small">@method.Description</span>
-                            </div>
+
+                    <div id="shipping-options">
+                        <div class="p-3 rounded-3 bg-light text-muted small">
+                            <span class="spinner-border spinner-border-sm me-1"></span>Đang tải phí ship...
                         </div>
-                    }
+                    </div>
+
+                    <input type="hidden" name="ShippingDistrictId" id="inp-district-id" value="" />
+                    <input type="hidden" name="ShippingWardCode" id="inp-ward-code" value="" />
+                    <input type="hidden" name="ShippingFee" id="inp-shipping-fee" value="0" />
+                    <input type="hidden" name="ShippingMethodId" id="inp-shipping-method" value="" />
                 </div>
 
                 <div class="checkout-section">
@@ -201,6 +212,14 @@
                         </div>
                     }
 
+                    <div class="summary-total d-flex justify-content-between align-items-center mb-2"
+                         id="shippingRow" style="display:none">
+                        <span class="fw-bold">
+                            <i class='bx bx-package'></i> Phí vận chuyển
+                        </span>
+                        <span id="shippingDisplay" class="fw-bold">—</span>
+                    </div>
+
                     <!-- Voucher Section -->
                     <div class="voucher-section mb-4 p-3 bg-light rounded-3">
                         <label class="form-label small fw-bold text-uppercase mb-2"><i class='bx bxs-coupon text-danger'></i> Mã giảm giá</label>
@@ -243,7 +262,7 @@
                 <div class="address-list-modal">
                     @foreach (var addr in savedAddresses)
                     {
-                        <div class="saved-addr-option p-3 border rounded-3 mb-3 cursor-pointer @(addr.Id == defaultAddr?.Id ? "active" : "")" 
+                        <div class="saved-addr-option p-3 border rounded-3 mb-3 cursor-pointer @(addr.Id == defaultAddr?.Id ? "active" : "")"
                              onclick="selectSavedAddress(this)"
                              data-id="@addr.Id"
                              data-fullname="@addr.FullName"
@@ -252,7 +271,9 @@
                              data-district="@addr.District"
                              data-ward="@addr.Ward"
                              data-street="@addr.Street"
-                             data-address="@addr.Address">
+                             data-address="@addr.Address"
+                             data-district-id="@addr.DistrictId"
+                             data-ward-code="@addr.WardCode">
                             <div class="d-flex justify-content-between">
                                 <span class="fw-bold">@addr.FullName</span>
                                 @if (addr.IsDefault) { <span class="text-danger x-small fw-bold">Mặc định</span> }
@@ -344,11 +365,11 @@
             document.getElementById('summaryName').innerText = d.fullname;
             document.getElementById('summaryPhone').innerText = d.phone;
             document.getElementById('summaryAddress').innerText = d.address;
-            
+
             document.getElementById('inputFullName').value = d.fullname;
             document.getElementById('inputPhone').value = d.phone;
             document.getElementById('inputStreet').value = d.street;
-            
+
             window.pendingDistrict = d.district; window.pendingWard = d.ward;
             const pOpt = [...provinceSelect.options].find(o => o.text === d.province);
             if (pOpt) { provinceSelect.value = pOpt.value; provinceSelect.onchange(); }
@@ -356,6 +377,11 @@
             document.getElementById('addressSummary').classList.remove('d-none');
             document.getElementById('formInputs').classList.add('d-none');
             addressModal.hide();
+
+            // Reload shipping options for the newly selected address
+            const districtId = parseInt(d.districtId) || 0;
+            const wardCode = d.wardCode || '';
+            loadShippingOptions(districtId, wardCode);
         }
 
         function useNewAddress() {
@@ -365,6 +391,17 @@
             document.getElementById('inputFullName').value = ''; document.getElementById('inputPhone').value = '';
             document.getElementById('inputStreet').value = ''; provinceSelect.value = ''; provinceSelect.onchange();
             addressModal.hide();
+
+            // Reset shipping khi nhập địa chỉ mới — không còn districtId/wardCode hợp lệ
+            document.getElementById('inp-district-id').value = '';
+            document.getElementById('inp-ward-code').value = '';
+            document.getElementById('inp-shipping-fee').value = '0';
+            document.getElementById('inp-shipping-method').value = '';
+            document.getElementById('shippingFee').dataset.value = '0';
+            document.getElementById('shipping-options').innerHTML =
+                '<div class="alert alert-warning small mb-0"><i class=\'bx bx-error-circle me-1\'></i>' +
+                'Vui lòng lưu địa chỉ mới trong <a href="/Address">trang địa chỉ</a> để tính phí ship tự động.</div>';
+            updateTotal();
         }
 
         function updateTotal() {
@@ -372,14 +409,21 @@
             const ship = parseFloat(document.getElementById('shippingFee').dataset.value || 0);
             const discount = window.currentDiscountAmount || 0;
             const total = Math.max(0, sub + ship - discount);
-            
-            // Cập nhật text hiển thị
+
             document.getElementById('totalOrder').innerText = total.toLocaleString('vi-VN') + 'đ';
-            
-            // Cập nhật hiển thị phí ship trong tóm tắt nếu cần
-            const shipDisplay = document.getElementById('displayShippingFee');
-            if (shipDisplay) {
-                shipDisplay.innerText = ship === 0 ? 'Miễn phí' : '+' + ship.toLocaleString('vi-VN') + 'đ';
+
+            // Hiển thị dòng phí ship khi đã có kết quả tính (districtId được gán)
+            const shippingRow     = document.getElementById('shippingRow');
+            const shippingDisplay = document.getElementById('shippingDisplay');
+            const hasCalculated   = document.getElementById('inp-district-id').value !== '';
+            if (shippingRow && shippingDisplay && hasCalculated) {
+                shippingRow.style.display = 'flex';
+                shippingDisplay.textContent = ship === 0
+                    ? 'Miễn phí'
+                    : ship.toLocaleString('vi-VN') + 'đ';
+                shippingDisplay.style.color = ship === 0 ? '#20c997' : '#E60023';
+            } else if (shippingRow && !hasCalculated) {
+                shippingRow.style.display = 'none';
             }
         }
 
@@ -388,14 +432,220 @@
             const section = el.closest('.checkout-section');
             section.querySelectorAll('.method-card').forEach(c => c.classList.remove('active'));
             el.classList.add('active');
-            
+
             // Update Radio input
             el.querySelector('input').checked = true;
-            
+
             // Update logic giá
             document.getElementById('shippingFee').dataset.value = cost;
             updateTotal();
         }
+
+        // ── GHN Shipping Logic ──────────────────────────────────────────────
+        const orderSubtotal = parseFloat(document.getElementById('subtotal').dataset.value || 0);
+        const freeShipDefault = 500000;
+        const defaultDistrictId = @(ViewBag.DefaultDistrictId ?? 0);
+        const defaultWardCode = '@(ViewBag.DefaultWardCode ?? "")';
+        const defaultWeight = @(ViewBag.DefaultWeight ?? 500);
+
+        async function loadShippingOptions(districtId, wardCode) {
+            if (!districtId || !wardCode) {
+                document.getElementById('shipping-options').innerHTML =
+                    '<div class="alert alert-warning small mb-0"><i class=\'bx bx-error-circle me-1\'></i>' +
+                    'Vui lòng cập nhật địa chỉ giao hàng có đầy đủ Quận/Huyện và Phường/Xã để tính phí ship tự động.</div>';
+                return;
+            }
+
+            document.getElementById('inp-district-id').value = districtId;
+            document.getElementById('inp-ward-code').value = wardCode;
+            document.getElementById('shipping-options').innerHTML =
+                '<div class="p-3 rounded-3 bg-light text-muted small"><span class="spinner-border spinner-border-sm me-1"></span>Đang tính phí ship...</div>';
+
+            const res = await fetch('/api/shipping/calculate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ toDistrictId: districtId, toWardCode: wardCode, weightGram: defaultWeight, orderTotal: orderSubtotal, freeShipThreshold: freeShipDefault })
+            }).then(r => r.json()).catch(() => []);
+
+            if (!res.length) {
+                document.getElementById('shipping-options').innerHTML =
+                    '<div class="p-3 rounded-3 bg-light text-muted small"><i class=\'bx bx-info-circle me-1\'></i>Không thể tính phí ship, sẽ tính khi giao hàng.</div>';
+                return;
+            }
+
+            const html = res.map((opt, i) => `
+                <label id="ship-opt-${opt.serviceId}" style="display:flex;align-items:center;gap:12px;padding:12px 14px;
+                    border:1.5px solid ${i===0?'#E60023':'#eeeeee'};border-radius:10px;margin-bottom:8px;cursor:pointer;
+                    background:${i===0?'rgba(230,0,35,0.04)':'#fff'};transition:all .15s;">
+                    <input type="radio" name="_shipChoice" value="${opt.serviceId}" ${i===0?'checked':''}
+                        onchange="selectShipOption(${opt.serviceId},${opt.fee},'${opt.serviceName}')" style="accent-color:#E60023"/>
+                    <div style="flex:1">
+                        <div style="font-weight:600;font-size:14px;color:#1a1a1a">${opt.serviceName}</div>
+                        <div style="font-size:12px;color:#a1acb8;margin-top:2px">
+                            <i class='bx bx-calendar' style="font-size:11px"></i> Dự kiến ${opt.estimatedDays} ngày
+                        </div>
+                        ${opt.freeShipRemaining ? `<div style="font-size:11px;color:#20c997;margin-top:2px">
+                            <i class='bx bx-gift' style="font-size:11px"></i>
+                            Mua thêm ${opt.freeShipRemaining.toLocaleString('vi-VN')}đ để miễn phí ship
+                        </div>` : ''}
+                    </div>
+                    <div style="font-weight:700;color:${opt.isFree?'#20c997':'#E60023'};font-size:15px">
+                        ${opt.isFree ? 'Miễn phí' : opt.fee.toLocaleString('vi-VN')+'đ'}
+                    </div>
+                </label>`).join('');
+
+            document.getElementById('shipping-options').innerHTML = html;
+            selectShipOption(res[0].serviceId, res[0].fee, res[0].serviceName);
+        }
+
+        function selectShipOption(serviceId, fee, name) {
+            document.getElementById('inp-shipping-fee').value = fee;
+            document.getElementById('inp-shipping-method').value = serviceId || '';
+            document.getElementById('shippingFee').dataset.value = fee;
+            updateTotal();
+            document.querySelectorAll('[id^="ship-opt-"]').forEach(el => {
+                const sel = el.id === 'ship-opt-' + serviceId;
+                el.style.borderColor = sel ? '#E60023' : '#eeeeee';
+                el.style.background = sel ? 'rgba(230,0,35,0.04)' : '#fff';
+            });
+        }
+
+        function normalizeName(s) {
+            return (s || '').trim().toLowerCase()
+                .replace(/\s*-\s*/g, '-')
+                .replace(/\s+/g, ' ');
+        }
+
+        function fuzzyMatch(a, b) {
+            const na = normalizeName(a), nb = normalizeName(b);
+            return na.includes(nb) || nb.includes(na);
+        }
+
+        async function saveAddressAndCalcShip() {
+            const btn = document.getElementById('btn-calc-ship');
+            const status = document.getElementById('addr-save-status');
+
+            const provinceSel = document.getElementById('province');
+            const districtSel = document.getElementById('district');
+            const wardSel     = document.getElementById('ward');
+            const provinceName = provinceSel?.options[provinceSel?.selectedIndex]?.text || '';
+            const districtName = districtSel?.options[districtSel?.selectedIndex]?.text || '';
+            const wardName     = wardSel?.options[wardSel?.selectedIndex]?.text || '';
+
+            if (!districtName || districtName === 'Chọn Quận/Huyện' ||
+                !wardName     || wardName === 'Chọn Phường/Xã') {
+                status.innerHTML = '<span style="color:#E60023">Vui lòng chọn đủ Quận/Huyện và Phường/Xã</span>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Đang tính...";
+            status.innerHTML = '';
+
+            try {
+                // Bước 1: Map tên tỉnh → GHN ProvinceId
+                const provinces = await fetch('/api/shipping/provinces').then(r => r.json());
+                const cleanProvince = provinceName.replace(/^Tỉnh\s+/i,'').replace(/^Thành phố\s+/i,'');
+                const ghnProvince = provinces.find(p => {
+                    const cp = p.provinceName.replace(/^Tỉnh\s+/i,'').replace(/^Thành phố\s+/i,'');
+                    return fuzzyMatch(cp, cleanProvince);
+                });
+                if (!ghnProvince) {
+                    status.innerHTML = '<span style="color:#E60023">Không tìm được tỉnh trong GHN. '
+                        + '<a href="/Address" style="color:#E60023;text-decoration:underline">Lưu địa chỉ tại đây</a> để tính phí chính xác.</span>';
+                    return;
+                }
+
+                // Bước 2: Map tên quận → GHN DistrictId
+                const districts = await fetch(`/api/shipping/districts?provinceId=${ghnProvince.provinceId}`).then(r => r.json());
+                const cleanDistrict = districtName.replace(/^Quận\s+/i,'').replace(/^Huyện\s+/i,'').replace(/^Thị xã\s+/i,'').replace(/^Thành phố\s+/i,'');
+                const ghnDistrict = districts.find(d => {
+                    const cd = d.districtName.replace(/^Quận\s+/i,'').replace(/^Huyện\s+/i,'').replace(/^Thị xã\s+/i,'').replace(/^Thành phố\s+/i,'');
+                    return fuzzyMatch(cd, cleanDistrict);
+                });
+                if (!ghnDistrict) {
+                    status.innerHTML = '<span style="color:#E60023">Không map được Quận/Huyện sang GHN. '
+                        + '<a href="/Address" style="color:#E60023;text-decoration:underline">Lưu địa chỉ tại đây</a>.</span>';
+                    return;
+                }
+
+                // Bước 3: Map tên phường → GHN WardCode
+                const wards = await fetch(`/api/shipping/wards?districtId=${ghnDistrict.districtId}`).then(r => r.json());
+                const cleanWard = wardName.replace(/^Phường\s+/i,'').replace(/^Xã\s+/i,'').replace(/^Thị trấn\s+/i,'');
+                const ghnWard = wards.find(w => {
+                    const cw = w.wardName.replace(/^Phường\s+/i,'').replace(/^Xã\s+/i,'').replace(/^Thị trấn\s+/i,'');
+                    return fuzzyMatch(cw, cleanWard);
+                });
+                if (!ghnWard) {
+                    status.innerHTML = '<span style="color:#E60023">Không map được Phường/Xã sang GHN. '
+                        + '<a href="/Address" style="color:#E60023;text-decoration:underline">Lưu địa chỉ tại đây</a>.</span>';
+                    return;
+                }
+
+                // Bước 4: Gán vào hidden inputs
+                document.getElementById('inp-district-id').value = ghnDistrict.districtId;
+                document.getElementById('inp-ward-code').value   = ghnWard.wardCode;
+
+                // Bước 4.5: Lưu địa chỉ mới vào DB và đặt làm mặc định
+                const fullName = document.getElementById('inputFullName')?.value?.trim() || '';
+                const phone    = document.getElementById('inputPhone')?.value?.trim() || '';
+                const street   = document.getElementById('inputStreet')?.value?.trim() || '';
+                const token    = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+                if (fullName && phone && street) {
+                    const saveRes = await fetch('/Address/AddAddress', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token
+                        },
+                        body: JSON.stringify({
+                            fullName, phone,
+                            province: provinceName,
+                            district: districtName,
+                            ward: wardName,
+                            street,
+                            isDefault: true,
+                            districtId: ghnDistrict.districtId,
+                            wardCode: ghnWard.wardCode
+                        })
+                    }).then(r => r.json()).catch(() => null);
+
+                    if (saveRes?.success) {
+                        document.getElementById('inputAddressId').value = saveRes.id;
+                        document.getElementById('summaryName').innerText    = fullName;
+                        document.getElementById('summaryPhone').innerText   = phone;
+                        document.getElementById('summaryAddress').innerText =
+                            `${street}, ${wardName}, ${districtName}, ${provinceName}`;
+                        document.getElementById('addressSummary').classList.remove('d-none');
+                        document.getElementById('formInputs').classList.add('d-none');
+                    }
+                }
+
+                status.innerHTML = '<span style="color:#20c997"><i class="bx bx-check"></i> Đã xác định vị trí, đang tính phí...</span>';
+
+                // Bước 5: Gọi tính phí (loadShippingOptions đọc orderSubtotal từ module scope)
+                await loadShippingOptions(ghnDistrict.districtId, ghnWard.wardCode);
+
+                status.innerHTML = '<span style="color:#20c997"><i class="bx bx-check-circle"></i> Đã tính phí ship thành công!</span>';
+            } catch (err) {
+                status.innerHTML = '<span style="color:#E60023">Lỗi: ' + err.message + '</span>';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = "<i class='bx bx-map-pin'></i> Lưu & Tính phí ship";
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (defaultDistrictId > 0 && defaultWardCode) {
+                await loadShippingOptions(defaultDistrictId, defaultWardCode);
+            } else {
+                document.getElementById('shipping-options').innerHTML =
+                    '<div class="alert alert-warning small mb-0"><i class=\'bx bx-error-circle me-1\'></i>' +
+                    'Vui lòng cập nhật địa chỉ giao hàng có đầy đủ Quận/Huyện và Phường/Xã để tính phí ship tự động.</div>';
+            }
+        });
+        // ── End GHN Shipping Logic ──────────────────────────────────────────
 
         // Voucher Logic
         document.getElementById('btnApplyCoupon').onclick = async function() {

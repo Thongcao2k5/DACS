@@ -139,6 +139,7 @@ namespace MotoShop.Controllers
                 ViewBag.IsDirectCheckout = true;
                 ViewBag.DirectVariantId = variantId.Value;
                 ViewBag.DirectQuantity = quantity;
+                ViewBag.DefaultWeight = Math.Max(100, variant.Weight * quantity);
             }
             else
             {
@@ -151,6 +152,11 @@ namespace MotoShop.Controllers
                 finalItems = (await _cartService.GetCartAsync(userId)).ToList();
                 if (!finalItems.Any()) return RedirectToAction("Index");
                 ViewBag.IsDirectCheckout = false;
+                var variantIds = finalItems.Select(i => i.ProductVariantId).ToList();
+                var weightMap = await _context.ProductVariants
+                    .Where(v => variantIds.Contains(v.ProductVariantId))
+                    .ToDictionaryAsync(v => v.ProductVariantId, v => v.Weight);
+                ViewBag.DefaultWeight = Math.Max(100, finalItems.Sum(i => i.Quantity * (weightMap.TryGetValue(i.ProductVariantId, out var w) ? w : 500)));
             }
 
             var shippingMethods = await _context.ShippingMethods.Where(s => s.IsActive == true).ToListAsync();
@@ -162,6 +168,8 @@ namespace MotoShop.Controllers
 
             var model = new CheckoutDto();
             var defaultAddr = savedAddresses.FirstOrDefault(a => a.IsDefault) ?? savedAddresses.FirstOrDefault();
+            ViewBag.DefaultDistrictId = defaultAddr?.DistrictId;
+            ViewBag.DefaultWardCode = defaultAddr?.WardCode;
             if (defaultAddr != null) {
                 model.FullName = defaultAddr.FullName ?? "";
                 model.Phone = defaultAddr.Phone ?? "";

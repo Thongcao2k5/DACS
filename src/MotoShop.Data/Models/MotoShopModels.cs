@@ -116,6 +116,7 @@ namespace MotoShop.Data.Models
         public string? ImageUrl { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public int MinStockLevel { get; set; } = 5;
+        public int Weight { get; set; } = 500;
 
         [ForeignKey("ProductId")]
         public virtual Product? Product { get; set; }
@@ -225,6 +226,13 @@ namespace MotoShop.Data.Models
         [StringLength(100)]
         public string? PaymentMethod { get; set; }
         public string? Note { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal ShippingFee { get; set; } = 0;
+        [StringLength(20)]
+        public string? ShippingProvinceCode { get; set; }
+        public int? ShippingDistrictId { get; set; }
+        [StringLength(20)]
+        public string? ShippingWardCode { get; set; }
 
         [ForeignKey("CustomerId")]
         public virtual Customer? Customer { get; set; }
@@ -757,6 +765,11 @@ namespace MotoShop.Data.Models
         [StringLength(100)]
         public string? EstimatedDays { get; set; }
         public bool IsActive { get; set; } = true;
+        public int EstimatedDaysInt { get; set; } = 3;
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal? FreeShipThreshold { get; set; }
+        [StringLength(100)]
+        public string? Provider { get; set; } = "Nội bộ";
     }
 
     [Table("WishlistsNew")]
@@ -785,6 +798,9 @@ namespace MotoShop.Data.Models
         public string? Ward { get; set; }
         public string? Street { get; set; }
         public bool IsDefault { get; set; } = false;
+        public int? DistrictId { get; set; }
+        [StringLength(20)]
+        public string? WardCode { get; set; }
         [NotMapped]
         public string Address => $"{Street}, {Ward}, {District}, {Province}";
 

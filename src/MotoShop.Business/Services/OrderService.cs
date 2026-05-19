@@ -50,6 +50,7 @@ namespace MotoShop.Business.Services
                     // 1. XỬ LÝ DANH SÁCH SẢN PHẨM
                     List<OrderItem> orderItemsToCreate = new List<OrderItem>();
                     decimal subTotal = 0;
+                    decimal originalSubTotal = 0;
 
                     if (checkoutData.DirectVariantId.HasValue)
                     {
@@ -59,7 +60,7 @@ namespace MotoShop.Business.Services
                         var variant = await _context.ProductVariants.FindAsync(checkoutData.DirectVariantId.Value);
                         if (variant == null || variant.StockQuantity < checkoutData.DirectQuantity)
                             return (false, "Sản phẩm không đủ tồn kho.", 0);
-                        
+
                         decimal directPrice = variant.ProductId.HasValue
                             ? await _promotionService.CalculateDiscountAsync(variant.ProductId.Value, variant.Price)
                             : variant.Price;
@@ -69,6 +70,7 @@ namespace MotoShop.Business.Services
                             Quantity = checkoutData.DirectQuantity,
                             Price = directPrice
                         });
+                        originalSubTotal = variant.Price * checkoutData.DirectQuantity;
                         subTotal = directPrice * checkoutData.DirectQuantity;
                     }
                     else
@@ -93,6 +95,7 @@ namespace MotoShop.Business.Services
                                 Quantity = item.Quantity,
                                 Price = discountedPrice
                             });
+                            originalSubTotal += productVariant.Price * item.Quantity;
                             subTotal += discountedPrice * item.Quantity;
                         }
                     }
@@ -129,6 +132,7 @@ namespace MotoShop.Business.Services
 
                     // 3. TÍNH TOÁN GIẢM GIÁ & SHIP
                     decimal discountAmount = 0;
+                    discountAmount += Math.Max(0, originalSubTotal - subTotal); // Flash Sale per-item discount
                     decimal discountedSubTotal = await _promotionService.CalculateOrderDiscountAsync(subTotal, new List<CartItem>());
                     discountAmount += subTotal - discountedSubTotal;
 
@@ -146,10 +150,23 @@ namespace MotoShop.Business.Services
                     }
 
                     decimal shippingCost = 0;
-                    if (checkoutData.ShippingMethodId.HasValue)
+                    int? shippingMethodId = null;
+
+                    if (checkoutData.ShippingDistrictId.HasValue)
                     {
+                        // GHN flow — ShippingFee = 0 nếu freeship, > 0 nếu có phí
+                        // GHN serviceId ≠ ShippingMethods.Id → không lưu ShippingMethodId
+                        shippingCost = checkoutData.ShippingFee;
+                    }
+                    else if (checkoutData.ShippingMethodId.HasValue)
+                    {
+                        // Phương thức nội bộ
                         var ship = await _context.ShippingMethods.FindAsync(checkoutData.ShippingMethodId.Value);
-                        if (ship != null) shippingCost = ship.Cost;
+                        if (ship != null)
+                        {
+                            shippingCost  = ship.Cost;
+                            shippingMethodId = ship.Id;
+                        }
                     }
 
                     // 4. TẠO ĐƠN HÀNG
@@ -157,8 +174,10 @@ namespace MotoShop.Business.Services
                         CustomerId = customer.CustomerId, OrderDate = DateTime.Now, TotalAmount = discountedSubTotal + shippingCost,
                         Status = MotoShop.Data.Constants.OrderStatusConst.Pending, PaymentStatus = "Unpaid", DiscountAmount = discountAmount,
                         ShippingAddress = $"{finalFullName} | {finalPhone} | {finalAddressStr}",
-                        Note = checkoutData.Note, ShippingMethodId = checkoutData.ShippingMethodId, CouponId = checkoutData.CouponId,
-                        // [M4-FIX] Validate payment method — fallback COD nếu giá trị không hợp lệ
+                        Note = checkoutData.Note, ShippingMethodId = shippingMethodId, CouponId = checkoutData.CouponId,
+                        ShippingFee = shippingCost,
+                        ShippingDistrictId = checkoutData.ShippingDistrictId,
+                        ShippingWardCode = checkoutData.ShippingWardCode,
                         PaymentMethod = _allowedPaymentMethods.Contains(checkoutData.PaymentMethod ?? "")
                             ? checkoutData.PaymentMethod!
                             : "COD"
@@ -230,6 +249,11 @@ namespace MotoShop.Business.Services
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
+                    _logger.LogError(ex,
+                        "Checkout lỗi: {Msg} | Inner: {Inner} | StackTrace: {Stack}",
+                        ex.Message,
+                        ex.InnerException?.Message,
+                        ex.InnerException?.StackTrace);
                     return (false, "Lỗi hệ thống: " + ex.Message, 0);
                 }
             });

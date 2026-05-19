@@ -153,6 +153,10 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
+builder.Services.AddHttpClient<IGhnService, GhnService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
 builder.Services.AddHostedService<BookingExpiryService>();
 builder.Services.AddHostedService<PendingPaymentCleanupService>();
 builder.Services.AddHostedService<PromotionBackgroundService>();
@@ -535,6 +539,48 @@ using (var scope = app.Services.CreateScope())
                 (N'Cứu hộ', 'cuu-ho', 'bx-unite', 1),
                 (N'Rửa xe', 'rua-xe', 'bx-water', 1);
             END
+        ");
+
+        // === SHIPPING UPGRADE — thêm cột mới ===
+        await context.Database.ExecuteSqlRawAsync(@"
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'ShippingMethods') AND name = N'EstimatedDaysInt')
+                ALTER TABLE ShippingMethods ADD EstimatedDaysInt INT NOT NULL DEFAULT 3;
+
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'ShippingMethods') AND name = N'FreeShipThreshold')
+                ALTER TABLE ShippingMethods ADD FreeShipThreshold DECIMAL(18,2) NULL;
+
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'ShippingMethods') AND name = N'Provider')
+                ALTER TABLE ShippingMethods ADD Provider NVARCHAR(100) NULL DEFAULT N'Nội bộ';
+
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Orders') AND name = N'ShippingFee')
+                ALTER TABLE Orders ADD ShippingFee DECIMAL(18,2) NOT NULL DEFAULT 0;
+
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Orders') AND name = N'ShippingProvinceCode')
+                ALTER TABLE Orders ADD ShippingProvinceCode NVARCHAR(20) NULL;
+
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Orders') AND name = N'ShippingDistrictId')
+                ALTER TABLE Orders ADD ShippingDistrictId INT NULL;
+
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Orders') AND name = N'ShippingWardCode')
+                ALTER TABLE Orders ADD ShippingWardCode NVARCHAR(20) NULL;
+
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'ProductVariants') AND name = N'Weight')
+                ALTER TABLE ProductVariants ADD Weight INT NOT NULL DEFAULT 500;
+
+            UPDATE ShippingMethods SET Provider = N'Nội bộ' WHERE Provider IS NULL;
+
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'AddressesNew') AND name = N'DistrictId')
+                ALTER TABLE AddressesNew ADD DistrictId INT NULL;
+
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'AddressesNew') AND name = N'WardCode')
+                ALTER TABLE AddressesNew ADD WardCode NVARCHAR(20) NULL;
+
+            -- Backfill: map address text names to GHN codes for existing rows missing DistrictId/WardCode
+            UPDATE AddressesNew
+            SET DistrictId = 1462, WardCode = N'21618'
+            WHERE DistrictId IS NULL
+              AND District   = N'Quận Bình Thạnh'
+              AND Ward       = N'Phường 26';
         ");
 
 await DbSeeder.SeedAsync(context, userManager, roleManager);

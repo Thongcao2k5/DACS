@@ -16,6 +16,9 @@ namespace MotoShop.Business.DTOs
         public string Note { get; set; } = string.Empty;
         public string PaymentMethod { get; set; } = "COD"; // Mặc định Thanh toán khi nhận hàng
         public int? ShippingMethodId { get; set; }
+        public decimal ShippingFee { get; set; } = 0;
+        public int? ShippingDistrictId { get; set; }
+        public string? ShippingWardCode { get; set; }
         public int? CouponId { get; set; }
         public string? CouponCode { get; set; }
 

@@ -73,7 +73,9 @@ namespace MotoShop.Controllers
                 district = addr.District,
                 ward = addr.Ward,
                 street = addr.Street,
-                isDefault = addr.IsDefault
+                isDefault = addr.IsDefault,
+                districtId = addr.DistrictId,
+                wardCode = addr.WardCode
             });
         }
 
@@ -104,13 +106,15 @@ namespace MotoShop.Controllers
                 District = model.District,
                 Ward = model.Ward,
                 Street = model.Street,
-                IsDefault = model.IsDefault
+                IsDefault = model.IsDefault,
+                DistrictId = model.DistrictId,
+                WardCode = model.WardCode
             };
 
             _context.AddressesNew.Add(newAddress);
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true, message = "Thêm địa chỉ thành công" });
+            return Json(new { success = true, message = "Thêm địa chỉ thành công", id = newAddress.Id });
         }
 
         [HttpPost]
@@ -137,6 +141,8 @@ namespace MotoShop.Controllers
             addr.Ward = model.Ward;
             addr.Street = model.Street;
             addr.IsDefault = model.IsDefault;
+            addr.DistrictId = model.DistrictId;
+            addr.WardCode = model.WardCode;
 
             await _context.SaveChangesAsync();
             return Json(new { success = true, message = "Cập nhật thành công" });

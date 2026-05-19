@@ -162,55 +162,65 @@
 @section Scripts {
     <script>
         const addrModal = new bootstrap.Modal(document.getElementById('addressModal'));
-        const API_BASE = "https://provinces.open-api.vn/api";
 
         async function initProvinces() {
             try {
-                const res = await fetch(`${API_BASE}/p/`);
+                const res = await fetch('/api/shipping/provinces');
                 const data = await res.json();
                 let html = '<option value="" selected disabled>Chọn Tỉnh/Thành</option>';
                 data.forEach(p => {
-                    html += `<option value="${p.code}" data-name="${p.name}">${p.name}</option>`;
+                    html += `<option value="${p.provinceId}" data-name="${p.provinceName}">${p.provinceName}</option>`;
                 });
                 document.getElementById('province').innerHTML = html;
             } catch (e) { console.error("Lỗi load tỉnh thành", e); }
         }
 
-        document.getElementById('province').addEventListener('change', async function() {
-            const pCode = this.value;
+        async function loadDistricts(provinceId) {
             const districtSelect = document.getElementById('district');
             const wardSelect = document.getElementById('ward');
             districtSelect.disabled = true;
             wardSelect.disabled = true;
             wardSelect.innerHTML = '<option value="" selected disabled>Chọn Phường/Xã</option>';
             try {
-                const res = await fetch(`${API_BASE}/p/${pCode}?depth=2`);
+                const res = await fetch(`/api/shipping/districts?provinceId=${provinceId}`);
                 const data = await res.json();
                 let html = '<option value="" selected disabled>Chọn Quận/Huyện</option>';
-                data.districts.forEach(d => { html += `<option value="${d.code}" data-name="${d.name}">${d.name}</option>`; });
+                data.forEach(d => { html += `<option value="${d.districtId}" data-name="${d.districtName}">${d.districtName}</option>`; });
                 districtSelect.innerHTML = html;
                 districtSelect.disabled = false;
-            } catch (e) { console.error("Lỗi load quận huyện", e); }
-        });
+                return data;
+            } catch (e) { console.error("Lỗi load quận huyện", e); return []; }
+        }
 
-        document.getElementById('district').addEventListener('change', async function() {
-            const dCode = this.value;
+        async function loadWards(districtId) {
             const wardSelect = document.getElementById('ward');
             wardSelect.disabled = true;
+            wardSelect.innerHTML = '<option value="" selected disabled>Chọn Phường/Xã</option>';
             try {
-                const res = await fetch(`${API_BASE}/d/${dCode}?depth=2`);
+                const res = await fetch(`/api/shipping/wards?districtId=${districtId}`);
                 const data = await res.json();
                 let html = '<option value="" selected disabled>Chọn Phường/Xã</option>';
-                data.wards.forEach(w => { html += `<option value="${w.code}" data-name="${w.name}">${w.name}</option>`; });
+                data.forEach(w => { html += `<option value="${w.wardCode}" data-name="${w.wardName}">${w.wardName}</option>`; });
                 wardSelect.innerHTML = html;
                 wardSelect.disabled = false;
-            } catch (e) { console.error("Lỗi load phường xã", e); }
+                return data;
+            } catch (e) { console.error("Lỗi load phường xã", e); return []; }
+        }
+
+        document.getElementById('province').addEventListener('change', function() {
+            loadDistricts(this.value);
+        });
+
+        document.getElementById('district').addEventListener('change', function() {
+            loadWards(this.value);
         });
 
         async function openAddModal() {
             document.getElementById('modalTitle').innerText = 'THÊM ĐỊA CHỈ MỚI';
             document.getElementById('addressId').value = '';
             document.getElementById('addressForm').reset();
+            document.getElementById('district').disabled = true;
+            document.getElementById('ward').disabled = true;
             await initProvinces();
             addrModal.show();
         }
@@ -229,23 +239,36 @@
                 await initProvinces();
                 const pSelect = document.getElementById('province');
                 const pOption = [...pSelect.options].find(o => o.text === data.province);
-                if (pOption) {
-                    pSelect.value = pOption.value;
-                    pSelect.dispatchEvent(new Event('change'));
-                    setTimeout(async () => {
-                        const dSelect = document.getElementById('district');
-                        const dOption = [...dSelect.options].find(o => o.text === data.district);
-                        if (dOption) {
-                            dSelect.value = dOption.value;
-                            dSelect.dispatchEvent(new Event('change'));
-                            setTimeout(() => {
-                                const wSelect = document.getElementById('ward');
-                                const wOption = [...wSelect.options].find(o => o.text === data.ward);
-                                if (wOption) wSelect.value = wOption.value;
-                            }, 400);
-                        }
-                    }, 400);
+                if (!pOption) { addrModal.show(); return; }
+
+                pSelect.value = pOption.value;
+                await loadDistricts(pOption.value);
+
+                const districtSelect = document.getElementById('district');
+                // Prefer GHN districtId, fall back to name matching for old addresses
+                let selectedDistrictId = null;
+                if (data.districtId) {
+                    const dOpt = districtSelect.querySelector(`option[value="${data.districtId}"]`);
+                    if (dOpt) { districtSelect.value = data.districtId; selectedDistrictId = data.districtId.toString(); }
                 }
+                if (!selectedDistrictId) {
+                    const dOpt = [...districtSelect.options].find(o => o.text === data.district);
+                    if (dOpt) { districtSelect.value = dOpt.value; selectedDistrictId = dOpt.value; }
+                }
+                if (!selectedDistrictId) { addrModal.show(); return; }
+
+                await loadWards(selectedDistrictId);
+
+                const wardSelect = document.getElementById('ward');
+                // Prefer GHN wardCode, fall back to name matching for old addresses
+                if (data.wardCode) {
+                    const wOpt = wardSelect.querySelector(`option[value="${data.wardCode}"]`);
+                    if (wOpt) wardSelect.value = data.wardCode;
+                } else {
+                    const wOpt = [...wardSelect.options].find(o => o.text === data.ward);
+                    if (wOpt) wardSelect.value = wOpt.value;
+                }
+
                 addrModal.show();
             } catch (err) { showToast('Không thể lấy dữ liệu', 'error'); }
         }
@@ -256,15 +279,23 @@
             const pSelect = document.getElementById('province');
             const dSelect = document.getElementById('district');
             const wSelect = document.getElementById('ward');
+            const provinceName = pSelect.options[pSelect.selectedIndex]?.getAttribute('data-name') || "";
+            const districtName = dSelect.options[dSelect.selectedIndex]?.getAttribute('data-name') || "";
+            const wardName = wSelect.options[wSelect.selectedIndex]?.getAttribute('data-name') || "";
+            if (!provinceName || !districtName || !wardName) {
+                showToast('Vui lòng chọn đầy đủ Tỉnh / Quận / Phường', 'error'); return;
+            }
             const payload = {
                 id: id ? parseInt(id) : null,
                 fullName: document.getElementById('fullName').value,
                 phone: document.getElementById('phone').value,
-                province: pSelect.options[pSelect.selectedIndex]?.getAttribute('data-name') || "",
-                district: dSelect.options[dSelect.selectedIndex]?.getAttribute('data-name') || "",
-                ward: wSelect.options[wSelect.selectedIndex]?.getAttribute('data-name') || "",
+                province: provinceName,
+                district: districtName,
+                ward: wardName,
                 street: document.getElementById('street').value,
-                isDefault: document.getElementById('isDefault').checked
+                isDefault: document.getElementById('isDefault').checked,
+                districtId: dSelect.value ? parseInt(dSelect.value) : null,
+                wardCode: wSelect.value || null
             };
             try {
                 const res = await fetch(url, {

@@ -4,142 +4,438 @@
     Layout = "_AdminLayout";
 }
 
-<div class="p-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div><h4 class="fw-bold m-0 text-uppercase"><i class='bx bx-truck me-2 text-danger'></i>Phương thức vận chuyển</h4></div>
-        <button class="btn btn-ms-red px-4 shadow-sm" onclick="openMethodModal()"><i class='bx bx-plus-circle me-1'></i>Thêm mới</button>
-    </div>
+@section Styles {
+<style>
+  :root {
+    --ms-red: #E60023;
+    --ms-red-hover: #C2001F;
+    --ms-red-light: rgba(230,0,35,0.08);
+    --ms-dark: #1a1a1a;
+    --ms-border: #eeeeee;
+    --ms-bg: #f8f9fa;
+  }
+  .ship-header {
+    background: var(--ms-dark);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ship-header h4 { color: #fff; margin: 0; font-size: 16px; font-weight: 500; }
+  .ship-header p  { color: #a1acb8; margin: 4px 0 0; font-size: 13px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
+  .stat-card {
+    background: #fff;
+    border: 1px solid var(--ms-border);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .stat-icon {
+    width: 40px; height: 40px; border-radius: 8px;
+    background: var(--ms-red-light);
+    display: grid; place-items: center;
+    color: var(--ms-red); font-size: 18px; flex-shrink: 0;
+  }
+  .stat-icon.green  { background: rgba(32,201,151,0.1); color: #20c997; }
+  .stat-icon.orange { background: rgba(253,126,20,0.1); color: #fd7e14; }
+  .stat-icon.purple { background: rgba(111,66,193,0.1); color: #6f42c1; }
+  .stat-label { font-size: 12px; color: #a1acb8; margin: 0; }
+  .stat-value { font-size: 22px; font-weight: 600; color: var(--ms-dark); margin: 0; line-height: 1; }
+  .method-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 16px; margin-bottom: 24px; }
+  .method-card {
+    background: #fff;
+    border: 1px solid var(--ms-border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color .15s;
+  }
+  .method-card:hover { border-color: var(--ms-red); }
+  .method-card.inactive { opacity: .55; }
+  .mc-head {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--ms-border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .mc-title { display: flex; align-items: center; gap: 10px; }
+  .mc-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--ms-red-light);
+    display: grid; place-items: center;
+    color: var(--ms-red); font-size: 16px;
+  }
+  .mc-name  { font-size: 14px; font-weight: 600; color: var(--ms-dark); margin: 0; }
+  .mc-provider { font-size: 11px; color: #a1acb8; margin: 2px 0 0; }
+  .form-switch .form-check-input:checked { background-color: var(--ms-red); border-color: var(--ms-red); }
+  .mc-body { padding: 12px 16px; }
+  .mc-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 10px; border-radius: 6px; margin-bottom: 6px;
+    background: var(--ms-bg); font-size: 13px;
+  }
+  .mc-row .label { color: #a1acb8; }
+  .mc-row .val   { font-weight: 600; color: var(--ms-dark); }
+  .mc-row .val.red { color: var(--ms-red); }
+  .mc-row .val.green { color: #20c997; }
+  .mc-foot { padding: 10px 16px; border-top: 1px solid var(--ms-border); display: flex; gap: 8px; }
+  .btn-ms-primary {
+    background: var(--ms-red); color: #fff; border: none;
+    border-radius: 7px; padding: 7px 14px; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; flex: 1; justify-content: center;
+    transition: background .15s;
+  }
+  .btn-ms-primary:hover { background: var(--ms-red-hover); color: #fff; }
+  .btn-ms-outline {
+    background: transparent; color: var(--ms-red);
+    border: 1px solid var(--ms-red); border-radius: 7px;
+    padding: 7px 12px; font-size: 13px; cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-ms-outline:hover { background: var(--ms-red-light); }
+  .ms-modal-header { background: var(--ms-dark); padding: 16px 20px; border-radius: 10px 10px 0 0; }
+  .ms-modal-header .modal-title { color: #fff; font-size: 15px; }
+  .ms-modal-header .btn-close { filter: invert(1); }
+  .btn-save {
+    background: var(--ms-red); color: #fff; border: none;
+    border-radius: 8px; padding: 9px 20px; font-size: 14px;
+    display: flex; align-items: center; gap: 6px; cursor: pointer;
+  }
+  .btn-save:hover { background: var(--ms-red-hover); color: #fff; }
+  .ms-input { border: 1px solid var(--ms-border); border-radius: 8px; padding: 8px 12px; width: 100%; font-size: 13px; }
+  .ms-input:focus { outline: none; border-color: var(--ms-red); box-shadow: 0 0 0 3px rgba(230,0,35,0.1); }
+  .ms-label { font-size: 13px; font-weight: 500; color: var(--ms-dark); margin-bottom: 5px; display: block; }
+</style>
+}
 
-    <div class="table-container shadow-sm bg-white rounded-3">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle m-0">
-                <thead class="bg-light small text-uppercase">
-                    <tr>
-                        <th class="ps-4">Tên phương thức</th>
-                        <th>Mô tả chi tiết</th>
-                        <th>Phí vận chuyển</th>
-                        <th>Trạng thái</th>
-                        <th class="text-end px-4">Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model) {
-                        <tr>
-                            <td class="ps-4 fw-bold">@item.Name</td>
-                            <td><div class="small text-muted text-truncate" style="max-width: 300px;">@item.Description</div></td>
-                            <td class="fw-bold @(item.Cost == 0 ? "text-success" : "text-ms-red")">
-                                @(item.Cost == 0 ? "Miễn phí" : item.Cost.ToString("N0") + "đ")
-                            </td>
-                            <td>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" @(item.IsActive ? "checked" : "") onchange="toggleStatus(@item.Id)">
-                                </div>
-                            </td>
-                            <td class="text-end px-4">
-                                <button type="button" class="btn btn-sm btn-icon btn-outline-primary btn-edit-method" 
-                                        data-method='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(item))'><i class="bx bx-edit-alt"></i></button>
-                                <button type="button" class="btn btn-sm btn-icon btn-outline-danger btn-delete-method" 
-                                        data-id="@item.Id"><i class="bx bx-trash"></i></button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+<div class="container-fluid py-4">
+  <div class="ship-header">
+    <div>
+      <h4><i class='bx bx-truck me-2'></i>Phương thức vận chuyển</h4>
+      <p>Quản lý phí ship — tích hợp GHN API</p>
     </div>
+    <div class="d-flex gap-2">
+      <a href="@Url.Action("Zones")" class="btn-ms-outline">
+        <i class='bx bx-map-pin' style="margin-right:4px"></i>Bản đồ vùng
+      </a>
+      <button class="btn-ms-primary" style="flex:none" onclick="openAddModal()">
+        <i class='bx bx-plus'></i>Thêm phương thức
+      </button>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-icon"><i class='bx bx-truck'></i></div>
+      <div>
+        <p class="stat-label">Tổng phương thức</p>
+        <p class="stat-value">@Model.Count()</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green"><i class='bx bx-check'></i></div>
+      <div>
+        <p class="stat-label">Đang hoạt động</p>
+        <p class="stat-value">@Model.Count(m => m.IsActive)</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon orange"><i class='bx bx-gift'></i></div>
+      <div>
+        <p class="stat-label">Có miễn phí ship</p>
+        <p class="stat-value">@Model.Count(m => m.FreeShipThreshold.HasValue)</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon purple"><i class='bx bx-link-external'></i></div>
+      <div>
+        <p class="stat-label">Tích hợp GHN</p>
+        <p class="stat-value">Live</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="method-grid" id="method-grid">
+    @foreach (var m in Model)
+    {
+      <div class="method-card @(m.IsActive ? "" : "inactive")" id="mc-@m.Id">
+        <div class="mc-head">
+          <div class="mc-title">
+            <div class="mc-icon"><i class='bx bx-truck'></i></div>
+            <div>
+              <p class="mc-name">@m.Name</p>
+              <p class="mc-provider">@(m.Provider ?? "Nội bộ")</p>
+            </div>
+          </div>
+          <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" role="switch"
+                   @(m.IsActive ? "checked" : "")
+                   onchange="toggleActive(@m.Id, this)" />
+          </div>
+        </div>
+        <div class="mc-body">
+          <div class="mc-row">
+            <span class="label"><i class='bx bx-tag me-1'></i>Phí mặc định</span>
+            <span class="val red">@m.Cost.ToString("N0")đ</span>
+          </div>
+          <div class="mc-row">
+            <span class="label"><i class='bx bx-time me-1'></i>Thời gian giao</span>
+            <span class="val">@m.EstimatedDaysInt ngày</span>
+          </div>
+          @if (m.FreeShipThreshold.HasValue)
+          {
+            <div class="mc-row" style="background:rgba(32,201,151,0.08)">
+              <span class="label"><i class='bx bx-gift me-1' style="color:#20c997"></i>Miễn phí từ</span>
+              <span class="val green">@m.FreeShipThreshold.Value.ToString("N0")đ</span>
+            </div>
+          }
+        </div>
+        <div class="mc-foot">
+          <button class="btn-ms-primary"
+            onclick="openEditModal(@m.Id,'@Html.Raw(m.Name.Replace("'","\\'")))','@Html.Raw((m.Description??"").Replace("'","\\'"))','@m.Cost','@m.EstimatedDaysInt','@(m.Provider??"Nội bộ")','@(m.FreeShipThreshold.HasValue?m.FreeShipThreshold.Value.ToString():"")','@(m.IsActive.ToString().ToLower())')">
+            <i class='bx bx-edit'></i>Chỉnh sửa
+          </button>
+          <button class="btn-ms-outline" onclick="deleteMethod(@m.Id,'@Html.Raw(m.Name.Replace("'","\\'"))')">
+            <i class='bx bx-trash'></i>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div style="background:#fff;border:1px solid var(--ms-border);border-radius:12px;padding:20px;margin-bottom:24px;">
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <i class='bx bx-calculator' style="color:var(--ms-red);font-size:18px"></i>
+      <span style="font-weight:600;color:var(--ms-dark);font-size:14px">Kiểm tra GHN API</span>
+      <span style="font-size:11px;color:#a1acb8;margin-left:4px">— nhập địa chỉ để tính phí thật</span>
+    </div>
+    <div class="row g-2">
+      <div class="col-md-4">
+        <label class="ms-label">Tỉnh / Thành phố</label>
+        <select class="ms-input" id="test-province" onchange="loadTestDistricts()">
+          <option value="">— Chọn tỉnh —</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="ms-label">Quận / Huyện</label>
+        <select class="ms-input" id="test-district" onchange="loadTestWards()" disabled>
+          <option value="">— Chọn quận —</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="ms-label">Phường / Xã</label>
+        <select class="ms-input" id="test-ward" disabled>
+          <option value="">— Chọn phường —</option>
+        </select>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-3 mt-3">
+      <div>
+        <label class="ms-label">Trọng lượng (gram)</label>
+        <input type="number" class="ms-input" id="test-weight" value="500" min="1" max="50000" style="width:140px" />
+      </div>
+      <button class="btn-ms-primary" style="flex:none;margin-top:18px;width:auto" onclick="testCalculate()">
+        <i class='bx bx-calculator'></i>Tính phí
+      </button>
+    </div>
+    <div id="test-result" class="mt-3"></div>
+  </div>
 </div>
 
-<!-- Modal Thêm/Sửa -->
-<div class="modal fade" id="methodModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content border-0 shadow-lg">
-            <form id="methodForm">
-                <input type="hidden" name="Id" id="mId">
-                <div class="modal-header border-bottom p-4">
-                    <h5 class="modal-title fw-bold">Thông tin vận chuyển</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Tên phương thức <span class="text-danger">*</span></label>
-                        <input type="text" name="Name" id="mName" class="form-control" placeholder="Ví dụ: Giao hàng nhanh, Nhận tại shop..." required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Phí vận chuyển (đ)</label>
-                        <input type="number" name="Cost" id="mCost" class="form-control" value="0">
-                        <small class="text-muted">Nhập 0 nếu miễn phí vận chuyển</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Mô tả ngắn</label>
-                        <textarea name="Description" id="mDesc" class="form-control" rows="3" placeholder="Ghi chú về thời gian giao hàng, phạm vi áp dụng..."></textarea>
-                    </div>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" name="IsActive" id="mActive" value="true" checked>
-                        <label class="form-check-label small fw-bold">Kích hoạt phương thức này</label>
-                    </div>
-                </div>
-                <div class="modal-footer border-top p-3 px-4">
-                    <button type="button" class="btn btn-outline-secondary border-0" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-ms-red px-4">Lưu phương thức</button>
-                </div>
-            </form>
+<div class="modal fade" id="methodModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius:12px;overflow:hidden;border:none">
+      <div class="ms-modal-header">
+        <h5 class="modal-title" id="modal-title">Thêm phương thức</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <input type="hidden" id="f-id" value="0" />
+        <div class="mb-3">
+          <label class="ms-label">Tên phương thức <span style="color:var(--ms-red)">*</span></label>
+          <input class="ms-input" id="f-name" placeholder="VD: Giao hàng tiêu chuẩn" />
         </div>
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <label class="ms-label">Nhà cung cấp</label>
+            <select class="ms-input" id="f-provider">
+              <option value="Nội bộ">Nội bộ</option>
+              <option value="GHN">GHN</option>
+              <option value="GHTK">GHTK</option>
+              <option value="Viettel Post">Viettel Post</option>
+              <option value="VNPost">VN Post</option>
+            </select>
+          </div>
+          <div class="col-6">
+            <label class="ms-label">Thời gian giao (ngày)</label>
+            <input type="number" class="ms-input" id="f-days" value="3" min="0" max="30" />
+          </div>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <label class="ms-label">Phí mặc định (đ) <span style="color:var(--ms-red)">*</span></label>
+            <input type="number" class="ms-input" id="f-cost" placeholder="30000" step="1000" />
+          </div>
+          <div class="col-6">
+            <label class="ms-label">Miễn phí ship từ (đ)</label>
+            <input type="number" class="ms-input" id="f-freeship" placeholder="Để trống = không có" step="10000" />
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="ms-label">Mô tả</label>
+          <textarea class="ms-input" id="f-desc" rows="2" placeholder="Mô tả hiển thị cho khách..."></textarea>
+        </div>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="f-active" checked />
+          <label class="form-check-label" for="f-active" style="font-size:13px">Kích hoạt</label>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid var(--ms-border)">
+        <button class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+        <button class="btn-save" onclick="saveMethod()">
+          <i class='bx bx-save'></i>Lưu phương thức
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 
 @section Scripts {
-    <script>
-        const mModal = new bootstrap.Modal(document.getElementById('methodModal'));
+<script>
+const modal = new bootstrap.Modal(document.getElementById('methodModal'));
 
-        function openMethodModal() {
-            $('#methodForm')[0].reset();
-            $('#mId').val(0);
-            mModal.show();
-        }
+function openAddModal() {
+  document.getElementById('modal-title').textContent = 'Thêm phương thức vận chuyển';
+  document.getElementById('f-id').value = 0;
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-desc').value = '';
+  document.getElementById('f-cost').value = '';
+  document.getElementById('f-freeship').value = '';
+  document.getElementById('f-days').value = 3;
+  document.getElementById('f-provider').value = 'Nội bộ';
+  document.getElementById('f-active').checked = true;
+  modal.show();
+}
 
-        $(document).on('click', '.btn-edit-method', function() {
-            const data = $(this).data('method');
-            if (!data) return;
+function openEditModal(id, name, desc, cost, days, provider, freeship, isActive) {
+  document.getElementById('modal-title').textContent = 'Chỉnh sửa phương thức';
+  document.getElementById('f-id').value = id;
+  document.getElementById('f-name').value = name;
+  document.getElementById('f-desc').value = desc;
+  document.getElementById('f-cost').value = cost;
+  document.getElementById('f-days').value = days;
+  document.getElementById('f-provider').value = provider;
+  document.getElementById('f-freeship').value = freeship;
+  document.getElementById('f-active').checked = (isActive === 'true');
+  modal.show();
+}
 
-            $('#mId').val(data.Id || data.id);
-            $('#mName').val(data.Name || data.name);
-            $('#mCost').val(data.Cost || data.cost);
-            $('#mDesc').val(data.Description || data.description);
-            
-            const isActive = (data.IsActive !== undefined) ? data.IsActive : data.isActive;
-            $('#mActive').prop('checked', isActive);
-            
-            mModal.show();
-        });
+async function saveMethod() {
+  const id = parseInt(document.getElementById('f-id').value);
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { alert('Nhập tên phương thức!'); return; }
 
-        $(document).on('click', '.btn-delete-method', function() {
-            const id = $(this).data('id');
-            if(confirm("Xác nhận xóa phương thức vận chuyển này?")) {
-                $.post('/Admin/ShippingMethod/Delete', { id: id }, function(res) {
-                    if (res.success) { UI.toast(res.message, 'success'); setTimeout(() => location.reload(), 1000); }
-                });
-            }
-        });
+  const formData = new URLSearchParams({
+    Id: id,
+    Name: name,
+    Description: document.getElementById('f-desc').value.trim(),
+    Cost: document.getElementById('f-cost').value || '0',
+    EstimatedDaysInt: document.getElementById('f-days').value || '3',
+    Provider: document.getElementById('f-provider').value,
+    IsActive: document.getElementById('f-active').checked
+  });
+  const freeship = document.getElementById('f-freeship').value;
+  if (freeship) formData.append('FreeShipThreshold', freeship);
 
-        $('#methodForm').on('submit', function(e) {
-            e.preventDefault();
-            $.post('/Admin/ShippingMethod/Save', $(this).serialize(), function(res) {
-                if (res.success) { UI.toast(res.message, 'success'); setTimeout(() => location.reload(), 1000); }
-            });
-        });
+  const r = await fetch('/Admin/ShippingMethod/Save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: formData.toString()
+  });
+  const res = await r.json();
+  if (res.success) { modal.hide(); location.reload(); }
+  else alert('Lỗi lưu, thử lại!');
+}
 
-        function toggleStatus(id) {
-            $.post('/Admin/ShippingMethod/ToggleStatus', { id: id }, function(res) {
-                if (res.success) UI.toast('Cập nhật trạng thái thành công', 'success');
-            });
-        }
+async function toggleActive(id, el) {
+  const r = await fetch('/Admin/ShippingMethod/ToggleStatus', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ id: id }).toString()
+  });
+  if (!r.ok) { el.checked = !el.checked; return; }
+  document.getElementById('mc-' + id)?.classList.toggle('inactive', !el.checked);
+}
 
-        function confirmDelete(id) {
-            if(confirm("Xác nhận xóa phương thức vận chuyển này?")) {
-                $.post('/Admin/ShippingMethod/Delete', { id: id }, function(res) {
-                    if (res.success) { UI.toast(res.message, 'success'); setTimeout(() => location.reload(), 1000); }
-                });
-            }
-        }
-    </script>
+async function deleteMethod(id, name) {
+  if (!confirm(`Xóa "${name}"?`)) return;
+  const r = await fetch('/Admin/ShippingMethod/Delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ id: id }).toString()
+  });
+  const res = await r.json();
+  if (res.success) document.getElementById('mc-' + id)?.remove();
+  else alert('Xóa thất bại!');
+}
+
+async function loadTestDistricts() {
+  const pid = document.getElementById('test-province').value;
+  const dd = document.getElementById('test-district');
+  dd.innerHTML = '<option>Đang tải...</option>'; dd.disabled = true;
+  document.getElementById('test-ward').innerHTML = '<option>— Chọn phường —</option>';
+  document.getElementById('test-ward').disabled = true;
+  if (!pid) return;
+  const data = await fetch(`/api/shipping/districts?provinceId=${pid}`).then(r => r.json());
+  dd.innerHTML = '<option value="">— Chọn quận —</option>' +
+    data.map(d => `<option value="${d.districtId}">${d.districtName}</option>`).join('');
+  dd.disabled = false;
+}
+
+async function loadTestWards() {
+  const did = document.getElementById('test-district').value;
+  const wd = document.getElementById('test-ward');
+  wd.innerHTML = '<option>Đang tải...</option>'; wd.disabled = true;
+  if (!did) return;
+  const data = await fetch(`/api/shipping/wards?districtId=${did}`).then(r => r.json());
+  wd.innerHTML = '<option value="">— Chọn phường —</option>' +
+    data.map(w => `<option value="${w.wardCode}">${w.wardName}</option>`).join('');
+  wd.disabled = false;
+}
+
+async function testCalculate() {
+  const districtId = parseInt(document.getElementById('test-district').value);
+  const wardCode = document.getElementById('test-ward').value;
+  const weight = parseInt(document.getElementById('test-weight').value) || 500;
+  const el = document.getElementById('test-result');
+  if (!districtId || !wardCode) {
+    el.innerHTML = '<div style="color:#E60023;font-size:13px">Vui lòng chọn đủ tỉnh, quận, phường</div>';
+    return;
+  }
+  el.innerHTML = '<div style="font-size:13px;color:#a1acb8">Đang tính phí...</div>';
+  const res = await fetch('/api/shipping/calculate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ toDistrictId: districtId, toWardCode: wardCode, weightGram: weight, orderTotal: 0, freeShipThreshold: 0 })
+  }).then(r => r.json());
+  el.innerHTML = res.map(s => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;
+                background:#f8f9fa;border-radius:8px;margin-bottom:8px;font-size:13px;">
+      <span style="font-weight:500;color:#1a1a1a">${s.serviceName}</span>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <span style="color:#a1acb8"><i class='bx bx-time' style="font-size:12px"></i> ${s.estimatedDays} ngày</span>
+        <span style="font-weight:700;color:#E60023">${s.fee.toLocaleString('vi-VN')}đ</span>
+      </div>
+    </div>`).join('');
+}
+
+fetch('/api/shipping/provinces').then(r => r.json()).then(data => {
+  const sel = document.getElementById('test-province');
+  sel.innerHTML = '<option value="">— Chọn tỉnh —</option>' +
+    data.map(p => `<option value="${p.provinceId}">${p.provinceName}</option>`).join('');
+}).catch(() => {});
+</script>
 }
