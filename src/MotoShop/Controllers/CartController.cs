@@ -139,7 +139,10 @@ namespace MotoShop.Controllers
                 ViewBag.IsDirectCheckout = true;
                 ViewBag.DirectVariantId = variantId.Value;
                 ViewBag.DirectQuantity = quantity;
-                ViewBag.DefaultWeight = Math.Max(100, variant.Weight * quantity);
+                var effectiveWeight = (variant.Weight == 500 && variant.WeightGroupId.HasValue)
+                    ? variant.WeightGroupId.Value switch { 1 => 300, 2 => 1000, 3 => 3000, 4 => 6000, _ => 500 }
+                    : variant.Weight;
+                ViewBag.DefaultWeight = Math.Max(100, effectiveWeight * quantity);
             }
             else
             {
@@ -153,9 +156,16 @@ namespace MotoShop.Controllers
                 if (!finalItems.Any()) return RedirectToAction("Index");
                 ViewBag.IsDirectCheckout = false;
                 var variantIds = finalItems.Select(i => i.ProductVariantId).ToList();
-                var weightMap = await _context.ProductVariants
+                var variantData = await _context.ProductVariants
                     .Where(v => variantIds.Contains(v.ProductVariantId))
-                    .ToDictionaryAsync(v => v.ProductVariantId, v => v.Weight);
+                    .Select(v => new { v.ProductVariantId, v.Weight, v.WeightGroupId })
+                    .ToListAsync();
+                var weightMap = variantData.ToDictionary(
+                    v => v.ProductVariantId,
+                    v => (v.Weight == 500 && v.WeightGroupId.HasValue)
+                        ? v.WeightGroupId.Value switch { 1 => 300, 2 => 1000, 3 => 3000, 4 => 6000, _ => 500 }
+                        : v.Weight
+                );
                 ViewBag.DefaultWeight = Math.Max(100, finalItems.Sum(i => i.Quantity * (weightMap.TryGetValue(i.ProductVariantId, out var w) ? w : 500)));
             }
 
@@ -163,6 +173,7 @@ namespace MotoShop.Controllers
 
             ViewBag.CartItems = finalItems;
             ViewBag.TotalAmount = finalItems.Sum(i => i.Total);
+            ViewBag.CartItemCount = finalItems.Sum(i => i.Quantity);
             ViewBag.ShippingMethods = shippingMethods;
             ViewBag.SavedAddresses = savedAddresses;
 

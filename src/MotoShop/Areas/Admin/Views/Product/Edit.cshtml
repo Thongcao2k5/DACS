@@ -74,6 +74,8 @@
                                         <th>Giá bán (VNĐ)</th>
                                         <th>SKU</th>
                                         <th>Tồn kho</th>
+                                        <th style="width:130px">Nhóm hàng<span style="font-size:10px;color:#a1acb8;display:block">(gợi ý KL)</span></th>
+                                        <th>Trọng lượng (g)</th>
                                         <th class="text-center" style="width: 50px"></th>
                                     </tr>
                                 </thead>
@@ -98,6 +100,21 @@
                                                     <input type="number" name="Variants[@i].StockQuantity" value="@variant.StockQuantity" class="form-control form-control-sm border-0 bg-transparent" style="width: 60px" />
                                                 </div>
                                             </td>
+                                            <td>
+                                                <select class="form-select form-select-sm border-0 bg-transparent"
+                                                        name="Variants[@i].WeightGroupId"
+                                                        style="width:130px"
+                                                        onchange="applyWeightGroup(this)">
+                                                    <option value="">-- Chọn nhóm --</option>
+                                                    <option value="1" data-weight="300"  selected="@(variant.WeightGroupId == 1)">Hàng nhẹ (300g)</option>
+                                                    <option value="2" data-weight="1000" selected="@(variant.WeightGroupId == 2)">Hàng TB (1kg)</option>
+                                                    <option value="3" data-weight="3000" selected="@(variant.WeightGroupId == 3)">Hàng nặng (3kg)</option>
+                                                    <option value="4" data-weight="6000" selected="@(variant.WeightGroupId == 4)">Rất nặng (6kg)</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="number" name="Variants[@i].Weight" value="@variant.Weight" class="form-control form-control-sm border-0 bg-transparent" min="1" style="width: 80px" title="Trọng lượng tính bằng gram (dùng tính phí ship)" />
+                                            </td>
                                             <td class="text-center pe-4">
                                                 <button type="button" class="btn btn-sm btn-icon text-danger" onclick="removeVariantRow(this, @variant.ProductVariantId)">
                                                     <i class="bx bx-trash"></i>
@@ -108,7 +125,7 @@
                                     @if (!Model.Variants.Any())
                                     {
                                         <tr id="noVariantRow">
-                                            <td colspan="5" class="text-center py-4 text-muted small italic">Sản phẩm này chưa có biến thể. Vui lòng thêm ít nhất một biến thể để bán hàng.</td>
+                                            <td colspan="7" class="text-center py-4 text-muted small italic">Sản phẩm này chưa có biến thể. Vui lòng thêm ít nhất một biến thể để bán hàng.</td>
                                         </tr>
                                     }
                                 </tbody>
@@ -219,6 +236,21 @@
                 <td>
                     <input type="number" name="Variants[${variantIndex}].StockQuantity" class="form-control form-control-sm" value="0" style="width: 60px" />
                 </td>
+                <td>
+                  <select class="form-select form-select-sm"
+                          name="Variants[${variantIndex}].WeightGroupId"
+                          style="width:130px"
+                          onchange="applyWeightGroup(this)">
+                    <option value="">-- Chọn nhóm --</option>
+                    <option value="1" data-weight="300">Hàng nhẹ (300g)</option>
+                    <option value="2" data-weight="1000">Hàng TB (1kg)</option>
+                    <option value="3" data-weight="3000">Hàng nặng (3kg)</option>
+                    <option value="4" data-weight="6000">Rất nặng (6kg)</option>
+                  </select>
+                </td>
+                <td>
+                    <input type="number" name="Variants[${variantIndex}].Weight" class="form-control form-control-sm" value="500" min="1" style="width: 80px" title="Trọng lượng (gram)" />
+                </td>
                 <td class="text-center pe-4">
                     <button type="button" class="btn btn-sm btn-icon text-danger" onclick="removeVariantRow(this)">
                         <i class="bx bx-trash"></i>
@@ -235,6 +267,19 @@
             }
             btn.closest('tr').remove();
             reIndexVariants();
+        }
+
+        function applyWeightGroup(select) {
+            const opt = select.options[select.selectedIndex];
+            const suggestedWeight = opt.dataset.weight;
+            if (!suggestedWeight) return;
+            const row = select.closest('tr');
+            const weightInput = row.querySelector('input[name*=".Weight"]');
+            if (weightInput) {
+                weightInput.value = suggestedWeight;
+                weightInput.style.background = '#fff3cd';
+                setTimeout(() => weightInput.style.background = '', 1500);
+            }
         }
 
         function reIndexVariants() {

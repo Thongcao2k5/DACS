@@ -447,6 +447,7 @@
         const defaultDistrictId = @(ViewBag.DefaultDistrictId ?? 0);
         const defaultWardCode = '@(ViewBag.DefaultWardCode ?? "")';
         const defaultWeight = @(ViewBag.DefaultWeight ?? 500);
+        const cartItemCount = @(ViewBag.CartItemCount ?? 1);
 
         async function loadShippingOptions(districtId, wardCode) {
             if (!districtId || !wardCode) {
@@ -464,7 +465,7 @@
             const res = await fetch('/api/shipping/calculate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ toDistrictId: districtId, toWardCode: wardCode, weightGram: defaultWeight, orderTotal: orderSubtotal, freeShipThreshold: freeShipDefault })
+                body: JSON.stringify({ toDistrictId: districtId, toWardCode: wardCode, weightGram: defaultWeight, itemCount: cartItemCount, orderTotal: orderSubtotal, freeShipThreshold: freeShipDefault })
             }).then(r => r.json()).catch(() => []);
 
             if (!res.length) {
@@ -473,29 +474,48 @@
                 return;
             }
 
-            const html = res.map((opt, i) => `
-                <label id="ship-opt-${opt.serviceId}" style="display:flex;align-items:center;gap:12px;padding:12px 14px;
-                    border:1.5px solid ${i===0?'#E60023':'#eeeeee'};border-radius:10px;margin-bottom:8px;cursor:pointer;
-                    background:${i===0?'rgba(230,0,35,0.04)':'#fff'};transition:all .15s;">
-                    <input type="radio" name="_shipChoice" value="${opt.serviceId}" ${i===0?'checked':''}
-                        onchange="selectShipOption(${opt.serviceId},${opt.fee},'${opt.serviceName}')" style="accent-color:#E60023"/>
+            const html = res.map((opt, i) => {
+                const isDisabled = opt.unavailableReason != null;
+                const isExpress  = opt.isExpress === true;
+                const isFirst    = i === 0 && !isDisabled;
+                return `
+                <label id="ship-opt-${opt.serviceId}-${i}" style="display:flex;align-items:flex-start;gap:12px;
+                    padding:12px 14px;
+                    border:1.5px solid ${isFirst ? '#E60023' : '#eee'};
+                    border-radius:10px;margin-bottom:8px;
+                    cursor:${isDisabled ? 'not-allowed' : 'pointer'};
+                    background:${isFirst ? 'rgba(230,0,35,0.04)' : '#fff'};
+                    opacity:${isDisabled ? '0.6' : '1'};transition:all .15s;">
+                    <input type="radio" name="_shipChoice"
+                           value="${opt.serviceId}"
+                           ${isFirst ? 'checked' : ''}
+                           ${isDisabled ? 'disabled' : ''}
+                           onchange="selectShipOption(${opt.serviceId},${opt.fee},'${opt.serviceName}')"
+                           style="accent-color:#E60023;margin-top:3px"/>
                     <div style="flex:1">
-                        <div style="font-weight:600;font-size:14px;color:#1a1a1a">${opt.serviceName}</div>
-                        <div style="font-size:12px;color:#a1acb8;margin-top:2px">
-                            <i class='bx bx-calendar' style="font-size:11px"></i> Dự kiến ${opt.estimatedDays} ngày
+                        <div style="display:flex;justify-content:space-between;align-items:center">
+                            <span style="font-weight:600;font-size:14px;color:#1a1a1a">
+                                ${opt.serviceName}
+                                ${isExpress ? '<span style="background:#E60023;color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:500">HOT</span>' : ''}
+                            </span>
+                            <span style="font-weight:700;color:${opt.isFree ? '#20c997' : '#E60023'};font-size:15px">
+                                ${opt.isFree ? 'Miễn phí' : opt.fee.toLocaleString('vi-VN') + 'đ'}
+                            </span>
                         </div>
-                        ${opt.freeShipRemaining ? `<div style="font-size:11px;color:#20c997;margin-top:2px">
-                            <i class='bx bx-gift' style="font-size:11px"></i>
-                            Mua thêm ${opt.freeShipRemaining.toLocaleString('vi-VN')}đ để miễn phí ship
-                        </div>` : ''}
+                        <div style="font-size:12px;color:#a1acb8;margin-top:3px">
+                            <i class='bx bx-time' style="font-size:11px"></i>
+                            ${opt.estimatedLabel || ('Dự kiến ' + opt.estimatedDays + ' ngày')}
+                        </div>
+                        ${opt.unavailableReason ? `<div style="font-size:11px;color:#fd7e14;margin-top:3px"><i class='bx bx-info-circle'></i> ${opt.unavailableReason}</div>` : ''}
+                        ${opt.freeShipRemaining ? `<div style="font-size:11px;color:#20c997;margin-top:3px"><i class='bx bx-gift'></i> Mua thêm ${opt.freeShipRemaining.toLocaleString('vi-VN')}đ để miễn phí ship</div>` : ''}
                     </div>
-                    <div style="font-weight:700;color:${opt.isFree?'#20c997':'#E60023'};font-size:15px">
-                        ${opt.isFree ? 'Miễn phí' : opt.fee.toLocaleString('vi-VN')+'đ'}
-                    </div>
-                </label>`).join('');
+                </label>`;
+            }).join('');
 
             document.getElementById('shipping-options').innerHTML = html;
-            selectShipOption(res[0].serviceId, res[0].fee, res[0].serviceName);
+            // Auto-select first enabled option
+            const firstEnabled = res.find(o => !o.unavailableReason);
+            if (firstEnabled) selectShipOption(firstEnabled.serviceId, firstEnabled.fee, firstEnabled.serviceName);
         }
 
         function selectShipOption(serviceId, fee, name) {
@@ -504,9 +524,12 @@
             document.getElementById('shippingFee').dataset.value = fee;
             updateTotal();
             document.querySelectorAll('[id^="ship-opt-"]').forEach(el => {
-                const sel = el.id === 'ship-opt-' + serviceId;
+                // id format: ship-opt-{serviceId}-{index}
+                const parts = el.id.split('-');
+                const elServiceId = parts[2];
+                const sel = elServiceId == serviceId;
                 el.style.borderColor = sel ? '#E60023' : '#eeeeee';
-                el.style.background = sel ? 'rgba(230,0,35,0.04)' : '#fff';
+                el.style.background  = sel ? 'rgba(230,0,35,0.04)' : '#fff';
             });
         }
 

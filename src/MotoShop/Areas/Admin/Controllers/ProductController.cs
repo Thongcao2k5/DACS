@@ -290,6 +290,8 @@ namespace MotoShop.Areas.Admin.Controllers
                             existingVariant.Price = vModel.Price;
                             existingVariant.SKU = vModel.SKU;
                             existingVariant.StockQuantity = vModel.StockQuantity;
+                            existingVariant.Weight = vModel.Weight > 0 ? vModel.Weight : 500;
+                            existingVariant.WeightGroupId = vModel.WeightGroupId;
                         }
                         else
                         {
@@ -299,6 +301,8 @@ namespace MotoShop.Areas.Admin.Controllers
                                 Price = vModel.Price,
                                 SKU = vModel.SKU,
                                 StockQuantity = vModel.StockQuantity,
+                                Weight = vModel.Weight > 0 ? vModel.Weight : 500,
+                                WeightGroupId = vModel.WeightGroupId,
                                 CreatedDate = DateTime.Now
                             });
                         }

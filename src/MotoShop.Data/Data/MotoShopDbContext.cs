@@ -62,6 +62,7 @@ namespace MotoShop.Data.Data
         public DbSet<ProductSpecification> ProductSpecifications { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<ProductReviewImage> ProductReviewImages { get; set; }
+        public DbSet<WeightGroup> WeightGroups { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

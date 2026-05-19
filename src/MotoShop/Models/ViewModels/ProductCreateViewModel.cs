@@ -23,10 +23,12 @@ namespace MotoShop.Models.ViewModels
 
     public class VariantViewModel
     {
-        public int ProductVariantId { get; set; } // Thêm trường này
+        public int ProductVariantId { get; set; }
         public string VariantName { get; set; } = string.Empty;
         public string SKU { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public int StockQuantity { get; set; }
+        public int Weight { get; set; } = 500;
+        public int? WeightGroupId { get; set; }
     }
 }

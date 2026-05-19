@@ -583,6 +583,35 @@ using (var scope = app.Services.CreateScope())
               AND Ward       = N'Phường 26';
         ");
 
+        await context.Database.ExecuteSqlRawAsync("""
+            IF NOT EXISTS (
+                SELECT 1 FROM sys.objects
+                WHERE object_id = OBJECT_ID(N'WeightGroups') AND type = 'U'
+            )
+            BEGIN
+                CREATE TABLE WeightGroups (
+                    Id            INT IDENTITY(1,1) PRIMARY KEY,
+                    Name          NVARCHAR(100) NOT NULL,
+                    DefaultWeight INT NOT NULL,
+                    MinWeight     INT NOT NULL,
+                    MaxWeight     INT NOT NULL,
+                    Description   NVARCHAR(200) NULL
+                );
+                INSERT INTO WeightGroups (Name, DefaultWeight, MinWeight, MaxWeight, Description) VALUES
+                (N'Hàng nhẹ',        300,    1,    499,  N'Bugi, xi nhan, bao tay, lọc gió, dây dầu, phụ kiện nhỏ'),
+                (N'Hàng trung bình', 1000,  500,  1999,  N'Dầu nhớt 1L, đĩa phanh, heo dầu, nhông sên dĩa, ắc quy nhỏ'),
+                (N'Hàng nặng',       3000, 2000,  4999,  N'Lốp xe, giảm xóc bộ đôi, ắc quy lớn, bình nhớt 4L'),
+                (N'Hàng rất nặng',   6000, 5000, 50000,  N'Bộ phước + bình dầu, bộ lốp + vành, động cơ');
+            END
+
+            IF NOT EXISTS (
+                SELECT 1 FROM sys.columns
+                WHERE object_id = OBJECT_ID(N'ProductVariants') AND name = N'WeightGroupId'
+            )
+                ALTER TABLE ProductVariants ADD WeightGroupId INT NULL
+                CONSTRAINT FK_ProductVariants_WeightGroup FOREIGN KEY REFERENCES WeightGroups(Id);
+            """);
+
 await DbSeeder.SeedAsync(context, userManager, roleManager);
     }
     catch (Exception ex) { 

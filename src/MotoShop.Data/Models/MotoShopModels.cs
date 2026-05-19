@@ -117,6 +117,7 @@ namespace MotoShop.Data.Models
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public int MinStockLevel { get; set; } = 5;
         public int Weight { get; set; } = 500;
+        public int? WeightGroupId { get; set; }
 
         [ForeignKey("ProductId")]
         public virtual Product? Product { get; set; }
@@ -124,11 +125,27 @@ namespace MotoShop.Data.Models
         public virtual Unit? BaseUnit { get; set; }
         [ForeignKey("ModelId")]
         public virtual MotorbikeModel? MotorbikeModel { get; set; }
+        [ForeignKey("WeightGroupId")]
+        public virtual WeightGroup? WeightGroup { get; set; }
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
         public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
         public virtual ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();
         public virtual ICollection<VariantImage> VariantImages { get; set; } = new List<VariantImage>();
         public virtual ICollection<ProductVariantAttributeValue> VariantAttributeValues { get; set; } = new List<ProductVariantAttributeValue>();
+    }
+
+    [Table("WeightGroups")]
+    public class WeightGroup
+    {
+        [Key]
+        public int Id { get; set; }
+        [Required, StringLength(100)]
+        public string Name { get; set; } = string.Empty;
+        public int DefaultWeight { get; set; }
+        public int MinWeight { get; set; }
+        public int MaxWeight { get; set; }
+        [StringLength(200)]
+        public string? Description { get; set; }
     }
 
     public class ProductImage
