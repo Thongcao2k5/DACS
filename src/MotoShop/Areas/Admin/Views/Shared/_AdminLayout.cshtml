@@ -220,27 +220,6 @@
                         <div>Phương thức vận chuyển</div>
                     </a>
                 </li>
-
-                <!-- HỆ THỐNG -->
-                <li class="menu-header small text-uppercase"><span class="menu-header-text">Hệ thống</span></li>
-                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Account" ? "active" : "")">
-                    <a asp-area="Admin" asp-controller="Account" asp-action="Index" class="menu-link">
-                        <i class="menu-icon tf-icons bx bx-user-circle"></i>
-                        <div>Tài khoản & Nhân viên</div>
-                    </a>
-                </li>
-                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Store" ? "active" : "")">
-                    <a asp-area="Admin" asp-controller="Store" asp-action="Index" class="menu-link">
-                        <i class="menu-icon tf-icons bx bx-store"></i>
-                        <div>Cửa hàng / Chi nhánh</div>
-                    </a>
-                </li>
-                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Setting" ? "active" : "")">
-                    <a asp-area="Admin" asp-controller="Setting" asp-action="Index" class="menu-link">
-                        <i class="menu-icon tf-icons bx bx-cog"></i>
-                        <div>Cài đặt hệ thống</div>
-                    </a>
-                </li>
             </ul>
         </aside>
         

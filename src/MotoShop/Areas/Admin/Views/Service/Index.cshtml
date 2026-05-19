@@ -194,10 +194,35 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
     <script>
         const sModal = new bootstrap.Modal(document.getElementById('serviceModal'));
+        let pendingEditorContent = '';
+        let sDescEditorReady = false;
+
+        document.getElementById('serviceModal').addEventListener('shown.bs.modal', function () {
+            if (!sDescEditorReady) {
+                tinymce.init({
+                    selector: '#sDesc',
+                    height: 280,
+                    menubar: false,
+                    plugins: 'lists link charmap code',
+                    toolbar: 'undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist | link | code | removeformat',
+                    content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; line-height: 1.6; }',
+                    setup: function (editor) {
+                        editor.on('init', function () {
+                            editor.setContent(pendingEditorContent);
+                            sDescEditorReady = true;
+                        });
+                    }
+                });
+            } else {
+                tinymce.get('sDesc').setContent(pendingEditorContent);
+            }
+        });
 
         function openServiceModal() {
+            pendingEditorContent = '';
             $('#serviceForm')[0].reset();
             $('#sId').val(0);
             $('#imgPreview').attr('src', '/assets/img/elements/18.jpg');
@@ -209,13 +234,13 @@
         $(document).on('click', '.btn-edit-service', function() {
             const data = $(this).data('service');
             if (!data) return;
+            pendingEditorContent = data.Description || data.description || '';
             $('#sId').val(data.ServiceId || data.serviceId);
             $('#sName').val(data.ServiceName || data.serviceName);
             $('#sCategory').val(data.CategoryId || data.categoryId);
             $('#sPrice').val(data.Price || data.price);
             $('#sDuration').val(data.Duration || data.duration);
             $('#sWarranty').val(data.WarrantyDays || data.warrantyDays);
-            $('#sDesc').val(data.Description || data.description);
             $('#sActive').prop('checked', data.IsActive || data.isActive);
             if (data.ImageUrl || data.imageUrl) $('#imgPreview').attr('src', data.ImageUrl || data.imageUrl);
             $('#modalTitle').text('Chỉnh sửa dịch vụ');
@@ -226,7 +251,9 @@
             e.preventDefault();
             const btn = $(this).find('button[type=submit]');
             btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> ĐANG LƯU...');
-            
+
+            const editor = tinymce.get('sDesc');
+            if (editor) editor.save();
             const formData = new FormData(this);
             $.ajax({
                 url: '/Admin/Service/Save',
