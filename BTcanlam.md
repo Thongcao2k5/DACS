@@ -19,21 +19,18 @@
 
 ---
 
-## 🟡 Trước demo (High Priority)
+## ✅ Đã sửa (High Priority — hoàn tất)
 
-### 5. Hai bảng trùng lặp chưa migrate xong
-- **Vấn đề:** `Wishlists` + `WishlistsNew`, `Addresses` + `AddressesNew` — code dùng cả hai
-- **Fix:** Xóa bảng legacy, chuyển toàn bộ code sang dùng bảng mới
+### 5. ~~Hai bảng trùng lặp chưa migrate xong~~ ✅ ĐÃ SỬA
+- `Customer.Addresses` → `ICollection<AddressNew>` (bảng `AddressesNew`)
+- DbContext chỉ có `WishlistsNew` + `AddressesNew`, không có DbSet cũ
+- Bảng `Wishlists`/`CustomerAddresses` cũ còn trong DB nhưng code không dùng — không ảnh hưởng
 
-### 6. FileService không validate file upload
-- **Vị trí:** `src/MotoShop.Business/Services/FileService.cs`
-- **Vấn đề:** `UploadAsync()` chấp nhận mọi loại file, không kiểm tra extension/size/mime
-- **Fix:** Thêm whitelist extension (jpg, png, webp), giới hạn max size (5MB)
+### 6. ~~FileService không validate file upload~~ ✅ ĐÃ SỬA
+- `FileService.cs` có đủ: whitelist extension (jpg/png/webp), MIME type check, giới hạn 5MB, magic bytes validation (byte header thực tế của file)
 
-### 7. Không validate pageNumber/pageSize trong controllers
-- **Vị trí:** ProductController, OrderController, AdminController
-- **Vấn đề:** Tham số có thể âm hoặc cực lớn gây lỗi/chậm
-- **Fix:** `pageNumber = Math.Max(1, pageNumber)`, `pageSize = Math.Clamp(pageSize, 1, 100)`
+### 7. ~~Không validate pageNumber/pageSize trong controllers~~ ✅ ĐÃ SỬA
+- Tất cả action có pagination đều có `Math.Max(1, page)` + `Math.Clamp(pageSize, 1, 100)`
 
 ---
 
