@@ -47,8 +47,8 @@ public class HomeController : Controller
 
         var bestSellingProducts = await _cache.GetOrCreateAsync(MotoShop.Data.Constants.CacheKeys.HomeBestSelling, e => {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
-            return _productService.GetRandomProductsAsync(4);
-        }) ?? await _productService.GetRandomProductsAsync(4);
+            return _productService.GetBestSellingProductsAsync(8);
+        }) ?? await _productService.GetBestSellingProductsAsync(8);
 
         var newProducts = await _cache.GetOrCreateAsync(MotoShop.Data.Constants.CacheKeys.HomeNewProducts, e => {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);

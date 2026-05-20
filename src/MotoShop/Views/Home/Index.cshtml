@@ -153,43 +153,51 @@
 }
 
 <!-- 4. FEATURED PRODUCTS -->
-<section class="bg-white">
+<section class="home-sections-bg">
     <div class="container">
-        <div class="section-title-wrapper d-flex justify-content-between align-items-end">
-            <div>
-                <h2 class="section-title text-uppercase">Sản phẩm nổi bật</h2>
+        <div class="prod-section-wrap psw-feat">
+            <div class="section-head">
+                <div class="section-head-left">
+                    <div class="section-icon"><i class='bx bx-star'></i></div>
+                    <span class="section-label">Sản phẩm nổi bật</span>
+                    <span class="section-badge">@(Model.FeaturedProducts?.Count() ?? 0) sản phẩm</span>
+                </div>
+                <a href="/Product" class="section-more">Xem tất cả <i class='bx bx-chevron-right'></i></a>
             </div>
-            <a asp-controller="Product" asp-action="Index" class="text-danger fw-bold text-decoration-none">Xem thêm <i class='bx bx-right-arrow-alt'></i></a>
-        </div>
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3" id="featuredProducts">
-            @if (Model.FeaturedProducts != null && Model.FeaturedProducts.Any())
-            {
-                foreach (var product in Model.FeaturedProducts)
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3" id="featuredProducts">
+                @if (Model.FeaturedProducts != null && Model.FeaturedProducts.Any())
                 {
-                    <div class="col">@await Html.PartialAsync("_ProductCard", product)</div>
+                    foreach (var product in Model.FeaturedProducts)
+                    {
+                        <div class="col">@await Html.PartialAsync("_ProductCard", product)</div>
+                    }
                 }
-            }
+            </div>
         </div>
     </div>
 </section>
 
 <!-- 5. BEST SELLING PRODUCTS -->
-<section class="bg-light">
+<section class="home-sections-bg">
     <div class="container">
-        <div class="section-title-wrapper d-flex justify-content-between align-items-end">
-            <div>
-                <h2 class="section-title text-uppercase">Sản phẩm bán chạy</h2>
+        <div class="prod-section-wrap psw-hot">
+            <div class="section-head">
+                <div class="section-head-left">
+                    <div class="section-icon"><i class='bx bx-trending-up'></i></div>
+                    <span class="section-label">Bán chạy nhất</span>
+                    <span class="section-badge">Tuần này</span>
+                </div>
+                <a href="/Product?sort=bestselling" class="section-more">Xem tất cả <i class='bx bx-chevron-right'></i></a>
             </div>
-            <a asp-controller="Product" asp-action="Index" class="text-danger fw-bold text-decoration-none">Xem thêm <i class='bx bx-right-arrow-alt'></i></a>
-        </div>
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3" id="bestSellingProducts">
-            @if (Model.BestSellingProducts != null && Model.BestSellingProducts.Any())
-            {
-                foreach (var product in Model.BestSellingProducts)
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3" id="bestSellingProducts">
+                @if (Model.BestSellingProducts != null && Model.BestSellingProducts.Any())
                 {
-                    <div class="col">@await Html.PartialAsync("_ProductCard", product)</div>
+                    foreach (var product in Model.BestSellingProducts)
+                    {
+                        <div class="col">@await Html.PartialAsync("_ProductCard", product)</div>
+                    }
                 }
-            }
+            </div>
         </div>
     </div>
 </section>
@@ -252,25 +260,62 @@
 </style>
 
 <!-- 7. NEW PRODUCTS -->
-<section class="bg-light">
+<section class="home-sections-bg">
     <div class="container">
-        <div class="section-title-wrapper d-flex justify-content-between align-items-end">
-            <div>
-                <h2 class="section-title text-uppercase">Sản phẩm mới</h2>
+        <div class="prod-section-wrap psw-new">
+            <div class="section-head">
+                <div class="section-head-left">
+                    <div class="section-icon"><i class='bx bx-badge-check'></i></div>
+                    <span class="section-label">Sản phẩm mới</span>
+                    <span class="section-badge">Vừa về kho</span>
+                </div>
+                <a href="/Product?sort=newest" class="section-more">Xem tất cả <i class='bx bx-chevron-right'></i></a>
             </div>
-            <a asp-controller="Product" asp-action="Index" class="text-danger fw-bold text-decoration-none">Xem thêm <i class='bx bx-right-arrow-alt'></i></a>
-        </div>
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3" id="newProducts">
-            @if (Model.NewProducts != null && Model.NewProducts.Any())
-            {
-                foreach (var product in Model.NewProducts)
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3" id="newProducts">
+                @if (Model.NewProducts != null && Model.NewProducts.Any())
                 {
-                    <div class="col">@await Html.PartialAsync("_ProductCard", product)</div>
+                    foreach (var product in Model.NewProducts)
+                    {
+                        <div class="col">@await Html.PartialAsync("_ProductCard", product)</div>
+                    }
                 }
-            }
+            </div>
         </div>
     </div>
 </section>
+
+@* ── CATEGORY SECTIONS ── *@
+@{
+    var catGroups = ViewBag.CategoryWithProducts as List<MotoShop.Business.DTOs.CategoryWithProductsDto>;
+}
+@if (catGroups != null && catGroups.Any())
+{
+    foreach (var group in catGroups)
+    {
+        <section class="home-sections-bg">
+            <div class="container">
+                <div class="prod-section-wrap psw-cat">
+                    <div class="section-head">
+                        <div class="section-head-left">
+                            <div class="section-icon"><i class='bx bx-category'></i></div>
+                            <span class="section-label">@group.CategoryName</span>
+                            <span class="section-badge">@group.TotalCount sản phẩm</span>
+                        </div>
+                        <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@group.CategoryId" class="section-more">
+                            Xem tất cả <i class='bx bx-chevron-right'></i>
+                        </a>
+                    </div>
+                    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+                        @foreach (var product in group.Products)
+                        {
+                            <div class="col">@await Html.PartialAsync("_ProductCard", product)</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+}
 
 <!-- 8. USP BAR -->
 <section class="usp-section-v2">

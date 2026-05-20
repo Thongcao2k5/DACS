@@ -112,3 +112,60 @@ html, body, .light-style {
 .ds-btn-primary { background: var(--ds-primary); color: #fff; }
 .ds-input:focus { border-color: var(--ds-primary); outline: 0; box-shadow: 0 0 0 0.2rem var(--ds-primary-light); }
 .ds-page-link.active { background: var(--ds-primary); color: #fff; border-color: var(--ds-primary); }
+
+/* ── Product Section Wrapper ── */
+.prod-section-wrap {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1.5px solid #f0f0f0;
+  padding: 18px 18px 12px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+.prod-section-wrap .section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1.5px solid #f5f5f5;
+  margin-bottom: 16px;
+}
+.prod-section-wrap .section-head-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.prod-section-wrap .section-icon {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px;
+}
+.prod-section-wrap .section-label {
+  font-size: 15px; font-weight: 800; color: #1a1a1a;
+}
+.prod-section-wrap .section-badge {
+  font-size: 10px; font-weight: 700;
+  padding: 3px 10px; border-radius: 100px;
+}
+.prod-section-wrap .section-more {
+  font-size: 12px; font-weight: 600; color: #E60023;
+  text-decoration: none;
+  display: flex; align-items: center; gap: 3px;
+}
+/* Màu theo loại section */
+.psw-flash  .section-icon  { background: rgba(230,0,35,0.1);   color: #E60023; }
+.psw-flash  .section-badge { background: rgba(230,0,35,0.1);   color: #E60023; }
+.psw-hot    .section-icon  { background: rgba(255,107,0,0.1);  color: #ff6b00; }
+.psw-hot    .section-badge { background: rgba(255,107,0,0.1);  color: #ff6b00; }
+.psw-new    .section-icon  { background: rgba(32,201,151,0.1); color: #20c997; }
+.psw-new    .section-badge { background: rgba(32,201,151,0.1); color: #20c997; }
+.psw-cat    .section-icon  { background: rgba(24,95,165,0.1);  color: #185FA5; }
+.psw-cat    .section-badge { background: rgba(24,95,165,0.1);  color: #185FA5; }
+.psw-feat   .section-icon  { background: rgba(111,66,193,0.1); color: #6f42c1; }
+.psw-feat   .section-badge { background: rgba(111,66,193,0.1); color: #6f42c1; }
+/* nền trang chủ xám nhẹ để các khung nổi lên */
+.home-sections-bg {
+  background: #f4f4f6;
+  padding: 12px 0;
+}

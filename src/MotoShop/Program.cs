@@ -612,6 +612,126 @@ using (var scope = app.Services.CreateScope())
                 CONSTRAINT FK_ProductVariants_WeightGroup FOREIGN KEY REFERENCES WeightGroups(Id);
             """);
 
+// ── Sub-categories ──────────────────────────────────────────────────────────
+await context.Database.ExecuteSqlRawAsync("""
+    IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Dầu nhớt động cơ')
+    BEGIN
+        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES
+        (N'Dầu nhớt động cơ',   'dau-nhot-dong-co',  16, 1),
+        (N'Dung dịch & Vệ sinh', 'dung-dich-ve-sinh', 16, 1),
+        (N'Dưỡng xe & Bảo vệ',  'duong-xe-bao-ve',   16, 1);
+    END
+
+    IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Lốp thể thao')
+    BEGIN
+        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES
+        (N'Lốp thể thao',  'lop-the-thao',  17, 1),
+        (N'Lốp phổ thông', 'lop-pho-thong', 17, 1);
+    END
+
+    IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Đĩa phanh & Má phanh')
+    BEGIN
+        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES
+        (N'Đĩa phanh & Má phanh', 'dia-phanh-ma-phanh', 18, 1),
+        (N'Heo dầu & Cùm thắng',  'heo-dau-cum-thang',  18, 1),
+        (N'Phụ kiện phanh',       'phu-kien-phanh',     18, 1);
+    END
+
+    IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Phuộc sau')
+    BEGIN
+        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES
+        (N'Phuộc sau',              'phuoc-sau',           19, 1),
+        (N'Phuộc trước & Bộ nâng', 'phuoc-truoc-bo-nang', 19, 1);
+    END
+
+    IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Ắc quy & Sạc')
+    BEGIN
+        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES
+        (N'Ắc quy & Sạc',   'ac-quy-sac',   20, 1),
+        (N'Đèn & Điện xe',  'den-dien-xe',  20, 1),
+        (N'Bugi & An toàn', 'bugi-an-toan', 20, 1);
+    END
+
+    IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Nhông sên dĩa')
+    BEGIN
+        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES
+        (N'Nhông sên dĩa',         'nhong-sen-dia',         22, 1),
+        (N'Truyền động xe tay ga', 'truyen-dong-xe-tay-ga', 22, 1),
+        (N'Truyền động & Động cơ', 'truyen-dong-dong-co',   22, 1),
+        (N'Điều khiển & Phụ kiện', 'dieu-khien-phu-kien',   22, 1);
+    END
+    """);
+
+await context.Database.ExecuteSqlRawAsync("""
+    UPDATE Products SET CategoryId =
+        (SELECT CategoryId FROM Categories WHERE Slug = 'dau-nhot-dong-co')
+    WHERE ProductId IN (204,205,206,207,208,209);
+
+    UPDATE Products SET CategoryId =
+        (SELECT CategoryId FROM Categories WHERE Slug = 'dung-dich-ve-sinh')
+    WHERE ProductId IN (210,212,213,214);
+
+    UPDATE Products SET CategoryId =
+        (SELECT CategoryId FROM Categories WHERE Slug = 'duong-xe-bao-ve')
+    WHERE ProductId IN (211,215);
+
+    UPDATE Products SET CategoryId =
+        (SELECT CategoryId FROM Categories WHERE Slug = 'lop-the-thao')
+    WHERE ProductId IN (216,217,218,220,222,224,225);
+
+    UPDATE Products SET CategoryId =
+        (SELECT CategoryId FROM Categories WHERE Slug = 'lop-pho-thong')
+    WHERE ProductId IN (219,221,223);
+
+    UPDATE Products SET CategoryId =
+        (SELECT CategoryId FROM Categories WHERE Slug = 'dia-phanh-ma-phanh')
+    WHERE ProductId IN (226,227,232,233);
+
+    UPDATE Products SET CategoryId =
+        (SELECT CategoryId FROM Categories WHERE Slug = 'heo-dau-cum-thang')
+    WHERE ProductId IN (228,231,234);
+
+    UPDATE Products SET CategoryId =
+        (SELECT CategoryId FROM Categories WHERE Slug = 'phu-kien-phanh')
+    WHERE ProductId IN (229,230,235);
+
+    UPDATE Products SET CategoryId =
+        (SELECT CategoryId FROM Categories WHERE Slug = 'phuoc-sau')
+    WHERE ProductId IN (236,237,238,240,241,242,243,244);
+
+    UPDATE Products SET CategoryId =
+        (SELECT CategoryId FROM Categories WHERE Slug = 'phuoc-truoc-bo-nang')
+    WHERE ProductId IN (239,245);
+
+    UPDATE Products SET CategoryId =
+        (SELECT CategoryId FROM Categories WHERE Slug = 'ac-quy-sac')
+    WHERE ProductId IN (247,249,251);
+
+    UPDATE Products SET CategoryId =
+        (SELECT CategoryId FROM Categories WHERE Slug = 'den-dien-xe')
+    WHERE ProductId IN (246,250,253,254);
+
+    UPDATE Products SET CategoryId =
+        (SELECT CategoryId FROM Categories WHERE Slug = 'bugi-an-toan')
+    WHERE ProductId IN (248,252);
+
+    UPDATE Products SET CategoryId =
+        (SELECT CategoryId FROM Categories WHERE Slug = 'nhong-sen-dia')
+    WHERE ProductId IN (265,267,268);
+
+    UPDATE Products SET CategoryId =
+        (SELECT CategoryId FROM Categories WHERE Slug = 'truyen-dong-xe-tay-ga')
+    WHERE ProductId IN (262,266,269);
+
+    UPDATE Products SET CategoryId =
+        (SELECT CategoryId FROM Categories WHERE Slug = 'truyen-dong-dong-co')
+    WHERE ProductId IN (260,261,263,264);
+
+    UPDATE Products SET CategoryId =
+        (SELECT CategoryId FROM Categories WHERE Slug = 'dieu-khien-phu-kien')
+    WHERE ProductId IN (255,256,257,258,259);
+    """);
+
 await DbSeeder.SeedAsync(context, userManager, roleManager);
     }
     catch (Exception ex) { 
