@@ -63,6 +63,10 @@ namespace MotoShop.Data.Data
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<ProductReviewImage> ProductReviewImages { get; set; }
         public DbSet<WeightGroup> WeightGroups { get; set; }
+        public DbSet<ProductUsage> ProductUsages { get; set; }
+        public DbSet<ProductProductUsage> ProductProductUsages { get; set; }
+        public DbSet<PromotionCategory> PromotionCategories { get; set; }
+        public DbSet<PromotionProductVariant> PromotionProductVariants { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -77,6 +81,37 @@ namespace MotoShop.Data.Data
                 .Property(p => p.DiscountType)
                 .HasConversion<string>()
                 .HasMaxLength(20);
+
+            builder.Entity<Promotion>()
+                .Property(p => p.ApplyType)
+                .HasConversion<string>()
+                .HasMaxLength(30);
+
+            builder.Entity<ProductProductUsage>()
+                .HasKey(x => new { x.ProductId, x.ProductUsageId });
+
+            builder.Entity<ProductProductUsage>()
+                .HasOne(x => x.Product)
+                .WithMany(p => p.ProductProductUsages)
+                .HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ProductProductUsage>()
+                .HasOne(x => x.ProductUsage)
+                .WithMany(u => u.ProductProductUsages)
+                .HasForeignKey(x => x.ProductUsageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ProductUsage>().HasData(
+                new ProductUsage { Id = 1, Name = "Tang toc", Slug = "tang-toc", IsActive = true },
+                new ProductUsage { Id = 2, Name = "Tiet kiem nhien lieu", Slug = "tiet-kiem-nhien-lieu", IsActive = true },
+                new ProductUsage { Id = 3, Name = "Bao ve dong co", Slug = "bao-ve-dong-co", IsActive = true },
+                new ProductUsage { Id = 4, Name = "Giam rung", Slug = "giam-rung", IsActive = true },
+                new ProductUsage { Id = 5, Name = "Tang hieu suat phanh", Slug = "tang-hieu-suat-phanh", IsActive = true },
+                new ProductUsage { Id = 6, Name = "Phu hop xe tay ga", Slug = "phu-hop-xe-tay-ga", IsActive = true },
+                new ProductUsage { Id = 7, Name = "Phu hop xe so", Slug = "phu-hop-xe-so", IsActive = true },
+                new ProductUsage { Id = 8, Name = "Trang tri xe", Slug = "trang-tri-xe", IsActive = true }
+            );
 
             builder.Entity<Promotion>()
                 .HasIndex(p => p.CouponCode);

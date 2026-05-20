@@ -1,3 +1,25 @@
 **/appsettings.Development.json
 **/appsettings.*.json
 !**/appsettings.json
+
+# Visual Studio / local IDE state
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build output
+bin/
+obj/
+**/bin/
+**/obj/
+
+# Runtime/generated files
+Logs/
+**/Logs/
+*.bak
+
+# Local upload/test artifacts
+src/MotoShop/wwwroot/uploads/blog/
+src/MotoShop/wwwroot/uploads/sliders/

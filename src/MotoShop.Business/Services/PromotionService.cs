@@ -131,7 +131,6 @@ namespace MotoShop.Business.Services
                     ProductId = product.ProductId,
                     ProductName = product.ProductName,
                     Slug = product.Slug ?? string.Empty,
-                    Description = product.Description ?? string.Empty,
                     CategoryName = product.Category?.CategoryName ?? string.Empty,
                     CategoryId = product.CategoryId,
                     BrandName = product.Brand?.BrandName ?? string.Empty,
@@ -193,7 +192,14 @@ namespace MotoShop.Business.Services
                 return Math.Max(0, orderTotal);
             }
 
-            return ApplyDiscount(orderTotal, promotion);
+            var eligibleTotal = await GetEligibleTotalAsync(promotion, items);
+            if (eligibleTotal <= 0)
+            {
+                return Math.Max(0, orderTotal);
+            }
+
+            var discountedEligibleTotal = ApplyDiscount(eligibleTotal, promotion);
+            return Math.Max(0, orderTotal - (eligibleTotal - discountedEligibleTotal));
         }
 
         public async Task<decimal> ApplyVoucherAsync(string code, decimal orderTotal)
@@ -449,10 +455,24 @@ namespace MotoShop.Business.Services
 
         private async Task<Promotion?> GetBestPromotionForProductAsync(int productId, IEnumerable<PromotionType> types)
         {
-            var activePromotions = await _promotionRepository.GetActivePromotions();
+            var now = DateTime.Now;
+            var product = await _context.Products
+                .AsNoTracking()
+                .Include(p => p.Variants)
+                .FirstOrDefaultAsync(p => p.ProductId == productId);
+
+            if (product == null) return null;
+
+            var activePromotions = await _context.Promotions
+                .AsNoTracking()
+                .Include(p => p.PromotionProducts)
+                .Include(p => p.PromotionCategories)
+                .Include(p => p.PromotionProductVariants)
+                .Where(p => p.IsActive && p.StartDate <= now && p.EndDate >= now && types.Contains(p.PromotionType))
+                .ToListAsync();
 
             return activePromotions
-                .Where(p => types.Contains(p.PromotionType) && p.PromotionProducts.Any(pp => pp.ProductId == productId))
+                .Where(p => IsPromotionApplicableToProduct(p, product, null))
                 .OrderByDescending(p => GetTypePriority(p.PromotionType))
                 .ThenByDescending(p => p.Priority)
                 .ThenByDescending(p => p.DiscountValue)
@@ -461,7 +481,14 @@ namespace MotoShop.Business.Services
 
         private async Task<Promotion?> GetBestOrderPromotionAsync()
         {
-            var activePromotions = await _promotionRepository.GetActivePromotions();
+            var now = DateTime.Now;
+            var activePromotions = await _context.Promotions
+                .AsNoTracking()
+                .Include(p => p.PromotionProducts)
+                .Include(p => p.PromotionCategories)
+                .Include(p => p.PromotionProductVariants)
+                .Where(p => p.IsActive && p.StartDate <= now && p.EndDate >= now)
+                .ToListAsync();
 
             return activePromotions
                 .Where(p => p.PromotionType == PromotionType.OrderDiscount || p.PromotionType == PromotionType.Campaign)
@@ -469,6 +496,41 @@ namespace MotoShop.Business.Services
                 .ThenByDescending(p => p.Priority)
                 .ThenByDescending(p => p.DiscountValue)
                 .FirstOrDefault();
+        }
+
+        private async Task<decimal> GetEligibleTotalAsync(Promotion promotion, List<CartItem> items)
+        {
+            if (promotion.ApplyType == PromotionApplyType.All || items == null || !items.Any())
+            {
+                return items == null || !items.Any() ? 0 : items.Sum(i => i.Price * i.Quantity);
+            }
+
+            var variantIds = items.Select(i => i.ProductVariantId).Distinct().ToList();
+            var variants = await _context.ProductVariants
+                .AsNoTracking()
+                .Include(v => v.Product)
+                .Where(v => variantIds.Contains(v.ProductVariantId))
+                .ToDictionaryAsync(v => v.ProductVariantId);
+
+            return items.Where(item =>
+                variants.TryGetValue(item.ProductVariantId, out var variant) &&
+                variant.Product != null &&
+                IsPromotionApplicableToProduct(promotion, variant.Product, variant.ProductVariantId))
+                .Sum(item => item.Price * item.Quantity);
+        }
+
+        private static bool IsPromotionApplicableToProduct(Promotion promotion, Product product, int? productVariantId)
+        {
+            return promotion.ApplyType switch
+            {
+                PromotionApplyType.All => true,
+                PromotionApplyType.Category => product.CategoryId.HasValue && promotion.PromotionCategories.Any(pc => pc.CategoryId == product.CategoryId.Value),
+                PromotionApplyType.Product => promotion.PromotionProducts.Any(pp => pp.ProductId == product.ProductId),
+                PromotionApplyType.ProductVariantSKU => productVariantId.HasValue
+                    ? promotion.PromotionProductVariants.Any(pv => pv.ProductVariantId == productVariantId.Value)
+                    : product.Variants.Any(v => promotion.PromotionProductVariants.Any(pv => pv.ProductVariantId == v.ProductVariantId)),
+                _ => false
+            };
         }
 
         private PromotionDto MapPromotion(Promotion promotion)

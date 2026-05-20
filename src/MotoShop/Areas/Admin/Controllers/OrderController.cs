@@ -97,7 +97,7 @@ namespace MotoShop.Areas.Admin.Controllers
             // 4. Lọc theo phương thức thanh toán
             if (!string.IsNullOrEmpty(paymentMethod))
             {
-                query = query.Where(o => o.Payments.Any(p => p.PaymentMethod == paymentMethod));
+                query = query.Where(o => o.PaymentMethod == paymentMethod || o.Payments.Any(p => p.PaymentMethod == paymentMethod));
             }
 
             return query;
@@ -173,20 +173,31 @@ namespace MotoShop.Areas.Admin.Controllers
 
         private static readonly Dictionary<string, List<string>> ValidTransitions = new()
         {
-            { "Pending", new[] { "Confirmed", "Cancelled" }.ToList() },
-            { "Confirmed", new[] { "Shipping", "Cancelled" }.ToList() },
+            { "Pending", new[] { "Processing", "Confirmed", "Cancelled" }.ToList() },
+            { "Processing", new[] { "Confirmed", "Shipping", "Completed", "Cancelled" }.ToList() },
+            { "DangXuLy", new[] { "Confirmed", "Shipping", "Completed", "Cancelled" }.ToList() },
+            { "Confirmed", new[] { "Processing", "Shipping", "Completed", "Cancelled" }.ToList() },
             { "Shipping", new[] { "Completed", "Cancelled" }.ToList() },
+            { "DangGiao", new[] { "Completed", "Cancelled" }.ToList() },
             { "Completed", new List<string>() },
-            { "Cancelled", new List<string>() }
+            { "DaHoanThanh", new List<string>() },
+            { "Cancelled", new List<string>() },
+            { "DaHuy", new List<string>() }
         };
 
         [HttpPost]
         public async Task<IActionResult> UpdateStatus(int id, string status)
         {
+            if (string.IsNullOrWhiteSpace(status))
+                return Json(new { success = false, message = "Vui lòng chọn trạng thái mới." });
+
             var order = await _context.Orders.FindAsync(id);
             if (order == null) return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
 
             var currentStatus = order.Status ?? "Pending";
+            if (string.Equals(currentStatus, status, StringComparison.OrdinalIgnoreCase))
+                return Json(new { success = true, message = "Trạng thái đơn hàng không thay đổi." });
+
             if (!ValidTransitions.ContainsKey(currentStatus) || !ValidTransitions[currentStatus].Contains(status))
             {
                 return Json(new { success = false, message = $"Không thể chuyển từ {currentStatus} sang {status}" });
@@ -209,6 +220,12 @@ namespace MotoShop.Areas.Admin.Controllers
                     {
                         using var tx = await _context.Database.BeginTransactionAsync();
                         order.Status = status;
+                        if ((status == "Completed" || status == "DaHoanThanh")
+                            && order.PaymentMethod == "COD"
+                            && order.PaymentStatus != "Paid")
+                        {
+                            order.PaymentStatus = "Paid";
+                        }
                         await _context.SaveChangesAsync();
                         // Cập nhật SoldCount khi đơn hoàn thành — trong cùng transaction
                         if (status == "Completed" || status == "DaHoanThanh")

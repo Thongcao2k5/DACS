@@ -128,7 +128,7 @@ builder.Services.AddAuthentication()
 builder.Services.ConfigureApplicationCookie(options => {
     options.Cookie.HttpOnly = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SameSite = SameSiteMode.Lax;
     options.ExpireTimeSpan = TimeSpan.FromDays(7);
     options.SlidingExpiration = true;
     options.LoginPath = "/Account/Login";
@@ -525,9 +525,6 @@ using (var scope = app.Services.CreateScope())
             UPDATE Brands SET LogoUrl = '/uploads/brands/ct_cytracing.png' WHERE BrandName = N'CYT RACING';
         ");
 
-        // Legacy Wishlists/Addresses cleanup must be handled by migrations or manual DBA steps,
-        // not by destructive startup SQL.
-
         Log.Information("Seeding Data...");
         await context.Database.ExecuteSqlRawAsync(@"
             IF EXISTS (SELECT * FROM sys.tables WHERE name = 'ServiceCategories') AND NOT EXISTS (SELECT * FROM ServiceCategories)
@@ -541,7 +538,7 @@ using (var scope = app.Services.CreateScope())
             END
         ");
 
-        // === SHIPPING UPGRADE — thêm cột mới ===
+// === SHIPPING UPGRADE — thêm cột mới ===
         await context.Database.ExecuteSqlRawAsync(@"
             IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'ShippingMethods') AND name = N'EstimatedDaysInt')
                 ALTER TABLE ShippingMethods ADD EstimatedDaysInt INT NOT NULL DEFAULT 3;
@@ -611,8 +608,7 @@ using (var scope = app.Services.CreateScope())
                 ALTER TABLE ProductVariants ADD WeightGroupId INT NULL
                 CONSTRAINT FK_ProductVariants_WeightGroup FOREIGN KEY REFERENCES WeightGroups(Id);
             """);
-
-await DbSeeder.SeedAsync(context, userManager, roleManager);
+        await DbSeeder.SeedAsync(context, userManager, roleManager);
     }
     catch (Exception ex) { 
         Log.Error("Startup Error: {Message}", ex.Message); 

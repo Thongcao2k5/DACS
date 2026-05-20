@@ -74,6 +74,7 @@
     @await RenderSectionAsync("Styles", required: false)
   </head>
   <body>
+    @Html.AntiForgeryToken()
     <!-- Global Loading Spinner -->
     <div id="adminLoader">
         <div class="spinner-border text-primary" role="status">
@@ -105,7 +106,7 @@
                 
                 <!-- KHO HÀNG & SẢN PHẨM -->
                 <li class="menu-header small text-uppercase"><span class="menu-header-text">Kho hàng & Sản phẩm</span></li>
-                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" || ViewContext.RouteData.Values["controller"]?.ToString() == "Category" || ViewContext.RouteData.Values["controller"]?.ToString() == "Brand" ? "active open" : "")">
+                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" || ViewContext.RouteData.Values["controller"]?.ToString() == "Category" || ViewContext.RouteData.Values["controller"]?.ToString() == "Brand" || ViewContext.RouteData.Values["controller"]?.ToString() == "ProductUsage" ? "active open" : "")">
                     <a href="javascript:void(0);" class="menu-link menu-toggle">
                         <i class="menu-icon tf-icons bx bx-box"></i>
                         <div>Cấu hình sản phẩm</div>
@@ -119,6 +120,9 @@
                         </li>
                         <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Brand" ? "active" : "")">
                             <a asp-area="Admin" asp-controller="Brand" asp-action="Index" class="menu-link"><div>Thương hiệu sản phẩm</div></a>
+                        </li>
+                        <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "ProductUsage" ? "active" : "")">
+                            <a asp-area="Admin" asp-controller="ProductUsage" asp-action="Index" class="menu-link"><div>Công dụng sản phẩm</div></a>
                         </li>
                     </ul>
                 </li>
@@ -294,7 +298,9 @@
         // GLOBAL AJAX ANTI-FORGERY TOKEN SETUP
         (function() {
             function getAntiforgeryToken() {
-                return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+                return document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    || document.querySelector('meta[name="__RequestVerificationToken"]')?.content
+                    || '';
             }
             if (typeof $ !== 'undefined') {
                 $.ajaxSetup({

@@ -43,7 +43,7 @@
                                     </div>
                                     <div class="mb-4">
                                         <label class="form-label fw-bold">Nội dung bài viết *</label>
-                                        <textarea asp-for="Content" id="RichEditor" class="form-control"></textarea>
+                                        <textarea asp-for="Content" id="RichEditor" class="form-control rich-editor"></textarea>
                                         <span asp-validation-for="Content" class="text-danger small"></span>
                                     </div>
                                 </div>
@@ -132,21 +132,25 @@
 </div>
 
 @section Scripts {
-    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="~/assets/js/rich-text-editor.js" asp-append-version="true"></script>
     <script>
-        tinymce.init({
-            selector: '#RichEditor',
-            height: 500,
-            plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount',
-            toolbar: 'undo redo | blocks | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | image link | help',
-            content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
-            promotion: false
-        });
-
         document.getElementById('Title').addEventListener('input', function() {
             if(!document.getElementById('Slug').getAttribute('data-manual')) {
                 document.getElementById('Slug').value = generateSlug(this.value);
             }
+        });
+
+        document.querySelector('form').addEventListener('submit', function () {
+            window.MotoShopRichText?.syncAll();
+        });
+
+        const statusSelect = document.querySelector('select[name="Status"]');
+        const publishSwitch = document.getElementById('swPublish');
+        statusSelect?.addEventListener('change', function () {
+            if (publishSwitch) publishSwitch.checked = this.value === '1';
+        });
+        publishSwitch?.addEventListener('change', function () {
+            if (statusSelect) statusSelect.value = this.checked ? '1' : '0';
         });
 
         function generateSlug(text) {
@@ -170,8 +174,13 @@
         }
     </script>
     <style>
+        .rich-text-area { min-height: 500px; }
         .x-small { font-size: 11px; }
         .object-fit-cover { object-fit: cover; }
         .nav-tabs .nav-link.active { background: white !important; border-bottom-color: transparent !important; font-weight: bold; }
     </style>
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/assets/css/rich-text-editor.css" asp-append-version="true" />
 }

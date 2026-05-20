@@ -1,4 +1,4 @@
-@model IEnumerable<MotoShop.Data.Models.Blog>
+﻿@model IEnumerable<MotoShop.Data.Models.Blog>
 
 @{
     ViewData["Title"] = "Quản lý Bài viết";
@@ -8,7 +8,6 @@
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Blog /</span> Danh sách bài viết</h4>
 
-    <!-- Filter & Search -->
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" class="row g-3">
@@ -18,7 +17,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Danh mục</label>
-                    <select name="categoryId" class="form-select" asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name"))">
+                    <select name="categoryId" class="form-select" asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name", ViewBag.CategoryId))">
                         <option value="">-- Tất cả danh mục --</option>
                     </select>
                 </div>
@@ -38,7 +37,6 @@
         </div>
     </div>
 
-    <!-- Table -->
     <div class="card">
         <div class="table-responsive text-nowrap">
             <table class="table table-hover">
@@ -66,7 +64,7 @@
                                 }
                                 else
                                 {
-                                    <span class="badge bg-label-secondary">No Image</span>
+                                    <span class="badge bg-label-secondary">Không có ảnh</span>
                                 }
                             </td>
                             <td><span class="badge bg-label-info">@item.Category?.Name</span></td>
@@ -89,6 +87,9 @@
                                     <div class="dropdown-menu">
                                         <a class="dropdown-item" asp-action="Details" asp-route-id="@item.Id"><i class="bx bx-show-alt me-1"></i> Xem</a>
                                         <a class="dropdown-item" asp-action="Edit" asp-route-id="@item.Id"><i class="bx bx-edit-alt me-1"></i> Sửa</a>
+                                        <a class="dropdown-item" href="javascript:void(0);" onclick="toggleBlogStatus(@item.Id)">
+                                            <i class="bx bx-refresh me-1"></i> @(item.Status == 1 ? "Chuyển bản nháp" : "Đăng bài")
+                                        </a>
                                         <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="deleteBlog(@item.Id)"><i class="bx bx-trash me-1"></i> Xóa</a>
                                     </div>
                                 </div>
@@ -107,7 +108,7 @@
         function deleteBlog(id) {
             Swal.fire({
                 title: 'Bạn có chắc chắn muốn xóa?',
-                text: "Hành động này không thể hoàn tác!",
+                text: 'Hành động này không thể hoàn tác!',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
@@ -124,7 +125,24 @@
                         }
                     });
                 }
-            })
+            });
+        }
+
+        async function toggleBlogStatus(id) {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            const formData = new FormData();
+            formData.append('__RequestVerificationToken', token);
+
+            const response = await fetch(`/Admin/Blog/ToggleStatus/${id}`, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            if (result.success) {
+                location.reload();
+            } else {
+                Swal.fire('Lỗi!', result.message || 'Không thể cập nhật trạng thái bài viết.', 'error');
+            }
         }
     </script>
 }

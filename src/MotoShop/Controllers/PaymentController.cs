@@ -224,7 +224,9 @@ namespace MotoShop.Controllers
                     return View();
                 }
 
-                var order = await _context.Orders.FindAsync(orderId);
+                var order = await _context.Orders
+                    .Include(o => o.Customer)
+                    .FirstOrDefaultAsync(o => o.OrderId == orderId);
                 if (order == null)
                 {
                     ViewBag.Status = "error";
@@ -232,26 +234,18 @@ namespace MotoShop.Controllers
                     return View();
                 }
 
-                // [C1-FIX] Bắt buộc phải đăng nhập — CreatePayment đã yêu cầu auth nên callback cũng phải có session
+                // VNPay redirects from an external domain, so the browser may not
+                // send the login cookie back. The signed callback itself is the
+                // trusted signal; do not fail a paid transaction because the
+                // customer session is missing.
                 var currentUserId = _userManager.GetUserId(User);
                 if (string.IsNullOrEmpty(currentUserId))
                 {
-                    _logger.LogWarning("VNPay callback without authenticated session. OrderId={OrderId}", orderId);
-                    ViewBag.Status = "error";
-                    ViewBag.Message = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập và kiểm tra lịch sử đơn hàng.";
-                    return View();
+                    _logger.LogInformation("VNPay callback processed without authenticated session. OrderId={OrderId}", orderId);
                 }
-
-                var ownerCustomerId = await _context.Customers
-                    .Where(c => c.UserId == currentUserId)
-                    .Select(c => (int?)c.CustomerId)
-                    .FirstOrDefaultAsync();
-                if (ownerCustomerId == null || order.CustomerId != ownerCustomerId)
+                else if (!string.Equals(order.Customer?.UserId, currentUserId, StringComparison.Ordinal))
                 {
-                    _logger.LogWarning("VNPay callback ownership mismatch. OrderId={OrderId}, OwnerId={OwnerId}, RequestUser={UserId}", orderId, order.CustomerId, currentUserId);
-                    ViewBag.Status = "error";
-                    ViewBag.Message = "Bạn không có quyền truy cập đơn hàng này.";
-                    return View();
+                    _logger.LogWarning("VNPay callback authenticated as a different user. OrderId={OrderId}, OwnerUserId={OwnerUserId}, RequestUserId={RequestUserId}", orderId, order.Customer?.UserId, currentUserId);
                 }
 
                 long expectedAmount = (long)(order.TotalAmount * 100);
@@ -270,7 +264,7 @@ namespace MotoShop.Controllers
                 {
                     _logger.LogInformation("VNPay order paid. OrderId={OrderId}, TxnNo={TxnNo}", orderId, vnpayTxnNo);
                     await _auditLogService.LogActionAsync(
-                        currentUserId, "PAYMENT_SUCCESS", "Order", orderId.ToString(),
+                        order.Customer?.UserId ?? currentUserId, "PAYMENT_SUCCESS", "Order", orderId.ToString(),
                         null, $"VNPay thanh toán thành công: {order.TotalAmount:N0}₫, TxnNo={vnpayTxnNo}",
                         HttpContext.Connection.RemoteIpAddress?.ToString());
 

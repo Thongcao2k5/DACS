@@ -9,11 +9,11 @@ namespace MotoShop.Business.DTOs
         public string ProductName { get; set; } = string.Empty;
         public string Slug { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string CategoryName { get; set; } = string.Empty;
         public int? CategoryId { get; set; }
+        public string CategoryName { get; set; } = string.Empty;
+        public int? BrandId { get; set; }
         public string BrandName { get; set; } = string.Empty;
         public string BrandLogoUrl { get; set; } = string.Empty;
-        public int? BrandId { get; set; }
         public bool IsFeatured { get; set; }
         public decimal MinPrice { get; set; }
         public decimal? MinOriginalPrice { get; set; }
@@ -47,6 +47,7 @@ namespace MotoShop.Business.DTOs
         public List<ProductVariantDto> Variants { get; set; } = new List<ProductVariantDto>();
         public List<ProductImageDto> Images { get; set; } = new List<ProductImageDto>();
         public List<ProductReviewDto> Reviews { get; set; } = new List<ProductReviewDto>();
+        public List<string> UsageNames { get; set; } = new List<string>();
     }
 
     public class ProductReviewDto

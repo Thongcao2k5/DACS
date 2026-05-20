@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MotoShop.Data.Data;
 
@@ -11,9 +12,11 @@ using MotoShop.Data.Data;
 namespace MotoShop.Data.Migrations
 {
     [DbContext(typeof(MotoShopDbContext))]
-    partial class MotoShopDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260519165823_AddSubCategoriesProductUsagesPromotionScopes")]
+    partial class AddSubCategoriesProductUsagesPromotionScopes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1175,11 +1178,16 @@ namespace MotoShop.Data.Migrations
                     b.Property<int>("SoldCount")
                         .HasColumnType("int");
 
+                    b.Property<int?>("SubCategoryId")
+                        .HasColumnType("int");
+
                     b.HasKey("ProductId");
 
                     b.HasIndex("BrandId");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("SubCategoryId");
 
                     b.ToTable("Products");
                 });
@@ -1687,6 +1695,29 @@ namespace MotoShop.Data.Migrations
                     b.ToTable("PromotionProductVariants");
                 });
 
+            modelBuilder.Entity("MotoShop.Data.Models.PromotionSubCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PromotionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SubCategoryId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PromotionId");
+
+                    b.HasIndex("SubCategoryId");
+
+                    b.ToTable("PromotionSubCategories");
+                });
+
             modelBuilder.Entity("MotoShop.Data.Models.Service", b =>
                 {
                     b.Property<int>("ServiceId")
@@ -2179,6 +2210,45 @@ namespace MotoShop.Data.Migrations
                     b.ToTable("StoreSettings");
                 });
 
+            modelBuilder.Entity("MotoShop.Data.Models.SubCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Slug")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId", "Slug");
+
+                    b.ToTable("SubCategories");
+                });
+
             modelBuilder.Entity("MotoShop.Data.Models.Unit", b =>
                 {
                     b.Property<int>("UnitId")
@@ -2520,9 +2590,16 @@ namespace MotoShop.Data.Migrations
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("MotoShop.Data.Models.SubCategory", "SubCategory")
+                        .WithMany("Products")
+                        .HasForeignKey("SubCategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Brand");
 
                     b.Navigation("Category");
+
+                    b.Navigation("SubCategory");
                 });
 
             modelBuilder.Entity("MotoShop.Data.Models.ProductImage", b =>
@@ -2693,6 +2770,25 @@ namespace MotoShop.Data.Migrations
                     b.Navigation("Promotion");
                 });
 
+            modelBuilder.Entity("MotoShop.Data.Models.PromotionSubCategory", b =>
+                {
+                    b.HasOne("MotoShop.Data.Models.Promotion", "Promotion")
+                        .WithMany("PromotionSubCategories")
+                        .HasForeignKey("PromotionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MotoShop.Data.Models.SubCategory", "SubCategory")
+                        .WithMany("PromotionSubCategories")
+                        .HasForeignKey("SubCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Promotion");
+
+                    b.Navigation("SubCategory");
+                });
+
             modelBuilder.Entity("MotoShop.Data.Models.Service", b =>
                 {
                     b.HasOne("MotoShop.Data.Models.ServiceCategory", "ServiceCategory")
@@ -2791,6 +2887,17 @@ namespace MotoShop.Data.Migrations
                     b.Navigation("Store");
                 });
 
+            modelBuilder.Entity("MotoShop.Data.Models.SubCategory", b =>
+                {
+                    b.HasOne("MotoShop.Data.Models.Category", "Category")
+                        .WithMany("ProductSubCategories")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
             modelBuilder.Entity("MotoShop.Data.Models.VariantImage", b =>
                 {
                     b.HasOne("MotoShop.Data.Models.ProductVariant", "ProductVariant")
@@ -2835,6 +2942,8 @@ namespace MotoShop.Data.Migrations
 
             modelBuilder.Entity("MotoShop.Data.Models.Category", b =>
                 {
+                    b.Navigation("ProductSubCategories");
+
                     b.Navigation("Products");
 
                     b.Navigation("SubCategories");
@@ -2932,6 +3041,8 @@ namespace MotoShop.Data.Migrations
                     b.Navigation("PromotionProductVariants");
 
                     b.Navigation("PromotionProducts");
+
+                    b.Navigation("PromotionSubCategories");
                 });
 
             modelBuilder.Entity("MotoShop.Data.Models.Service", b =>
@@ -2962,6 +3073,13 @@ namespace MotoShop.Data.Migrations
                     b.Navigation("Orders");
 
                     b.Navigation("Staffs");
+                });
+
+            modelBuilder.Entity("MotoShop.Data.Models.SubCategory", b =>
+                {
+                    b.Navigation("Products");
+
+                    b.Navigation("PromotionSubCategories");
                 });
 #pragma warning restore 612, 618
         }

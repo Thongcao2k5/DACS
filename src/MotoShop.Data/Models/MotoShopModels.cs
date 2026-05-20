@@ -82,6 +82,32 @@ namespace MotoShop.Data.Models
         public virtual ICollection<FlashSaleProduct> OldFlashSaleProducts { get; set; } = new List<FlashSaleProduct>();
         public virtual ICollection<PromotionProduct> PromotionProducts { get; set; } = new List<PromotionProduct>();
         public virtual ICollection<ProductSpecification> Specifications { get; set; } = new List<ProductSpecification>();
+        public virtual ICollection<ProductProductUsage> ProductProductUsages { get; set; } = new List<ProductProductUsage>();
+    }
+
+    public class ProductUsage
+    {
+        [Key]
+        public int Id { get; set; }
+        [Required, StringLength(200)]
+        public string Name { get; set; } = string.Empty;
+        [StringLength(255)]
+        public string? Slug { get; set; }
+        public string? Description { get; set; }
+        public bool IsActive { get; set; } = true;
+
+        public virtual ICollection<ProductProductUsage> ProductProductUsages { get; set; } = new List<ProductProductUsage>();
+    }
+
+    public class ProductProductUsage
+    {
+        public int ProductId { get; set; }
+        public int ProductUsageId { get; set; }
+
+        [ForeignKey(nameof(ProductId))]
+        public virtual Product? Product { get; set; }
+        [ForeignKey(nameof(ProductUsageId))]
+        public virtual ProductUsage? ProductUsage { get; set; }
     }
 
     public class Unit

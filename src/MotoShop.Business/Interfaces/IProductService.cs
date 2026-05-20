@@ -14,12 +14,13 @@ namespace MotoShop.Business.Interfaces
             int? categoryId,
             int? brandId,
             string? sort,
-            int page,
+            int pageNumber,
             int pageSize,
             decimal? minPrice = null,
             decimal? maxPrice = null,
             bool? inStock = null,
             bool? onSale = null,
+            string? usageSlug = null,
             IEnumerable<int>? productIds = null
         );
         Task<IEnumerable<CategoryDto>> GetAllCategoriesAsync();

@@ -1,5 +1,7 @@
 @model MotoShop.Models.ViewModels.HomeViewModel
+@using MotoShop.Data.Models
 @{
+    var productUsages = ViewBag.ProductUsages as List<ProductUsage> ?? new List<ProductUsage>();
     ViewData["Title"] = "Trang chủ";
 }
 
@@ -248,6 +250,41 @@
         filter: grayscale(0%);
         opacity: 1;
         transform: scale(1.05);
+    }
+    .usage-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+    }
+    .usage-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 56px;
+        padding: 12px 14px;
+        border: 1px solid #edf0f4;
+        border-radius: 8px;
+        background: #fff;
+        color: #2b2c40;
+        font-weight: 700;
+        box-shadow: 0 8px 22px rgba(67, 89, 113, 0.06);
+        transition: transform .15s ease, border-color .15s ease;
+    }
+    .usage-card:hover {
+        transform: translateY(-2px);
+        border-color: #ea3943;
+        color: #ea3943;
+    }
+    .usage-icon {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #fff0f1;
+        color: #ea3943;
+        flex: 0 0 auto;
     }
 </style>
 

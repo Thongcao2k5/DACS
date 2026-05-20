@@ -14,4 +14,13 @@ namespace MotoShop.Data.Enums
         Percent,
         Fixed
     }
+
+    public enum PromotionApplyType
+    {
+        All,
+        Category,
+        SubCategory,
+        Product,
+        ProductVariantSKU
+    }
 }

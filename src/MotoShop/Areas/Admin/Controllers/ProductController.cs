@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Identity;
 using MotoShop.Business.Interfaces;
+using MotoShop.Data.Data;
 using MotoShop.Data.Interfaces;
 using MotoShop.Data.Models;
 using MotoShop.Models.ViewModels;
@@ -11,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using System.Text.RegularExpressions;
 
 namespace MotoShop.Areas.Admin.Controllers
 {
@@ -25,6 +27,7 @@ namespace MotoShop.Areas.Admin.Controllers
         private readonly IAuditLogService _auditLogService;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly Microsoft.Extensions.Caching.Memory.IMemoryCache _cache;
+        private readonly MotoShopDbContext _context;
 
         public ProductController(
             IProductRepository productRepository, 
@@ -33,7 +36,8 @@ namespace MotoShop.Areas.Admin.Controllers
             IGenericRepository<Brand> brandRepository,
             IAuditLogService auditLogService,
             UserManager<IdentityUser> userManager,
-            Microsoft.Extensions.Caching.Memory.IMemoryCache cache)
+            Microsoft.Extensions.Caching.Memory.IMemoryCache cache,
+            MotoShopDbContext context)
         {
             _productRepository = productRepository;
             _fileService = fileService;
@@ -42,6 +46,7 @@ namespace MotoShop.Areas.Admin.Controllers
             _auditLogService = auditLogService;
             _userManager = userManager;
             _cache = cache;
+            _context = context;
         }
 
         private void ClearHomeCache()
@@ -51,6 +56,18 @@ namespace MotoShop.Areas.Admin.Controllers
             _cache.Remove(MotoShop.Data.Constants.CacheKeys.HomeNewProducts);
             _cache.Remove(MotoShop.Data.Constants.CacheKeys.HomeCategoryProducts);
             _cache.Remove(MotoShop.Data.Constants.CacheKeys.HomeFlashSale);
+            _cache.Remove(MotoShop.Data.Constants.CacheKeys.HomeCategories);
+        }
+
+        private async Task LoadProductFormLookupsAsync(int? categoryId = null)
+        {
+            ViewBag.Categories = await _categoryRepository.GetAllAsync();
+            ViewBag.Brands = await _brandRepository.GetAllAsync();
+            ViewBag.ProductUsages = await _context.ProductUsages
+                .AsNoTracking()
+                .Where(u => u.IsActive)
+                .OrderBy(u => u.Name)
+                .ToListAsync();
         }
 
         public async Task<IActionResult> Index(string? searchTerm, int? categoryId, int? brandId, string? status, string? sort, int page = 1, int pageSize = 10)
@@ -133,8 +150,7 @@ namespace MotoShop.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Create()
         {
-            ViewBag.Categories = await _categoryRepository.GetAllAsync();
-            ViewBag.Brands = await _brandRepository.GetAllAsync();
+            await LoadProductFormLookupsAsync();
             return View();
         }
 
@@ -144,6 +160,7 @@ namespace MotoShop.Areas.Admin.Controllers
         {
             if (!ModelState.IsValid)
             {
+                await LoadProductFormLookupsAsync(model.CategoryId);
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
                 return Json(new { success = false, message = "Dữ liệu không hợp lệ!", errors = errors });
             }
@@ -162,15 +179,24 @@ namespace MotoShop.Areas.Admin.Controllers
                 {
                     ProductName = model.ProductName,
                     Slug = slug,
-                    Description = model.Description,
+                    Description = SanitizeHtml(model.Description),
                     CategoryId = model.CategoryId,
                     BrandId = model.BrandId,
                     IsFeatured = model.IsFeatured,
                     IsActive = model.IsActive,
                     CreatedDate = DateTime.Now,
                     Images = new List<ProductImage>(),
-                    Variants = new List<ProductVariant>()
+                    Variants = new List<ProductVariant>(),
+                    ProductProductUsages = new List<ProductProductUsage>()
                 };
+
+                if (model.ProductUsageIds != null && model.ProductUsageIds.Any())
+                {
+                    foreach (var usageId in model.ProductUsageIds.Distinct())
+                    {
+                        product.ProductProductUsages.Add(new ProductProductUsage { ProductUsageId = usageId });
+                    }
+                }
 
                 if (model.Images != null && model.Images.Any())
                 {
@@ -229,12 +255,12 @@ namespace MotoShop.Areas.Admin.Controllers
                 .Include(p => p.Brand)
                 .Include(p => p.Images)
                 .Include(p => p.Variants)
+                .Include(p => p.ProductProductUsages)
                 .FirstOrDefaultAsync();
 
             if (product == null) return NotFound();
 
-            ViewBag.Categories = await _categoryRepository.GetAllAsync();
-            ViewBag.Brands = await _brandRepository.GetAllAsync();
+            await LoadProductFormLookupsAsync(product.CategoryId);
 
             return View(product);
         }
@@ -242,7 +268,8 @@ namespace MotoShop.Areas.Admin.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int ProductId, string ProductName, int? CategoryId, int? BrandId, string Description, bool IsActive, bool IsFeatured,
-            List<VariantViewModel> Variants, 
+            List<VariantViewModel> Variants,
+            List<int> ProductUsageIds,
             List<int> DeletedVariantIds, 
             List<int> DeletedImageIds, 
             string ImageOrdersJson,
@@ -253,6 +280,7 @@ namespace MotoShop.Areas.Admin.Controllers
                 var existingProduct = await _productRepository.Find(p => p.ProductId == ProductId)
                     .Include(p => p.Variants)
                     .Include(p => p.Images)
+                    .Include(p => p.ProductProductUsages)
                     .FirstOrDefaultAsync();
 
                 if (existingProduct == null) return Json(new { success = false, message = "Không tìm thấy sản phẩm trong hệ thống" });
@@ -260,10 +288,9 @@ namespace MotoShop.Areas.Admin.Controllers
                 existingProduct.ProductName = ProductName;
                 existingProduct.CategoryId = CategoryId;
                 existingProduct.BrandId = BrandId;
-                existingProduct.Description = Description;
+                existingProduct.Description = SanitizeHtml(Description);
                 existingProduct.IsActive = IsActive;
                 existingProduct.IsFeatured = IsFeatured;
-                
                 var baseSlug = GenerateSlug(ProductName);
                 var slug = baseSlug;
                 var counter = 1;
@@ -306,6 +333,19 @@ namespace MotoShop.Areas.Admin.Controllers
                                 CreatedDate = DateTime.Now
                             });
                         }
+                    }
+                }
+
+                existingProduct.ProductProductUsages.Clear();
+                if (ProductUsageIds != null && ProductUsageIds.Any())
+                {
+                    foreach (var usageId in ProductUsageIds.Distinct())
+                    {
+                        existingProduct.ProductProductUsages.Add(new ProductProductUsage
+                        {
+                            ProductId = ProductId,
+                            ProductUsageId = usageId
+                        });
                     }
                 }
 
@@ -475,6 +515,17 @@ namespace MotoShop.Areas.Admin.Controllers
             char[] chars = text.Where(c => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark).ToArray();
             string result = new string(chars).Normalize(System.Text.NormalizationForm.FormC);
             return result.Replace('đ', 'd').Replace('Đ', 'D');
+        }
+
+        private string SanitizeHtml(string? html)
+        {
+            if (string.IsNullOrWhiteSpace(html)) return string.Empty;
+
+            var sanitized = Regex.Replace(html, @"<\s*script[^>]*>.*?<\s*/\s*script\s*>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            sanitized = Regex.Replace(sanitized, @"\s+on\w+\s*=\s*(['""]).*?\1", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            sanitized = Regex.Replace(sanitized, @"\s+on\w+\s*=\s*[^\s>]+", string.Empty, RegexOptions.IgnoreCase);
+            sanitized = Regex.Replace(sanitized, @"javascript\s*:", string.Empty, RegexOptions.IgnoreCase);
+            return sanitized;
         }
     }
 }

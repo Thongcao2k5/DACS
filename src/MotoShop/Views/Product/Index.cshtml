@@ -1,16 +1,9 @@
 @using MotoShop.Business.Helpers
-@model PagedList<MotoShop.Business.DTOs.ProductDto>
+@model MotoShop.Models.ViewModels.ProductListViewModel
 
 @{
-    ViewData["Title"] = !string.IsNullOrEmpty(ViewBag.SearchTerm) ? "Tìm kiếm: " + ViewBag.SearchTerm : (ViewBag.CategoryName ?? "Tất cả sản phẩm");
-    var searchTerm = ViewBag.SearchTerm;
-    var categoryId = ViewBag.CurrentCategoryId;
-    var brandId = ViewBag.CurrentBrandId;
-    var sort = ViewBag.Sort;
-    var inStock = ViewBag.InStock;
-    var onSale = ViewBag.OnSale;
-    var minPrice = ViewBag.SelectedMinPrice;
-    var maxPrice = ViewBag.SelectedMaxPrice;
+    ViewData["Title"] = Model.PageTitle;
+    var pagedProducts = Model.PagedProducts;
 }
 
 <!-- BREADCRUMB ĐỘNG -->
@@ -20,47 +13,27 @@
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">Trang chủ</a></li>
                 <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none text-muted">Sản phẩm</a></li>
-                @if (!string.IsNullOrEmpty(searchTerm))
-                {
-                    <li class="breadcrumb-item active text-danger fw-500" aria-current="page">Tìm kiếm "@searchTerm"</li>
-                }
-                else if (ViewBag.CategoryName != null)
-                {
-                    <li class="breadcrumb-item active text-danger fw-500" aria-current="page">@ViewBag.CategoryName</li>
-                }
+                <li class="breadcrumb-item active text-danger fw-500" aria-current="page">@Model.PageTitle</li>
             </ol>
         </nav>
     </div>
 </div>
 
 <main class="container mb-5">
-    <!-- TIÊU ĐỀ ĐỘNG (FIX 1) -->
+    <!-- TIÊU ĐỀ ĐỘNG -->
     <div class="page-header mb-4">
-        @if (!string.IsNullOrEmpty(searchTerm))
-        {
-            <h1 class="fw-bold h3 mb-1">Kết quả tìm kiếm</h1>
-            <p class="text-muted small">Tìm thấy <strong class="text-danger">@ViewBag.TotalProducts</strong> sản phẩm cho từ khóa <strong class="text-dark">"@searchTerm"</strong></p>
-        }
-        else if (ViewBag.CategoryName != null)
-        {
-            <h1 class="fw-bold h3 mb-1">@ViewBag.CategoryName</h1>
-            <p class="text-muted small">@ViewBag.TotalProducts sản phẩm trong danh mục</p>
-        }
-        else if (ViewBag.BrandName != null)
-        {
-            <h1 class="fw-bold h3 mb-1">Thương hiệu @ViewBag.BrandName</h1>
-            <p class="text-muted small">@ViewBag.TotalProducts sản phẩm của @ViewBag.BrandName</p>
-        }
-        else
-        {
-            <h1 class="fw-bold h3 mb-1">Tất cả sản phẩm</h1>
-            <p class="text-muted small">Tổng số @ViewBag.TotalProducts sản phẩm</p>
-        }
+        <h1 class="fw-bold h3 mb-1">@Model.PageTitle</h1>
+        <p class="text-muted small">@Model.PageSubtitle</p>
     </div>
 
     <form id="filterForm" method="get" asp-action="Index">
-        <input type="hidden" name="searchTerm" value="@searchTerm" />
+        <input type="hidden" name="searchTerm" value="@Model.CurrentKeyword" />
         <input type="hidden" name="viewType" id="viewTypeInput" value="@Context.Request.Cookies["viewType"]" />
+
+        <!-- Ẩn các params để form submit vẫn giữ giá trị (do form GET sẽ reset URL parameters nếu không có hidden inputs) -->
+        <input type="hidden" name="sort" id="sortInput" value="@Model.CurrentSort" />
+        <input type="hidden" name="inStock" id="inStockInput" value="@(Model.IsInStockActive ? "true" : "")" />
+        <input type="hidden" name="onSale" id="onSaleInput" value="@(Model.IsDiscountActive ? "true" : "")" />
 
         <div class="row g-4">
             <!-- 1. LEFT SIDEBAR: FILTERS -->
@@ -71,40 +44,36 @@
                         <a asp-action="Index" class="text-danger small fw-bold text-decoration-none">XÓA TẤT CẢ</a>
                     </div>
 
-                    <!-- Price Slider (TÍNH NĂNG 2) -->
+                    <!-- Price Slider -->
                     <div class="filter-widget mb-4 pb-4 border-bottom">
                         <h6 class="fw-bold mb-3 small">KHOẢNG GIÁ</h6>
                         <div class="price-display d-flex justify-content-between mb-2 small fw-500">
-                            <span id="minPriceLabel">@minPrice.ToString("N0")đ</span>
-                            <span id="maxPriceLabel">@maxPrice.ToString("N0")đ</span>
+                            <span id="minPriceLabel">@Model.SelectedMinPrice.ToString("N0")đ</span>
+                            <span id="maxPriceLabel">@Model.SelectedMaxPrice.ToString("N0")đ</span>
                         </div>
                         <div class="range-slider-wrapper position-relative py-3">
-                            <input type="range" id="minPrice" name="minPrice" class="range-slider" min="0" max="@ViewBag.MaxPriceLimit" step="10000" value="@minPrice">
-                            <input type="range" id="maxPrice" name="maxPrice" class="range-slider" min="0" max="@ViewBag.MaxPriceLimit" step="10000" value="@maxPrice">
+                            <input type="range" id="minPrice" name="minPrice" class="range-slider" min="0" max="@Model.MaxPriceLimit" step="10000" value="@Model.SelectedMinPrice">
+                            <input type="range" id="maxPrice" name="maxPrice" class="range-slider" min="0" max="@Model.MaxPriceLimit" step="10000" value="@Model.SelectedMaxPrice">
                         </div>
                     </div>
 
                     <!-- Category Filter -->
                     <div class="filter-widget mb-4 pb-4 border-bottom">
                         <h6 class="fw-bold mb-3 small">DANH MỤC</h6>
-                        @{
-                            var catCount = ViewBag.CategoryProductCount as Dictionary<int, int> ?? new Dictionary<int, int>();
-                            var brandCount = ViewBag.BrandProductCount as Dictionary<int, int> ?? new Dictionary<int, int>();
-                        }
                         <select name="categoryId" class="form-select rounded-pill filter-select">
                             <option value="">Tất cả danh mục</option>
-                            @foreach (var cat in ViewBag.CategoryListItems as List<CategoryDto> ?? new List<CategoryDto>())
+                            @foreach (var cat in Model.Categories)
                             {
-                                var count = catCount.GetValueOrDefault(cat.CategoryId, 0);
+                                var count = Model.CategoryProductCount.GetValueOrDefault(cat.CategoryId, 0);
                                 if (count == 0) continue;
-                                <option value="@cat.CategoryId" selected="@(ViewBag.CurrentCategoryId?.ToString() == cat.CategoryId.ToString())">
+                                <option value="@cat.CategoryId" selected="@(Model.CurrentCategoryId == cat.CategoryId)">
                                     @cat.CategoryName (@count)
                                 </option>
                             }
                         </select>
                     </div>
 
-                    <!-- Brand Filter Slider -->
+                    <!-- Brand Filter -->
                     <div class="filter-widget mb-4 pb-4 border-bottom">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h6 class="fw-bold mb-0 small">THƯƠNG HIỆU</h6>
@@ -113,18 +82,18 @@
                                 <button type="button" class="brand-arr" onclick="slideBrand(1)">›</button>
                             </div>
                         </div>
-                        <input type="hidden" name="brandId" id="brandIdInput" value="@(ViewBag.CurrentBrandId?.ToString() ?? "")">
+                        <input type="hidden" name="brandId" id="brandIdInput" value="@Model.CurrentBrandId">
                         <div class="brand-slider-track" id="brandSliderTrack">
-                            <div class="brand-slide-item @(ViewBag.CurrentBrandId == null ? "active" : "")"
+                            <div class="brand-slide-item @(Model.CurrentBrandId == null ? "active" : "")"
                                  onclick="selectBrand('')" title="Tất cả">
                                 <div class="brand-slide-logo">
                                     <i class='bx bx-store'></i>
                                 </div>
                                 <span class="brand-slide-name">Tất cả</span>
                             </div>
-                            @foreach (var brand in ViewBag.BrandListItems as List<BrandDto> ?? new List<BrandDto>())
+                            @foreach (var brand in Model.Brands)
                             {
-                                <div class="brand-slide-item @(ViewBag.CurrentBrandId?.ToString() == brand.BrandId.ToString() ? "active" : "")"
+                                <div class="brand-slide-item @(Model.CurrentBrandId == brand.BrandId ? "active" : "")"
                                      onclick="selectBrand('@brand.BrandId')"
                                      title="@brand.BrandName">
                                     <div class="brand-slide-logo">
@@ -145,18 +114,6 @@
                         </div>
                     </div>
 
-                    <!-- Quick Checkboxes -->
-                    <div class="filter-widget mb-4">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input filter-check" type="checkbox" name="inStock" value="true" id="checkInStock" @(inStock == true ? "checked" : "")>
-                            <label class="form-check-label small fw-500" for="checkInStock">Còn hàng</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input filter-check" type="checkbox" name="onSale" value="true" id="checkOnSale" @(onSale == true ? "checked" : "")>
-                            <label class="form-check-label small fw-500" for="checkOnSale">Đang giảm giá</label>
-                        </div>
-                    </div>
-
                     <button type="submit" id="applyBtn" class="btn btn-danger w-100 rounded-pill fw-bold mt-2">ÁP DỤNG BỘ LỌC</button>
                 </div>
             </aside>
@@ -166,12 +123,14 @@
                 <!-- Toolbar -->
                 <div class="toolbar d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 bg-white p-3 rounded-4 shadow-sm border">
                     <div class="toolbar-info">
-                        <!-- FIX 5: ĐẾM CHÍNH XÁC -->
-                        <p class="text-muted mb-0 small fw-500">Hiển thị <strong class="text-dark">@ViewBag.From–@ViewBag.To</strong> / <strong class="text-danger">@ViewBag.TotalProducts</strong> sản phẩm</p>
+                        @{
+                            var fromCount = pagedProducts.TotalCount > 0 ? (pagedProducts.CurrentPage - 1) * pagedProducts.PageSize + 1 : 0;
+                            var toCount = Math.Min(pagedProducts.CurrentPage * pagedProducts.PageSize, pagedProducts.TotalCount);
+                        }
+                        <p class="text-muted mb-0 small fw-500">Hiển thị <strong class="text-dark">@fromCount–@toCount</strong> / <strong class="text-danger">@pagedProducts.TotalCount</strong> sản phẩm</p>
                     </div>
 
                     <div class="d-flex align-items-center gap-3">
-                        <!-- TOGGLE GRID/LIST (TÍNH NĂNG 6) -->
                         <div class="view-toggle d-flex gap-1">
                             <button type="button" class="btn-view @(Context.Request.Cookies["viewType"] != "list" ? "active" : "")" onclick="setView('grid')" title="Lưới">
                                 <i class='bx bx-grid-alt'></i>
@@ -180,38 +139,63 @@
                                 <i class='bx bx-list-ul'></i>
                             </button>
                         </div>
-
                         <div class="d-flex align-items-center gap-2">
                             <span class="text-muted small flex-shrink-0">Sắp xếp:</span>
-                            <select name="sort" class="form-select rounded-pill border-secondary-subtle py-1 shadow-none small filter-select" style="min-width: 160px;" asp-items="ViewBag.SortList">
+                            <select class="form-select rounded-pill border-secondary-subtle py-1 shadow-none small" style="min-width: 160px;" id="sortSelect" asp-items="ViewBag.SortList" onchange="toggleFilter('sort', this.value)">
                             </select>
                         </div>
                     </div>
                 </div>
 
-                <!-- Quick Filters (TÍNH NĂNG 8) -->
                 @{
                     string BuildQuery(string key, string? val)
                     {
                         var q = new Dictionary<string, string?> {
-                            { "searchTerm", searchTerm },
-                            { "categoryId", categoryId?.ToString() },
-                            { "brandId", brandId?.ToString() },
-                            { "minPrice", minPrice?.ToString() },
-                            { "maxPrice", maxPrice?.ToString() },
-                            { "sort", sort },
-                            { "inStock", inStock?.ToString() },
-                            { "onSale", onSale?.ToString() }
+                            { "searchTerm", Model.CurrentKeyword },
+                            { "categoryId", Model.CurrentCategoryId?.ToString() },
+                            { "brandId", Model.CurrentBrandId?.ToString() },
+
+                            { "minPrice", Model.SelectedMinPrice > 0 ? Model.SelectedMinPrice.ToString() : null },
+                            { "maxPrice", Model.SelectedMaxPrice < Model.MaxPriceLimit ? Model.SelectedMaxPrice.ToString() : null },
+                            { "sort", Model.CurrentSort },
+                            { "inStock", Model.IsInStockActive ? "true" : null },
+                            { "onSale", Model.IsDiscountActive ? "true" : null }
                         };
-                        q[key] = (q.ContainsKey(key) && q[key] == val) ? null : val;
-                        return "?" + string.Join("&", q.Where(x => x.Value != null).Select(x => $"{x.Key}={x.Value}"));
+
+                        // Toggle Logic
+                        q[key] = (q.ContainsKey(key) && string.Equals(q[key], val, StringComparison.OrdinalIgnoreCase)) ? null : val;
+
+                        var queryParams = q.Where(x => !string.IsNullOrEmpty(x.Value))
+                                           .Select(x => $"{x.Key}={Uri.EscapeDataString(x.Value!)}");
+                        return "?" + string.Join("&", queryParams);
                     }
                 }
+
+                <!-- Quick Filters -->
                 <div class="quick-filters d-flex gap-2 mb-4 flex-wrap overflow-auto pb-2 no-scrollbar">
-                    <a href="@BuildQuery("sort", "newest")" class="quick-filter-tag @(sort == "newest" || string.IsNullOrEmpty(sort) ? "active" : "")">Mới nhất</a>
-                    <a href="@BuildQuery("onSale", "true")" class="quick-filter-tag @(onSale == true ? "active" : "")">Đang giảm giá</a>
-                    <a href="@BuildQuery("inStock", "true")" class="quick-filter-tag @(inStock == true ? "active" : "")">Còn hàng</a>
-                    <a href="@BuildQuery("sort", "price_asc")" class="quick-filter-tag @(sort == "price_asc" ? "active" : "")">Giá thấp nhất</a>
+
+                    <!-- Toggle Mới nhất -->
+                    @{ var isNewest = Model.CurrentSort == "newest" || string.IsNullOrEmpty(Model.CurrentSort); }
+                    <a href="@BuildQuery("sort", "newest")" class="quick-filter-tag @(isNewest ? "active" : "")">
+                        Mới nhất @(isNewest ? Html.Raw("<span class='ms-1'>&times;</span>") : "")
+                    </a>
+
+                    <!-- Toggle Đang giảm giá -->
+                    <a href="@BuildQuery("onSale", "true")" class="quick-filter-tag @(Model.IsDiscountActive ? "active" : "")">
+                        Đang giảm giá @(Model.IsDiscountActive ? Html.Raw("<span class='ms-1'>&times;</span>") : "")
+                    </a>
+
+                    <!-- Toggle Còn hàng -->
+                    <a href="@BuildQuery("inStock", "true")" class="quick-filter-tag @(Model.IsInStockActive ? "active" : "")">
+                        Còn hàng @(Model.IsInStockActive ? Html.Raw("<span class='ms-1'>&times;</span>") : "")
+                    </a>
+
+                    <!-- Toggle Giá thấp nhất -->
+                    <a href="@BuildQuery("sort", "price_asc")" class="quick-filter-tag @(Model.CurrentSort == "price_asc" ? "active" : "")">
+                        Giá thấp nhất @(Model.CurrentSort == "price_asc" ? Html.Raw("<span class='ms-1'>&times;</span>") : "")
+                    </a>
+
+                    <!-- Sub Categories as Chips (Toggleable) -->
                 </div>
 
                 <!-- Product Grid Wrapper -->
@@ -222,28 +206,28 @@
                         </div>
                     </div>
 
-                    @if (Model.Any())
+                    @if (pagedProducts.Any())
                     {
                         <div id="partialContainer">
-                            @await Html.PartialAsync("_ProductGridPartial", Model)
+                            @await Html.PartialAsync("_ProductGridPartial", pagedProducts)
                         </div>
 
                         <!-- Pagination -->
-                        @if (Model.TotalPages > 1)
+                        @if (pagedProducts.TotalPages > 1)
                         {
                             <nav aria-label="Page navigation" class="mt-5">
                                 <ul class="pagination justify-content-center">
-                                    <li class="page-item @(Model.HasPrevious ? "" : "disabled")">
-                                        <a class="page-link rounded-circle mx-1 border-0 shadow-sm" href="@Url.Action("Index", new { page = Model.CurrentPage - 1, searchTerm, categoryId, brandId, sort, minPrice, maxPrice, inStock, onSale })"><i class='bx bx-chevron-left'></i></a>
+                                    <li class="page-item @(pagedProducts.HasPrevious ? "" : "disabled")">
+                                        <a class="page-link rounded-circle mx-1 border-0 shadow-sm" href="@Url.Action("Index", new { page = pagedProducts.CurrentPage + 1, searchTerm = Model.CurrentKeyword, categoryId = Model.CurrentCategoryId, brandId = Model.CurrentBrandId, sort = Model.CurrentSort, minPrice = Model.SelectedMinPrice, maxPrice = Model.SelectedMaxPrice, inStock = Model.IsInStockActive ? "true" : null, onSale = Model.IsDiscountActive ? "true" : null })"><i class='bx bx-chevron-right'></i></a>
                                     </li>
-                                    @for (int i = 1; i <= Model.TotalPages; i++)
+                                    @for (int i = 1; i <= pagedProducts.TotalPages; i++)
                                     {
-                                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
-                                            <a class="page-link rounded-circle mx-1 border-0 shadow-sm" href="@Url.Action("Index", new { page = i, searchTerm, categoryId, brandId, sort, minPrice, maxPrice, inStock, onSale })">@i</a>
+                                        <li class="page-item @(i == pagedProducts.CurrentPage ? "active" : "")">
+                                            <a class="page-link rounded-circle mx-1 border-0 shadow-sm" href="@Url.Action("Index", new { page = i, searchTerm = Model.CurrentKeyword, categoryId = Model.CurrentCategoryId, brandId = Model.CurrentBrandId, sort = Model.CurrentSort, minPrice = Model.SelectedMinPrice, maxPrice = Model.SelectedMaxPrice, inStock = Model.IsInStockActive ? "true" : null, onSale = Model.IsDiscountActive ? "true" : null })">@i</a>
                                         </li>
                                     }
-                                    <li class="page-item @(Model.HasNext ? "" : "disabled")">
-                                        <a class="page-link rounded-circle mx-1 border-0 shadow-sm" href="@Url.Action("Index", new { page = Model.CurrentPage + 1, searchTerm, categoryId, brandId, sort, minPrice, maxPrice, inStock, onSale })"><i class='bx bx-chevron-right'></i></a>
+                                    <li class="page-item @(pagedProducts.HasNext ? "" : "disabled")">
+                                        <a class="page-link rounded-circle mx-1 border-0 shadow-sm" href="@Url.Action("Index", new { page = pagedProducts.CurrentPage + 1, searchTerm = Model.CurrentKeyword, categoryId = Model.CurrentCategoryId, brandId = Model.CurrentBrandId, sort = Model.CurrentSort, minPrice = Model.SelectedMinPrice, maxPrice = Model.SelectedMaxPrice, inStock = Model.IsInStockActive ? "true" : null, onSale = Model.IsDiscountActive ? "true" : null })"><i class='bx bx-chevron-right'></i></a>
                                     </li>
                                 </ul>
                             </nav>
@@ -251,32 +235,17 @@
                     }
                     else
                     {
-                        <!-- EMPTY STATE (FIX 3) -->
+                        <!-- EMPTY STATE -->
                         <div class="empty-state text-center py-5 bg-white rounded-4 border">
                             <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.2" class="mb-3">
                                 <circle cx="11" cy="11" r="8"/>
                                 <path d="m21 21-4.35-4.35"/>
                                 <path d="M8 11h6"/>
                             </svg>
-                            <h5 class="fw-bold">
-                                @if (!string.IsNullOrEmpty(searchTerm)) { <span>Không tìm thấy kết quả cho "@searchTerm"</span> }
-                                else { <span>Không có sản phẩm nào</span> }
-                            </h5>
-                            <p class="text-muted small mb-4">Thử thay đổi bộ lọc hoặc từ khóa khác để tìm thấy điều bạn cần.</p>
-                            
-                            @if (ViewBag.Suggestions != null)
-                            {
-                                <div class="mb-4">
-                                    <p class="small fw-500 mb-2">Gợi ý cho bạn:</p>
-                                    <div class="d-flex gap-2 justify-content-center flex-wrap">
-                                        @foreach (var s in ViewBag.Suggestions)
-                                        {
-                                            <a href="/Product?searchTerm=@s" class="badge bg-light text-dark border px-3 py-2 text-decoration-none hover-danger">@s</a>
-                                        }
-                                    </div>
-                                </div>
-                            }
-                            <a asp-action="Index" class="btn btn-danger rounded-pill px-5 fw-bold">XEM TẤT CẢ SẢN PHẨM</a>
+                            <h5 class="fw-bold">Không tìm thấy sản phẩm phù hợp với bộ lọc hiện tại.</h5>
+                            <p class="text-muted small mb-4">Vui lòng thử thay đổi bộ lọc hoặc xóa bộ lọc để xem các sản phẩm khác.</p>
+
+                            <a href="/Product" class="btn btn-danger rounded-pill px-5 fw-bold">XÓA BỘ LỌC</a>
                         </div>
                     }
                 </div>
@@ -285,7 +254,7 @@
     </form>
 </main>
 
-<!-- Compare Bar (TÍNH NĂNG 4) -->
+<!-- Compare Bar -->
 <div class="compare-bar" id="compareBar" style="display:none">
     <div class="container d-flex align-items-center gap-3">
         <span class="fw-bold small text-uppercase d-none d-md-block">So sánh:</span>
@@ -297,7 +266,7 @@
     </div>
 </div>
 
-<!-- Quick View Modal (TÍNH NĂNG 3) -->
+<!-- Quick View Modal -->
 <div class="modal fade" id="quickViewModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 rounded-4 overflow-hidden">
@@ -329,49 +298,14 @@
     .range-slider::-webkit-slider-thumb { pointer-events: auto; -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #dc3545; cursor: pointer; border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
     .range-slider::-moz-range-thumb { pointer-events: auto; width: 18px; height: 18px; border-radius: 50%; background: #dc3545; cursor: pointer; border: 3px solid #fff; }
 
-    /* Badge Styles */
-    .product-badge {
-        position: absolute;
-        top: 8px; left: 8px;
-        font-size: 10px;
-        font-weight: 700;
-        padding: 3px 8px;
-        border-radius: 20px;
-        z-index: 1;
-    }
-    .badge-flash-sm {
-        background: #E24B4A;
-        color: white;
-    }
-    .badge-sale-sm {
-        background: #E24B4A;
-        color: white;
-    }
-    .badge-new-sm {
-        background: #EAF3DE;
-        color: #3B6D11;
-    }
-
-    /* Quick View Hover */
-    .product-hover-actions { position: absolute; bottom: -50px; left: 0; right: 0; display: flex; justify-content: center; padding: 10px; background: rgba(0,0,0,0.4); transition: bottom 0.3s ease; }
-    .product-card:hover .product-hover-actions { bottom: 0; }
-    .btn-quick-view { background: white; border: none; border-radius: 20px; padding: 6px 15px; font-size: 11px; font-weight: bold; color: #333; transition: all 0.2s; }
-    .btn-quick-view:hover { background: #dc3545; color: white; }
-
-    /* Wishlist & Compare Buttons */
-    .btn-wishlist-abs, .btn-compare-abs { position: absolute; right: 10px; width: 34px; height: 34px; border-radius: 50%; border: none; background: white; color: #999; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; z-index: 2; }
-    .btn-wishlist-abs { top: 10px; }
-    .btn-compare-abs { top: 50px; }
-    .btn-wishlist-abs:hover, .btn-wishlist-abs.active { color: #dc3545; }
-    .btn-compare-abs:hover { color: #007bff; }
+    /* Quick Filter Tags */
+    .quick-filter-tag { padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid #eee; background: white; color: #666; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
+    .quick-filter-tag:hover, .quick-filter-tag.active { background: #dc3545; color: white; border-color: #dc3545; }
+    .quick-filter-tag.active span { opacity: 0.8; }
 
     /* View Toggle */
     .btn-view { width: 34px; height: 34px; border: 1px solid #eee; border-radius: 8px; background: white; color: #999; transition: all 0.2s; }
     .btn-view.active { background: #dc3545; color: white; border-color: #dc3545; }
-
-    /* Quick Filter Tags */
-    .quick-filter-tag { padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid #eee; background: white; color: #666; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
-    .quick-filter-tag:hover, .quick-filter-tag.active { background: #dc3545; color: white; border-color: #dc3545; }
 
     /* Compare Bar */
     .compare-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 3px solid #dc3545; padding: 15px 0; z-index: 1050; box-shadow: 0 -4px 15px rgba(0,0,0,0.1); }
@@ -384,10 +318,6 @@
     .list-view .product-card { flex-direction: row!important; height: auto!important; }
     .list-view .product-img-wrapper { width: 220px!important; flex-shrink: 0!important; aspect-ratio: 1/1!important; }
     .list-view .product-info { padding: 20px!important; justify-content: center; }
-
-    /* Skeleton Loading */
-    .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
-    @@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
     /* Brand Slider */
     .brand-slider-track {
@@ -420,13 +350,27 @@
     .brand-arr { width: 22px; height: 22px; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #666; font-size: 14px; line-height: 1; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
     .brand-arr:hover { background: #dc3545; color: #fff; border-color: #dc3545; }
 
-    /* Skeleton Loading */
-    .skeleton-card .skeleton-img { height: 200px; border-radius: 12px; }
-
+    /* Quick View Hover */
+    .product-hover-actions { position: absolute; bottom: -50px; left: 0; right: 0; display: flex; justify-content: center; padding: 10px; background: rgba(0,0,0,0.4); transition: bottom 0.3s ease; }
+    .product-card:hover .product-hover-actions { bottom: 0; }
+    .btn-quick-view { background: white; border: none; border-radius: 20px; padding: 6px 15px; font-size: 11px; font-weight: bold; color: #333; transition: all 0.2s; }
+    .btn-quick-view:hover { background: #dc3545; color: white; }
+    .btn-wishlist-abs, .btn-compare-abs { position: absolute; right: 10px; width: 34px; height: 34px; border-radius: 50%; border: none; background: white; color: #999; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; z-index: 2; }
+    .btn-wishlist-abs { top: 10px; }
+    .btn-compare-abs { top: 50px; }
+    .btn-compare-abs:hover { color: #007bff; }
 </style>
 
 @section Scripts {
     <script>
+        function toggleFilter(key, value) {
+            // Helper function for select boxes
+            if(key === 'sort') {
+                document.getElementById('sortInput').value = value;
+            }
+            $('#filterForm').submit();
+        }
+
         function selectBrand(id) {
             document.getElementById('brandIdInput').value = id;
             document.getElementById('filterForm').submit();
@@ -437,19 +381,17 @@
             if (t) t.scrollBy({ left: dir * 130, behavior: 'smooth' });
         }
 
-        // Set View Type (Grid/List)
         function setView(type) {
             document.cookie = "viewType=" + type + ";path=/;max-age=" + (30*24*60*60);
             $('#viewTypeInput').val(type);
             location.reload();
         }
 
-        // Quick View
         async function quickView(slug) {
             const modal = new bootstrap.Modal(document.getElementById('quickViewModal'));
             modal.show();
             $('#quickViewContent').html('<div class="text-center py-5"><div class="spinner-border text-danger"></div></div>');
-            
+
             try {
                 const res = await fetch(`/Product/QuickView?slug=${slug}`);
                 const html = await res.text();
@@ -459,7 +401,6 @@
             }
         }
 
-        // Price Slider Logic
         const minPrice = document.getElementById('minPrice');
         const maxPrice = document.getElementById('maxPrice');
         const minLabel = document.getElementById('minPriceLabel');
@@ -533,21 +474,8 @@
         }
 
         $(document).ready(function() {
-            // FIX: Lưu filter khi click vào xem sản phẩm
-            $(document).on('click', '.product-card a, .quick-view-btn', function() {
-                sessionStorage.setItem('productListFilter', window.location.search);
-            });
-
-            // Khôi phục filter khi quay lại từ trang chi tiết
-            if (window.location.search === "" && document.referrer.includes('/Product/Details')) {
-                const savedFilter = sessionStorage.getItem('productListFilter');
-                if (savedFilter) {
-                    window.location.search = savedFilter;
-                }
-            }
-
             renderCompareBar();
-            $('.filter-select, .filter-check').on('change', function () { $('#filterForm').submit(); });
+            $('.filter-select:not(#sortSelect)').on('change', function () { $('#filterForm').submit(); });
             $('#filterForm').on('submit', function() {
                 $('#loadingOverlay').removeClass('d-none').addClass('d-flex');
                 $('#applyBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> ĐANG LỌC...');

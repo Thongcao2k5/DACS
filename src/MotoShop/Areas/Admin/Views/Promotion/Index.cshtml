@@ -3,6 +3,9 @@
     ViewData["Title"] = "Quản lý Khuyến mãi";
     Layout = "_AdminLayout";
     var products = ViewBag.Products as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var categories = ViewBag.Categories as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var subCategories = ViewBag.SubCategories as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var productVariants = ViewBag.ProductVariants as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
     var currentType = ViewBag.Type as string;
     var currentActive = ViewBag.IsActive as string;
     var currentTime = ViewBag.TimeStatus as string;
@@ -28,6 +31,8 @@
         .product-picker { max-height: 220px; overflow: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; background: #fafafa; }
         .product-picker label { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; border-radius: 7px; margin: 0; cursor: pointer; }
         .product-picker label:hover { background: #fff; }
+        .product-filter-bar { margin-bottom: 10px; }
+        .product-empty-state { display: none; padding: 16px; text-align: center; color: #8b98a9; }
         .usage-text { min-width: 74px; display: inline-block; }
         @@media (max-width: 767.98px) {
             .promotion-table table { min-width: 920px; }
@@ -190,6 +195,16 @@
                             <input type="number" name="Priority" id="pPriority" class="form-control" value="0">
                         </div>
                         <div class="col-lg-3">
+                            <label class="form-label fw-bold small">Pham vi ap dung</label>
+                            <select name="ApplyType" id="pApplyType" class="form-select">
+                                <option value="All">Toan bo don hang</option>
+                                <option value="Category">Theo danh muc</option>
+                                <option value="SubCategory">Theo danh muc con</option>
+                                <option value="Product" selected>Theo san pham</option>
+                                <option value="ProductVariantSKU">Theo SKU / bien the</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-3">
                             <label class="form-label fw-bold small">Kiểu giảm giá</label>
                             <select name="DiscountType" id="pDiscountType" class="form-select">
                                 <option value="Percent">Theo Phần trăm (%)</option>
@@ -251,15 +266,49 @@
                         </div>
                     </div>
 
-                    <div class="mt-4 promo-field promo-products">
+                    <div class="mt-4 promo-scope promo-categories">
+                        <label class="form-label fw-bold small">Chon danh muc ap dung</label>
+                        <div class="product-picker">
+                            @foreach (var c in categories)
+                            {
+                                <label><span><input class="form-check-input me-2 category-check" type="checkbox" name="categoryIds" value="@c.CategoryId">@c.CategoryName</span></label>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mt-4 promo-scope promo-subcategories">
+                        <label class="form-label fw-bold small">Chon danh muc con ap dung</label>
+                        <div class="product-picker">
+                            @foreach (var sc in subCategories)
+                            {
+                                <label><span><input class="form-check-input me-2 subcategory-check" type="checkbox" name="subCategoryIds" value="@sc.Id">@sc.CategoryName - @sc.Name</span></label>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mt-4 promo-scope promo-variants">
+                        <label class="form-label fw-bold small">Chon SKU / bien the ap dung</label>
+                        <div class="product-picker">
+                            @foreach (var v in productVariants)
+                            {
+                                <label><span><input class="form-check-input me-2 variant-check" type="checkbox" name="productVariantIds" value="@v.ProductVariantId">@v.ProductName - @v.VariantName (@v.SKU)</span></label>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mt-4 promo-field promo-scope promo-products">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <label class="form-label fw-bold small mb-0">Chọn sản phẩm áp dụng</label>
                             <span class="small text-muted"><span id="selectedProductCount">0</span> sản phẩm đã chọn</span>
                         </div>
+                        <div class="product-filter-bar">
+                            <input type="text" id="productSearchFilter" class="form-control" placeholder="Tìm nhanh theo tên sản phẩm...">
+                        </div>
                         <div class="product-picker">
                             @foreach (var p in products)
                             {
-                                <label>
+                                var searchableText = $"{p.ProductName}".ToLowerInvariant();
+                                <label class="product-option" data-search="@searchableText">
                                     <span>
                                         <input class="form-check-input me-2 product-check" type="checkbox" name="productIds" value="@p.ProductId">
                                         @p.ProductName
@@ -267,6 +316,7 @@
                                     <span class="small text-muted">@(((decimal)p.Price).ToString("N0"))₫</span>
                                 </label>
                             }
+                            <div id="productEmptyState" class="product-empty-state">Không tìm thấy sản phẩm phù hợp.</div>
                         </div>
                         <div class="small text-danger mt-2 promo-flash">
                             <i class="bx bx-info-circle"></i> Flash Sale sẽ tự động hiển thị Countdown trên giao diện người dùng.
@@ -303,6 +353,7 @@
             document.getElementById('modalTitle').innerText = 'Tạo chương trình Khuyến mãi';
             setDefaultDates();
             syncDynamicFields();
+            resetProductFilters();
             syncSelectedProductCount();
             pModal.show();
         }
@@ -321,27 +372,55 @@
 
         function syncDynamicFields() {
             const type = document.getElementById('pPromotionType').value;
+            const applyType = document.getElementById('pApplyType').value;
             document.querySelectorAll('.promo-field').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.promo-scope').forEach(el => el.style.display = 'none');
 
             if (type === 'FlashSale') {
-                document.querySelector('.promo-products').style.display = '';
                 document.querySelector('.promo-flash').style.display = '';
             }
             if (type === 'ProductDiscount') {
-                document.querySelector('.promo-products').style.display = '';
                 document.querySelector('.promo-flash').style.display = 'none';
             }
             if (type === 'Voucher') document.querySelector('.promo-voucher').style.display = '';
             if (type === 'OrderDiscount') document.querySelector('.promo-order').style.display = '';
             if (type === 'Campaign') document.querySelector('.promo-campaign').style.display = '';
+
+            if (applyType === 'Category') document.querySelector('.promo-categories').style.display = '';
+            if (applyType === 'SubCategory') document.querySelector('.promo-subcategories').style.display = '';
+            if (applyType === 'Product') document.querySelector('.promo-products').style.display = '';
+            if (applyType === 'ProductVariantSKU') document.querySelector('.promo-variants').style.display = '';
         }
 
         function syncSelectedProductCount() {
             document.getElementById('selectedProductCount').innerText = document.querySelectorAll('.product-check:checked').length;
         }
 
+        function filterPromotionProducts() {
+            const keyword = (document.getElementById('productSearchFilter')?.value || '').trim().toLowerCase();
+            let visibleCount = 0;
+
+            document.querySelectorAll('.product-option').forEach(option => {
+                const matchesKeyword = !keyword || (option.dataset.search || '').includes(keyword);
+                const isVisible = matchesKeyword;
+                option.style.display = isVisible ? '' : 'none';
+                if (isVisible) visibleCount++;
+            });
+
+            const emptyState = document.getElementById('productEmptyState');
+            if (emptyState) emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        function resetProductFilters() {
+            const search = document.getElementById('productSearchFilter');
+            if (search) search.value = '';
+            filterPromotionProducts();
+        }
+
         document.getElementById('pPromotionType').addEventListener('change', syncDynamicFields);
+        document.getElementById('pApplyType').addEventListener('change', syncDynamicFields);
         document.querySelectorAll('.product-check').forEach(cb => cb.addEventListener('change', syncSelectedProductCount));
+        document.getElementById('productSearchFilter')?.addEventListener('input', filterPromotionProducts);
 
         document.getElementById('promotionForm').addEventListener('submit', function (e) {
             e.preventDefault();
@@ -366,6 +445,7 @@
             document.getElementById('pName').value = data.name || '';
             document.getElementById('pDescription').value = data.description || '';
             document.getElementById('pPromotionType').value = data.promotionType || 'ProductDiscount';
+            document.getElementById('pApplyType').value = data.applyType || 'Product';
             document.getElementById('pDiscountType').value = data.discountType || 'Percent';
             document.getElementById('pDiscountValue').value = data.discountValue || 0;
             document.getElementById('pCouponCode').value = data.couponCode || '';
@@ -383,9 +463,15 @@
 
             const ids = new Set(data.productIds || []);
             document.querySelectorAll('.product-check').forEach(cb => cb.checked = ids.has(parseInt(cb.value)));
+            const categoryIds = new Set(data.categoryIds || []);
+            document.querySelectorAll('.category-check').forEach(cb => cb.checked = categoryIds.has(parseInt(cb.value)));
+
+            const variantIds = new Set(data.productVariantIds || []);
+            document.querySelectorAll('.variant-check').forEach(cb => cb.checked = variantIds.has(parseInt(cb.value)));
 
             document.getElementById('modalTitle').innerText = 'Chỉnh sửa Khuyến mãi';
             syncDynamicFields();
+            resetProductFilters();
             syncSelectedProductCount();
             pModal.show();
         });

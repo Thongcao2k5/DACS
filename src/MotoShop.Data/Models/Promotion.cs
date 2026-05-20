@@ -26,6 +26,9 @@ namespace MotoShop.Data.Models
         [Required]
         public DiscountType DiscountType { get; set; } = DiscountType.Percent;
 
+        [Required]
+        public PromotionApplyType ApplyType { get; set; } = PromotionApplyType.Product;
+
         [Column(TypeName = "decimal(18, 2)")]
         public decimal DiscountValue { get; set; }
 
@@ -58,5 +61,35 @@ namespace MotoShop.Data.Models
         public DateTime? UpdatedAt { get; set; }
 
         public virtual ICollection<PromotionProduct> PromotionProducts { get; set; } = new List<PromotionProduct>();
+        public virtual ICollection<PromotionCategory> PromotionCategories { get; set; } = new List<PromotionCategory>();
+        public virtual ICollection<PromotionProductVariant> PromotionProductVariants { get; set; } = new List<PromotionProductVariant>();
+    }
+
+    [Table("PromotionCategories")]
+    public class PromotionCategory
+    {
+        [Key]
+        public int Id { get; set; }
+        public int PromotionId { get; set; }
+        public int CategoryId { get; set; }
+
+        [ForeignKey(nameof(PromotionId))]
+        public virtual Promotion? Promotion { get; set; }
+        [ForeignKey(nameof(CategoryId))]
+        public virtual Category? Category { get; set; }
+    }
+
+    [Table("PromotionProductVariants")]
+    public class PromotionProductVariant
+    {
+        [Key]
+        public int Id { get; set; }
+        public int PromotionId { get; set; }
+        public int ProductVariantId { get; set; }
+
+        [ForeignKey(nameof(PromotionId))]
+        public virtual Promotion? Promotion { get; set; }
+        [ForeignKey(nameof(ProductVariantId))]
+        public virtual ProductVariant? ProductVariant { get; set; }
     }
 }

@@ -63,8 +63,11 @@ namespace MotoShop.Areas.Admin.Controllers
                     Priority = p.Priority,
                     BannerImage = p.BannerImage,
                     BackgroundColor = p.BackgroundColor,
+                    ApplyType = p.ApplyType.ToString(),
                     ProductCount = p.PromotionProducts.Count,
                     ProductIds = p.PromotionProducts.Select(pp => pp.ProductId).ToList(),
+                    CategoryIds = p.PromotionCategories.Select(pc => pc.CategoryId).ToList(),
+                    ProductVariantIds = p.PromotionProductVariants.Select(pv => pv.ProductVariantId).ToList(),
                     StatusText = !p.IsActive ? "Tam dung" : p.StartDate > now ? "Sap dien ra" : p.EndDate < now ? "Da ket thuc" : "Dang ap dung",
                     StatusClass = !p.IsActive ? "badge-paused" : p.StartDate > now ? "badge-upcoming" : p.EndDate < now ? "badge-expired" : "badge-active"
                 })
@@ -80,6 +83,20 @@ namespace MotoShop.Areas.Admin.Controllers
                     p.ProductName,
                     Price = p.Variants.OrderBy(v => v.Price).Select(v => v.Price).FirstOrDefault()
                 })
+                .ToListAsync();
+
+            ViewBag.Categories = await _context.Categories
+                .AsNoTracking()
+                .OrderBy(c => c.CategoryName)
+                .Select(c => new { c.CategoryId, c.CategoryName })
+                .ToListAsync();
+
+            ViewBag.ProductVariants = await _context.ProductVariants
+                .AsNoTracking()
+                .Include(v => v.Product)
+                .Where(v => !v.Product.IsDeleted)
+                .OrderBy(v => v.Product.ProductName)
+                .Select(v => new { v.ProductVariantId, v.VariantName, v.SKU, ProductName = v.Product.ProductName })
                 .ToListAsync();
 
             ViewBag.SearchTerm = searchTerm;
@@ -129,12 +146,32 @@ namespace MotoShop.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Save(Promotion promotion, int[] productIds)
+        public async Task<IActionResult> Save(Promotion promotion, int[] productIds, int[] categoryIds, int[] productVariantIds)
         {
             if (string.IsNullOrWhiteSpace(promotion.Name))
             {
                 return Json(new { success = false, message = "Tên khuyến mãi là bắt buộc." });
             }
+
+            if (promotion.EndDate < promotion.StartDate)
+                return Json(new { success = false, message = "Ngay ket thuc khong duoc nho hon ngay bat dau." });
+
+            if (promotion.DiscountValue <= 0)
+                return Json(new { success = false, message = "Gia tri giam phai lon hon 0." });
+
+            if (promotion.DiscountType == DiscountType.Percent && promotion.DiscountValue > 100)
+                return Json(new { success = false, message = "Giam theo phan tram khong duoc vuot qua 100%." });
+
+            var hasScope = promotion.ApplyType switch
+            {
+                PromotionApplyType.All => true,
+                PromotionApplyType.Category => categoryIds != null && categoryIds.Length > 0,
+                PromotionApplyType.Product => productIds != null && productIds.Length > 0,
+                PromotionApplyType.ProductVariantSKU => productVariantIds != null && productVariantIds.Length > 0,
+                _ => false
+            };
+            if (!hasScope)
+                return Json(new { success = false, message = "Vui long chon doi tuong ap dung cho pham vi khuyen mai." });
 
             var isNew = promotion.Id == 0;
             promotion.Slug = string.IsNullOrWhiteSpace(promotion.Slug) ? GenerateSlug(promotion.Name) : promotion.Slug;
@@ -180,6 +217,7 @@ namespace MotoShop.Areas.Admin.Controllers
                         saved.Description = promotion.Description;
                         saved.PromotionType = promotion.PromotionType;
                         saved.DiscountType = promotion.DiscountType;
+                        saved.ApplyType = promotion.ApplyType;
                         saved.DiscountValue = promotion.DiscountValue;
                         saved.MaxDiscountAmount = promotion.MaxDiscountAmount;
                         saved.MinOrderAmount = promotion.MinOrderAmount;
@@ -199,8 +237,10 @@ namespace MotoShop.Areas.Admin.Controllers
 
                     var existingLinks = _context.PromotionProducts.Where(pp => pp.PromotionId == saved.Id);
                     _context.PromotionProducts.RemoveRange(existingLinks);
+                    _context.PromotionCategories.RemoveRange(_context.PromotionCategories.Where(pc => pc.PromotionId == saved.Id));
+                    _context.PromotionProductVariants.RemoveRange(_context.PromotionProductVariants.Where(pv => pv.PromotionId == saved.Id));
 
-                    if (saved.PromotionType == PromotionType.FlashSale || saved.PromotionType == PromotionType.ProductDiscount)
+                    if (saved.ApplyType == PromotionApplyType.Product)
                     {
                         if (productIds != null && productIds.Length > 0)
                         {
@@ -209,6 +249,16 @@ namespace MotoShop.Areas.Admin.Controllers
                                 _context.PromotionProducts.Add(new PromotionProduct { PromotionId = saved.Id, ProductId = productId });
                             }
                         }
+                    }
+                    else if (saved.ApplyType == PromotionApplyType.Category && categoryIds != null)
+                    {
+                        foreach (var categoryId in categoryIds.Distinct())
+                            _context.PromotionCategories.Add(new PromotionCategory { PromotionId = saved.Id, CategoryId = categoryId });
+                    }
+                    else if (saved.ApplyType == PromotionApplyType.ProductVariantSKU && productVariantIds != null)
+                    {
+                        foreach (var productVariantId in productVariantIds.Distinct())
+                            _context.PromotionProductVariants.Add(new PromotionProductVariant { PromotionId = saved.Id, ProductVariantId = productVariantId });
                     }
 
                     await _context.SaveChangesAsync();
@@ -289,6 +339,8 @@ namespace MotoShop.Areas.Admin.Controllers
 
             var links = _context.PromotionProducts.Where(pp => ids.Contains(pp.PromotionId));
             _context.PromotionProducts.RemoveRange(links);
+            _context.PromotionCategories.RemoveRange(_context.PromotionCategories.Where(pc => ids.Contains(pc.PromotionId)));
+            _context.PromotionProductVariants.RemoveRange(_context.PromotionProductVariants.Where(pv => ids.Contains(pv.PromotionId)));
 
             var promos = await _context.Promotions.Where(p => ids.Contains(p.Id)).ToListAsync();
             _context.Promotions.RemoveRange(promos);

@@ -43,6 +43,7 @@ namespace MotoShop.Business.Services
             decimal? maxPrice = null,
             bool? inStock = null,
             bool? onSale = null,
+            string? usageSlug = null,
             IEnumerable<int>? productIds = null)
         {
             var query = _productRepository.Find(p => p.IsActive && !p.IsDeleted)
@@ -69,6 +70,7 @@ namespace MotoShop.Business.Services
                     (p.Description != null && (EF.Functions.Collate(p.Description, "SQL_Latin1_General_CP1_CI_AI").Contains(search) || p.Description.ToLower().Contains(search))) ||
                     (p.Brand != null && (EF.Functions.Collate(p.Brand.BrandName, "SQL_Latin1_General_CP1_CI_AI").Contains(search) || p.Brand.BrandName.ToLower().Contains(search))) ||
                     (p.Category != null && (EF.Functions.Collate(p.Category.CategoryName, "SQL_Latin1_General_CP1_CI_AI").Contains(search) || p.Category.CategoryName.ToLower().Contains(search))) ||
+                    p.ProductProductUsages.Any(u => u.ProductUsage != null && (EF.Functions.Collate(u.ProductUsage.Name, "SQL_Latin1_General_CP1_CI_AI").Contains(search) || u.ProductUsage.Name.ToLower().Contains(search))) ||
                     p.Variants.Any(v => v.SKU != null && v.SKU.ToLower().Contains(search)));
             }
 
@@ -76,6 +78,11 @@ namespace MotoShop.Business.Services
             if (categoryId.HasValue && categoryId.Value > 0)
             {
                 query = query.Where(p => p.CategoryId == categoryId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(usageSlug))
+            {
+                query = query.Where(p => p.ProductProductUsages.Any(u => u.ProductUsage != null && u.ProductUsage.Slug == usageSlug && u.ProductUsage.IsActive));
             }
 
             // Lọc theo thương hiệu
@@ -510,7 +517,7 @@ namespace MotoShop.Business.Services
             // 2. Lấy sản phẩm (Lọc: Có trong Promotion Campaign HOẶC có giá giảm Variant HOẶC là Flash Sale)
             // Lưu ý: onSale=true trong GetPagedProductsAsync sẽ lấy những sp có Variant.OriginalPrice > Price
             var pagedResult = await GetPagedProductsAsync(
-                null, null, null, sort, pageNumber, pageSize, null, null, true, true, promoProductIds
+                null, null, null, sort, pageNumber, pageSize, null, null, true, true, null, promoProductIds
             );
 
             // 3. Xử lý logic nhãn và giá "phân biệt rõ" (Shopee Style)

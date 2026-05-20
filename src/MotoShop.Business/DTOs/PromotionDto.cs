@@ -28,6 +28,9 @@ namespace MotoShop.Business.DTOs
         public int ProductCount { get; set; }
         public string StatusText { get; set; } = string.Empty;
         public string StatusClass { get; set; } = string.Empty;
+        public string ApplyType { get; set; } = "Product";
         public List<int>? ProductIds { get; set; }
+        public List<int>? CategoryIds { get; set; }
+        public List<int>? ProductVariantIds { get; set; }
     }
 }

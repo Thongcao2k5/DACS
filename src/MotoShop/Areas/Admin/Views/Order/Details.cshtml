@@ -157,6 +157,7 @@
                     <label class="form-label fw-bold small text-uppercase">Trạng thái mới</label>
                     <select id="statusSelect" class="form-select border-primary">
                         <option value="Pending">Chờ xử lý</option>
+                        <option value="Processing">Đang xử lý</option>
                         <option value="Confirmed">Đã xác nhận</option>
                         <option value="Shipping">Đang giao</option>
                         <option value="Completed">Hoàn thành</option>
@@ -191,15 +192,15 @@
                     hideLoader();
                     if (res.success) {
                         statusModal.hide();
-                        UI.toast('Cập nhật trạng thái thành công', 'success');
+                        UI.toast(res.message || 'Cập nhật trạng thái thành công', 'success');
                         setTimeout(() => location.reload(), 1000);
                     } else {
                         UI.toast(res.message || 'Không thể cập nhật trạng thái', 'error');
                     }
                 })
-                .fail(function() {
+                .fail(function(xhr) {
                     hideLoader();
-                    UI.toast('Không thể kết nối máy chủ', 'error');
+                    UI.toast(xhr.responseJSON?.message || 'Không thể kết nối máy chủ', 'error');
                 });
         }
     </script>

@@ -305,7 +305,15 @@ namespace MotoShop.Business.Services
                         .Include(o => o.OrderItems).ThenInclude(oi => oi.ProductVariant)
                         .Include(o => o.Customer)
                         .FirstOrDefaultAsync(o => o.OrderId == orderId && o.Customer != null && o.Customer.UserId == userId);
-                    var cancellable = new[] { MotoShop.Data.Constants.OrderStatusConst.Pending, MotoShop.Data.Constants.OrderStatusConst.Processing, MotoShop.Data.Constants.OrderStatusConst.DangXuLy };
+                    var cancellable = new[]
+                    {
+                        MotoShop.Data.Constants.OrderStatusConst.Pending,
+                        MotoShop.Data.Constants.OrderStatusConst.Processing,
+                        MotoShop.Data.Constants.OrderStatusConst.DangXuLy,
+                        "Confirmed",
+                        MotoShop.Data.Constants.OrderStatusConst.Shipping,
+                        MotoShop.Data.Constants.OrderStatusConst.DangGiao
+                    };
                     if (order == null || !cancellable.Contains(order.Status)) return false;
 
                     order.Status = MotoShop.Data.Constants.OrderStatusConst.Cancelled;

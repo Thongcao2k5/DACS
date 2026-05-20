@@ -79,6 +79,7 @@
                 <select name="status" class="form-select border-0 bg-light">
                     <option value="">-- Tất cả --</option>
                     <option value="Pending" selected="@(ViewBag.Status == "Pending")">Chờ xử lý</option>
+                    <option value="Processing" selected="@(ViewBag.Status == "Processing")">Đang xử lý</option>
                     <option value="Confirmed" selected="@(ViewBag.Status == "Confirmed")">Đã xác nhận</option>
                     <option value="Shipping" selected="@(ViewBag.Status == "Shipping")">Đang giao</option>
                     <option value="Completed" selected="@(ViewBag.Status == "Completed")">Hoàn thành</option>
@@ -131,7 +132,7 @@
                 <tbody>
                     @if (Model.Any()) {
                         @foreach (var item in Model) {
-                            <tr id="row-@item.OrderId">
+                            <tr id="row-@item.OrderId" data-payment-method="@item.PaymentMethod" data-payment-status="@item.PaymentStatus">
                                 <td class="checkbox-cell"><input class="form-check-input row-checkbox" type="checkbox" value="@item.OrderId"></td>
                                 <td><span class="order-code">#@item.OrderCode</span></td>
                                 <td>
@@ -153,18 +154,28 @@
                                     @{
                                         var statusClass = item.Status switch {
                                             "Pending" => "bg-label-waiting",
+                                            "Processing" => "bg-label-confirmed",
+                                            "DangXuLy" => "bg-label-confirmed",
                                             "Confirmed" => "bg-label-confirmed",
                                             "Shipping" => "bg-label-shipping",
+                                            "DangGiao" => "bg-label-shipping",
                                             "Completed" => "bg-label-completed",
+                                            "DaHoanThanh" => "bg-label-completed",
                                             "Cancelled" => "bg-label-cancelled",
+                                            "DaHuy" => "bg-label-cancelled",
                                             _ => "bg-label-secondary"
                                         };
                                         var statusText = item.Status switch {
                                             "Pending" => "Chờ xử lý",
+                                            "Processing" => "Đang xử lý",
+                                            "DangXuLy" => "Đang xử lý",
                                             "Confirmed" => "Đã xác nhận",
                                             "Shipping" => "Đang giao",
+                                            "DangGiao" => "Đang giao",
                                             "Completed" => "Hoàn thành",
+                                            "DaHoanThanh" => "Hoàn thành",
                                             "Cancelled" => "Đã hủy",
+                                            "DaHuy" => "Đã hủy",
                                             _ => item.Status
                                         };
                                     }
@@ -252,6 +263,7 @@
                     <label class="form-label fw-bold small text-uppercase">Trạng thái mới</label>
                     <select id="statusSelect" class="form-select border-primary shadow-none">
                         <option value="Pending">Chờ xử lý</option>
+                        <option value="Processing">Đang xử lý</option>
                         <option value="Confirmed">Đã xác nhận</option>
                         <option value="Shipping">Đang giao</option>
                         <option value="Completed">Hoàn thành</option>
@@ -356,11 +368,14 @@
             $.post('/Admin/Order/UpdateStatus', { id: id, status: status }, function(res) {
                 hideLoader();
                 if (res.success) {
-                    UI.toast('Cập nhật trạng thái thành công', 'success');
+                    UI.toast(res.message || 'Cập nhật trạng thái thành công', 'success');
                     setTimeout(() => location.reload(), 1000);
                 } else {
-                    UI.toast('Có lỗi xảy ra', 'error');
+                    UI.toast(res.message || 'Có lỗi xảy ra', 'error');
                 }
+            }).fail(function(xhr) {
+                hideLoader();
+                UI.toast(xhr.responseJSON?.message || 'Không thể kết nối máy chủ', 'error');
             });
         }
 
@@ -405,6 +420,23 @@
                     }
                 } catch (e) { console.error("Error loading column preferences", e); }
             }
+
+            $('#orderTable tbody tr[data-payment-method]').each(function() {
+                const $row = $(this);
+                const method = $row.data('payment-method') || 'COD';
+                const status = $row.data('payment-status') || 'Unpaid';
+                const methodText = method === 'VNPay'
+                    ? 'Ví VNPay'
+                    : (method === 'BankTransfer' ? 'Chuyển khoản' : 'Tiền mặt (COD)');
+                const isPaid = status === 'Paid';
+                const statusText = isPaid
+                    ? (method === 'COD' ? 'Đã nhận tiền khi giao hàng' : 'Đã thanh toán')
+                    : 'Chờ thanh toán';
+                const badgeClass = isPaid ? 'bg-label-success' : 'bg-label-warning';
+
+                $row.find('td:nth-child(4)').html(`<div class="small fw-600"><i class='bx bx-wallet me-1'></i>${methodText}</div>`);
+                $row.find('td:nth-child(5)').html(`<span class="badge ${badgeClass}">${statusText}</span>`);
+            });
         });
 
         // Hàm xuất Excel (Lấy dữ liệu từ Form lọc để chính xác nhất)

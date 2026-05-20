@@ -62,37 +62,73 @@ namespace MotoShop.Controllers
             var categories = await _cache.GetOrCreateAsync("all_categories", e => {
                 e.SetAbsoluteExpiration(TimeSpan.FromHours(1));
                 return _categoryService.GetAllAsync();
-            }) ?? await _categoryService.GetAllAsync();
+            }) ?? new List<CategoryDto>();
 
             var brands = await _cache.GetOrCreateAsync("all_brands", e => {
                 e.SetAbsoluteExpiration(TimeSpan.FromHours(1));
                 return _productService.GetAllBrandsAsync();
-            }) ?? await _productService.GetAllBrandsAsync();
+            }) ?? new List<BrandDto>();
 
-            ViewBag.CategoryProductCount = await _cache.GetOrCreateAsync("product_count_by_category", e => {
+            var maxPriceLimit = await _cache.GetOrCreateAsync("max_product_price", e => {
+                e.SetAbsoluteExpiration(TimeSpan.FromHours(1));
+                return _productService.GetMaxProductPriceAsync();
+            });
+
+            var categoryProductCount = await _cache.GetOrCreateAsync("product_count_by_category", e => {
                 e.SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
                 return _productService.GetProductCountByCategoryAsync();
-            });
-            ViewBag.BrandProductCount = await _cache.GetOrCreateAsync("product_count_by_brand", e => {
+            }) ?? new Dictionary<int, int>();
+
+            var brandProductCount = await _cache.GetOrCreateAsync("product_count_by_brand", e => {
                 e.SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
                 return _productService.GetProductCountByBrandAsync();
-            });
+            }) ?? new Dictionary<int, int>();
 
-            ViewBag.CategoryListItems = categories.ToList();
-            ViewBag.BrandListItems = brands.ToList();
+            var vm = new MotoShop.Models.ViewModels.ProductListViewModel
+            {
+                PagedProducts = pagedProducts,
+                Categories = categories.ToList(),
+                Brands = brands.ToList(),
+                CategoryProductCount = categoryProductCount,
+                BrandProductCount = brandProductCount,
 
-            var categoryItems = categories.Select(c => new {
-                CategoryId = c.CategoryId,
-                CategoryNameWithCount = $"{c.CategoryName} ({((Dictionary<int, int>)ViewBag.CategoryProductCount).GetValueOrDefault(c.CategoryId, 0)})"
-            });
-            ViewBag.CategoryList = new SelectList(categoryItems, "CategoryId", "CategoryNameWithCount", categoryId);
-            
-            var brandItems = brands.Select(b => new {
-                BrandId = b.BrandId,
-                BrandNameWithCount = $"{b.BrandName} ({((Dictionary<int, int>)ViewBag.BrandProductCount).GetValueOrDefault(b.BrandId, 0)})"
-            });
-            ViewBag.BrandList = new SelectList(brandItems, "BrandId", "BrandNameWithCount", brandId);
-            
+                CurrentKeyword = searchTerm,
+                CurrentCategoryId = categoryId,
+                CurrentBrandId = brandId,
+
+                CurrentSort = sort,
+                IsDiscountActive = onSale ?? false,
+                IsInStockActive = inStock ?? false,
+
+                SelectedMinPrice = minPrice ?? 0,
+                SelectedMaxPrice = maxPrice ?? maxPriceLimit,
+                MaxPriceLimit = maxPriceLimit
+            };
+
+            // Setup display titles
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                vm.PageTitle = "Kết quả tìm kiếm";
+                vm.PageSubtitle = $"Tìm thấy {pagedProducts.TotalCount} sản phẩm cho từ khóa \"{searchTerm}\"";
+            }
+            else if (categoryId.HasValue)
+            {
+                var cat = categories.FirstOrDefault(c => c.CategoryId == categoryId.Value);
+                vm.PageTitle = cat?.CategoryName ?? "Danh mục";
+                vm.PageSubtitle = $"{pagedProducts.TotalCount} sản phẩm trong danh mục";
+            }
+            else if (brandId.HasValue)
+            {
+                var brand = brands.FirstOrDefault(b => b.BrandId == brandId.Value);
+                vm.PageTitle = $"Thương hiệu {brand?.BrandName}";
+                vm.PageSubtitle = $"{pagedProducts.TotalCount} sản phẩm của {brand?.BrandName}";
+            }
+            else
+            {
+                vm.PageTitle = "Tất cả sản phẩm";
+                vm.PageSubtitle = $"Tổng số {pagedProducts.TotalCount} sản phẩm";
+            }
+
             ViewBag.SortList = new List<SelectListItem>
             {
                 new SelectListItem { Value = "newest", Text = "Mới nhất", Selected = (sort == "newest" || string.IsNullOrEmpty(sort)) },
@@ -102,28 +138,55 @@ namespace MotoShop.Controllers
                 new SelectListItem { Value = "za", Text = "Tên Z-A", Selected = (sort == "za") }
             };
 
-            ViewBag.From = pagedProducts.TotalCount > 0 ? (page - 1) * pageSize + 1 : 0;
-            ViewBag.To = Math.Min(page * pageSize, pagedProducts.TotalCount);
-            ViewBag.TotalProducts = pagedProducts.TotalCount;
-            ViewBag.CategoryName = categories.FirstOrDefault(c => c.CategoryId == categoryId)?.CategoryName;
-            ViewBag.BrandName = brands.FirstOrDefault(b => b.BrandId == brandId)?.BrandName;
-
-            ViewBag.MaxPriceLimit = await _cache.GetOrCreateAsync("max_product_price", e => {
-                e.SetAbsoluteExpiration(TimeSpan.FromHours(1));
-                return _productService.GetMaxProductPriceAsync();
-            });
-            ViewBag.SelectedMinPrice = minPrice ?? 0;
-            ViewBag.SelectedMaxPrice = maxPrice ?? ViewBag.MaxPriceLimit;
-
-            ViewBag.SearchTerm = searchTerm;
-            ViewBag.CurrentCategoryId = categoryId;
-            ViewBag.CurrentBrandId = brandId;
-            ViewBag.Sort = sort;
-            ViewBag.InStock = inStock;
-            ViewBag.OnSale = onSale;
-
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return PartialView("_ProductGridPartial", pagedProducts);
-            return View(pagedProducts);
+            return View(vm);
+        }
+
+        [HttpGet("products/usage/{slug}")]
+        public async Task<IActionResult> Usage(string slug, string? sort, int page = 1, int pageSize = 12)
+        {
+            var usage = await _unitOfWork.Repository<ProductUsage>()
+                .Find(u => u.IsActive && u.Slug == slug)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+
+            if (usage == null) return NotFound();
+
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 100);
+            var products = await _productService.GetPagedProductsAsync(null, null, null, sort, page, pageSize, null, null, null, null, slug);
+            ViewBag.UsageName = usage.Name;
+            ViewBag.TotalProducts = products.TotalCount;
+            ViewBag.From = products.TotalCount > 0 ? (page - 1) * pageSize + 1 : 0;
+            ViewBag.To = Math.Min(page * pageSize, products.TotalCount);
+            ViewBag.SearchTerm = null;
+            ViewBag.Sort = sort;
+            ViewBag.CurrentCategoryId = null;
+            ViewBag.CurrentBrandId = null;
+            ViewBag.CategoryListItems = await _categoryService.GetAllAsync();
+            ViewBag.BrandListItems = (await _productService.GetAllBrandsAsync()).ToList();
+            ViewBag.CategoryProductCount = await _productService.GetProductCountByCategoryAsync();
+            ViewBag.BrandProductCount = await _productService.GetProductCountByBrandAsync();
+            ViewBag.SortList = new List<SelectListItem>
+            {
+                new SelectListItem { Value = "newest", Text = "Moi nhat", Selected = (sort == "newest" || string.IsNullOrEmpty(sort)) },
+                new SelectListItem { Value = "price_asc", Text = "Gia thap den cao", Selected = sort == "price_asc" },
+                new SelectListItem { Value = "price_desc", Text = "Gia cao den thap", Selected = sort == "price_desc" },
+                new SelectListItem { Value = "az", Text = "Ten A-Z", Selected = sort == "az" },
+                new SelectListItem { Value = "za", Text = "Ten Z-A", Selected = sort == "za" }
+            };
+            ViewBag.MaxPriceLimit = await _productService.GetMaxProductPriceAsync();
+            ViewBag.SelectedMinPrice = 0;
+            ViewBag.SelectedMaxPrice = ViewBag.MaxPriceLimit;
+            ViewBag.SortList = new List<SelectListItem>
+            {
+                new SelectListItem { Value = "newest", Text = "Mới nhất", Selected = (sort == "newest" || string.IsNullOrEmpty(sort)) },
+                new SelectListItem { Value = "price_asc", Text = "Giá thấp đến cao", Selected = (sort == "price_asc") },
+                new SelectListItem { Value = "price_desc", Text = "Giá cao đến thấp", Selected = (sort == "price_desc") },
+                new SelectListItem { Value = "az", Text = "Tên A-Z", Selected = (sort == "az") },
+                new SelectListItem { Value = "za", Text = "Tên Z-A", Selected = (sort == "za") }
+            };
+            return View("Index", products);
         }
 
         [HttpGet]

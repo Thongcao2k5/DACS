@@ -100,6 +100,11 @@ public class HomeController : Controller
         ViewBag.Sliders     = sliders;
         ViewBag.Banners     = banners;
         ViewBag.RecentBlogs = recentBlogs;
+        ViewBag.ProductUsages = await _context.ProductUsages
+            .AsNoTracking()
+            .Where(u => u.IsActive)
+            .OrderBy(u => u.Name)
+            .ToListAsync();
 
         return View(model);
     }

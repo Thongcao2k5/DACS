@@ -1,4 +1,4 @@
-@model MotoShop.Data.Models.Blog
+﻿@model MotoShop.Data.Models.Blog
 
 @{
     ViewData["Title"] = "Chi tiết bài viết";
@@ -7,6 +7,14 @@
 
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Blog /</span> Chi tiết bài viết</h4>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
     <div class="row">
         <div class="col-md-8">
@@ -18,7 +26,7 @@
                         <span class="me-3"><i class="bx bx-folder"></i> @Model.Category?.Name</span>
                         <span><i class="bx bx-link"></i> @Model.Slug</span>
                     </div>
-                    
+
                     @if (!string.IsNullOrEmpty(Model.Thumbnail))
                     {
                         <img src="@Model.Thumbnail" class="img-fluid rounded mb-4 w-100" style="max-height: 400px; object-fit: cover;">
@@ -30,7 +38,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -52,10 +60,14 @@
                         <li class="mb-3">
                             <span class="fw-bold">Ngày cập nhật:</span>
                             @(Model.UpdatedDate != null ? Model.UpdatedDate.Value.ToString("dd/MM/yyyy HH:mm") : "Chưa cập nhật")
-                            </li>                    </ul>
+                        </li>
+                    </ul>
                     <hr>
                     <div class="d-grid gap-2">
                         <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Chỉnh sửa</a>
+                        <button type="button" class="btn @(Model.Status == 1 ? "btn-outline-warning" : "btn-outline-success")" onclick="toggleBlogStatus(@Model.Id)">
+                            @(Model.Status == 1 ? "Chuyển về bản nháp" : "Đăng bài viết")
+                        </button>
                         <a asp-action="Index" class="btn btn-outline-secondary">Quay lại danh sách</a>
                     </div>
                 </div>
@@ -68,3 +80,24 @@
     .blog-content img { max-width: 100%; height: auto; border-radius: 8px; }
     .blog-content { line-height: 1.8; font-size: 1.1rem; }
 </style>
+
+@section Scripts {
+    <script>
+        async function toggleBlogStatus(id) {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            const formData = new FormData();
+            formData.append('__RequestVerificationToken', token);
+
+            const response = await fetch(`/Admin/Blog/ToggleStatus/${id}`, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            if (result.success) {
+                location.reload();
+            } else {
+                alert(result.message || 'Không thể cập nhật trạng thái bài viết.');
+            }
+        }
+    </script>
+}
