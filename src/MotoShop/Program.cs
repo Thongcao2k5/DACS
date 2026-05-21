@@ -769,3 +769,4 @@ app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Inde
 app.MapHub<MotoShop.Hubs.ChatHub>("/chatHub");
 
 app.Run();
+    

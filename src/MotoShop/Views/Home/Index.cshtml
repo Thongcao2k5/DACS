@@ -74,10 +74,10 @@
 </section>
 
 <!-- 2. CATEGORY QUICK ACCESS -->
-<section class="bg-white">
+<section class="bg-white home-category-section">
     <div class="container">
         <div class="section-title-wrapper text-center">
-            <h2 class="section-title center text-uppercase">Danh mục nổi bật</h2>
+            <h2 class="section-title center text-uppercase home-category-title">Danh mục nổi bật</h2>
         </div>
         <div class="cat-row">
             @if (Model.TopCategories != null)
@@ -202,63 +202,6 @@
     </div>
 </section>
 
-<!-- 6. BRAND SHOWCASE -->
-<section class="bg-white brand-section">
-    <div class="container">
-        <div class="section-title-wrapper text-center">
-            <h5 class="text-muted text-uppercase mb-4">Thương hiệu đồng hành</h5>
-        </div>
-        <div class="row align-items-center justify-content-center g-4">
-            <div class="col-4 col-md-2 brand-item text-center">
-                <img src="~/assets/img/brand/honda.png" alt="Honda" class="brand-logo-img" asp-append-version="true">
-            </div>
-            <div class="col-4 col-md-2 brand-item text-center">
-                <img src="~/assets/img/brand/yamaha.png" alt="Yamaha" class="brand-logo-img" asp-append-version="true">
-            </div>
-            <div class="col-4 col-md-2 brand-item text-center">
-                <img src="~/assets/img/brand/mortul.png" alt="Motul" class="brand-logo-img" asp-append-version="true">
-            </div>
-            <div class="col-4 col-md-2 brand-item text-center">
-                <img src="~/assets/img/brand/brembo.png" alt="Brembo" class="brand-logo-img" asp-append-version="true">
-            </div>
-            <div class="col-4 col-md-2 brand-item text-center">
-                <img src="~/assets/img/brand/michelin.png" alt="Michelin" class="brand-logo-img" asp-append-version="true">
-            </div>
-            <div class="col-4 col-md-2 brand-item text-center">
-                <img src="~/assets/img/brand/ohlins.png" alt="Ohlins" class="brand-logo-img" asp-append-version="true">
-            </div>
-        </div>
-    </div>
-</section>
-
-<style>
-    /* Brand section layout */
-    .brand-section { padding-top: 24px !important; padding-bottom: 24px !important; }
-    .brand-section h5 {
-        font-size: 13px;
-        letter-spacing: 2px;
-        color: #9ca3af;
-        text-align: center;
-        margin-bottom: 20px !important;
-        font-weight: 600;
-    }
-    /* Logo — trạng thái bình thường */
-    .brand-logo-img {
-        max-width: 100%;
-        max-height: 70px;
-        object-fit: contain;
-        filter: grayscale(30%);
-        opacity: 0.75;
-        transition: filter 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
-    }
-    /* Logo — hover */
-    .brand-item:hover .brand-logo-img {
-        filter: grayscale(0%);
-        opacity: 1;
-        transform: scale(1.05);
-    }
-</style>
-
 <!-- 7. NEW PRODUCTS -->
 <section class="home-sections-bg">
     <div class="container">
@@ -284,20 +227,79 @@
     </div>
 </section>
 
+<!-- 7. BRAND SHOWCASE -->
+<section class="brand-section-new brand-section-mid">
+    <div class="container">
+        <div class="brand-title">Thương hiệu đồng hành</div>
+        <div class="brand-grid-new">
+            <a href="/Product?brandId=132" class="brand-card-new">
+                <div class="brand-logo-wrap b-honda">
+                    <img src="~/assets/img/brand/honda.png" alt="Honda"/>
+                </div>
+                <span class="brand-name-new">Honda</span>
+            </a>
+            <a href="/Product?brandId=133" class="brand-card-new">
+                <div class="brand-logo-wrap b-yamaha">
+                    <img src="~/assets/img/brand/yamaha.png" alt="Yamaha"/>
+                </div>
+                <span class="brand-name-new">Yamaha</span>
+            </a>
+            <a href="/Product?brandId=77" class="brand-card-new">
+                <div class="brand-logo-wrap b-motul">
+                    <img src="~/assets/img/brand/mortul.png" alt="Motul"/>
+                </div>
+                <span class="brand-name-new">Motul</span>
+            </a>
+            <a href="/Product?brandId=79" class="brand-card-new">
+                <div class="brand-logo-wrap b-brembo">
+                    <img src="~/assets/img/brand/brembo.png" alt="Brembo"/>
+                </div>
+                <span class="brand-name-new">Brembo</span>
+            </a>
+            <a href="/Product?brandId=131" class="brand-card-new">
+                <div class="brand-logo-wrap b-michelin">
+                    <img src="~/assets/img/brand/michelin.png" alt="Michelin"/>
+                </div>
+                <span class="brand-name-new">Michelin</span>
+            </a>
+            <a href="/Product?brandId=81" class="brand-card-new">
+                <div class="brand-logo-wrap b-ohlins">
+                    <img src="~/assets/img/brand/ohlins.png" alt="Öhlins"/>
+                </div>
+                <span class="brand-name-new">Öhlins</span>
+            </a>
+        </div>
+    </div>
+</section>
+
 @* ── CATEGORY SECTIONS ── *@
 @{
     var catGroups = ViewBag.CategoryWithProducts as List<MotoShop.Business.DTOs.CategoryWithProductsDto>;
+
+    var catStyles = new Dictionary<int, (string cssClass, string icon)>
+    {
+        { 16, ("psw-yw",   "bx bx-droplet") },
+        { 17, ("psw-blue", "bx bx-circle") },
+        { 18, ("psw-red",  "bx bx-stop-circle") },
+        { 19, ("psw-pu",   "bx bx-adjust") },
+        { 20, ("psw-gn",   "bx bx-bolt-circle") },
+        { 22, ("psw-or",   "bx bx-wrench") },
+    };
 }
 @if (catGroups != null && catGroups.Any())
 {
     foreach (var group in catGroups)
     {
+        var style = catStyles.ContainsKey(group.CategoryId)
+            ? catStyles[group.CategoryId]
+            : ("psw-cat", "bx bx-category");
+
         <section class="home-sections-bg">
             <div class="container">
-                <div class="prod-section-wrap psw-cat">
+                <div class="prod-section-wrap @style.Item1">
                     <div class="section-head">
                         <div class="section-head-left">
-                            <div class="section-icon"><i class='bx bx-category'></i></div>
+                            <div class="section-icon"><i class='@style.Item2'></i></div>
                             <span class="section-label">@group.CategoryName</span>
                             <span class="section-badge">@group.TotalCount sản phẩm</span>
                         </div>

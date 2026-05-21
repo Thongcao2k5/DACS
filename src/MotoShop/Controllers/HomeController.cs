@@ -62,8 +62,8 @@ public class HomeController : Controller
 
         var categoryProducts = await _cache.GetOrCreateAsync(MotoShop.Data.Constants.CacheKeys.HomeCategoryProducts, e => {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15);
-            return _productService.GetCategoryWithProductsAsync(4, 4);
-        }) ?? await _productService.GetCategoryWithProductsAsync(4, 4);
+            return _productService.GetCategoryWithProductsAsync(6, 4);
+        }) ?? await _productService.GetCategoryWithProductsAsync(6, 4);
 
         var topCategories = categories
             .OrderByDescending(c => c.ProductCount)

@@ -634,9 +634,13 @@ namespace MotoShop.Business.Services
 
         public async Task<List<CategoryWithProductsDto>> GetCategoryWithProductsAsync(int categoriesCount = 4, int productsPerCategory = 4)
         {
-            var topCats = await _uow.Repository<Category>().Find(c => c.ParentId == null && c.Products.Any(p => p.IsActive && !p.IsDeleted))
+            var topCats = await _uow.Repository<Category>().Find(c => c.ParentId == null && (
+                    c.Products.Any(p => p.IsActive && !p.IsDeleted) ||
+                    c.SubCategories.Any(sc => sc.Products.Any(p => p.IsActive && !p.IsDeleted))))
                 .AsNoTracking()
-                .OrderByDescending(c => c.Products.Count(p => p.IsActive && !p.IsDeleted))
+                .OrderByDescending(c =>
+                    c.Products.Count(p => p.IsActive && !p.IsDeleted) +
+                    c.SubCategories.Sum(sc => sc.Products.Count(p => p.IsActive && !p.IsDeleted)))
                 .Take(categoriesCount)
                 .Select(c => new { c.CategoryId, c.CategoryName, c.Slug })
                 .ToListAsync();
