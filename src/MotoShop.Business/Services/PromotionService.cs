@@ -554,7 +554,7 @@ namespace MotoShop.Business.Services
         private async Task<List<Promotion>> GetActiveOrderPromotionsAsync()
         {
             var now = DateTime.Now;
-            return await _context.Promotions
+            var promotions = await _context.Promotions
                 .AsNoTracking()
                 .Include(p => p.PromotionProducts)
                 .Include(p => p.PromotionCategories)
@@ -563,10 +563,13 @@ namespace MotoShop.Business.Services
                     && p.StartDate <= now
                     && p.EndDate >= now
                     && (p.PromotionType == PromotionType.OrderDiscount || p.PromotionType == PromotionType.Campaign))
+                .ToListAsync();
+
+            return promotions
                 .OrderByDescending(p => GetTypePriority(p.PromotionType))
                 .ThenByDescending(p => p.Priority)
                 .ThenByDescending(p => p.DiscountValue)
-                .ToListAsync();
+                .ToList();
         }
 
         private async Task<decimal> GetEligibleTotalAsync(Promotion promotion, decimal orderTotal, List<CartItem>? items)

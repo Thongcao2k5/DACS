@@ -67,6 +67,7 @@ namespace MotoShop.Data.Data
         public DbSet<ProductProductUsage> ProductProductUsages { get; set; }
         public DbSet<PromotionCategory> PromotionCategories { get; set; }
         public DbSet<PromotionProductVariant> PromotionProductVariants { get; set; }
+        public DbSet<EventPopup> EventPopups { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

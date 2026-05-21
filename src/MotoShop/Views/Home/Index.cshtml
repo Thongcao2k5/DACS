@@ -5,6 +5,104 @@
     ViewData["Title"] = "Trang chủ";
 }
 
+@{
+    var flashSale = ViewBag.ActiveFlashSale as MotoShop.Data.Models.Promotion;
+    var flashProducts = ViewBag.FlashSaleProducts as List<MotoShop.Business.DTOs.ProductDto>;
+}
+@if (flashSale != null)
+{
+<div class="popup-overlay" id="eventPopup">
+  <div class="popup-box">
+    <button class="popup-close" onclick="closePopup()"><i class='bx bx-x'></i></button>
+
+    <div class="popup-header">
+      <div class="popup-badges">
+        <span class="popup-badge-live"><i class='bx bx-radio-circle-marked'></i> ĐANG DIỄN RA</span>
+        <span class="popup-badge-type"><i class='bx bx-flame'></i> FLASH SALE</span>
+      </div>
+      <div class="popup-discount">-@((int)flashSale.DiscountValue)%</div>
+      <div class="popup-title">@flashSale.Name</div>
+      <div class="popup-subtitle">Kết thúc lúc @flashSale.EndDate.ToString("HH:mm dd/MM/yyyy")</div>
+    </div>
+
+    <div class="popup-countdown">
+      <div class="popup-cd-label"><i class='bx bx-time'></i> Kết thúc sau</div>
+      <div class="popup-cd-items">
+        <div class="popup-cd-box" id="cdHours">00</div>
+        <div class="popup-cd-sep">:</div>
+        <div class="popup-cd-box" id="cdMinutes">00</div>
+        <div class="popup-cd-sep">:</div>
+        <div class="popup-cd-box" id="cdSeconds">00</div>
+      </div>
+    </div>
+
+    @if (flashProducts != null && flashProducts.Any())
+    {
+    <div class="popup-products">
+      <div class="popup-products-label">Sản phẩm đang giảm giá</div>
+      <div class="popup-products-grid">
+        @foreach (var p in flashProducts.Take(4))
+        {
+          <a href="/Product/Details?slug=@p.Slug" class="popup-prod-item">
+            <div class="popup-prod-img">
+              <img src="@p.PrimaryImageUrl" alt="@p.ProductName"
+                   onerror="this.src='/images/placeholder.jpg'" />
+              <span class="popup-prod-pct">-@((int)flashSale.DiscountValue)%</span>
+            </div>
+            <div class="popup-prod-info">
+              <div class="popup-prod-name">@p.ProductName</div>
+              <div class="popup-prod-price">@((p.FlashSalePrice ?? p.MinPrice).ToString("N0"))đ</div>
+              <div class="popup-prod-old">@((p.MinOriginalPrice ?? p.MinPrice).ToString("N0"))đ</div>
+            </div>
+          </a>
+        }
+      </div>
+    </div>
+    }
+
+    <div class="popup-actions">
+      <a href="/Product/Promotion" class="popup-btn-main">
+        <i class='bx bx-bolt-circle'></i> Xem tất cả ưu đãi
+      </a>
+      <button class="popup-btn-skip" onclick="closePopup()">Để sau</button>
+    </div>
+  </div>
+</div>
+<script>
+(function() {
+    const key = 'popup_@flashSale.Id';
+    if (sessionStorage.getItem(key)) return;
+    setTimeout(() => {
+        const el = document.getElementById('eventPopup');
+        if (el) el.style.display = 'flex';
+    }, 800);
+})();
+function closePopup() {
+    const el = document.getElementById('eventPopup');
+    if (el) el.style.display = 'none';
+    sessionStorage.setItem('popup_@flashSale.Id', '1');
+}
+const endDate = new Date('@flashSale.EndDate.ToString("yyyy-MM-ddTHH:mm:ss")');
+function tick() {
+    const diff = endDate - new Date();
+    if (diff <= 0) {
+        ['cdHours','cdMinutes','cdSeconds'].forEach(id => {
+            document.getElementById(id).textContent = '00';
+        });
+        return;
+    }
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    document.getElementById('cdHours').textContent   = String(h).padStart(2,'0');
+    document.getElementById('cdMinutes').textContent = String(m).padStart(2,'0');
+    document.getElementById('cdSeconds').textContent = String(s).padStart(2,'0');
+}
+tick();
+setInterval(tick, 1000);
+</script>
+}
+
 <!-- 1. HERO SLIDER -->
 @{
     var sliders = ViewBag.Sliders as List<MotoShop.Data.Models.Slider> ?? new List<MotoShop.Data.Models.Slider>();

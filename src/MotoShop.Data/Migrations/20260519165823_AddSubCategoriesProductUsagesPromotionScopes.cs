@@ -24,11 +24,10 @@ IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[Shipping
     ALTER TABLE [ShippingMethods] ADD [Provider] nvarchar(100) NULL;
 ");
 
-            migrationBuilder.AddColumn<DateTime>(
-                name: "CompletedAt",
-                table: "ServiceBookings",
-                type: "datetime2",
-                nullable: true);
+            migrationBuilder.Sql(@"
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[ServiceBookings]') AND name = N'CompletedAt')
+    ALTER TABLE [ServiceBookings] ADD [CompletedAt] datetime2 NULL;
+");
 
             migrationBuilder.AddColumn<string>(
                 name: "ApplyType",

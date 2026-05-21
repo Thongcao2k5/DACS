@@ -942,4 +942,37 @@ namespace MotoShop.Data.Models
         [ForeignKey("ValueId")]
         public virtual AttributeValue AttributeValue { get; set; } = null!;
     }
+
+    [Table("EventPopups")]
+    public class EventPopup
+    {
+        [Key]
+        public int Id { get; set; }
+        [Required, StringLength(50)]
+        public string EventType { get; set; } = "FlashSale";
+        [Required, StringLength(200)]
+        public string Title { get; set; } = string.Empty;
+        [StringLength(300)]
+        public string? Subtitle { get; set; }
+        [StringLength(500)]
+        public string? Description { get; set; }
+        [StringLength(500)]
+        public string? Conditions { get; set; }
+        [StringLength(50)]
+        public string? CouponCode { get; set; }
+        [Required, StringLength(100)]
+        public string CtaText { get; set; } = "Mua ngay";
+        [Required, StringLength(200)]
+        public string CtaUrl { get; set; } = "/Product/Promotion";
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public int? TotalQty { get; set; }
+        public bool IsEnabled { get; set; } = true;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [NotMapped]
+        public bool IsActive => IsEnabled && StartDate <= DateTime.Now && EndDate >= DateTime.Now;
+        [NotMapped]
+        public TimeSpan TimeRemaining => EndDate > DateTime.Now ? EndDate - DateTime.Now : TimeSpan.Zero;
+    }
 }

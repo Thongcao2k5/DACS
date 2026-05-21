@@ -1,0 +1,247 @@
+@model List<MotoShop.Data.Models.EventPopup>
+@{
+    ViewData["Title"] = "Quản lý Popup Sự kiện";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+<style>
+.popup-admin-card { background:#fff;border-radius:12px;border:1px solid #eee;padding:16px;margin-bottom:12px; }
+.popup-admin-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:8px; }
+.event-type-badge { background:rgba(230,0,35,0.1);color:#E60023;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px; }
+.popup-time-info { font-size:12px;color:#a1acb8;margin:4px 0; }
+.popup-title-text { font-size:14px;font-weight:700;color:#1a1a1a; }
+</style>
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0">Popup Sự kiện</h4>
+            <p class="text-muted small mb-0">Quản lý popup hiển thị khi khách vào trang chủ</p>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()">
+            <i class="bx bx-plus me-1"></i>Thêm popup
+        </button>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center text-muted py-5">
+            <i class="bx bx-notification-off" style="font-size:48px"></i>
+            <p class="mt-2">Chưa có popup nào</p>
+        </div>
+    }
+
+    @foreach (var popup in Model)
+    {
+        <div class="popup-admin-card" id="popup-@popup.Id">
+            <div class="popup-admin-header">
+                <div>
+                    <span class="event-type-badge">@popup.EventType</span>
+                    <div class="popup-title-text mt-1">@popup.Title</div>
+                    <div class="popup-time-info">
+                        <i class="bx bx-calendar me-1"></i>
+                        @popup.StartDate.ToString("dd/MM/yyyy HH:mm") → @popup.EndDate.ToString("dd/MM/yyyy HH:mm")
+                        @if (popup.IsActive)
+                        {
+                            <span class="badge bg-success ms-2">Đang chạy</span>
+                        }
+                        else if (popup.EndDate < DateTime.Now)
+                        {
+                            <span class="badge bg-secondary ms-2">Đã hết hạn</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning ms-2">Chưa bắt đầu</span>
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(popup.CouponCode))
+                    {
+                        <div class="popup-time-info">
+                            <i class="bx bx-purchase-tag me-1"></i>Mã: <strong>@popup.CouponCode</strong>
+                        </div>
+                    }
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox"
+                               @(popup.IsEnabled ? "checked" : "")
+                               onchange="togglePopup(@popup.Id, this)" />
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary"
+                            onclick="openEditModal(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(popup)))">
+                        <i class="bx bx-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deletePopup(@popup.Id)">
+                        <i class="bx bx-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="popupModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark">
+                <h5 class="modal-title text-white" id="modalTitle">Thêm popup sự kiện</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="f-id" value="0" />
+                <div class="row g-3">
+                    <div class="col-6">
+                        <label class="form-label">Loại sự kiện</label>
+                        <select class="form-select" id="f-type">
+                            <option value="FlashSale">🔥 Flash Sale</option>
+                            <option value="KhaiTruong">🎉 Khai trương</option>
+                            <option value="KhuyenMai">🎁 Khuyến mãi</option>
+                            <option value="RaMat">📦 Ra mắt SP mới</option>
+                            <option value="LeTet">🏖️ Lễ hội / Tết</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Mã giảm giá</label>
+                        <input class="form-control" id="f-coupon" placeholder="FLASHSALE40" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Tiêu đề <span class="text-danger">*</span></label>
+                        <input class="form-control" id="f-title" placeholder="Flash Sale Cuối Tuần — Giảm đến 40%!" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Phụ đề</label>
+                        <input class="form-control" id="f-subtitle" placeholder="Chỉ còn trong thời gian giới hạn" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Mô tả</label>
+                        <input class="form-control" id="f-desc" placeholder="Áp dụng cho tất cả sản phẩm..." />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Điều kiện <small class="text-muted">(phân cách bằng ·)</small></label>
+                        <input class="form-control" id="f-conditions" placeholder="Đơn tối thiểu 200k · Mỗi KH 1 lần/ngày" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Text nút CTA</label>
+                        <input class="form-control" id="f-cta-text" value="Mua ngay" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Link nút CTA</label>
+                        <input class="form-control" id="f-cta-url" value="/Product/Promotion" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Bắt đầu</label>
+                        <input type="datetime-local" class="form-control" id="f-start" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Kết thúc</label>
+                        <input type="datetime-local" class="form-control" id="f-end" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Tổng số lượng SP</label>
+                        <input type="number" class="form-control" id="f-qty" placeholder="200" />
+                    </div>
+                    <div class="col-6 d-flex align-items-end">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="f-enabled" checked />
+                            <label class="form-check-label">Kích hoạt</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-primary" onclick="savePopup()">
+                    <i class="bx bx-save me-1"></i>Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const modal = new bootstrap.Modal(document.getElementById('popupModal'));
+const token = document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ?? '';
+
+function openAddModal() {
+    document.getElementById('modalTitle').textContent = 'Thêm popup sự kiện';
+    document.getElementById('f-id').value = 0;
+    ['f-title','f-subtitle','f-desc','f-conditions','f-coupon'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    document.getElementById('f-type').value = 'FlashSale';
+    document.getElementById('f-cta-text').value = 'Mua ngay';
+    document.getElementById('f-cta-url').value = '/Product/Promotion';
+    document.getElementById('f-qty').value = '';
+    document.getElementById('f-start').value = '';
+    document.getElementById('f-end').value = '';
+    document.getElementById('f-enabled').checked = true;
+    modal.show();
+}
+
+function openEditModal(p) {
+    document.getElementById('modalTitle').textContent = 'Chỉnh sửa popup';
+    document.getElementById('f-id').value = p.id;
+    document.getElementById('f-type').value = p.eventType;
+    document.getElementById('f-title').value = p.title;
+    document.getElementById('f-subtitle').value = p.subtitle ?? '';
+    document.getElementById('f-desc').value = p.description ?? '';
+    document.getElementById('f-conditions').value = p.conditions ?? '';
+    document.getElementById('f-coupon').value = p.couponCode ?? '';
+    document.getElementById('f-cta-text').value = p.ctaText;
+    document.getElementById('f-cta-url').value = p.ctaUrl;
+    document.getElementById('f-start').value = new Date(p.startDate).toISOString().slice(0,16);
+    document.getElementById('f-end').value = new Date(p.endDate).toISOString().slice(0,16);
+    document.getElementById('f-qty').value = p.totalQty ?? '';
+    document.getElementById('f-enabled').checked = p.isEnabled;
+    modal.show();
+}
+
+async function savePopup() {
+    const body = {
+        id:          parseInt(document.getElementById('f-id').value),
+        eventType:   document.getElementById('f-type').value,
+        title:       document.getElementById('f-title').value,
+        subtitle:    document.getElementById('f-subtitle').value,
+        description: document.getElementById('f-desc').value,
+        conditions:  document.getElementById('f-conditions').value,
+        couponCode:  document.getElementById('f-coupon').value,
+        ctaText:     document.getElementById('f-cta-text').value,
+        ctaUrl:      document.getElementById('f-cta-url').value,
+        startDate:   document.getElementById('f-start').value,
+        endDate:     document.getElementById('f-end').value,
+        totalQty:    parseInt(document.getElementById('f-qty').value) || null,
+        isEnabled:   document.getElementById('f-enabled').checked
+    };
+    if (!body.title) { alert('Nhập tiêu đề!'); return; }
+    const r = await fetch('/Admin/EventPopup/Save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': decodeURIComponent(token) },
+        body: JSON.stringify(body)
+    });
+    if (r.ok) { modal.hide(); location.reload(); }
+    else alert('Lỗi lưu!');
+}
+
+async function togglePopup(id, el) {
+    const r = await fetch(`/Admin/EventPopup/Toggle/${id}`, {
+        method: 'POST',
+        headers: { 'X-XSRF-TOKEN': decodeURIComponent(token) }
+    });
+    if (!r.ok) el.checked = !el.checked;
+}
+
+async function deletePopup(id) {
+    if (!confirm('Xóa popup này?')) return;
+    const r = await fetch(`/Admin/EventPopup/Delete/${id}`, {
+        method: 'POST',
+        headers: { 'X-XSRF-TOKEN': decodeURIComponent(token) }
+    });
+    if (r.ok) document.getElementById('popup-'+id)?.remove();
+}
+</script>
+}

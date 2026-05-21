@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using MotoShop.Business.Interfaces;
 using MotoShop.Data.Data;
+using MotoShop.Data.Enums;
 using MotoShop.Data.Models;
 using MotoShop.Models;
 using MotoShop.Models.ViewModels;
@@ -105,6 +106,27 @@ public class HomeController : Controller
             .Where(u => u.IsActive)
             .OrderBy(u => u.Name)
             .ToListAsync();
+
+        var now = DateTime.Now;
+        ViewBag.ActivePopup = await _context.EventPopups
+            .AsNoTracking()
+            .Where(p => p.IsEnabled && p.StartDate <= now && p.EndDate >= now)
+            .OrderByDescending(p => p.StartDate)
+            .FirstOrDefaultAsync();
+
+        var activeFlashSale = await _context.Promotions
+            .AsNoTracking()
+            .Where(p => p.IsActive && p.PromotionType == PromotionType.FlashSale
+                        && p.StartDate <= now && p.EndDate >= now)
+            .OrderByDescending(p => p.Priority)
+            .ThenByDescending(p => p.StartDate)
+            .FirstOrDefaultAsync();
+
+        if (activeFlashSale != null)
+        {
+            ViewBag.ActiveFlashSale = activeFlashSale;
+            ViewBag.FlashSaleProducts = await _promotionService.GetFlashSaleProductsAsync(4);
+        }
 
         return View(model);
     }

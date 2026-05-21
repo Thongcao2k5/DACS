@@ -728,6 +728,56 @@ using (var scope = app.Services.CreateScope())
     WHERE ProductId IN (255,256,257,258,259);
     """);
 
+        // VIỆC 1: Backfill DistrictId cho địa chỉ Tân Bình thiếu DistrictId
+        await context.Database.ExecuteSqlRawAsync(@"
+            UPDATE AddressesNew
+            SET DistrictId = 1455
+            WHERE District LIKE N'%Tân Bình%'
+              AND (DistrictId IS NULL OR DistrictId = 0);
+        ");
+
+        // VIỆC 2: Tạo bảng EventPopups + seed data
+        await context.Database.ExecuteSqlRawAsync("""
+            IF NOT EXISTS (SELECT 1 FROM sys.objects
+                           WHERE object_id = OBJECT_ID(N'EventPopups') AND type = 'U')
+            BEGIN
+                CREATE TABLE EventPopups (
+                    Id          INT IDENTITY(1,1) PRIMARY KEY,
+                    EventType   NVARCHAR(50)  NOT NULL CONSTRAINT DF_EP_EventType  DEFAULT 'FlashSale',
+                    Title       NVARCHAR(200) NOT NULL,
+                    Subtitle    NVARCHAR(300) NULL,
+                    Description NVARCHAR(500) NULL,
+                    Conditions  NVARCHAR(500) NULL,
+                    CouponCode  NVARCHAR(50)  NULL,
+                    CtaText     NVARCHAR(100) NOT NULL CONSTRAINT DF_EP_CtaText    DEFAULT N'Mua ngay',
+                    CtaUrl      NVARCHAR(200) NOT NULL CONSTRAINT DF_EP_CtaUrl     DEFAULT '/khuyen-mai',
+                    StartDate   DATETIME2     NOT NULL,
+                    EndDate     DATETIME2     NOT NULL,
+                    TotalQty    INT           NULL,
+                    IsEnabled   BIT           NOT NULL CONSTRAINT DF_EP_IsEnabled  DEFAULT 1,
+                    CreatedAt   DATETIME2     NOT NULL CONSTRAINT DF_EP_CreatedAt  DEFAULT GETDATE()
+                );
+
+                INSERT INTO EventPopups
+                    (EventType, Title, Subtitle, Description, Conditions,
+                     CouponCode, CtaText, CtaUrl, StartDate, EndDate, TotalQty, IsEnabled)
+                VALUES (
+                    'FlashSale',
+                    N'Flash Sale Cuối Tuần — Giảm đến 40%!',
+                    N'Chỉ còn trong thời gian giới hạn',
+                    N'Áp dụng cho tất cả sản phẩm Phụ tùng & Phụ kiện',
+                    N'Đơn tối thiểu 200k · Mỗi KH 1 lần/ngày',
+                    'FLASHSALE40',
+                    N'Mua ngay',
+                    '/Product/Promotion',
+                    DATEADD(DAY, -1, GETDATE()),
+                    DATEADD(DAY, 7, GETDATE()),
+                    200,
+                    1
+                );
+            END
+        """);
+
         await DbSeeder.SeedAsync(context, userManager, roleManager);
     }
     catch (Exception ex) { 
