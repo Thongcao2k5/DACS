@@ -41,5 +41,6 @@ namespace MotoShop.Business.Interfaces
         Task<PagedList<ProductDto>> GetPagedDiscountProductsAsync(int pageNumber, int pageSize, string sort = "newest");
         Task<List<BrandWithProductsDto>> GetBrandWithProductsAsync(int brandsCount = 4, int productsPerBrand = 6);
         Task<List<CategoryWithProductsDto>> GetCategoryWithProductsAsync(int categoriesCount = 4, int productsPerCategory = 4);
+        Task<IEnumerable<ProductDto>> GetBestSellingProductsAsync(int count = 8);
     }
 }

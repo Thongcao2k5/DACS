@@ -74,10 +74,12 @@ namespace MotoShop.Business.Services
                     p.Variants.Any(v => v.SKU != null && v.SKU.ToLower().Contains(search)));
             }
 
-            // Lọc theo danh mục
+            // Lọc theo danh mục (bao gồm sub-categories)
             if (categoryId.HasValue && categoryId.Value > 0)
             {
-                query = query.Where(p => p.CategoryId == categoryId.Value);
+                query = query.Where(p =>
+                    p.CategoryId == categoryId.Value ||
+                    p.Category!.ParentId == categoryId.Value);
             }
 
             if (!string.IsNullOrWhiteSpace(usageSlug))
@@ -301,6 +303,37 @@ namespace MotoShop.Business.Services
                 .ToListAsync();
 
             return pool.OrderBy(_ => Guid.NewGuid()).Take(count).ToList();
+        }
+
+        public async Task<IEnumerable<ProductDto>> GetBestSellingProductsAsync(int count = 8)
+        {
+            return await _productRepository.Find(p => p.IsActive && !p.IsDeleted && p.SoldCount > 0)
+                .AsNoTracking()
+                .OrderByDescending(p => p.SoldCount)
+                .Take(count)
+                .Select(p => new ProductDto
+                {
+                    ProductId        = p.ProductId,
+                    ProductName      = p.ProductName,
+                    Slug             = p.Slug,
+                    CategoryName     = p.Category != null ? p.Category.CategoryName : string.Empty,
+                    CategoryId       = p.CategoryId,
+                    BrandName        = p.Brand != null ? p.Brand.BrandName : string.Empty,
+                    BrandLogoUrl     = p.Brand != null ? p.Brand.LogoUrl : string.Empty,
+                    BrandId          = p.BrandId,
+                    IsFeatured       = p.IsFeatured,
+                    SoldCount        = p.SoldCount,
+                    CreatedDate      = p.CreatedDate,
+                    MinPrice         = p.Variants.Select(v => v.Price).OrderBy(x => x).FirstOrDefault(),
+                    MinOriginalPrice = p.Variants.OrderBy(v => v.Price).Select(v => (decimal?)(v.OriginalPrice ?? v.Price)).FirstOrDefault(),
+                    OldPrice         = p.Variants.OrderBy(v => v.Price).Select(v => (decimal?)(v.OriginalPrice ?? v.Price)).FirstOrDefault(),
+                    DefaultVariantId = p.Variants.OrderBy(v => v.Price).Select(v => v.ProductVariantId).FirstOrDefault(),
+                    PrimaryImageUrl  = p.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault()
+                                       ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? string.Empty,
+                    StockCount       = p.Variants.Sum(v => v.StockQuantity),
+                    IsInStock        = p.Variants.Any(v => v.StockQuantity > 0),
+                })
+                .ToListAsync();
         }
 
         private static decimal ApplyDiscount(decimal originalPrice, MotoShop.Data.Enums.DiscountType discountType, decimal discountValue)
@@ -608,9 +641,13 @@ namespace MotoShop.Business.Services
 
         public async Task<List<CategoryWithProductsDto>> GetCategoryWithProductsAsync(int categoriesCount = 4, int productsPerCategory = 4)
         {
-            var topCats = await _uow.Repository<Category>().Find(c => c.ParentId == null && c.Products.Any(p => p.IsActive && !p.IsDeleted))
+            var topCats = await _uow.Repository<Category>().Find(c => c.ParentId == null && (
+                    c.Products.Any(p => p.IsActive && !p.IsDeleted) ||
+                    c.SubCategories.Any(sc => sc.Products.Any(p => p.IsActive && !p.IsDeleted))))
                 .AsNoTracking()
-                .OrderByDescending(c => c.Products.Count(p => p.IsActive && !p.IsDeleted))
+                .OrderByDescending(c =>
+                    c.Products.Count(p => p.IsActive && !p.IsDeleted) +
+                    c.SubCategories.Sum(sc => sc.Products.Count(p => p.IsActive && !p.IsDeleted)))
                 .Take(categoriesCount)
                 .Select(c => new { c.CategoryId, c.CategoryName, c.Slug })
                 .ToListAsync();
