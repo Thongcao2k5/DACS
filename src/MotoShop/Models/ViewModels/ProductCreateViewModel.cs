@@ -10,7 +10,6 @@ namespace MotoShop.Models.ViewModels
         public string ProductName { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public int? CategoryId { get; set; }
-        public int? SubCategoryId { get; set; }
         public int? BrandId { get; set; }
         public bool IsFeatured { get; set; }
         public bool IsActive { get; set; } = true;

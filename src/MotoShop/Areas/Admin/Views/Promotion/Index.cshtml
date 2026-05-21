@@ -4,7 +4,6 @@
     Layout = "_AdminLayout";
     var products = ViewBag.Products as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
     var categories = ViewBag.Categories as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
-    var subCategories = ViewBag.SubCategories as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
     var productVariants = ViewBag.ProductVariants as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
     var currentType = ViewBag.Type as string;
     var currentActive = ViewBag.IsActive as string;
@@ -199,7 +198,6 @@
                             <select name="ApplyType" id="pApplyType" class="form-select">
                                 <option value="All">Toan bo don hang</option>
                                 <option value="Category">Theo danh muc</option>
-                                <option value="SubCategory">Theo danh muc con</option>
                                 <option value="Product" selected>Theo san pham</option>
                                 <option value="ProductVariantSKU">Theo SKU / bien the</option>
                             </select>
@@ -272,16 +270,6 @@
                             @foreach (var c in categories)
                             {
                                 <label><span><input class="form-check-input me-2 category-check" type="checkbox" name="categoryIds" value="@c.CategoryId">@c.CategoryName</span></label>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="mt-4 promo-scope promo-subcategories">
-                        <label class="form-label fw-bold small">Chon danh muc con ap dung</label>
-                        <div class="product-picker">
-                            @foreach (var sc in subCategories)
-                            {
-                                <label><span><input class="form-check-input me-2 subcategory-check" type="checkbox" name="subCategoryIds" value="@sc.Id">@sc.CategoryName - @sc.Name</span></label>
                             }
                         </div>
                     </div>
@@ -387,7 +375,6 @@
             if (type === 'Campaign') document.querySelector('.promo-campaign').style.display = '';
 
             if (applyType === 'Category') document.querySelector('.promo-categories').style.display = '';
-            if (applyType === 'SubCategory') document.querySelector('.promo-subcategories').style.display = '';
             if (applyType === 'Product') document.querySelector('.promo-products').style.display = '';
             if (applyType === 'ProductVariantSKU') document.querySelector('.promo-variants').style.display = '';
         }

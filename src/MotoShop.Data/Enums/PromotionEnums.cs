@@ -19,7 +19,6 @@ namespace MotoShop.Data.Enums
     {
         All,
         Category,
-        SubCategory,
         Product,
         ProductVariantSKU
     }
