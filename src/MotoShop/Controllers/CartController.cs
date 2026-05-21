@@ -121,7 +121,7 @@ namespace MotoShop.Controllers
 
                 // SỬ DỤNG PromotionHelper ĐÃ REFACTOR ĐỂ TÍNH GIÁ ĐÚNG
                 decimal displayPrice = variant.ProductId.HasValue
-                    ? await _promotionService.CalculateDiscountAsync(variant.ProductId.Value, variant.Price)
+                    ? await _promotionService.CalculateDiscountAsync(variant.ProductId.Value, variant.Price, variant.ProductVariantId)
                     : variant.Price;
                 decimal originalPrice = variant.Price;
 
@@ -244,7 +244,7 @@ namespace MotoShop.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> CheckCoupon(string code, string orderValue)
+        public async Task<IActionResult> CheckCoupon(string code, string orderValue, int? directVariantId, int directQuantity = 1)
         {
             if (string.IsNullOrEmpty(code)) return Json(new { success = false, message = "Vui lòng nhập mã." });
 
@@ -253,13 +253,58 @@ namespace MotoShop.Controllers
                 return Json(new { success = false, message = "Giá trị đơn hàng không hợp lệ." });
             }
 
-            var result = await _promotionService.ValidateVoucherAsync(code, val);
+            var promotionItems = await GetPromotionItemsForCouponAsync(directVariantId, directQuantity);
+            var result = await _promotionService.ValidateVoucherAsync(code, val, promotionItems);
             return Json(new
             {
                 success = result.IsValid,
                 message = result.Message,
                 discountAmount = result.DiscountAmount
             });
+        }
+
+        private async Task<List<CartItem>> GetPromotionItemsForCouponAsync(int? directVariantId, int directQuantity)
+        {
+            if (directVariantId.HasValue)
+            {
+                var variant = await _context.ProductVariants
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(v => v.ProductVariantId == directVariantId.Value);
+
+                if (variant == null)
+                {
+                    return new List<CartItem>();
+                }
+
+                var price = variant.ProductId.HasValue
+                    ? await _promotionService.CalculateDiscountAsync(variant.ProductId.Value, variant.Price, variant.ProductVariantId)
+                    : variant.Price;
+
+                return new List<CartItem>
+                {
+                    new CartItem
+                    {
+                        ProductVariantId = variant.ProductVariantId,
+                        Quantity = Math.Max(1, directQuantity),
+                        Price = price
+                    }
+                };
+            }
+
+            var userId = GetCartUserId();
+            var cart = await _context.Carts
+                .AsNoTracking()
+                .Include(c => c.CartItems)
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            return cart?.CartItems
+                .Select(i => new CartItem
+                {
+                    ProductVariantId = i.ProductVariantId,
+                    Quantity = i.Quantity,
+                    Price = i.Price
+                })
+                .ToList() ?? new List<CartItem>();
         }
 
         [Microsoft.AspNetCore.Authorization.Authorize]

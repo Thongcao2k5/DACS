@@ -36,7 +36,7 @@ namespace MotoShop.Business.Services
             if (variant == null || variant.StockQuantity < quantity) return false;
 
             decimal finalPrice = variant.ProductId.HasValue
-                ? await _promotionService.CalculateDiscountAsync(variant.ProductId.Value, variant.Price)
+                ? await _promotionService.CalculateDiscountAsync(variant.ProductId.Value, variant.Price, variant.ProductVariantId)
                 : variant.Price;
 
             var cart = await _unitOfWork.Repository<MotoShop.Data.Models.Cart>()
@@ -218,7 +218,7 @@ namespace MotoShop.Business.Services
                     if (guestItem.Quantity < 1 || stock < 1) continue;
                     // [H1-FIX] Tính lại giá theo khuyến mãi hiện tại thay vì dùng giá cũ từ guest cart
                     decimal currentPrice = variant.ProductId.HasValue
-                        ? await _promotionService.CalculateDiscountAsync(variant.ProductId.Value, variant.Price)
+                        ? await _promotionService.CalculateDiscountAsync(variant.ProductId.Value, variant.Price, guestItem.ProductVariantId)
                         : variant.Price;
                     var newItem = new CartItem
                     {

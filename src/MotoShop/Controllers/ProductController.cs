@@ -155,29 +155,29 @@ namespace MotoShop.Controllers
             page = Math.Max(1, page);
             pageSize = Math.Clamp(pageSize, 1, 100);
             var products = await _productService.GetPagedProductsAsync(null, null, null, sort, page, pageSize, null, null, null, null, slug);
-            ViewBag.UsageName = usage.Name;
-            ViewBag.TotalProducts = products.TotalCount;
-            ViewBag.From = products.TotalCount > 0 ? (page - 1) * pageSize + 1 : 0;
-            ViewBag.To = Math.Min(page * pageSize, products.TotalCount);
-            ViewBag.SearchTerm = null;
-            ViewBag.Sort = sort;
-            ViewBag.CurrentCategoryId = null;
-            ViewBag.CurrentBrandId = null;
-            ViewBag.CategoryListItems = await _categoryService.GetAllAsync();
-            ViewBag.BrandListItems = (await _productService.GetAllBrandsAsync()).ToList();
-            ViewBag.CategoryProductCount = await _productService.GetProductCountByCategoryAsync();
-            ViewBag.BrandProductCount = await _productService.GetProductCountByBrandAsync();
-            ViewBag.SortList = new List<SelectListItem>
+            var categories = (await _categoryService.GetAllAsync()).ToList();
+            var brands = (await _productService.GetAllBrandsAsync()).ToList();
+            var maxPriceLimit = await _productService.GetMaxProductPriceAsync();
+
+            var vm = new MotoShop.Models.ViewModels.ProductListViewModel
             {
-                new SelectListItem { Value = "newest", Text = "Moi nhat", Selected = (sort == "newest" || string.IsNullOrEmpty(sort)) },
-                new SelectListItem { Value = "price_asc", Text = "Gia thap den cao", Selected = sort == "price_asc" },
-                new SelectListItem { Value = "price_desc", Text = "Gia cao den thap", Selected = sort == "price_desc" },
-                new SelectListItem { Value = "az", Text = "Ten A-Z", Selected = sort == "az" },
-                new SelectListItem { Value = "za", Text = "Ten Z-A", Selected = sort == "za" }
+                PagedProducts = products,
+                Categories = categories,
+                Brands = brands,
+                CategoryProductCount = await _productService.GetProductCountByCategoryAsync(),
+                BrandProductCount = await _productService.GetProductCountByBrandAsync(),
+                CurrentKeyword = null,
+                CurrentCategoryId = null,
+                CurrentBrandId = null,
+                CurrentSort = sort,
+                IsDiscountActive = false,
+                IsInStockActive = false,
+                SelectedMinPrice = 0,
+                SelectedMaxPrice = maxPriceLimit,
+                MaxPriceLimit = maxPriceLimit,
+                PageTitle = $"Cong dung: {usage.Name}",
+                PageSubtitle = $"{products.TotalCount} san pham phu hop voi cong dung {usage.Name}"
             };
-            ViewBag.MaxPriceLimit = await _productService.GetMaxProductPriceAsync();
-            ViewBag.SelectedMinPrice = 0;
-            ViewBag.SelectedMaxPrice = ViewBag.MaxPriceLimit;
             ViewBag.SortList = new List<SelectListItem>
             {
                 new SelectListItem { Value = "newest", Text = "Mới nhất", Selected = (sort == "newest" || string.IsNullOrEmpty(sort)) },
@@ -186,7 +186,7 @@ namespace MotoShop.Controllers
                 new SelectListItem { Value = "az", Text = "Tên A-Z", Selected = (sort == "az") },
                 new SelectListItem { Value = "za", Text = "Tên Z-A", Selected = (sort == "za") }
             };
-            return View("Index", products);
+            return View("Index", vm);
         }
 
         [HttpGet]
@@ -371,7 +371,7 @@ namespace MotoShop.Controllers
                 if (defaultVar != null) {
                     decimal basePrice = defaultVar.OriginalPrice ?? defaultVar.Price;
                     // [M3-FIX] Dùng PromotionService thay vì tính tay — nhất quán với CartService/OrderService
-                    decimal discountedPrice = await _promotionService.CalculateDiscountAsync(product.ProductId, basePrice);
+                    decimal discountedPrice = await _promotionService.CalculateDiscountAsync(product.ProductId, basePrice, defaultVar.ProductVariantId);
                     if (discountedPrice < basePrice) {
                         ViewBag.PromotionPrice = discountedPrice;
                         ViewBag.PromotionOriginalPrice = basePrice;

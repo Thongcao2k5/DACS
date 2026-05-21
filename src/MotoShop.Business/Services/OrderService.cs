@@ -62,7 +62,7 @@ namespace MotoShop.Business.Services
                             return (false, "Sản phẩm không đủ tồn kho.", 0);
 
                         decimal directPrice = variant.ProductId.HasValue
-                            ? await _promotionService.CalculateDiscountAsync(variant.ProductId.Value, variant.Price)
+                            ? await _promotionService.CalculateDiscountAsync(variant.ProductId.Value, variant.Price, variant.ProductVariantId)
                             : variant.Price;
 
                         orderItemsToCreate.Add(new OrderItem {
@@ -88,7 +88,7 @@ namespace MotoShop.Business.Services
                                 return (false, $"Sản phẩm '{productVariant?.VariantName}' không đủ tồn kho.", 0);
 
                             var discountedPrice = productVariant.ProductId.HasValue
-                                ? await _promotionService.CalculateDiscountAsync(productVariant.ProductId.Value, productVariant.Price)
+                                ? await _promotionService.CalculateDiscountAsync(productVariant.ProductId.Value, productVariant.Price, productVariant.ProductVariantId)
                                 : productVariant.Price;
                             orderItemsToCreate.Add(new OrderItem {
                                 ProductVariantId = item.ProductVariantId,
@@ -133,17 +133,24 @@ namespace MotoShop.Business.Services
                     // 3. TÍNH TOÁN GIẢM GIÁ & SHIP
                     decimal discountAmount = 0;
                     discountAmount += Math.Max(0, originalSubTotal - subTotal); // Flash Sale per-item discount
-                    decimal discountedSubTotal = await _promotionService.CalculateOrderDiscountAsync(subTotal, new List<CartItem>());
+                    var promotionItems = orderItemsToCreate.Select(item => new CartItem
+                    {
+                        ProductVariantId = item.ProductVariantId!.Value,
+                        Quantity = item.Quantity,
+                        Price = item.Price
+                    }).ToList();
+
+                    decimal discountedSubTotal = await _promotionService.CalculateOrderDiscountAsync(subTotal, promotionItems);
                     discountAmount += subTotal - discountedSubTotal;
 
                     if (!string.IsNullOrEmpty(checkoutData.CouponCode))
                     {
                         checkoutData.CouponId = null;
 
-                        var voucherValidation = await _promotionService.ValidateVoucherAsync(checkoutData.CouponCode, discountedSubTotal);
+                        var voucherValidation = await _promotionService.ValidateVoucherAsync(checkoutData.CouponCode, discountedSubTotal, promotionItems);
                         if (voucherValidation.IsValid)
                         {
-                            var totalAfterVoucher = await _promotionService.ApplyVoucherAsync(checkoutData.CouponCode, discountedSubTotal);
+                            var totalAfterVoucher = await _promotionService.ApplyVoucherAsync(checkoutData.CouponCode, discountedSubTotal, promotionItems);
                             discountAmount += discountedSubTotal - totalAfterVoucher;
                             discountedSubTotal = totalAfterVoucher;
                         }

@@ -13,10 +13,10 @@ namespace MotoShop.Business.Interfaces
         Task<List<PromotionDto>> GetFeaturedAsync();
         Task<List<ProductDto>> GetFlashSaleProductsAsync(int count = 12);
 
-        Task<decimal> CalculateDiscountAsync(int productId, decimal originalPrice);
+        Task<decimal> CalculateDiscountAsync(int productId, decimal originalPrice, int? productVariantId = null);
         Task<decimal> CalculateOrderDiscountAsync(decimal orderTotal, List<CartItem> items);
-        Task<decimal> ApplyVoucherAsync(string code, decimal orderTotal);
-        Task<(bool IsValid, decimal DiscountAmount, string Message)> ValidateVoucherAsync(string code, decimal orderTotal);
+        Task<decimal> ApplyVoucherAsync(string code, decimal orderTotal, List<CartItem>? items = null);
+        Task<(bool IsValid, decimal DiscountAmount, string Message)> ValidateVoucherAsync(string code, decimal orderTotal, List<CartItem>? items = null);
 
         Task<PromotionDto> CreateAsync(PromotionDto dto);
         Task<bool> UpdateAsync(int id, PromotionDto dto);

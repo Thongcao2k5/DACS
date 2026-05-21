@@ -45,6 +45,8 @@ namespace MotoShop.Business.Services
             var promotions = await _context.Promotions
                 .AsNoTracking()
                 .Include(p => p.PromotionProducts)
+                .Include(p => p.PromotionCategories)
+                .Include(p => p.PromotionProductVariants)
                 .OrderByDescending(p => p.StartDate)
                 .ToListAsync();
 
@@ -168,9 +170,9 @@ namespace MotoShop.Business.Services
                 .ToList();
         }
 
-        public async Task<decimal> CalculateDiscountAsync(int productId, decimal originalPrice)
+        public async Task<decimal> CalculateDiscountAsync(int productId, decimal originalPrice, int? productVariantId = null)
         {
-            var promotion = await GetBestPromotionForProductAsync(productId, new[]
+            var promotion = await GetBestPromotionForProductAsync(productId, productVariantId, new[]
             {
                 PromotionType.FlashSale,
                 PromotionType.ProductDiscount
@@ -186,25 +188,25 @@ namespace MotoShop.Business.Services
 
         public async Task<decimal> CalculateOrderDiscountAsync(decimal orderTotal, List<CartItem> items)
         {
-            var promotion = await GetBestOrderPromotionAsync();
-            if (promotion == null)
+            var promotions = await GetActiveOrderPromotionsAsync();
+            foreach (var promotion in promotions)
             {
-                return Math.Max(0, orderTotal);
+                var eligibleTotal = await GetEligibleTotalAsync(promotion, orderTotal, items);
+                if (eligibleTotal <= 0)
+                {
+                    continue;
+                }
+
+                var discountedEligibleTotal = ApplyDiscount(eligibleTotal, promotion);
+                return Math.Max(0, orderTotal - (eligibleTotal - discountedEligibleTotal));
             }
 
-            var eligibleTotal = await GetEligibleTotalAsync(promotion, items);
-            if (eligibleTotal <= 0)
-            {
-                return Math.Max(0, orderTotal);
-            }
-
-            var discountedEligibleTotal = ApplyDiscount(eligibleTotal, promotion);
-            return Math.Max(0, orderTotal - (eligibleTotal - discountedEligibleTotal));
+            return Math.Max(0, orderTotal);
         }
 
-        public async Task<decimal> ApplyVoucherAsync(string code, decimal orderTotal)
+        public async Task<decimal> ApplyVoucherAsync(string code, decimal orderTotal, List<CartItem>? items = null)
         {
-            var validation = await ValidateVoucherAsync(code, orderTotal);
+            var validation = await ValidateVoucherAsync(code, orderTotal, items);
             if (!validation.IsValid)
                 return Math.Max(0, orderTotal);
 
@@ -227,7 +229,7 @@ namespace MotoShop.Business.Services
             return Math.Max(0, orderTotal - validation.DiscountAmount);
         }
 
-        public async Task<(bool IsValid, decimal DiscountAmount, string Message)> ValidateVoucherAsync(string code, decimal orderTotal)
+        public async Task<(bool IsValid, decimal DiscountAmount, string Message)> ValidateVoucherAsync(string code, decimal orderTotal, List<CartItem>? items = null)
         {
             if (string.IsNullOrWhiteSpace(code))
             {
@@ -261,8 +263,14 @@ namespace MotoShop.Business.Services
                 return (false, 0, "Đơn hàng chưa đạt giá trị tối thiểu.");
             }
 
-            var discountAmount = ApplyDiscount(orderTotal, promotion);
-            discountAmount = Math.Max(0, orderTotal - discountAmount);
+            var eligibleTotal = await GetEligibleTotalAsync(promotion, orderTotal, items);
+            if (eligibleTotal <= 0)
+            {
+                return (false, 0, "Voucher khong ap dung cho san pham trong don hang.");
+            }
+
+            var discountedEligibleTotal = ApplyDiscount(eligibleTotal, promotion);
+            var discountAmount = Math.Max(0, eligibleTotal - discountedEligibleTotal);
 
             return (true, discountAmount, "Voucher hợp lệ.");
         }
@@ -276,6 +284,7 @@ namespace MotoShop.Business.Services
                 Description = dto.Description,
                 PromotionType = ParsePromotionType(dto.PromotionType),
                 DiscountType = ParseDiscountType(dto.DiscountType),
+                ApplyType = ParseApplyType(dto.ApplyType),
                 DiscountValue = dto.DiscountValue,
                 MaxDiscountAmount = dto.MaxDiscountAmount,
                 MinOrderAmount = dto.MinOrderAmount,
@@ -302,7 +311,7 @@ namespace MotoShop.Business.Services
                     await _promotionRepository.AddAsync(promotion);
                     await _unitOfWork.CompleteAsync();
 
-                    if (dto.ProductIds != null)
+                    if (promotion.ApplyType == PromotionApplyType.Product && dto.ProductIds != null)
                     {
                         var links = dto.ProductIds.Distinct().Select(productId => new PromotionProduct
                         {
@@ -313,6 +322,34 @@ namespace MotoShop.Business.Services
                         if (links.Any())
                         {
                             await _unitOfWork.Repository<PromotionProduct>().AddRangeAsync(links);
+                            await _unitOfWork.CompleteAsync();
+                        }
+                    }
+                    else if (promotion.ApplyType == PromotionApplyType.Category && dto.CategoryIds != null)
+                    {
+                        var links = dto.CategoryIds.Distinct().Select(categoryId => new PromotionCategory
+                        {
+                            PromotionId = promotion.Id,
+                            CategoryId = categoryId
+                        }).ToList();
+
+                        if (links.Any())
+                        {
+                            await _unitOfWork.Repository<PromotionCategory>().AddRangeAsync(links);
+                            await _unitOfWork.CompleteAsync();
+                        }
+                    }
+                    else if (promotion.ApplyType == PromotionApplyType.ProductVariantSKU && dto.ProductVariantIds != null)
+                    {
+                        var links = dto.ProductVariantIds.Distinct().Select(productVariantId => new PromotionProductVariant
+                        {
+                            PromotionId = promotion.Id,
+                            ProductVariantId = productVariantId
+                        }).ToList();
+
+                        if (links.Any())
+                        {
+                            await _unitOfWork.Repository<PromotionProductVariant>().AddRangeAsync(links);
                             await _unitOfWork.CompleteAsync();
                         }
                     }
@@ -339,6 +376,8 @@ namespace MotoShop.Business.Services
                 {
                     var promotion = await _context.Promotions
                         .Include(p => p.PromotionProducts)
+                        .Include(p => p.PromotionCategories)
+                        .Include(p => p.PromotionProductVariants)
                         .FirstOrDefaultAsync(p => p.Id == id);
 
                     if (promotion == null)
@@ -351,6 +390,7 @@ namespace MotoShop.Business.Services
                     promotion.Description = dto.Description;
                     promotion.PromotionType = ParsePromotionType(dto.PromotionType);
                     promotion.DiscountType = ParseDiscountType(dto.DiscountType);
+                    promotion.ApplyType = ParseApplyType(dto.ApplyType);
                     promotion.DiscountValue = dto.DiscountValue;
                     promotion.MaxDiscountAmount = dto.MaxDiscountAmount;
                     promotion.MinOrderAmount = dto.MinOrderAmount;
@@ -366,21 +406,40 @@ namespace MotoShop.Business.Services
                     promotion.BackgroundColor = dto.BackgroundColor;
                     promotion.UpdatedAt = DateTime.Now;
 
-                    if (dto.ProductIds != null)
-                    {
-                        _context.PromotionProducts.RemoveRange(promotion.PromotionProducts);
-                        await _context.SaveChangesAsync();
+                    _context.PromotionProducts.RemoveRange(promotion.PromotionProducts);
+                    _context.PromotionCategories.RemoveRange(promotion.PromotionCategories);
+                    _context.PromotionProductVariants.RemoveRange(promotion.PromotionProductVariants);
+                    await _context.SaveChangesAsync();
 
+                    if (promotion.ApplyType == PromotionApplyType.Product && dto.ProductIds != null)
+                    {
                         var links = dto.ProductIds.Distinct().Select(productId => new PromotionProduct
                         {
                             PromotionId = promotion.Id,
                             ProductId = productId
                         }).ToList();
 
-                        if (links.Any())
+                        if (links.Any()) await _context.PromotionProducts.AddRangeAsync(links);
+                    }
+                    else if (promotion.ApplyType == PromotionApplyType.Category && dto.CategoryIds != null)
+                    {
+                        var links = dto.CategoryIds.Distinct().Select(categoryId => new PromotionCategory
                         {
-                            await _context.PromotionProducts.AddRangeAsync(links);
-                        }
+                            PromotionId = promotion.Id,
+                            CategoryId = categoryId
+                        }).ToList();
+
+                        if (links.Any()) await _context.PromotionCategories.AddRangeAsync(links);
+                    }
+                    else if (promotion.ApplyType == PromotionApplyType.ProductVariantSKU && dto.ProductVariantIds != null)
+                    {
+                        var links = dto.ProductVariantIds.Distinct().Select(productVariantId => new PromotionProductVariant
+                        {
+                            PromotionId = promotion.Id,
+                            ProductVariantId = productVariantId
+                        }).ToList();
+
+                        if (links.Any()) await _context.PromotionProductVariants.AddRangeAsync(links);
                     }
 
                     await _context.SaveChangesAsync();
@@ -405,6 +464,8 @@ namespace MotoShop.Business.Services
                 {
                     var promotion = await _context.Promotions
                         .Include(p => p.PromotionProducts)
+                        .Include(p => p.PromotionCategories)
+                        .Include(p => p.PromotionProductVariants)
                         .FirstOrDefaultAsync(p => p.Id == id);
 
                     if (promotion == null)
@@ -415,6 +476,14 @@ namespace MotoShop.Business.Services
                     if (promotion.PromotionProducts.Any())
                     {
                         _context.PromotionProducts.RemoveRange(promotion.PromotionProducts);
+                    }
+                    if (promotion.PromotionCategories.Any())
+                    {
+                        _context.PromotionCategories.RemoveRange(promotion.PromotionCategories);
+                    }
+                    if (promotion.PromotionProductVariants.Any())
+                    {
+                        _context.PromotionProductVariants.RemoveRange(promotion.PromotionProductVariants);
                     }
 
                     _context.Promotions.Remove(promotion);
@@ -450,15 +519,18 @@ namespace MotoShop.Business.Services
             return await _context.Promotions
                 .AsNoTracking()
                 .Include(p => p.PromotionProducts)
+                .Include(p => p.PromotionCategories)
+                .Include(p => p.PromotionProductVariants)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        private async Task<Promotion?> GetBestPromotionForProductAsync(int productId, IEnumerable<PromotionType> types)
+        private async Task<Promotion?> GetBestPromotionForProductAsync(int productId, int? productVariantId, IEnumerable<PromotionType> types)
         {
             var now = DateTime.Now;
             var product = await _context.Products
                 .AsNoTracking()
                 .Include(p => p.Variants)
+                .Include(p => p.Category)
                 .FirstOrDefaultAsync(p => p.ProductId == productId);
 
             if (product == null) return null;
@@ -472,43 +544,48 @@ namespace MotoShop.Business.Services
                 .ToListAsync();
 
             return activePromotions
-                .Where(p => IsPromotionApplicableToProduct(p, product, null))
+                .Where(p => IsPromotionApplicableToProduct(p, product, productVariantId))
                 .OrderByDescending(p => GetTypePriority(p.PromotionType))
                 .ThenByDescending(p => p.Priority)
                 .ThenByDescending(p => p.DiscountValue)
                 .FirstOrDefault();
         }
 
-        private async Task<Promotion?> GetBestOrderPromotionAsync()
+        private async Task<List<Promotion>> GetActiveOrderPromotionsAsync()
         {
             var now = DateTime.Now;
-            var activePromotions = await _context.Promotions
+            return await _context.Promotions
                 .AsNoTracking()
                 .Include(p => p.PromotionProducts)
                 .Include(p => p.PromotionCategories)
                 .Include(p => p.PromotionProductVariants)
-                .Where(p => p.IsActive && p.StartDate <= now && p.EndDate >= now)
-                .ToListAsync();
-
-            return activePromotions
-                .Where(p => p.PromotionType == PromotionType.OrderDiscount || p.PromotionType == PromotionType.Campaign)
+                .Where(p => p.IsActive
+                    && p.StartDate <= now
+                    && p.EndDate >= now
+                    && (p.PromotionType == PromotionType.OrderDiscount || p.PromotionType == PromotionType.Campaign))
                 .OrderByDescending(p => GetTypePriority(p.PromotionType))
                 .ThenByDescending(p => p.Priority)
                 .ThenByDescending(p => p.DiscountValue)
-                .FirstOrDefault();
+                .ToListAsync();
         }
 
-        private async Task<decimal> GetEligibleTotalAsync(Promotion promotion, List<CartItem> items)
+        private async Task<decimal> GetEligibleTotalAsync(Promotion promotion, decimal orderTotal, List<CartItem>? items)
         {
-            if (promotion.ApplyType == PromotionApplyType.All || items == null || !items.Any())
+            if (promotion.ApplyType == PromotionApplyType.All)
             {
-                return items == null || !items.Any() ? 0 : items.Sum(i => i.Price * i.Quantity);
+                return orderTotal;
+            }
+
+            if (items == null || !items.Any())
+            {
+                return 0;
             }
 
             var variantIds = items.Select(i => i.ProductVariantId).Distinct().ToList();
             var variants = await _context.ProductVariants
                 .AsNoTracking()
                 .Include(v => v.Product)
+                    .ThenInclude(p => p!.Category)
                 .Where(v => variantIds.Contains(v.ProductVariantId))
                 .ToDictionaryAsync(v => v.ProductVariantId);
 
@@ -524,7 +601,9 @@ namespace MotoShop.Business.Services
             return promotion.ApplyType switch
             {
                 PromotionApplyType.All => true,
-                PromotionApplyType.Category => product.CategoryId.HasValue && promotion.PromotionCategories.Any(pc => pc.CategoryId == product.CategoryId.Value),
+                PromotionApplyType.Category => product.CategoryId.HasValue && promotion.PromotionCategories.Any(pc =>
+                    pc.CategoryId == product.CategoryId.Value ||
+                    (product.Category != null && product.Category.ParentId.HasValue && pc.CategoryId == product.Category.ParentId.Value)),
                 PromotionApplyType.Product => promotion.PromotionProducts.Any(pp => pp.ProductId == product.ProductId),
                 PromotionApplyType.ProductVariantSKU => productVariantId.HasValue
                     ? promotion.PromotionProductVariants.Any(pv => pv.ProductVariantId == productVariantId.Value)
@@ -537,6 +616,9 @@ namespace MotoShop.Business.Services
         {
             var dto = _mapper.Map<PromotionDto>(promotion);
             dto.ProductIds = promotion.PromotionProducts?.Select(pp => pp.ProductId).Distinct().ToList();
+            dto.CategoryIds = promotion.PromotionCategories?.Select(pc => pc.CategoryId).Distinct().ToList();
+            dto.ProductVariantIds = promotion.PromotionProductVariants?.Select(pv => pv.ProductVariantId).Distinct().ToList();
+            dto.ApplyType = promotion.ApplyType.ToString();
             dto.UsedCount = promotion.UsedCount;
             dto.UsageLimit = promotion.UsageLimit;
             dto.Priority = promotion.Priority;
@@ -559,6 +641,13 @@ namespace MotoShop.Business.Services
             return Enum.TryParse<DiscountType>(value, true, out var parsed)
                 ? parsed
                 : DiscountType.Percent;
+        }
+
+        private static PromotionApplyType ParseApplyType(string? value)
+        {
+            return Enum.TryParse<PromotionApplyType>(value, true, out var parsed)
+                ? parsed
+                : PromotionApplyType.Product;
         }
 
         private static DateTime ParseStartDate(string? value)

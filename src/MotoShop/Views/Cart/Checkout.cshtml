@@ -684,7 +684,10 @@
             this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
             try {
-                const res = await fetch(`/Cart/CheckCoupon?code=${code}&orderValue=${orderValue}`);
+                const directVariantId = document.querySelector('[name="DirectVariantId"]')?.value || '';
+                const directQuantity = document.querySelector('[name="DirectQuantity"]')?.value || '1';
+                const directQuery = directVariantId ? `&directVariantId=${directVariantId}&directQuantity=${directQuantity}` : '';
+                const res = await fetch(`/Cart/CheckCoupon?code=${code}&orderValue=${orderValue}${directQuery}`);
                 const data = await res.json();
                 
                 if (data.success) {
