@@ -73,7 +73,7 @@ namespace MotoShop.Business.Services
                 LicensePlate = model.LicensePlate,
                 Notes = model.Note,
                 DepositAmount = depositAmount,
-                DepositStatus = "Unpaid",
+                DepositStatus = DepositStatusConst.Unpaid,
                 ExpireAt = DateTime.Now.AddHours(_config.GetValue<int>("Booking:ExpireAfterHours", 2))
             };
 
@@ -199,7 +199,7 @@ namespace MotoShop.Business.Services
             }
 
             booking.Status = BookingStatusConst.Confirmed;
-            booking.DepositStatus = "Paid";
+            booking.DepositStatus = DepositStatusConst.Paid;
             booking.TransferProof = transferProof;
             booking.ConfirmedAt = DateTime.Now;
 

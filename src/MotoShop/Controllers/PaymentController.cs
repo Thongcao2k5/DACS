@@ -6,6 +6,7 @@ using MotoShop.Business.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using MotoShop.Data.Constants;
 using System;
 using System.Threading.Tasks;
 
@@ -181,10 +182,10 @@ namespace MotoShop.Controllers
 
                 // Atomic idempotency — tránh race condition khi VNPay gọi callback 2 lần
                 var bookingRows = await _context.ServiceBookings
-                    .Where(b => b.BookingId == bookingId && b.DepositStatus != "Paid")
+                    .Where(b => b.BookingId == bookingId && b.DepositStatus != DepositStatusConst.Paid)
                     .ExecuteUpdateAsync(b => b
-                        .SetProperty(x => x.Status, "Confirmed")
-                        .SetProperty(x => x.DepositStatus, "Paid")
+                        .SetProperty(x => x.Status, BookingStatusConst.Confirmed)
+                        .SetProperty(x => x.DepositStatus, DepositStatusConst.Paid)
                         .SetProperty(x => x.ConfirmedAt, DateTime.Now));
 
                 if (bookingRows > 0)

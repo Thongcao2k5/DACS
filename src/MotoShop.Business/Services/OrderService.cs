@@ -179,7 +179,7 @@ namespace MotoShop.Business.Services
                     // 4. TẠO ĐƠN HÀNG
                     var order = new Order {
                         CustomerId = customer.CustomerId, OrderDate = DateTime.Now, TotalAmount = discountedSubTotal + shippingCost,
-                        Status = MotoShop.Data.Constants.OrderStatusConst.Pending, PaymentStatus = "Unpaid", DiscountAmount = discountAmount,
+                        Status = MotoShop.Data.Constants.OrderStatusConst.Pending, PaymentStatus = MotoShop.Data.Constants.PaymentStatusConst.Unpaid, DiscountAmount = discountAmount,
                         ShippingAddress = $"{finalFullName} | {finalPhone} | {finalAddressStr}",
                         Note = checkoutData.Note, ShippingMethodId = shippingMethodId, CouponId = checkoutData.CouponId,
                         ShippingFee = shippingCost,

@@ -88,8 +88,8 @@ namespace MotoShop.Areas.Admin.Controllers
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId);
             if (booking == null) return Json(new { success = false });
 
-            booking.Status = "Confirmed";
-            booking.DepositStatus = "Paid";
+            booking.Status = BookingStatusConst.Confirmed;
+            booking.DepositStatus = DepositStatusConst.Paid;
             booking.ConfirmedAt = DateTime.Now;
             await _context.SaveChangesAsync();
 
@@ -138,7 +138,7 @@ namespace MotoShop.Areas.Admin.Controllers
 
             booking.Status = MotoShop.Data.Constants.BookingStatusConst.Cancelled;
             booking.CancelReason = reason;
-            booking.DepositStatus = "Rejected";
+            booking.DepositStatus = DepositStatusConst.Rejected;
             await _context.SaveChangesAsync();
 
             await _auditLogService.LogActionAsync(

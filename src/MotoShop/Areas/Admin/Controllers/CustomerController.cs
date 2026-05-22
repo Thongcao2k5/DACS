@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MotoShop.Business.Interfaces;
+using MotoShop.Data.Constants;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 using System.Linq;
@@ -92,8 +93,8 @@ namespace MotoShop.Areas.Admin.Controllers
             ViewBag.ServiceHistory = serviceHistory;
             
             // Thống kê
-            ViewBag.TotalSpend = customer.Orders.Where(o => o.Status != "Cancelled").Sum(o => o.TotalAmount);
-            ViewBag.CompletedOrders = customer.Orders.Count(o => o.Status == "Completed");
+            ViewBag.TotalSpend = customer.Orders.Where(o => o.Status != OrderStatusConst.Cancelled && o.Status != OrderStatusConst.DaHuy).Sum(o => o.TotalAmount);
+            ViewBag.CompletedOrders = customer.Orders.Count(o => o.Status == OrderStatusConst.Completed || o.Status == OrderStatusConst.DaHoanThanh);
 
             return View(customer);
         }

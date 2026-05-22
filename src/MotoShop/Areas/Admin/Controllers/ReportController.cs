@@ -146,7 +146,7 @@ namespace MotoShop.Areas.Admin.Controllers
 
             // Chỉ tính đơn hàng + dịch vụ ĐÃ HOÀN THÀNH, dùng CompletedAt làm mốc thời gian
             decimal orderToday = await _context.Orders
-                .Where(o => o.OrderDate.Date == now.Date && o.Status == "Completed")
+                .Where(o => o.OrderDate.Date == now.Date && (o.Status == OrderStatusConst.Completed || o.Status == OrderStatusConst.DaHoanThanh))
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0m;
             decimal svcToday = await CompletedServiceRevenue()
                 .Where(s => s.CompletedAt.Date == now.Date)
@@ -154,7 +154,7 @@ namespace MotoShop.Areas.Admin.Controllers
             ViewBag.RevenueToday = orderToday + svcToday;
 
             decimal orderMonth = await _context.Orders
-                .Where(o => o.OrderDate >= startOfMonth && o.Status == "Completed")
+                .Where(o => o.OrderDate >= startOfMonth && (o.Status == OrderStatusConst.Completed || o.Status == OrderStatusConst.DaHoanThanh))
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0m;
             decimal svcMonth = await CompletedServiceRevenue()
                 .Where(s => s.CompletedAt >= startOfMonth)
@@ -162,7 +162,7 @@ namespace MotoShop.Areas.Admin.Controllers
             ViewBag.RevenueMonth = orderMonth + svcMonth;
 
             decimal orderYear = await _context.Orders
-                .Where(o => o.OrderDate >= startOfYear && o.Status == "Completed")
+                .Where(o => o.OrderDate >= startOfYear && (o.Status == OrderStatusConst.Completed || o.Status == OrderStatusConst.DaHoanThanh))
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0m;
             decimal svcYear = await CompletedServiceRevenue()
                 .Where(s => s.CompletedAt >= startOfYear)
@@ -170,7 +170,7 @@ namespace MotoShop.Areas.Admin.Controllers
             ViewBag.RevenueYear = orderYear + svcYear;
 
             decimal orderLastMon = await _context.Orders
-                .Where(o => o.OrderDate >= lastMonStart && o.OrderDate <= lastMonEnd && o.Status == "Completed")
+                .Where(o => o.OrderDate >= lastMonStart && o.OrderDate <= lastMonEnd && (o.Status == OrderStatusConst.Completed || o.Status == OrderStatusConst.DaHoanThanh))
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0m;
             decimal svcLastMon = await CompletedServiceRevenue()
                 .Where(s => s.CompletedAt >= lastMonStart && s.CompletedAt <= lastMonEnd)
@@ -181,11 +181,11 @@ namespace MotoShop.Areas.Admin.Controllers
 
             // Period comparison KPIs — chỉ đơn hàng Completed
             var curRows = await _context.Orders
-                .Where(o => o.Status == "Completed" && o.OrderDate >= start && o.OrderDate <= end)
+                .Where(o => (o.Status == OrderStatusConst.Completed || o.Status == OrderStatusConst.DaHoanThanh) && o.OrderDate >= start && o.OrderDate <= end)
                 .Select(o => new { o.TotalAmount, o.OrderDate })
                 .ToListAsync();
             var prevRows = await _context.Orders
-                .Where(o => o.Status == "Completed" && o.OrderDate >= prevStart && o.OrderDate <= prevEnd)
+                .Where(o => (o.Status == OrderStatusConst.Completed || o.Status == OrderStatusConst.DaHoanThanh) && o.OrderDate >= prevStart && o.OrderDate <= prevEnd)
                 .Select(o => new { o.TotalAmount })
                 .ToListAsync();
 
@@ -264,7 +264,7 @@ namespace MotoShop.Areas.Admin.Controllers
                 from oi in _context.OrderItems
                 join o  in _context.Orders         on oi.OrderId          equals o.OrderId
                 join pv in _context.ProductVariants on oi.ProductVariantId equals pv.ProductVariantId
-                where o.Status == "Completed"
+                where (o.Status == OrderStatusConst.Completed || o.Status == OrderStatusConst.DaHoanThanh)
                    && o.OrderDate >= start && o.OrderDate <= end
                    && pv.ProductId != null
                 group new { oi } by pv.ProductId into g
@@ -319,7 +319,7 @@ namespace MotoShop.Areas.Admin.Controllers
                 join p  in _context.Products        on pv.ProductId        equals p.ProductId
                 join c  in _context.Categories      on p.CategoryId        equals c.CategoryId into cj
                 from c in cj.DefaultIfEmpty()
-                where o.Status == "Completed" && o.OrderDate >= start && o.OrderDate <= end
+                where (o.Status == OrderStatusConst.Completed || o.Status == OrderStatusConst.DaHoanThanh) && o.OrderDate >= start && o.OrderDate <= end
                 group new { oi, p, c } by new { p.ProductId, p.ProductName, Cat = c != null ? c.CategoryName : "" } into g
                 select new
                 {
@@ -350,8 +350,8 @@ namespace MotoShop.Areas.Admin.Controllers
                 .ToListAsync();
 
             int total     = rows.Count;
-            int completed = rows.Count(o => o.Status == "Completed");
-            int cancelled = rows.Count(o => o.Status == "Cancelled");
+            int completed = rows.Count(o => o.Status == OrderStatusConst.Completed || o.Status == OrderStatusConst.DaHoanThanh);
+            int cancelled = rows.Count(o => o.Status == OrderStatusConst.Cancelled || o.Status == OrderStatusConst.DaHuy);
 
             var statusGroups = rows
                 .GroupBy(o => o.Status ?? "Khác")
@@ -367,7 +367,7 @@ namespace MotoShop.Areas.Admin.Controllers
             var procData = await (
                 from o  in _context.Orders
                 join sh in _context.OrderStatusHistory on o.OrderId equals sh.OrderId
-                where o.OrderDate >= start && o.OrderDate <= end && sh.Status == "Completed"
+                where o.OrderDate >= start && o.OrderDate <= end && (sh.Status == OrderStatusConst.Completed || sh.Status == OrderStatusConst.DaHoanThanh)
                 select new { o.OrderDate, sh.ChangedDate }
             ).ToListAsync();
             double avgHours = procData.Any()
@@ -426,7 +426,7 @@ namespace MotoShop.Areas.Admin.Controllers
 
             // Top 10 spenders — chỉ tính đơn Completed
             var spenderAgg = await _context.Orders
-                .Where(o => o.Status == "Completed"
+                .Where(o => (o.Status == OrderStatusConst.Completed || o.Status == OrderStatusConst.DaHoanThanh)
                          && o.OrderDate >= start && o.OrderDate <= end
                          && o.CustomerId.HasValue)
                 .GroupBy(o => o.CustomerId)
@@ -502,7 +502,7 @@ namespace MotoShop.Areas.Admin.Controllers
             var data = await (
                 from o in _context.Orders
                 join c in _context.Customers on o.CustomerId equals c.CustomerId
-                where o.Status != "Cancelled" && o.OrderDate >= start && o.OrderDate <= end
+                where o.Status != OrderStatusConst.Cancelled && o.Status != OrderStatusConst.DaHuy && o.OrderDate >= start && o.OrderDate <= end
                 group new { o, c } by new { o.CustomerId, c.FullName, c.Email, c.Phone } into g
                 select new
                 {

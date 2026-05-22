@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MotoShop.Data.Constants;
 using MotoShop.Data.Data;
 using Microsoft.AspNetCore.Authorization;
 using MotoShop.Business.DTOs;
@@ -107,7 +108,7 @@ namespace MotoShop.Controllers
 
             // Slots còn lại hôm nay (Ví dụ 16 slots mỗi ngày)
             var bookedToday = await _context.ServiceBookings
-                .CountAsync(b => b.ServiceId == service.ServiceId && b.ServiceDate.HasValue && b.ServiceDate.Value.Date == DateTime.Today && b.Status != "Cancelled");
+                .CountAsync(b => b.ServiceId == service.ServiceId && b.ServiceDate.HasValue && b.ServiceDate.Value.Date == DateTime.Today && b.Status != BookingStatusConst.Cancelled);
             ViewBag.RemainingSlots = Math.Max(0, 16 - bookedToday);
 
             // Cọc trước 30%
@@ -128,7 +129,7 @@ namespace MotoShop.Controllers
                 var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
                 if (customer != null)
                 {
-                    canReview = await _context.ServiceBookings.AnyAsync(b => b.CustomerId == customer.CustomerId && b.ServiceId == service.ServiceId && b.Status == "Completed");
+                    canReview = await _context.ServiceBookings.AnyAsync(b => b.CustomerId == customer.CustomerId && b.ServiceId == service.ServiceId && (b.Status == BookingStatusConst.Completed || b.Status == BookingStatusConst.DaHoanThanh));
                     hasReviewed = await _context.ServiceReviews.AnyAsync(r => r.CustomerId == customer.CustomerId && r.ServiceId == service.ServiceId);
                 }
             }
@@ -325,7 +326,7 @@ namespace MotoShop.Controllers
                 return Forbid();
 
             // Nếu đã thanh toán hoặc đã chọn "Trả sau" thì về trang thành công
-            if (booking.DepositStatus == "Paid" || booking.DepositStatus == "PayLater")
+            if (booking.DepositStatus == DepositStatusConst.Paid || booking.DepositStatus == DepositStatusConst.PayLater)
             {
                 return RedirectToAction("BookingSuccess", new { id = booking.BookingId });
             }
@@ -400,10 +401,10 @@ namespace MotoShop.Controllers
             if (booking.CustomerId.HasValue && booking.CustomerId != currentCustomerId)
                 return Json(new { success = false, message = "Bạn không có quyền thực hiện thao tác này." });
 
-            if (booking.DepositStatus == "Paid" || booking.DepositStatus == "PayLater")
+            if (booking.DepositStatus == DepositStatusConst.Paid || booking.DepositStatus == DepositStatusConst.PayLater)
                 return Json(new { success = false, message = "Lịch hẹn đã được xử lý." });
 
-            booking.DepositStatus = "PayLater";
+            booking.DepositStatus = DepositStatusConst.PayLater;
             await _context.SaveChangesAsync();
 
             return Json(new { success = true });

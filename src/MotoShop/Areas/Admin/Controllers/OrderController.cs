@@ -204,7 +204,7 @@ namespace MotoShop.Areas.Admin.Controllers
                 return Json(new { success = false, message = $"Không thể chuyển từ {currentStatus} sang {status}" });
             }
 
-            if (status == "Cancelled")
+            if (status == OrderStatusConst.Cancelled)
             {
                 // Sử dụng service để có logic hoàn tồn kho
                 var customer = _context.Customers.FirstOrDefault(c => c.CustomerId == order.CustomerId);
@@ -221,15 +221,15 @@ namespace MotoShop.Areas.Admin.Controllers
                     {
                         using var tx = await _context.Database.BeginTransactionAsync();
                         order.Status = status;
-                        if ((status == "Completed" || status == "DaHoanThanh")
+                        if ((status == OrderStatusConst.Completed || status == OrderStatusConst.DaHoanThanh)
                             && order.PaymentMethod == "COD"
-                            && order.PaymentStatus != "Paid")
+                            && order.PaymentStatus != PaymentStatusConst.Paid)
                         {
-                            order.PaymentStatus = "Paid";
+                            order.PaymentStatus = PaymentStatusConst.Paid;
                         }
                         await _context.SaveChangesAsync();
                         // Cập nhật SoldCount khi đơn hoàn thành — trong cùng transaction
-                        if (status == "Completed" || status == "DaHoanThanh")
+                        if (status == OrderStatusConst.Completed || status == OrderStatusConst.DaHoanThanh)
                             await _orderService.CompleteOrderAsync(id);
                         await tx.CommitAsync();
                     });
@@ -250,7 +250,7 @@ namespace MotoShop.Areas.Admin.Controllers
             await _context.SaveChangesAsync();
 
             // Gửi email thông báo trạng thái đơn hàng
-            if (status == "Shipping" || status == "Completed")
+            if (status == OrderStatusConst.Shipping || status == OrderStatusConst.Completed)
             {
                 try
                 {
@@ -265,7 +265,7 @@ namespace MotoShop.Areas.Admin.Controllers
 
                     if (orderForEmail?.Customer?.Email != null)
                     {
-                        if (status == "Shipping")
+                        if (status == OrderStatusConst.Shipping)
                             await _emailService.SendOrderShippingAsync(orderForEmail);
                         else
                             await _emailService.SendOrderCompletedAsync(orderForEmail);

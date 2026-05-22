@@ -39,6 +39,14 @@ namespace MotoShop.Data.Constants
         public const string Cancelled = "Cancelled";
     }
 
+    public static class DepositStatusConst
+    {
+        public const string Unpaid = "Unpaid";
+        public const string Paid = "Paid";
+        public const string PayLater = "PayLater";
+        public const string Rejected = "Rejected";
+    }
+
     public static class CacheKeys
     {
         public const string HomeCategories = "home_categories";

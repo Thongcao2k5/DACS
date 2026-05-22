@@ -56,7 +56,7 @@ namespace MotoShop.Areas.Admin.Controllers
 
             // Card 1: Revenue Today & vs Yesterday (Orders Completed + Service Completed)
             var orderRevenueToday = await _context.Orders
-                .Where(o => o.OrderDate.Date == today && o.Status == OrderStatusConst.Completed)
+                .Where(o => o.OrderDate.Date == today && (o.Status == OrderStatusConst.Completed || o.Status == OrderStatusConst.DaHoanThanh))
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
             var svcRevenueToday = await CompletedServiceRevenue()
                 .Where(s => s.CompletedAt.Date == today)
@@ -64,7 +64,7 @@ namespace MotoShop.Areas.Admin.Controllers
             var revenueToday = orderRevenueToday + svcRevenueToday;
 
             var orderRevenueYesterday = await _context.Orders
-                .Where(o => o.OrderDate.Date == yesterday && o.Status == OrderStatusConst.Completed)
+                .Where(o => o.OrderDate.Date == yesterday && (o.Status == OrderStatusConst.Completed || o.Status == OrderStatusConst.DaHoanThanh))
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
             var svcRevenueYesterday = await CompletedServiceRevenue()
                 .Where(s => s.CompletedAt.Date == yesterday)
@@ -78,7 +78,7 @@ namespace MotoShop.Areas.Admin.Controllers
 
             // Monthly Revenue & Growth (chỉ Completed)
             var orderThisMonth = await _context.Orders
-                .Where(o => o.OrderDate >= firstDayOfMonth && o.Status == OrderStatusConst.Completed)
+                .Where(o => o.OrderDate >= firstDayOfMonth && (o.Status == OrderStatusConst.Completed || o.Status == OrderStatusConst.DaHoanThanh))
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
             var svcThisMonth = await CompletedServiceRevenue()
                 .Where(s => s.CompletedAt >= firstDayOfMonth)
@@ -86,7 +86,7 @@ namespace MotoShop.Areas.Admin.Controllers
             var revenueThisMonth = orderThisMonth + svcThisMonth;
 
             var orderLastMonth = await _context.Orders
-                .Where(o => o.OrderDate >= firstDayOfLastMonth && o.OrderDate < firstDayOfMonth && o.Status == OrderStatusConst.Completed)
+                .Where(o => o.OrderDate >= firstDayOfLastMonth && o.OrderDate < firstDayOfMonth && (o.Status == OrderStatusConst.Completed || o.Status == OrderStatusConst.DaHoanThanh))
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
             var svcLastMonth = await CompletedServiceRevenue()
                 .Where(s => s.CompletedAt >= firstDayOfLastMonth && s.CompletedAt < firstDayOfMonth)
