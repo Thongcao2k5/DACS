@@ -1,0 +1,62 @@
+@model GPULabOrchestrator.Business.DTOs.InstanceCreateDto
+@{ ViewData["Title"] = "Create Instance"; }
+
+<div class="max-w-xl mx-auto">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div class="bg-surface border border-border rounded-xl p-6 space-y-5">
+            <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1.5">Instance Name (optional)</label>
+                <input asp-for="Name" placeholder="e.g., training-run-v2"
+                       class="w-full bg-[#0f1117] border border-border rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"/>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1.5">GPU Model</label>
+                <select asp-for="GpuModel"
+                        class="w-full bg-[#0f1117] border border-border rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors">
+                    @foreach (var m in (string[])ViewBag.GpuModels)
+                    {
+                        <option value="@m">@m</option>
+                    }
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1.5">Container Image</label>
+                <select asp-for="ImageId"
+                        class="w-full bg-[#0f1117] border border-border rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors">
+                    @foreach (var img in (IEnumerable<GPULabOrchestrator.Business.DTOs.ContainerImageDto>)ViewBag.Images)
+                    {
+                        <option value="@img.Id">@img.FullName (@img.Framework)</option>
+                    }
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1.5">Max Hours: <span id="hoursVal">8</span>h</label>
+                <input asp-for="MaxHours" type="range" min="1" max="168" value="8"
+                       oninput="document.getElementById('hoursVal').textContent = this.value"
+                       class="w-full accent-indigo-500"/>
+                <div class="flex justify-between text-xs text-slate-500 mt-1">
+                    <span>1h</span><span>168h (1 week)</span>
+                </div>
+            </div>
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs">
+                    @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <p>@err.ErrorMessage</p>
+                    }
+                </div>
+            }
+
+            <button type="submit"
+                    class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg text-sm transition-colors">
+                Create Instance
+            </button>
+        </div>
+    </form>
+</div>

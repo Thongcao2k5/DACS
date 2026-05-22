@@ -1,0 +1,148 @@
+@model GPULabOrchestrator.Business.DTOs.DashboardDto
+@{ ViewData["Title"] = "Dashboard"; }
+
+<!-- Stat Cards -->
+<div class="grid grid-cols-4 gap-4 mb-6">
+    <div class="stat-card">
+        <p class="text-xs text-slate-400 mb-2">Active Instances</p>
+        <div class="flex items-end justify-between">
+            <span class="text-2xl font-bold text-white">@Model.ActiveInstances</span>
+            <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <p class="text-xs text-slate-400 mb-2">Quota Remaining</p>
+        <div class="flex items-end justify-between mb-2">
+            <span class="text-2xl font-bold text-white">@(Model.Quota?.AvailableHours ?? 0)<span class="text-sm font-normal text-slate-400">h</span></span>
+            <span class="text-xs text-slate-400">/ @(Model.Quota?.TotalHours ?? 0)h</span>
+        </div>
+        @if (Model.Quota != null)
+        {
+            <div class="w-full bg-slate-700 rounded-full h-1.5">
+                <div class="bg-indigo-500 h-1.5 rounded-full" style="width: @(Model.Quota.UsagePercent)%"></div>
+            </div>
+        }
+    </div>
+    <div class="stat-card">
+        <p class="text-xs text-slate-400 mb-2">GPUs Available</p>
+        <div class="flex items-end justify-between">
+            <span class="text-2xl font-bold text-indigo-400">@Model.AvailableGpus</span>
+            <span class="text-xs text-slate-400">/ @Model.TotalGpus total</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <p class="text-xs text-slate-400 mb-2">In Queue</p>
+        <span class="text-2xl font-bold text-yellow-400">@Model.QueuedInstances</span>
+    </div>
+</div>
+
+<!-- Main content -->
+<div class="grid grid-cols-3 gap-4">
+    <!-- Running Instances -->
+    <div class="col-span-2 bg-surface border border-border rounded-xl">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+            <h2 class="text-sm font-semibold text-white">My Instances</h2>
+            <a asp-controller="Instance" asp-action="Index"
+               class="text-xs text-indigo-400 hover:text-indigo-300">View all →</a>
+        </div>
+        <div class="divide-y divide-border">
+            @if (!Model.RecentInstances.Any())
+            {
+                <div class="px-5 py-8 text-center">
+                    <p class="text-slate-500 text-sm">No instances yet.</p>
+                    <a asp-controller="Instance" asp-action="Create"
+                       class="mt-3 inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">
+                        Create your first instance
+                    </a>
+                </div>
+            }
+            @foreach (var inst in Model.RecentInstances)
+            {
+                <div class="flex items-center justify-between px-5 py-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-slate-700 rounded-lg flex items-center justify-center">
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-white">@(inst.Name ?? inst.Id.ToString()[..8])</p>
+                            <p class="text-xs text-slate-400">@inst.GpuModel · @inst.ImageName</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="badge-@inst.Status.ToString().ToLower()">@inst.Status</span>
+                        @if (inst.Uptime.HasValue)
+                        {
+                            <span class="text-xs text-slate-400">@inst.Uptime.Value.Hours h @inst.Uptime.Value.Minutes m</span>
+                        }
+                        <a asp-controller="Instance" asp-action="Detail" asp-route-id="@inst.Id"
+                           class="text-xs text-slate-400 hover:text-white transition-colors">Details</a>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="px-5 py-3 border-t border-border">
+            <a asp-controller="Instance" asp-action="Create"
+               class="flex items-center justify-center gap-1.5 w-full border border-dashed border-border hover:border-indigo-500/50 text-slate-400 hover:text-indigo-400 text-xs py-2 rounded-lg transition-all">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Create New Instance
+            </a>
+        </div>
+    </div>
+
+    <!-- Quota + Activity -->
+    <div class="space-y-4">
+        <div class="bg-surface border border-border rounded-xl p-5">
+            <h2 class="text-sm font-semibold text-white mb-4">Quota Usage</h2>
+            @if (Model.Quota != null)
+            {
+                <div class="space-y-3">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Used</span>
+                        <span class="text-red-400 font-medium">@Model.Quota.UsedHours h</span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Locked</span>
+                        <span class="text-yellow-400 font-medium">@Model.Quota.LockedHours h</span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Available</span>
+                        <span class="text-green-400 font-medium">@Model.Quota.AvailableHours h</span>
+                    </div>
+                    <div class="border-t border-border pt-3">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-400">Total</span>
+                            <span class="text-white font-semibold">@Model.Quota.TotalHours h</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-2">
+                            <div class="bg-gradient-to-r from-red-500 to-indigo-500 h-2 rounded-full" style="width: @(Model.Quota.UsagePercent)%"></div>
+                        </div>
+                    </div>
+                </div>
+            }
+            <a asp-controller="Quota" asp-action="Request"
+               class="mt-4 flex items-center justify-center gap-1.5 w-full text-xs text-indigo-400 hover:text-indigo-300 py-2 border border-indigo-500/20 hover:border-indigo-500/40 rounded-lg transition-all">
+                Request More Quota →
+            </a>
+        </div>
+
+        <div class="bg-surface border border-border rounded-xl p-5">
+            <h2 class="text-sm font-semibold text-white mb-4">Recent Activity</h2>
+            <div class="space-y-3">
+                @foreach (var log in Model.RecentActivity.Take(6))
+                {
+                    <div class="flex items-start gap-2.5">
+                        <div class="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0"></div>
+                        <div>
+                            <p class="text-xs text-slate-300">@log.Action.Replace("_", " ")</p>
+                            <p class="text-xs text-slate-500">@log.OccurredAt.ToString("MMM d, HH:mm")</p>
+                        </div>
+                    </div>
+                }
+                @if (!Model.RecentActivity.Any())
+                {
+                    <p class="text-xs text-slate-500">No recent activity.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

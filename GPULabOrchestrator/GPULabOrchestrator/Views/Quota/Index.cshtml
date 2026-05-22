@@ -1,0 +1,70 @@
+@model GPULabOrchestrator.Business.DTOs.QuotaDto?
+@{ ViewData["Title"] = "Quota"; }
+
+<div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="stat-card">
+        <p class="text-xs text-slate-400 mb-1">Total Hours</p>
+        <p class="text-2xl font-bold text-white">@(Model?.TotalHours ?? 0)h</p>
+    </div>
+    <div class="stat-card">
+        <p class="text-xs text-slate-400 mb-1">Used</p>
+        <p class="text-2xl font-bold text-red-400">@(Model?.UsedHours ?? 0)h</p>
+    </div>
+    <div class="stat-card">
+        <p class="text-xs text-slate-400 mb-1">Available</p>
+        <p class="text-2xl font-bold text-green-400">@(Model?.AvailableHours ?? 0)h</p>
+    </div>
+</div>
+
+@if (Model != null)
+{
+    <div class="bg-surface border border-border rounded-xl p-5 mb-6">
+        <div class="flex justify-between text-xs mb-2">
+            <span class="text-slate-400">Usage</span>
+            <span class="text-slate-300">@Model.UsedHours / @Model.TotalHours hours (@Model.UsagePercent.ToString("F0")%)</span>
+        </div>
+        <div class="w-full bg-slate-700 rounded-full h-3">
+            <div class="bg-gradient-to-r from-indigo-500 to-purple-500 h-3 rounded-full transition-all"
+                 style="width: @(Math.Min(Model.UsagePercent, 100))%"></div>
+        </div>
+        @if (Model.ExpiresAt.HasValue)
+        {
+            <p class="text-xs text-slate-500 mt-2">Expires: @Model.ExpiresAt.Value.ToString("MMMM d, yyyy")</p>
+        }
+    </div>
+}
+
+<div class="flex justify-between items-center mb-4">
+    <h2 class="text-sm font-semibold text-white">My Requests</h2>
+    <a asp-action="Request" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">
+        + Request More Quota
+    </a>
+</div>
+
+<div class="bg-surface border border-border rounded-xl overflow-hidden">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="border-b border-border">
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400">Date</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400">Hours Requested</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400">Reason</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400">Status</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+            @foreach (var req in (IEnumerable<GPULabOrchestrator.Business.DTOs.QuotaRequestDto>)ViewBag.Requests)
+            {
+                <tr class="hover:bg-white/[0.02]">
+                    <td class="px-5 py-3 text-slate-300 text-xs">@req.CreatedAt.ToString("MMM d, yyyy")</td>
+                    <td class="px-5 py-3 text-white font-medium">+@req.RequestedHours h</td>
+                    <td class="px-5 py-3 text-slate-400 text-xs">@(req.Reason ?? "—")</td>
+                    <td class="px-5 py-3">
+                        <span class="@(req.Status == QuotaRequestStatus.Approved || req.Status == QuotaRequestStatus.AutoApproved ? "badge-running" : req.Status == QuotaRequestStatus.Rejected ? "badge-failed" : "badge-queued")">
+                            @req.Status
+                        </span>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

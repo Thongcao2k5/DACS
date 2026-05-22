@@ -1,0 +1,36 @@
+@model GPULabOrchestrator.Business.DTOs.QuotaRequestCreateDto
+@{ ViewData["Title"] = "Request Quota"; }
+
+<div class="max-w-lg mx-auto">
+    <form asp-action="Request" method="post">
+        @Html.AntiForgeryToken()
+        <div class="bg-surface border border-border rounded-xl p-6 space-y-5">
+            <div class="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg text-xs text-indigo-300">
+                Requests ≤ 10 hours are auto-approved instantly. Larger requests go to your Lab Manager.
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1.5">
+                    Hours Requested: <span id="hoursVal">50</span>h
+                </label>
+                <input asp-for="RequestedHours" type="range" min="1" max="500" value="50"
+                       oninput="document.getElementById('hoursVal').textContent = this.value"
+                       class="w-full accent-indigo-500"/>
+                <div class="flex justify-between text-xs text-slate-500 mt-1">
+                    <span>1h (auto)</span><span>500h</span>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1.5">Reason</label>
+                <textarea asp-for="Reason" rows="3" placeholder="e.g., Training final model for ICLR submission..."
+                          class="w-full bg-[#0f1117] border border-border rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors resize-none"></textarea>
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg text-sm transition-colors">
+                Submit Request
+            </button>
+        </div>
+    </form>
+</div>
