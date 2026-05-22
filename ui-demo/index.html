@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GPU Lab Orchestrator</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --base: #090b10;
+  --surface: #0f1219;
+  --card: #141720;
+  --card2: #191d2a;
+  --border: #1e2235;
+  --border2: #252a3d;
+  --indigo: #6366f1;
+  --indigo2: #818cf8;
+  --indigo-dim: rgba(99,102,241,0.12);
+  --indigo-glow: rgba(99,102,241,0.25);
+  --green: #22d3a5;
+  --green-dim: rgba(34,211,165,0.12);
+  --yellow: #fbbf24;
+  --yellow-dim: rgba(251,191,36,0.12);
+  --red: #f87171;
+  --red-dim: rgba(248,113,113,0.12);
+  --orange: #fb923c;
+  --orange-dim: rgba(251,146,60,0.12);
+  --blue: #60a5fa;
+  --blue-dim: rgba(96,165,250,0.12);
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #475569;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Sora', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--base);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Dot grid background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, #1e2235 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Pages */
+.page { display: none; position: relative; z-index: 1; }
+.page.active { display: flex; }
+
+/* ─── LOGIN ──────────────────────────────────────────────── */
+#login {
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-wrap {
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 36px;
+  justify-content: center;
+}
+
+.logo-icon {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, var(--indigo), #a78bfa);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 24px var(--indigo-glow);
+}
+
+.logo-icon svg { width: 22px; height: 22px; color: #fff; }
+
+.login-logo h1 {
+  font-size: 17px; font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+.login-logo span {
+  display: block;
+  font-size: 11px;
+  color: var(--text3);
+  font-family: var(--mono);
+  font-weight: 300;
+}
+
+.login-card {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 36px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--indigo), transparent);
+}
+
+.login-card h2 {
+  font-size: 20px; font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.login-card p {
+  font-size: 13px; color: var(--text2);
+  margin-bottom: 28px;
+}
+
+.form-group { margin-bottom: 18px; }
+
+.form-group label {
+  display: block;
+  font-size: 11px; font-weight: 500;
+  color: var(--text2);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.form-group input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: var(--sans);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus {
+  border-color: var(--indigo);
+  box-shadow: 0 0 0 3px var(--indigo-dim);
+}
+
+.form-group input::placeholder { color: var(--text3); }
+
+.btn-primary {
+  width: 100%;
+  background: var(--indigo);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 13px; font-weight: 600;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+}
+
+.btn-primary:hover {
+  background: #5457e8;
+  box-shadow: 0 4px 20px var(--indigo-glow);
+  transform: translateY(-1px);
+}
+
+.login-hint {
+  margin-top: 20px;
+  padding: 12px 14px;
+  background: var(--indigo-dim);
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 10px;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--indigo2);
+  line-height: 1.8;
+}
+
+/* ─── APP LAYOUT ─────────────────────────────────────────── */
+#app {
+  min-height: 100vh;
+  flex-direction: row;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 236px;
+  min-height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0; top: 0;
+  z-index: 100;
+}
+
+.sidebar-logo {
+  padding: 20px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-logo-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--indigo), #a78bfa);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px var(--indigo-dim);
+}
+
+.sidebar-logo-icon svg { width: 16px; height: 16px; color: #fff; }
+
+.sidebar-logo-text { font-size: 13px; font-weight: 600; letter-spacing: -0.2px; }
+.sidebar-logo-sub { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+
+.sidebar-nav { flex: 1; padding: 14px 10px; }
+
+.nav-section-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 10px 10px 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 1px;
+  border: 1px solid transparent;
+}
+
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.7; }
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+}
+
+.nav-item.active {
+  background: var(--indigo-dim);
+  color: var(--indigo2);
+  border-color: rgba(99,102,241,0.2);
+}
+
+.nav-item.active svg { opacity: 1; }
+
+.nav-badge {
+  margin-left: auto;
+  background: var(--indigo);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 20px;
+  font-family: var(--mono);
+}
+
+.sidebar-footer {
+  padding: 14px 10px;
+  border-top: 1px solid var(--border);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+}
+
+.user-avatar {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, var(--indigo), #a78bfa);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600;
+  flex-shrink: 0;
+}
+
+.user-name { font-size: 12px; font-weight: 500; }
+.user-role {
+  font-size: 10px;
+  color: var(--text3);
+  font-family: var(--mono);
+}
+
+.logout-btn {
+  margin-left: auto;
+  background: none; border: none;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.15s;
+  display: flex;
+}
+
+.logout-btn:hover { color: var(--red); }
+.logout-btn svg { width: 14px; height: 14px; }
+
+/* Main area */
+.main {
+  margin-left: 236px;
+  flex: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky; top: 0; z-index: 10;
+}
+
+.page-title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quota-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--green-dim);
+  border: 1px solid rgba(34,211,165,0.2);
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--green);
+}
+
+.quota-chip::before {
+  content: '';
+  width: 6px; height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--green);
+}
+
+.btn-new {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--indigo);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 13px;
+  font-size: 12px; font-weight: 600;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-new svg { width: 13px; height: 13px; }
+.btn-new:hover { background: #5457e8; box-shadow: 0 2px 12px var(--indigo-glow); }
+
+.content { padding: 24px; flex: 1; }
+
+/* ─── STAT CARDS ─────────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.stat-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--indigo-dim), transparent);
+}
+
+.stat-label {
+  font-size: 10.5px;
+  color: var(--text3);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  font-family: var(--mono);
+  letter-spacing: -1px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.stat-sub {
+  font-size: 11px;
+  color: var(--text3);
+  font-family: var(--mono);
+}
+
+.stat-bar {
+  width: 100%;
+  height: 3px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 1s cubic-bezier(0.4,0,0.2,1);
+}
+
+.stat-pulse {
+  display: inline-flex;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  animation: pulse-ring 2s infinite;
+  position: absolute;
+  top: 18px; right: 18px;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 currentColor; }
+  70% { box-shadow: 0 0 0 5px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* ─── GRID LAYOUT ────────────────────────────────────────── */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 14px;
+}
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.panel-link {
+  font-size: 11px;
+  color: var(--indigo2);
+  cursor: pointer;
+  font-family: var(--mono);
+  text-decoration: none;
+}
+
+.panel-link:hover { color: var(--indigo); }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; }
+
+thead tr { border-bottom: 1px solid var(--border); }
+
+th {
+  padding: 10px 20px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text3);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,0.015); }
+
+td {
+  padding: 11px 20px;
+  font-size: 12.5px;
+  vertical-align: middle;
+}
+
+.instance-name {
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.instance-name:hover { color: var(--indigo2); }
+
+.instance-id {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+.gpu-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text2);
+}
+
+.img-tag {
+  font-size: 10.5px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+/* Status badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 500;
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+
+.badge::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.badge-running { background: var(--green-dim); color: var(--green); }
+.badge-queued { background: var(--yellow-dim); color: var(--yellow); }
+.badge-stopped { background: rgba(71,85,105,0.2); color: #64748b; }
+.badge-suspended { background: var(--orange-dim); color: var(--orange); }
+.badge-failed { background: var(--red-dim); color: var(--red); }
+.badge-allocating { background: var(--blue-dim); color: var(--blue); }
+.badge-available { background: var(--green-dim); color: var(--green); }
+.badge-allocated { background: var(--red-dim); color: var(--red); }
+.badge-maintenance { background: rgba(71,85,105,0.2); color: #64748b; }
+
+.uptime {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text2);
+}
+
+.expires {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.action-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px; font-weight: 500;
+  font-family: var(--sans);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+}
+
+.btn-connect { background: var(--green-dim); color: var(--green); border-color: rgba(34,211,165,0.2); }
+.btn-connect:hover { background: rgba(34,211,165,0.2); }
+.btn-stop { background: var(--yellow-dim); color: var(--yellow); border-color: rgba(251,191,36,0.2); }
+.btn-stop:hover { background: rgba(251,191,36,0.2); }
+.btn-destroy { background: var(--red-dim); color: var(--red); border-color: rgba(248,113,113,0.2); }
+.btn-destroy:hover { background: rgba(248,113,113,0.2); }
+.btn-start { background: var(--blue-dim); color: var(--blue); border-color: rgba(96,165,250,0.2); }
+.btn-start:hover { background: rgba(96,165,250,0.2); }
+
+/* Empty state */
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text3);
+  font-size: 13px;
+}
+
+.add-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px dashed var(--border);
+  font-size: 12px;
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.add-row:hover { color: var(--indigo2); background: var(--indigo-dim); }
+.add-row svg { width: 13px; height: 13px; }
+
+/* ─── QUOTA PANEL ────────────────────────────────────────── */
+.quota-donut-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+}
+
+.donut-svg-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-svg-wrap svg { transform: rotate(-90deg); }
+
+.donut-center {
+  position: absolute;
+  text-align: center;
+}
+
+.donut-center-val {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: var(--mono);
+  display: block;
+}
+
+.donut-center-label {
+  font-size: 10px;
+  color: var(--text3);
+  font-family: var(--mono);
+}
+
+.quota-legend { display: flex; flex-direction: column; gap: 8px; }
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.legend-dot {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.legend-dot::before {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.legend-val {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.quota-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px;
+  border: 1px dashed rgba(99,102,241,0.3);
+  border-radius: 8px;
+  font-size: 11.5px;
+  color: var(--indigo2);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--mono);
+}
+
+.quota-action:hover { background: var(--indigo-dim); border-color: var(--indigo); }
+
+/* Activity */
+.activity-list { padding: 8px 0; }
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 20px;
+  transition: background 0.15s;
+}
+
+.activity-item:hover { background: rgba(255,255,255,0.015); }
+
+.activity-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.activity-action { font-size: 12px; color: var(--text); }
+.activity-time { font-size: 10.5px; color: var(--text3); font-family: var(--mono); margin-top: 2px; }
+
+/* ─── GPU PAGE ───────────────────────────────────────────── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filter-input {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 8px 13px;
+  font-size: 12.5px;
+  color: var(--text);
+  font-family: var(--sans);
+  outline: none;
+  transition: border-color 0.2s;
+  width: 200px;
+}
+
+.filter-input:focus { border-color: var(--indigo); }
+.filter-input::placeholder { color: var(--text3); }
+
+.filter-select {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 8px 13px;
+  font-size: 12.5px;
+  color: var(--text);
+  font-family: var(--sans);
+  outline: none;
+  cursor: pointer;
+}
+
+.gpu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.gpu-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.gpu-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--indigo-dim), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.gpu-card:hover { border-color: rgba(99,102,241,0.3); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+.gpu-card:hover::before { opacity: 1; }
+
+.gpu-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  position: relative;
+}
+
+.gpu-model { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+.gpu-node { font-size: 10.5px; color: var(--text3); font-family: var(--mono); margin-top: 3px; }
+
+.gpu-specs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.spec-chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 10.5px;
+  font-family: var(--mono);
+  color: var(--text2);
+}
+
+.gpu-util {
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.gpu-util-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--text3);
+  margin-bottom: 5px;
+  font-family: var(--mono);
+}
+
+.util-bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.util-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--indigo), #a78bfa);
+}
+
+.btn-rent {
+  width: 100%;
+  padding: 9px;
+  border-radius: 9px;
+  font-size: 12px; font-weight: 600;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  position: relative;
+}
+
+.btn-rent-avail {
+  background: var(--indigo-dim);
+  color: var(--indigo2);
+  border-color: rgba(99,102,241,0.3);
+}
+
+.btn-rent-avail:hover { background: rgba(99,102,241,0.2); border-color: var(--indigo); }
+
+.btn-rent-na {
+  background: rgba(255,255,255,0.02);
+  color: var(--text3);
+  border-color: var(--border);
+  cursor: not-allowed;
+}
+
+/* ─── CREATE INSTANCE ────────────────────────────────────── */
+.create-wrap { max-width: 520px; }
+
+.form-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.form-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--indigo), transparent);
+}
+
+.form-select {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: var(--sans);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.form-select:focus { border-color: var(--indigo); }
+
+.range-wrap { position: relative; }
+
+.range-input {
+  width: 100%;
+  accent-color: var(--indigo);
+  cursor: pointer;
+}
+
+.range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--text3);
+  font-family: var(--mono);
+  margin-top: 5px;
+}
+
+.gpu-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+.gpu-option {
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.gpu-option:hover { border-color: var(--border2); }
+.gpu-option.selected { background: var(--indigo-dim); border-color: var(--indigo); }
+
+.gpu-option-name { font-size: 13px; font-weight: 600; }
+.gpu-option-vram { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-top: 3px; }
+
+/* ─── INSTANCE DETAIL ────────────────────────────────────── */
+.detail-grid { display: grid; grid-template-columns: 1fr 300px; gap: 14px; }
+
+.connect-card {
+  background: var(--green-dim);
+  border: 1px solid rgba(34,211,165,0.2);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.connect-card-left { display: flex; align-items: center; gap: 10px; }
+.connect-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse-ring 2s infinite; color: var(--green); }
+.connect-label { font-size: 13px; font-weight: 600; color: var(--green); }
+.connect-sub { font-size: 11px; color: rgba(34,211,165,0.7); font-family: var(--mono); margin-top: 2px; }
+
+.btn-connect-lg {
+  background: var(--green);
+  color: #042a23;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 12px; font-weight: 700;
+  font-family: var(--sans);
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: all 0.15s;
+}
+
+.btn-connect-lg:hover { box-shadow: 0 0 16px rgba(34,211,165,0.4); }
+
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; }
+
+.info-item { display: flex; flex-direction: column; gap: 4px; }
+.info-key { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+.info-val { font-size: 12.5px; font-family: var(--mono); color: var(--text); }
+
+.terminal-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-top: 14px;
+}
+
+.terminal-header {
+  background: var(--surface);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.terminal-dots { display: flex; gap: 5px; }
+.terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+.terminal-title { font-size: 11px; font-family: var(--mono); color: var(--text3); margin-left: 8px; }
+
+.terminal-body {
+  padding: 14px 16px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.8;
+  color: var(--green);
+  min-height: 120px;
+}
+
+.terminal-prompt { color: var(--text3); }
+.terminal-cmd { color: var(--text); }
+
+/* Snapshot table */
+.snap-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; border-bottom: 1px solid var(--border); }
+.snap-row:last-child { border: none; }
+.snap-label { font-size: 12.5px; }
+.snap-meta { font-size: 10.5px; color: var(--text3); font-family: var(--mono); margin-top: 2px; }
+
+/* Metric cards */
+.metric-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.metric-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.metric-val { font-size: 24px; font-weight: 700; font-family: var(--mono); }
+.metric-unit { font-size: 12px; font-weight: 400; color: var(--text2); }
+
+/* ─── ANIMATIONS ─────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in { animation: fadeInUp 0.3s ease forwards; }
+
+.stagger-1 { animation-delay: 0.05s; opacity: 0; }
+.stagger-2 { animation-delay: 0.1s; opacity: 0; }
+.stagger-3 { animation-delay: 0.15s; opacity: 0; }
+.stagger-4 { animation-delay: 0.2s; opacity: 0; }
+
+/* Page sub-content */
+.sub-page { display: none; }
+.sub-page.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     LOGIN PAGE
+════════════════════════════════════════════════════════ -->
+<div id="login" class="page active">
+  <div class="login-wrap">
+    <div class="login-logo">
+      <div class="logo-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+      </div>
+      <div>
+        <h1>GPU Lab Orchestrator</h1>
+        <span>Research Computing Platform · v1.0</span>
+      </div>
+    </div>
+
+    <div class="login-card fade-in">
+      <h2>Welcome back</h2>
+      <p>Sign in to manage your GPU resources</p>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" placeholder="you@gpulab.edu" value="researcher1@gpulab.edu"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" placeholder="••••••••" value="Research@123"/>
+      </div>
+      <button class="btn-primary" onclick="goToApp()">Sign In →</button>
+      <div class="login-hint">
+        demo accounts:<br/>
+        admin@gpulab.edu / Admin@123<br/>
+        manager@gpulab.edu / Manager@123<br/>
+        researcher1@gpulab.edu / Research@123
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     APP
+════════════════════════════════════════════════════════ -->
+<div id="app" class="page">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+      </div>
+      <div>
+        <div class="sidebar-logo-text">GPU Lab</div>
+        <div class="sidebar-logo-sub">Orchestrator</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="showPage('dashboard')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" onclick="showPage('gpus')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/></svg>
+        GPUs
+        <span class="nav-badge" style="background:var(--green);color:#042a23">5 free</span>
+      </div>
+      <div class="nav-item" onclick="showPage('instances')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        My Instances
+        <span class="nav-badge">3</span>
+      </div>
+      <div class="nav-item" onclick="showPage('quota')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Quota
+      </div>
+
+      <div class="nav-section-label" style="margin-top:10px">Management</div>
+      <div class="nav-item" onclick="showPage('manager')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Quota Requests
+        <span class="nav-badge" style="background:var(--yellow);color:#3a2a00">2</span>
+      </div>
+      <div class="nav-item" onclick="showPage('nodes')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        Nodes
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar">A</div>
+        <div>
+          <div class="user-name">Alice Nguyen</div>
+          <div class="user-role">researcher</div>
+        </div>
+        <button class="logout-btn" onclick="logout()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="topbar">
+      <span class="page-title" id="pageTitle">Dashboard</span>
+      <div class="topbar-right">
+        <div class="quota-chip">142h remaining</div>
+        <button class="btn-new" onclick="showPage('create')">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          New Instance
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ── DASHBOARD ──────────────────────── -->
+      <div id="pg-dashboard" class="sub-page active">
+        <div class="stats-grid">
+          <div class="stat-card fade-in stagger-1">
+            <div class="stat-pulse" style="background:var(--green);color:var(--green)"></div>
+            <div class="stat-label">Active Instances</div>
+            <div class="stat-value" style="color:var(--green)">3</div>
+            <div class="stat-sub">2 running · 1 queued</div>
+          </div>
+          <div class="stat-card fade-in stagger-2">
+            <div class="stat-label">Quota Remaining</div>
+            <div class="stat-value" style="color:var(--indigo2)">142<span style="font-size:14px;color:var(--text3)">h</span></div>
+            <div class="stat-sub">58h used of 200h total</div>
+            <div class="stat-bar"><div class="stat-bar-fill" style="width:71%;background:linear-gradient(90deg,var(--indigo),#a78bfa)"></div></div>
+          </div>
+          <div class="stat-card fade-in stagger-3">
+            <div class="stat-label">GPUs Available</div>
+            <div class="stat-value" style="color:var(--text)">5<span style="font-size:14px;color:var(--text3)">/12</span></div>
+            <div class="stat-sub">worker-01 · worker-02</div>
+            <div class="stat-bar"><div class="stat-bar-fill" style="width:58%;background:var(--orange)"></div></div>
+          </div>
+          <div class="stat-card fade-in stagger-4">
+            <div class="stat-label">Queue Position</div>
+            <div class="stat-value" style="color:var(--yellow)">1</div>
+            <div class="stat-sub">inst-002 waiting</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Running Instances</span>
+              <span class="panel-link" onclick="showPage('instances')">View all →</span>
+            </div>
+            <table>
+              <thead><tr>
+                <th>Instance</th><th>GPU / Image</th><th>Status</th><th>Uptime</th><th>Expires</th><th style="text-align:right">Actions</th>
+              </tr></thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="instance-name" onclick="showPage('detail')">training-run-v3</div>
+                    <div class="instance-id">inst-a1b2c3d4</div>
+                  </td>
+                  <td>
+                    <div class="gpu-tag">RTX 4090</div>
+                    <div class="img-tag">pytorch:2.3-cuda12</div>
+                  </td>
+                  <td><span class="badge badge-running">running</span></td>
+                  <td><span class="uptime">2h 14m</span></td>
+                  <td><span class="expires">Jun 3, 22:00</span></td>
+                  <td>
+                    <div class="action-btns" style="justify-content:flex-end">
+                      <button class="btn-sm btn-connect" onclick="showPage('detail')">Connect</button>
+                      <button class="btn-sm btn-stop">Stop</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="instance-name">bert-finetune</div>
+                    <div class="instance-id">inst-e5f6a7b8</div>
+                  </td>
+                  <td>
+                    <div class="gpu-tag">A100 80GB</div>
+                    <div class="img-tag">tensorflow:2.15-cuda12</div>
+                  </td>
+                  <td><span class="badge badge-queued">queued</span></td>
+                  <td><span class="uptime">—</span></td>
+                  <td><span class="expires">—</span></td>
+                  <td>
+                    <div class="action-btns" style="justify-content:flex-end">
+                      <button class="btn-sm btn-destroy">Cancel</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="instance-name">diffusion-exp</div>
+                    <div class="instance-id">inst-c9d0e1f2</div>
+                  </td>
+                  <td>
+                    <div class="gpu-tag">RTX 4090</div>
+                    <div class="img-tag">jax:0.4-cuda12</div>
+                  </td>
+                  <td><span class="badge badge-suspended">suspended</span></td>
+                  <td><span class="uptime">—</span></td>
+                  <td><span class="expires">—</span></td>
+                  <td>
+                    <div class="action-btns" style="justify-content:flex-end">
+                      <button class="btn-sm btn-start">Resume</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="add-row" onclick="showPage('create')">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Create New Instance
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="panel">
+              <div class="panel-header">
+                <span class="panel-title">Quota Usage</span>
+                <span class="panel-link" onclick="showPage('quota')">Details →</span>
+              </div>
+              <div class="quota-donut-wrap">
+                <div class="donut-svg-wrap">
+                  <svg width="140" height="140" viewBox="0 0 140 140">
+                    <circle cx="70" cy="70" r="54" fill="none" stroke="#1e2235" stroke-width="14"/>
+                    <circle cx="70" cy="70" r="54" fill="none" stroke="#f87171" stroke-width="14" stroke-dasharray="339.3" stroke-dashoffset="240" stroke-linecap="round"/>
+                    <circle cx="70" cy="70" r="54" fill="none" stroke="#fbbf24" stroke-width="14" stroke-dasharray="339.3" stroke-dashoffset="289" stroke-linecap="round" style="transform:rotate(80deg);transform-origin:70px 70px"/>
+                    <circle cx="70" cy="70" r="54" fill="none" stroke="#22d3a5" stroke-width="14" stroke-dasharray="339.3" stroke-dashoffset="100" stroke-linecap="round" style="transform:rotate(133deg);transform-origin:70px 70px"/>
+                  </svg>
+                  <div class="donut-center">
+                    <span class="donut-center-val">200</span>
+                    <span class="donut-center-label">total hours</span>
+                  </div>
+                </div>
+                <div class="quota-legend">
+                  <div class="legend-row">
+                    <span class="legend-dot" style="--c:var(--red)">
+                      <span style="width:8px;height:8px;border-radius:2px;background:var(--red);display:inline-block;flex-shrink:0"></span>
+                      Used
+                    </span>
+                    <span class="legend-val" style="color:var(--red)">58h</span>
+                  </div>
+                  <div class="legend-row">
+                    <span class="legend-dot">
+                      <span style="width:8px;height:8px;border-radius:2px;background:var(--yellow);display:inline-block;flex-shrink:0"></span>
+                      Locked
+                    </span>
+                    <span class="legend-val" style="color:var(--yellow)">10h</span>
+                  </div>
+                  <div class="legend-row">
+                    <span class="legend-dot">
+                      <span style="width:8px;height:8px;border-radius:2px;background:var(--green);display:inline-block;flex-shrink:0"></span>
+                      Available
+                    </span>
+                    <span class="legend-val" style="color:var(--green)">132h</span>
+                  </div>
+                </div>
+                <div class="quota-action" onclick="showPage('quota')">+ Request More Quota</div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header"><span class="panel-title">Recent Activity</span></div>
+              <div class="activity-list">
+                <div class="activity-item">
+                  <div class="activity-dot" style="background:var(--green)"></div>
+                  <div>
+                    <div class="activity-action">Instance training-run-v3 started</div>
+                    <div class="activity-time">2 hours ago</div>
+                  </div>
+                </div>
+                <div class="activity-item">
+                  <div class="activity-dot" style="background:var(--orange)"></div>
+                  <div>
+                    <div class="activity-action">diffusion-exp preempted by Lab Manager</div>
+                    <div class="activity-time">5 hours ago</div>
+                  </div>
+                </div>
+                <div class="activity-item">
+                  <div class="activity-dot" style="background:var(--indigo)"></div>
+                  <div>
+                    <div class="activity-action">Quota request approved: +50h</div>
+                    <div class="activity-time">1 day ago</div>
+                  </div>
+                </div>
+                <div class="activity-item">
+                  <div class="activity-dot" style="background:var(--red)"></div>
+                  <div>
+                    <div class="activity-action">inst-old-exp terminated (quota expired)</div>
+                    <div class="activity-time">2 days ago</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── GPU LIST ─────────────────────── -->
+      <div id="pg-gpus" class="sub-page">
+        <div class="filter-bar">
+          <input class="filter-input" placeholder="Search GPU model..."/>
+          <select class="filter-select">
+            <option>All Status</option>
+            <option>Available</option>
+            <option>Allocated</option>
+            <option>Maintenance</option>
+          </select>
+          <select class="filter-select">
+            <option>All VRAM</option>
+            <option>24 GB</option>
+            <option>40 GB</option>
+            <option>80 GB</option>
+          </select>
+          <span style="margin-left:auto;font-size:11px;color:var(--text3);font-family:var(--mono)">8 GPUs total</span>
+        </div>
+        <div class="gpu-grid">
+          <!-- RTX 4090 available -->
+          <div class="gpu-card">
+            <div class="gpu-card-head">
+              <div>
+                <div class="gpu-model">RTX 4090</div>
+                <div class="gpu-node">worker-01 · GPU:0</div>
+              </div>
+              <span class="badge badge-available">available</span>
+            </div>
+            <div class="gpu-specs">
+              <span class="spec-chip">24 GB VRAM</span>
+              <span class="spec-chip">Ada Lovelace</span>
+              <span class="spec-chip">sm_89</span>
+            </div>
+            <div class="gpu-util">
+              <div class="gpu-util-label"><span>Utilization</span><span>0%</span></div>
+              <div class="util-bar"><div class="util-fill" style="width:0%"></div></div>
+            </div>
+            <button class="btn-rent btn-rent-avail" onclick="showPage('create')">
+              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Rent this GPU
+            </button>
+          </div>
+          <!-- RTX 4090 allocated -->
+          <div class="gpu-card">
+            <div class="gpu-card-head">
+              <div>
+                <div class="gpu-model">RTX 4090</div>
+                <div class="gpu-node">worker-01 · GPU:1</div>
+              </div>
+              <span class="badge badge-allocated">allocated</span>
+            </div>
+            <div class="gpu-specs">
+              <span class="spec-chip">24 GB VRAM</span>
+              <span class="spec-chip">Ada Lovelace</span>
+              <span class="spec-chip">sm_89</span>
+            </div>
+            <div class="gpu-util">
+              <div class="gpu-util-label"><span>Utilization</span><span>94%</span></div>
+              <div class="util-bar"><div class="util-fill" style="width:94%;background:linear-gradient(90deg,var(--orange),var(--red))"></div></div>
+            </div>
+            <button class="btn-rent btn-rent-na" disabled>Not Available</button>
+          </div>
+          <!-- A100 80GB available -->
+          <div class="gpu-card">
+            <div class="gpu-card-head">
+              <div>
+                <div class="gpu-model">A100 SXM4</div>
+                <div class="gpu-node">worker-01 · GPU:2</div>
+              </div>
+              <span class="badge badge-available">available</span>
+            </div>
+            <div class="gpu-specs">
+              <span class="spec-chip">80 GB VRAM</span>
+              <span class="spec-chip">Ampere</span>
+              <span class="spec-chip">sm_80</span>
+            </div>
+            <div class="gpu-util">
+              <div class="gpu-util-label"><span>Utilization</span><span>0%</span></div>
+              <div class="util-bar"><div class="util-fill" style="width:0%"></div></div>
+            </div>
+            <button class="btn-rent btn-rent-avail" onclick="showPage('create')">
+              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Rent this GPU
+            </button>
+          </div>
+          <!-- A100 40GB allocated -->
+          <div class="gpu-card">
+            <div class="gpu-card-head">
+              <div>
+                <div class="gpu-model">A100 PCIe</div>
+                <div class="gpu-node">worker-02 · GPU:2</div>
+              </div>
+              <span class="badge badge-allocated">allocated</span>
+            </div>
+            <div class="gpu-specs">
+              <span class="spec-chip">40 GB VRAM</span>
+              <span class="spec-chip">Ampere</span>
+              <span class="spec-chip">sm_80</span>
+            </div>
+            <div class="gpu-util">
+              <div class="gpu-util-label"><span>Utilization</span><span>71%</span></div>
+              <div class="util-bar"><div class="util-fill" style="width:71%"></div></div>
+            </div>
+            <button class="btn-rent btn-rent-na" disabled>Not Available</button>
+          </div>
+          <!-- RTX 3090 available -->
+          <div class="gpu-card">
+            <div class="gpu-card-head">
+              <div>
+                <div class="gpu-model">RTX 3090</div>
+                <div class="gpu-node">worker-02 · GPU:0</div>
+              </div>
+              <span class="badge badge-available">available</span>
+            </div>
+            <div class="gpu-specs">
+              <span class="spec-chip">24 GB VRAM</span>
+              <span class="spec-chip">Ampere</span>
+              <span class="spec-chip">sm_86</span>
+            </div>
+            <div class="gpu-util">
+              <div class="gpu-util-label"><span>Utilization</span><span>0%</span></div>
+              <div class="util-bar"><div class="util-fill" style="width:0%"></div></div>
+            </div>
+            <button class="btn-rent btn-rent-avail" onclick="showPage('create')">
+              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Rent this GPU
+            </button>
+          </div>
+          <!-- Maintenance -->
+          <div class="gpu-card">
+            <div class="gpu-card-head">
+              <div>
+                <div class="gpu-model">A100 PCIe</div>
+                <div class="gpu-node">worker-02 · GPU:3</div>
+              </div>
+              <span class="badge badge-maintenance">maintenance</span>
+            </div>
+            <div class="gpu-specs">
+              <span class="spec-chip">40 GB VRAM</span>
+              <span class="spec-chip">Ampere</span>
+              <span class="spec-chip">sm_80</span>
+            </div>
+            <div class="gpu-util">
+              <div class="gpu-util-label"><span>Utilization</span><span>—</span></div>
+              <div class="util-bar"><div class="util-fill" style="width:0%"></div></div>
+            </div>
+            <button class="btn-rent btn-rent-na" disabled>Under Maintenance</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── INSTANCES ────────────────────── -->
+      <div id="pg-instances" class="sub-page">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+          <div style="display:flex;gap:8px">
+            <span style="background:var(--green-dim);border:1px solid rgba(34,211,165,0.2);color:var(--green);font-size:11px;padding:5px 12px;border-radius:20px;font-family:var(--mono)">2 Running</span>
+            <span style="background:var(--yellow-dim);border:1px solid rgba(251,191,36,0.2);color:var(--yellow);font-size:11px;padding:5px 12px;border-radius:20px;font-family:var(--mono)">1 Queued</span>
+          </div>
+          <button class="btn-new" onclick="showPage('create')">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            New Instance
+          </button>
+        </div>
+        <div class="panel">
+          <table>
+            <thead><tr>
+              <th>Instance</th><th>GPU / Image</th><th>Status</th><th>Uptime</th><th>Expires</th><th style="text-align:right">Actions</th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="instance-name" onclick="showPage('detail')">training-run-v3</div>
+                  <div class="instance-id">inst-a1b2c3d4...</div>
+                </td>
+                <td><div class="gpu-tag">RTX 4090</div><div class="img-tag">pytorch:2.3-cuda12</div></td>
+                <td><span class="badge badge-running">running</span></td>
+                <td><span class="uptime">2h 14m</span></td>
+                <td><span class="expires">Jun 3, 22:00</span></td>
+                <td><div class="action-btns" style="justify-content:flex-end">
+                  <button class="btn-sm btn-connect" onclick="showPage('detail')">Connect</button>
+                  <button class="btn-sm btn-stop">Stop</button>
+                  <button class="btn-sm btn-destroy">Destroy</button>
+                </div></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="instance-name">bert-finetune</div>
+                  <div class="instance-id">inst-e5f6a7b8...</div>
+                </td>
+                <td><div class="gpu-tag">A100 80GB</div><div class="img-tag">tensorflow:2.15-cuda12</div></td>
+                <td><span class="badge badge-queued">queued</span></td>
+                <td><span class="uptime">—</span></td>
+                <td><span class="expires">—</span></td>
+                <td><div class="action-btns" style="justify-content:flex-end">
+                  <button class="btn-sm btn-destroy">Cancel</button>
+                </div></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="instance-name">diffusion-exp</div>
+                  <div class="instance-id">inst-c9d0e1f2...</div>
+                </td>
+                <td><div class="gpu-tag">RTX 4090</div><div class="img-tag">jax:0.4-cuda12</div></td>
+                <td><span class="badge badge-suspended">suspended</span></td>
+                <td><span class="uptime">—</span></td>
+                <td><span class="expires">—</span></td>
+                <td><div class="action-btns" style="justify-content:flex-end">
+                  <button class="btn-sm btn-start">Resume</button>
+                  <button class="btn-sm btn-destroy">Destroy</button>
+                </div></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="instance-name">old-experiment</div>
+                  <div class="instance-id">inst-f3a4b5c6...</div>
+                </td>
+                <td><div class="gpu-tag">RTX 3090</div><div class="img-tag">pytorch:2.2-cuda11</div></td>
+                <td><span class="badge badge-stopped">stopped</span></td>
+                <td><span class="uptime">—</span></td>
+                <td><span class="expires">—</span></td>
+                <td><div class="action-btns" style="justify-content:flex-end">
+                  <button class="btn-sm btn-start">Start</button>
+                  <button class="btn-sm btn-destroy">Destroy</button>
+                </div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── CREATE INSTANCE ──────────────── -->
+      <div id="pg-create" class="sub-page">
+        <div class="create-wrap">
+          <div class="form-card">
+            <div style="margin-bottom:22px">
+              <div style="font-size:15px;font-weight:700;margin-bottom:4px">New Instance</div>
+              <div style="font-size:12px;color:var(--text3)">Configure and launch a GPU container</div>
+            </div>
+
+            <div class="form-group">
+              <label>Instance Name <span style="color:var(--text3);font-weight:400">(optional)</span></label>
+              <input type="text" placeholder="e.g., training-run-v4" style="font-family:var(--mono)"/>
+            </div>
+
+            <div class="form-group">
+              <label>Select GPU Model</label>
+              <div class="gpu-options">
+                <div class="gpu-option selected">
+                  <div class="gpu-option-name">RTX 4090</div>
+                  <div class="gpu-option-vram">24 GB</div>
+                </div>
+                <div class="gpu-option" onclick="selectGpu(this)">
+                  <div class="gpu-option-name">A100</div>
+                  <div class="gpu-option-vram">80 GB</div>
+                </div>
+                <div class="gpu-option" onclick="selectGpu(this)">
+                  <div class="gpu-option-name">RTX 3090</div>
+                  <div class="gpu-option-vram">24 GB</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Container Image</label>
+              <select class="form-select">
+                <option>pytorch:2.3-cuda12 (PyTorch)</option>
+                <option>tensorflow:2.15-cuda12 (TensorFlow)</option>
+                <option>jax:0.4-cuda12 (JAX)</option>
+                <option>ubuntu:22.04-cuda12 (Base)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Max Hours: <span id="hoursDisplay" style="color:var(--indigo2);font-family:var(--mono)">8h</span></label>
+              <div class="range-wrap">
+                <input type="range" class="range-input" min="1" max="168" value="8"
+                  oninput="document.getElementById('hoursDisplay').textContent=this.value+'h'"/>
+                <div class="range-labels"><span>1h</span><span>1 week</span></div>
+              </div>
+            </div>
+
+            <div style="background:var(--indigo-dim);border:1px solid rgba(99,102,241,0.2);border-radius:10px;padding:12px 14px;margin-bottom:20px">
+              <div style="font-size:10.5px;color:var(--text3);margin-bottom:6px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.5px">Estimated cost</div>
+              <div style="font-size:14px;font-weight:700;font-family:var(--mono);color:var(--indigo2)">8 GPU-hours <span style="font-size:12px;font-weight:400;color:var(--text3)">of 142h available</span></div>
+            </div>
+
+            <button class="btn-primary" onclick="showPage('detail')">Launch Instance →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── INSTANCE DETAIL ──────────────── -->
+      <div id="pg-detail" class="sub-page">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+          <span class="panel-link" onclick="showPage('instances')" style="font-size:12px">← My Instances</span>
+          <span style="color:var(--text3);font-size:12px">/</span>
+          <span style="font-size:13px;font-weight:600">training-run-v3</span>
+          <span class="badge badge-running" style="margin-left:4px">running</span>
+        </div>
+
+        <div class="connect-card">
+          <div class="connect-card-left">
+            <div class="connect-dot"></div>
+            <div>
+              <div class="connect-label">Instance is Running</div>
+              <div class="connect-sub">ssh alice@192.168.1.101 -p 32891</div>
+            </div>
+          </div>
+          <button class="btn-connect-lg">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            Open SSH
+          </button>
+        </div>
+
+        <div class="detail-grid">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="panel">
+              <div class="panel-header"><span class="panel-title">Instance Info</span></div>
+              <div class="info-grid">
+                <div class="info-item"><div class="info-key">Instance ID</div><div class="info-val">inst-a1b2c3d4-e5f6</div></div>
+                <div class="info-item"><div class="info-key">Status</div><div class="info-val" style="color:var(--green)">Running</div></div>
+                <div class="info-item"><div class="info-key">GPU</div><div class="info-val">RTX 4090 (device:1)</div></div>
+                <div class="info-item"><div class="info-key">Node</div><div class="info-val">worker-01</div></div>
+                <div class="info-item"><div class="info-key">Image</div><div class="info-val">pytorch:2.3-cuda12</div></div>
+                <div class="info-item"><div class="info-key">Uptime</div><div class="info-val">2h 14m 38s</div></div>
+                <div class="info-item"><div class="info-key">Started</div><div class="info-val">Jun 3, 19:45 UTC</div></div>
+                <div class="info-item"><div class="info-key">Expires</div><div class="info-val">Jun 3, 22:00 UTC</div></div>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+              <div class="metric-card">
+                <div class="metric-label">GPU Utilization</div>
+                <div class="metric-val">94<span class="metric-unit">%</span></div>
+                <div class="stat-bar" style="margin-top:8px"><div class="stat-bar-fill" style="width:94%;background:linear-gradient(90deg,var(--indigo),#a78bfa)"></div></div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">VRAM Used</div>
+                <div class="metric-val">21.3<span class="metric-unit">GB</span></div>
+                <div class="stat-bar" style="margin-top:8px"><div class="stat-bar-fill" style="width:89%;background:var(--orange)"></div></div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">Quota Used</div>
+                <div class="metric-val">2.2<span class="metric-unit">h</span></div>
+                <div class="stat-bar" style="margin-top:8px"><div class="stat-bar-fill" style="width:28%;background:var(--green)"></div></div>
+              </div>
+            </div>
+
+            <div class="terminal-section">
+              <div class="terminal-header">
+                <div class="terminal-dots">
+                  <div class="terminal-dot" style="background:#ff5f57"></div>
+                  <div class="terminal-dot" style="background:#febc2e"></div>
+                  <div class="terminal-dot" style="background:#28c840"></div>
+                </div>
+                <span class="terminal-title">bash — training-run-v3</span>
+              </div>
+              <div class="terminal-body">
+                <span class="terminal-prompt">alice@worker-01:~$ </span><span class="terminal-cmd">python train.py --model bert-large --epochs 10</span><br/>
+                <span style="color:var(--text2)">Loading dataset... done (12.4s)</span><br/>
+                <span style="color:var(--text2)">Model parameters: 340M</span><br/>
+                <span style="color:var(--text2)">Epoch 1/10 [=====>      ] 47% | loss: 0.342 | acc: 0.891</span><br/>
+                <span class="terminal-prompt">▋</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="panel">
+              <div class="panel-header">
+                <span class="panel-title">Snapshots</span>
+                <button class="btn-sm btn-start" style="font-family:var(--sans)">+ Create</button>
+              </div>
+              <div class="snap-row">
+                <div>
+                  <div class="snap-label">snapshot-20260603-1800</div>
+                  <div class="snap-meta">4.2 GB · Jun 3, 18:00</div>
+                </div>
+                <button class="btn-sm btn-destroy">Delete</button>
+              </div>
+              <div class="snap-row">
+                <div>
+                  <div class="snap-label">checkpoint-epoch-5</div>
+                  <div class="snap-meta">3.8 GB · Jun 2, 14:30</div>
+                </div>
+                <button class="btn-sm btn-destroy">Delete</button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header"><span class="panel-title">Actions</span></div>
+              <div style="padding:16px;display:flex;flex-direction:column;gap:8px">
+                <button class="btn-sm btn-stop" style="padding:9px;font-size:12px;font-family:var(--sans);width:100%">⏸ Pause Instance</button>
+                <button class="btn-sm btn-stop" style="padding:9px;font-size:12px;font-family:var(--sans);width:100%">⏹ Stop Instance</button>
+                <button class="btn-sm btn-start" style="padding:9px;font-size:12px;font-family:var(--sans);width:100%">⏱ Extend Time +4h</button>
+                <button class="btn-sm btn-destroy" style="padding:9px;font-size:12px;font-family:var(--sans);width:100%">🗑 Destroy Instance</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── QUOTA PAGE ───────────────────── -->
+      <div id="pg-quota" class="sub-page">
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
+          <div class="stat-card"><div class="stat-label">Total Hours</div><div class="stat-value">200<span style="font-size:14px;color:var(--text3)">h</span></div></div>
+          <div class="stat-card"><div class="stat-label">Used</div><div class="stat-value" style="color:var(--red)">58<span style="font-size:14px;color:var(--text3)">h</span></div></div>
+          <div class="stat-card"><div class="stat-label">Available</div><div class="stat-value" style="color:var(--green)">132<span style="font-size:14px;color:var(--text3)">h</span></div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 340px;gap:14px">
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">My Requests</span>
+              <button class="btn-new" style="font-size:11px;padding:6px 12px">+ Request Quota</button>
+            </div>
+            <table>
+              <thead><tr><th>Date</th><th>Hours</th><th>Reason</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td><span class="expires">Jun 1, 2026</span></td><td><span style="font-family:var(--mono);color:var(--green);font-weight:600">+50h</span></td><td style="color:var(--text2);font-size:12px">Training final model for ICLR</td><td><span class="badge badge-running">approved</span></td></tr>
+                <tr><td><span class="expires">May 15, 2026</span></td><td><span style="font-family:var(--mono);color:var(--green);font-weight:600">+10h</span></td><td style="color:var(--text2);font-size:12px">Quick experiment</td><td><span class="badge badge-running">auto-approved</span></td></tr>
+                <tr><td><span class="expires">May 2, 2026</span></td><td><span style="font-family:var(--mono);color:var(--red);font-weight:600">+200h</span></td><td style="color:var(--text2);font-size:12px">Large scale pretraining</td><td><span class="badge badge-failed">rejected</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="panel" style="padding:20px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:16px">Request More Quota</div>
+            <div class="form-group">
+              <label>Hours Needed: <span id="qHours" style="color:var(--indigo2);font-family:var(--mono)">50h</span></label>
+              <input type="range" class="range-input" min="1" max="500" value="50"
+                oninput="document.getElementById('qHours').textContent=this.value+'h'"/>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px;font-family:var(--mono)"><span>1h (auto)</span><span>500h</span></div>
+            </div>
+            <div class="form-group">
+              <label>Reason</label>
+              <textarea placeholder="Training final model for thesis..." style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:10px 13px;font-size:12px;color:var(--text);font-family:var(--sans);outline:none;resize:none;height:80px;transition:border-color 0.2s" onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"></textarea>
+            </div>
+            <button class="btn-primary">Submit Request</button>
+            <div style="margin-top:12px;padding:10px 12px;background:var(--indigo-dim);border:1px solid rgba(99,102,241,0.2);border-radius:8px;font-size:10.5px;font-family:var(--mono);color:var(--indigo2);line-height:1.7">
+              ≤ 10h → auto-approved<br/>
+              &gt; 10h → Lab Manager review
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MANAGER PAGE ─────────────────── -->
+      <div id="pg-manager" class="sub-page">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Pending Quota Requests</span>
+            <span style="font-size:11px;font-family:var(--mono);color:var(--yellow)">2 awaiting review</span>
+          </div>
+          <table>
+            <thead><tr><th>Researcher</th><th>Hours Requested</th><th>Reason</th><th>Submitted</th><th style="text-align:right">Action</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div style="font-weight:500">Bob Tran</div><div class="instance-id">researcher2@gpulab.edu</div></td>
+                <td><span style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--yellow)">+100h</span></td>
+                <td style="font-size:12px;color:var(--text2);max-width:200px">Large-scale diffusion model pretraining for PhD thesis</td>
+                <td><span class="expires">Jun 3, 09:00</span></td>
+                <td><div class="action-btns" style="justify-content:flex-end">
+                  <button class="btn-sm btn-connect">Approve</button>
+                  <button class="btn-sm btn-destroy">Reject</button>
+                </div></td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:500">Alice Nguyen</div><div class="instance-id">researcher1@gpulab.edu</div></td>
+                <td><span style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--yellow)">+50h</span></td>
+                <td style="font-size:12px;color:var(--text2);max-width:200px">ICLR deadline — need to run ablation studies</td>
+                <td><span class="expires">Jun 2, 15:30</span></td>
+                <td><div class="action-btns" style="justify-content:flex-end">
+                  <button class="btn-sm btn-connect">Approve</button>
+                  <button class="btn-sm btn-destroy">Reject</button>
+                </div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── NODES PAGE ───────────────────── -->
+      <div id="pg-nodes" class="sub-page">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Worker Nodes</span>
+            <button class="btn-new" style="font-size:11px;padding:6px 12px">+ Add Node</button>
+          </div>
+          <table>
+            <thead><tr><th>Node</th><th>IP Address</th><th>Status</th><th>GPUs</th><th>Last Heartbeat</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div style="font-weight:500;font-family:var(--mono)">worker-01</div></td>
+                <td><span class="instance-id" style="font-size:12px">192.168.1.101</span></td>
+                <td><span class="badge badge-running">online</span></td>
+                <td><span style="font-family:var(--mono);font-size:12px;color:var(--text2)">4 GPUs (2 free)</span></td>
+                <td><span class="expires">just now</span></td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:500;font-family:var(--mono)">worker-02</div></td>
+                <td><span class="instance-id" style="font-size:12px">192.168.1.102</span></td>
+                <td><span class="badge badge-running">online</span></td>
+                <td><span style="font-family:var(--mono);font-size:12px;color:var(--text2)">4 GPUs (3 free)</span></td>
+                <td><span class="expires">12s ago</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+const pageTitles = {
+  dashboard: 'Dashboard',
+  gpus: 'GPU Cluster',
+  instances: 'My Instances',
+  create: 'New Instance',
+  detail: 'Instance Detail',
+  quota: 'Quota',
+  manager: 'Quota Requests',
+  nodes: 'Worker Nodes'
+};
+
+function showPage(name) {
+  document.querySelectorAll('.sub-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const pg = document.getElementById('pg-' + name);
+  if (pg) pg.classList.add('active');
+
+  document.getElementById('pageTitle').textContent = pageTitles[name] || name;
+
+  // highlight nav
+  const navMap = { dashboard: 0, gpus: 1, instances: 2, quota: 3, manager: 4, nodes: 5 };
+  const items = document.querySelectorAll('.nav-item');
+  if (navMap[name] !== undefined) items[navMap[name]]?.classList.add('active');
+}
+
+function goToApp() {
+  document.getElementById('login').classList.remove('active');
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('app').classList.add('active');
+  document.getElementById('app').style.display = 'flex';
+}
+
+function logout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('login').style.display = 'flex';
+  document.getElementById('login').classList.add('active');
+}
+
+function selectGpu(el) {
+  document.querySelectorAll('.gpu-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+</script>
+</body>
+</html>
