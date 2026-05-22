@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MotoShop.Business.DTOs;
 using MotoShop.Business.Helpers;
 using MotoShop.Business.Interfaces;
+using MotoShop.Data.Constants;
 using MotoShop.Data.Enums;
 using MotoShop.Data.Interfaces;
 using MotoShop.Data.Models;
@@ -449,7 +450,7 @@ namespace MotoShop.Business.Services
             return await _uow.Repository<OrderItem>().Find(oi => 
                 oi.Order != null && oi.Order.Customer != null && oi.Order.Customer.UserId == userId && 
                 oi.ProductVariant != null && oi.ProductVariant.ProductId == productId &&
-                (oi.Order.Status == "Completed" || oi.Order.Status == "DaHoanThanh"))
+                (oi.Order.Status == OrderStatusConst.Completed || oi.Order.Status == OrderStatusConst.DaHoanThanh))
                 .AsNoTracking()
                 .AnyAsync();
         }

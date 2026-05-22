@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MotoShop.Data.Constants;
 using System;
 using System.Linq;
 using System.Threading;
@@ -41,8 +42,8 @@ namespace MotoShop.Services
                     var threshold = DateTime.Now.AddMinutes(-30);
                     var expiredOrders = await context.Orders
                         .Where(o => o.PaymentMethod == "VNPay"
-                            && o.PaymentStatus == "Unpaid"
-                            && o.Status == "Pending"
+                            && o.PaymentStatus == PaymentStatusConst.Unpaid
+                            && o.Status == OrderStatusConst.Pending
                             && o.OrderDate < threshold)
                         .ToListAsync(stoppingToken);
 
@@ -50,8 +51,8 @@ namespace MotoShop.Services
                     {
                         foreach (var order in expiredOrders)
                         {
-                            order.Status = "Cancelled";
-                            order.PaymentStatus = "Cancelled";
+                            order.Status = OrderStatusConst.Cancelled;
+                            order.PaymentStatus = PaymentStatusConst.Cancelled;
                         }
                         await context.SaveChangesAsync(stoppingToken);
                         _logger.LogInformation("Cancelled {Count} expired VNPay orders (pending > 30 min)", expiredOrders.Count);

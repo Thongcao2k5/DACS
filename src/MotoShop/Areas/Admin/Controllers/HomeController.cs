@@ -56,7 +56,7 @@ namespace MotoShop.Areas.Admin.Controllers
 
             // Card 1: Revenue Today & vs Yesterday (Orders Completed + Service Completed)
             var orderRevenueToday = await _context.Orders
-                .Where(o => o.OrderDate.Date == today && o.Status == "Completed")
+                .Where(o => o.OrderDate.Date == today && o.Status == OrderStatusConst.Completed)
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
             var svcRevenueToday = await CompletedServiceRevenue()
                 .Where(s => s.CompletedAt.Date == today)
@@ -64,7 +64,7 @@ namespace MotoShop.Areas.Admin.Controllers
             var revenueToday = orderRevenueToday + svcRevenueToday;
 
             var orderRevenueYesterday = await _context.Orders
-                .Where(o => o.OrderDate.Date == yesterday && o.Status == "Completed")
+                .Where(o => o.OrderDate.Date == yesterday && o.Status == OrderStatusConst.Completed)
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
             var svcRevenueYesterday = await CompletedServiceRevenue()
                 .Where(s => s.CompletedAt.Date == yesterday)
@@ -78,7 +78,7 @@ namespace MotoShop.Areas.Admin.Controllers
 
             // Monthly Revenue & Growth (chỉ Completed)
             var orderThisMonth = await _context.Orders
-                .Where(o => o.OrderDate >= firstDayOfMonth && o.Status == "Completed")
+                .Where(o => o.OrderDate >= firstDayOfMonth && o.Status == OrderStatusConst.Completed)
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
             var svcThisMonth = await CompletedServiceRevenue()
                 .Where(s => s.CompletedAt >= firstDayOfMonth)
@@ -86,7 +86,7 @@ namespace MotoShop.Areas.Admin.Controllers
             var revenueThisMonth = orderThisMonth + svcThisMonth;
 
             var orderLastMonth = await _context.Orders
-                .Where(o => o.OrderDate >= firstDayOfLastMonth && o.OrderDate < firstDayOfMonth && o.Status == "Completed")
+                .Where(o => o.OrderDate >= firstDayOfLastMonth && o.OrderDate < firstDayOfMonth && o.Status == OrderStatusConst.Completed)
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
             var svcLastMonth = await CompletedServiceRevenue()
                 .Where(s => s.CompletedAt >= firstDayOfLastMonth && s.CompletedAt < firstDayOfMonth)
@@ -101,8 +101,8 @@ namespace MotoShop.Areas.Admin.Controllers
             // Card 2: Orders Today
             var ordersTodayQuery = _context.Orders.Where(o => o.OrderDate.Date == today);
             ViewBag.TotalOrdersToday = await ordersTodayQuery.CountAsync();
-            ViewBag.CompletedOrdersToday = await ordersTodayQuery.Where(o => o.Status == "Completed" || o.Status == "DaHoanThanh" || o.Status == "Delivered").CountAsync();
-            ViewBag.PendingOrdersToday = await ordersTodayQuery.Where(o => o.Status == "Pending" || o.Status == "Processing" || o.Status == "DangXuLy").CountAsync();
+            ViewBag.CompletedOrdersToday = await ordersTodayQuery.Where(o => o.Status == OrderStatusConst.Completed || o.Status == OrderStatusConst.DaHoanThanh || o.Status == OrderStatusConst.Delivered).CountAsync();
+            ViewBag.PendingOrdersToday = await ordersTodayQuery.Where(o => o.Status == OrderStatusConst.Pending || o.Status == OrderStatusConst.Processing || o.Status == OrderStatusConst.DangXuLy).CountAsync();
 
             // Card 3: Customers
             ViewBag.TotalCustomers = await _context.Customers.CountAsync();
@@ -115,8 +115,8 @@ namespace MotoShop.Areas.Admin.Controllers
             // Card 5: Monthly Invoices
             var monthlyOrdersQuery = _context.Orders.Where(o => o.OrderDate >= firstDayOfMonth);
             ViewBag.TotalOrdersMonth = await monthlyOrdersQuery.CountAsync();
-            ViewBag.CompletedOrdersMonth = await monthlyOrdersQuery.Where(o => o.Status == "Completed" || o.Status == "DaHoanThanh" || o.Status == "Delivered").CountAsync();
-            ViewBag.PendingOrdersMonth = await monthlyOrdersQuery.Where(o => o.Status == "Pending" || o.Status == "Processing" || o.Status == "DangXuLy").CountAsync();
+            ViewBag.CompletedOrdersMonth = await monthlyOrdersQuery.Where(o => o.Status == OrderStatusConst.Completed || o.Status == OrderStatusConst.DaHoanThanh || o.Status == OrderStatusConst.Delivered).CountAsync();
+            ViewBag.PendingOrdersMonth = await monthlyOrdersQuery.Where(o => o.Status == OrderStatusConst.Pending || o.Status == OrderStatusConst.Processing || o.Status == OrderStatusConst.DangXuLy).CountAsync();
             
             // Recent Orders for the table
             var recentOrders = await _context.Orders

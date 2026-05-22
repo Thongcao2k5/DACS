@@ -5,10 +5,12 @@ namespace MotoShop.Data.Constants
         public const string Pending = "Pending";
         public const string Processing = "Processing";
         public const string DangXuLy = "DangXuLy";
+        public const string Confirmed = "Confirmed";
         public const string Shipping = "Shipping";
         public const string DangGiao = "DangGiao";
         public const string Completed = "Completed";
         public const string DaHoanThanh = "DaHoanThanh";
+        public const string Delivered = "Delivered";
         public const string Cancelled = "Cancelled";
         public const string DaHuy = "DaHuy";
     }
@@ -18,6 +20,7 @@ namespace MotoShop.Data.Constants
         public const string Unpaid = "Unpaid";
         public const string Paid = "Paid";
         public const string Failed = "Failed";
+        public const string Cancelled = "Cancelled";
     }
 
     public static class ReviewStatusConst

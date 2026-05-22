@@ -9,6 +9,7 @@ using System;
 using MotoShop.Business.Interfaces;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using MotoShop.Data.Constants;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 using Microsoft.AspNetCore.Http;
@@ -198,10 +199,10 @@ namespace MotoShop.Controllers
 
             // Thống kê đơn hàng chi tiết hơn
             ViewBag.TotalOrders = customer.Orders.Count;
-            ViewBag.Pending = customer.Orders.Count(o => o.Status == "DangXuLy" || o.Status == "Pending" || o.Status == "Processing");
-            ViewBag.Shipping = customer.Orders.Count(o => o.Status == "DangGiao" || o.Status == "Shipping");
-            ViewBag.Completed = customer.Orders.Count(o => o.Status == "DaHoanThanh" || o.Status == "Completed");
-            ViewBag.TotalSpent = customer.Orders.Where(o => o.Status == "DaHoanThanh" || o.Status == "Completed").Sum(o => o.TotalAmount);
+            ViewBag.Pending = customer.Orders.Count(o => o.Status == OrderStatusConst.DangXuLy || o.Status == OrderStatusConst.Pending || o.Status == OrderStatusConst.Processing);
+            ViewBag.Shipping = customer.Orders.Count(o => o.Status == OrderStatusConst.DangGiao || o.Status == OrderStatusConst.Shipping);
+            ViewBag.Completed = customer.Orders.Count(o => o.Status == OrderStatusConst.DaHoanThanh || o.Status == OrderStatusConst.Completed);
+            ViewBag.TotalSpent = customer.Orders.Where(o => o.Status == OrderStatusConst.DaHoanThanh || o.Status == OrderStatusConst.Completed).Sum(o => o.TotalAmount);
 
             return View(customer);
         }

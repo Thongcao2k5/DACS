@@ -1,5 +1,6 @@
 using AutoMapper;
 using MotoShop.Business.DTOs;
+using MotoShop.Data.Constants;
 using MotoShop.Data.Enums;
 using MotoShop.Data.Models;
 using System;
@@ -88,7 +89,7 @@ namespace MotoShop.Business.Mappings
                 .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.Customer != null ? src.Customer.FullName : "Khách hàng"))
                 .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.Customer != null ? src.Customer.AvatarUrl : string.Empty))
                 .ForMember(dest => dest.ReviewImages, opt => opt.MapFrom(src => src.Images.Select(i => i.ImageUrl).ToList()))
-                .ForMember(dest => dest.IsApproved, opt => opt.MapFrom(src => src.Status == "Approved"));
+                .ForMember(dest => dest.IsApproved, opt => opt.MapFrom(src => src.Status == ReviewStatusConst.Approved));
 
             // ProductVariant Mapping
             CreateMap<ProductVariant, ProductVariantDto>()

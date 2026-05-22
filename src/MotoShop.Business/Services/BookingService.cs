@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MotoShop.Business.DTOs;
 using MotoShop.Business.Interfaces;
+using MotoShop.Data.Constants;
 using MotoShop.Data.Data;
 using MotoShop.Data.Interfaces;
 using MotoShop.Data.Models;
@@ -155,7 +156,7 @@ namespace MotoShop.Business.Services
                 RemainingAmount = (booking.Service?.Price ?? 0) - booking.DepositAmount,
                 ServiceDate = booking.ServiceDate ?? DateTime.Now,
                 TimeSlot = booking.ServiceDate?.ToString("HH:mm") ?? "00:00",
-                Status = booking.Status ?? "Pending",
+                Status = booking.Status ?? BookingStatusConst.Pending,
                 ExpireAt = booking.ExpireAt ?? DateTime.Now,
                 BankName = bankName ?? "Vietcombank",
                 AccountNumber = accountNumber ?? "0123456789",
@@ -172,7 +173,7 @@ namespace MotoShop.Business.Services
 
             // Lấy danh sách khung giờ đã đạt tối đa số lượng phục vụ
             var bookedSlots = await _uow.Repository<ServiceBooking>()
-                .Find(b => b.ServiceDate.HasValue && b.ServiceDate.Value.Date == date.Date && b.Status != "Cancelled")
+                .Find(b => b.ServiceDate.HasValue && b.ServiceDate.Value.Date == date.Date && b.Status != BookingStatusConst.Cancelled)
                 .GroupBy(b => b.ServiceDate!.Value)
                 .Where(g => g.Count() >= maxConcurrent)
                 .Select(g => g.Key.ToString("HH:mm"))
@@ -185,19 +186,19 @@ namespace MotoShop.Business.Services
         {
             var booking = await _uow.Repository<ServiceBooking>().GetByIdAsync(bookingId);
 
-            if (booking == null || booking.Status != "Pending")
+            if (booking == null || booking.Status != BookingStatusConst.Pending)
                 return false;
 
             // Kiểm tra chưa hết hạn
             if (DateTime.Now > booking.ExpireAt)
             {
-                booking.Status = "Cancelled";
+                booking.Status = BookingStatusConst.Cancelled;
                 booking.CancelReason = "Hết hạn chuyển khoản cọc";
                 await _uow.CompleteAsync();
                 return false;
             }
 
-            booking.Status = "Confirmed";
+            booking.Status = BookingStatusConst.Confirmed;
             booking.DepositStatus = "Paid";
             booking.TransferProof = transferProof;
             booking.ConfirmedAt = DateTime.Now;
@@ -209,14 +210,14 @@ namespace MotoShop.Business.Services
         public async Task CancelExpiredBookingsAsync()
         {
             var expired = await _uow.Repository<ServiceBooking>()
-                .Find(b => b.Status == "Pending" && b.ExpireAt.HasValue && b.ExpireAt.Value < DateTime.Now)
+                .Find(b => b.Status == BookingStatusConst.Pending && b.ExpireAt.HasValue && b.ExpireAt.Value < DateTime.Now)
                 .ToListAsync();
 
             if (expired.Any())
             {
                 foreach (var b in expired)
                 {
-                    b.Status = "Cancelled";
+                    b.Status = BookingStatusConst.Cancelled;
                     b.CancelReason = "Tự động hủy do hết hạn chuyển khoản cọc";
                 }
                 await _uow.CompleteAsync();
@@ -240,10 +241,10 @@ namespace MotoShop.Business.Services
             }
 
             // Chỉ cho phép hủy khi đang ở trạng thái Chờ cọc hoặc Đã xác nhận
-            if (booking.Status != "Pending" && booking.Status != "Confirmed")
+            if (booking.Status != BookingStatusConst.Pending && booking.Status != BookingStatusConst.Confirmed)
                 return false;
 
-            booking.Status = "Cancelled";
+            booking.Status = BookingStatusConst.Cancelled;
             booking.CancelReason = reason;
             
             await _uow.CompleteAsync();

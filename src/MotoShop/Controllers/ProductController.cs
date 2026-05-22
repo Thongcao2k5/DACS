@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using MotoShop.Data.Constants;
 using MotoShop.Data.Models;
 using MotoShop.Data.Enums;
 using MotoShop.Data.Interfaces;
@@ -284,7 +285,7 @@ namespace MotoShop.Controllers
 
             var products = rawProducts.Select(p => {
                 specsMap[p.ProductId] = p.Specifications.OrderBy(s => s.DisplayOrder).ToDictionary(s => s.SpecName, s => s.SpecValue);
-                var approvedReviews = p.Reviews.Where(r => r.Status == "Approved").ToList();
+                var approvedReviews = p.Reviews.Where(r => r.Status == ReviewStatusConst.Approved).ToList();
                 ratingMap[p.ProductId] = approvedReviews.Any() ? Math.Round(approvedReviews.Average(r => r.Rating), 1) : 0;
                 return new ProductDto {
                     ProductId = p.ProductId, ProductName = p.ProductName, Slug = p.Slug ?? string.Empty,

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using MotoShop.Data.Constants;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 using MotoShop.Business.Interfaces;
@@ -173,16 +174,16 @@ namespace MotoShop.Areas.Admin.Controllers
 
         private static readonly Dictionary<string, List<string>> ValidTransitions = new()
         {
-            { "Pending", new[] { "Processing", "Confirmed", "Cancelled" }.ToList() },
-            { "Processing", new[] { "Confirmed", "Shipping", "Completed", "Cancelled" }.ToList() },
-            { "DangXuLy", new[] { "Confirmed", "Shipping", "Completed", "Cancelled" }.ToList() },
-            { "Confirmed", new[] { "Processing", "Shipping", "Completed", "Cancelled" }.ToList() },
-            { "Shipping", new[] { "Completed", "Cancelled" }.ToList() },
-            { "DangGiao", new[] { "Completed", "Cancelled" }.ToList() },
-            { "Completed", new List<string>() },
-            { "DaHoanThanh", new List<string>() },
-            { "Cancelled", new List<string>() },
-            { "DaHuy", new List<string>() }
+            { OrderStatusConst.Pending,     new[] { OrderStatusConst.Processing, OrderStatusConst.Confirmed, OrderStatusConst.Cancelled }.ToList() },
+            { OrderStatusConst.Processing,  new[] { OrderStatusConst.Confirmed, OrderStatusConst.Shipping, OrderStatusConst.Completed, OrderStatusConst.Cancelled }.ToList() },
+            { OrderStatusConst.DangXuLy,    new[] { OrderStatusConst.Confirmed, OrderStatusConst.Shipping, OrderStatusConst.Completed, OrderStatusConst.Cancelled }.ToList() },
+            { OrderStatusConst.Confirmed,   new[] { OrderStatusConst.Processing, OrderStatusConst.Shipping, OrderStatusConst.Completed, OrderStatusConst.Cancelled }.ToList() },
+            { OrderStatusConst.Shipping,    new[] { OrderStatusConst.Completed, OrderStatusConst.Cancelled }.ToList() },
+            { OrderStatusConst.DangGiao,    new[] { OrderStatusConst.Completed, OrderStatusConst.Cancelled }.ToList() },
+            { OrderStatusConst.Completed,   new List<string>() },
+            { OrderStatusConst.DaHoanThanh, new List<string>() },
+            { OrderStatusConst.Cancelled,   new List<string>() },
+            { OrderStatusConst.DaHuy,       new List<string>() }
         };
 
         [HttpPost]

@@ -199,7 +199,7 @@ namespace MotoShop.Controllers
             return status switch
             {
                 OrderStatusConst.Pending or OrderStatusConst.DangXuLy => "Đơn hàng đã được tiếp nhận và đang chờ xử lý.",
-                "Confirmed" => "Đơn hàng đã được xác nhận.",
+                OrderStatusConst.Confirmed => "Đơn hàng đã được xác nhận.",
                 OrderStatusConst.Shipping or OrderStatusConst.DangGiao => "Đơn hàng đang được vận chuyển đến bạn.",
                 OrderStatusConst.Completed or OrderStatusConst.DaHoanThanh => "Đơn hàng đã được giao thành công.",
                 OrderStatusConst.Cancelled or OrderStatusConst.DaHuy => "Đơn hàng đã bị hủy.",
@@ -214,7 +214,7 @@ namespace MotoShop.Controllers
             var order = await GetOrderByIdSafe(id);
             if (order == null) return Json(new { success = false, message = "Không tìm thấy đơn hàng hoặc bạn không có quyền hủy đơn này" });
 
-            if (order.Status != "Pending" && order.Status != "DangXuLy" && order.Status != "Processing")
+            if (order.Status != OrderStatusConst.Pending && order.Status != OrderStatusConst.DangXuLy && order.Status != OrderStatusConst.Processing)
             {
                 return Json(new { success = false, message = "Không thể hủy đơn đang giao hoặc đã hoàn thành" });
             }
