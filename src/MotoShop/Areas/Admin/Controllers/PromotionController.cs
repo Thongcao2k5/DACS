@@ -182,6 +182,14 @@ namespace MotoShop.Areas.Admin.Controllers
                 promotion.CouponCode = null;
             }
 
+            if (!string.IsNullOrWhiteSpace(promotion.CouponCode))
+            {
+                var isDuplicate = await _context.Promotions
+                    .AnyAsync(p => p.CouponCode == promotion.CouponCode && p.Id != promotion.Id);
+                if (isDuplicate)
+                    return Json(new { success = false, message = "Mã coupon này đã được sử dụng bởi chương trình khuyến mãi khác." });
+            }
+
             if (promotion.PromotionType != PromotionType.Voucher && promotion.PromotionType != PromotionType.OrderDiscount)
             {
                 promotion.MinOrderAmount = null;

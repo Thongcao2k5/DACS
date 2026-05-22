@@ -4,6 +4,7 @@ using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace MotoShop.Areas.Admin.Controllers
@@ -57,14 +58,15 @@ namespace MotoShop.Areas.Admin.Controllers
 
             variant.StockQuantity += quantity;
 
-            // Lưu lịch sử giao dịch
+            // Lưu lịch sử giao dịch (kèm admin thực hiện)
+            var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "system";
             var transaction = new InventoryTransaction
             {
                 ProductVariantId = variantId,
                 Quantity = quantity,
                 TransactionType = quantity >= 0 ? "IN" : "OUT",
                 TransactionDate = DateTime.Now,
-                Note = note
+                Note = $"[Admin:{adminId}] {note}"
             };
 
             _context.InventoryTransactions.Add(transaction);

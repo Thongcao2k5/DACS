@@ -56,9 +56,10 @@ namespace MotoShop.Business.Services
 
                 using (var client = new SmtpClient())
                 {
+                    var smtpPort = int.TryParse(_configuration["EmailSettings:SmtpPort"], out var p) ? p : 587;
                     await client.ConnectAsync(
                         _configuration["EmailSettings:SmtpServer"],
-                        int.Parse(_configuration["EmailSettings:SmtpPort"] ?? "587"),
+                        smtpPort,
                         MailKit.Security.SecureSocketOptions.StartTls);
 
                     await client.AuthenticateAsync(

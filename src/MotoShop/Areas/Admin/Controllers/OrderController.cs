@@ -195,7 +195,7 @@ namespace MotoShop.Areas.Admin.Controllers
             var order = await _context.Orders.FindAsync(id);
             if (order == null) return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
 
-            var currentStatus = order.Status ?? "Pending";
+            var currentStatus = order.Status ?? OrderStatusConst.Pending;
             if (string.Equals(currentStatus, status, StringComparison.OrdinalIgnoreCase))
                 return Json(new { success = true, message = "Trạng thái đơn hàng không thay đổi." });
 
@@ -289,7 +289,7 @@ namespace MotoShop.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Cancel(int id)
         {
-            return await UpdateStatus(id, "Cancelled");
+            return await UpdateStatus(id, OrderStatusConst.Cancelled);
         }
 
         [HttpPost]
@@ -298,7 +298,7 @@ namespace MotoShop.Areas.Admin.Controllers
             if (ids == null || ids.Length == 0) return Json(new { success = false });
             
             var orders = await _context.Orders.Where(o => ids.Contains(o.OrderId)).ToListAsync();
-            var deletableStatuses = new[] { "Cancelled", "DaHuy" };
+            var deletableStatuses = new[] { OrderStatusConst.Cancelled, OrderStatusConst.DaHuy };
             var blocked = orders.Where(o => !deletableStatuses.Contains(o.Status)).Select(o => o.OrderId).ToList();
             if (blocked.Any())
                 return Json(new { success = false, message = "Chỉ được xóa đơn đã hủy. Đơn không hợp lệ: " + string.Join(", ", blocked) });

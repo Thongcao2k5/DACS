@@ -119,8 +119,10 @@ namespace MotoShop.Business.Services
             // PNG: 89 50 4E 47
             if (bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47)
                 return true;
-            // WEBP: 52 49 46 46 (RIFF)
-            if (bytes[0] == 0x52 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x46)
+            // WEBP: RIFF (bytes 0-3) + bất kỳ 4 bytes kích thước + WEBP (bytes 8-11)
+            if (bytes.Length >= 12 &&
+                bytes[0] == 0x52 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x46 &&
+                bytes[8] == 0x57 && bytes[9] == 0x45 && bytes[10] == 0x42 && bytes[11] == 0x50)
                 return true;
 
             return false;
@@ -131,20 +133,21 @@ namespace MotoShop.Business.Services
             if (string.IsNullOrEmpty(fileUrl)) return;
 
             var wwwrootPath = _environment.WebRootPath;
-            var filePath = Path.Combine(wwwrootPath, fileUrl.TrimStart('/'));
+            var uploadsRoot = Path.GetFullPath(Path.Combine(wwwrootPath, "uploads"));
 
-            if (File.Exists(filePath))
-            {
-                File.Delete(filePath);
-            }
-            
+            var filePath = Path.GetFullPath(Path.Combine(wwwrootPath, fileUrl.TrimStart('/')));
+            // Chặn path traversal: chỉ cho phép xóa file trong thư mục uploads/
+            if (!filePath.StartsWith(uploadsRoot + Path.DirectorySeparatorChar)) return;
+
+            if (File.Exists(filePath)) File.Delete(filePath);
+
             // Also try to delete thumb/medium versions if it's a product image
             if (fileUrl.Contains("-full"))
             {
-                var thumbPath = Path.Combine(wwwrootPath, fileUrl.Replace("-full", "-thumb").TrimStart('/'));
-                var mediumPath = Path.Combine(wwwrootPath, fileUrl.Replace("-full", "-medium").TrimStart('/'));
-                if (File.Exists(thumbPath)) File.Delete(thumbPath);
-                if (File.Exists(mediumPath)) File.Delete(mediumPath);
+                var thumbPath = Path.GetFullPath(Path.Combine(wwwrootPath, fileUrl.Replace("-full", "-thumb").TrimStart('/')));
+                var mediumPath = Path.GetFullPath(Path.Combine(wwwrootPath, fileUrl.Replace("-full", "-medium").TrimStart('/')));
+                if (thumbPath.StartsWith(uploadsRoot + Path.DirectorySeparatorChar) && File.Exists(thumbPath)) File.Delete(thumbPath);
+                if (mediumPath.StartsWith(uploadsRoot + Path.DirectorySeparatorChar) && File.Exists(mediumPath)) File.Delete(mediumPath);
             }
         }
     }

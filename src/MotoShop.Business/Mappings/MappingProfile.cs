@@ -64,6 +64,7 @@ namespace MotoShop.Business.Mappings
                                      (!pp.Quantity.HasValue || pp.SoldQuantity < pp.Quantity.Value))
                         .OrderByDescending(pp => pp.Promotion!.Priority)
                         .Select(pp => (decimal?)(
+                            !src.Variants.Any() ? 0m :
                             pp.Promotion!.DiscountType == DiscountType.Percent
                                 ? src.Variants.Min(v => v.Price) * (1 - pp.Promotion.DiscountValue / 100m)
                                 : src.Variants.Min(v => v.Price) > pp.Promotion.DiscountValue
@@ -137,9 +138,10 @@ namespace MotoShop.Business.Mappings
             CreateMap<FlashSaleProduct, FlashSaleProductDto>()
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product != null ? src.Product.ProductName : string.Empty))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.Product != null && src.Product.Images != null && src.Product.Images.Any(i => i.IsPrimary) ? src.Product.Images.First(i => i.IsPrimary).ImageUrl : (src.Product != null && src.Product.Images != null && src.Product.Images.Any() ? src.Product.Images.First().ImageUrl : string.Empty)))
-                .ForMember(dest => dest.OriginalPrice, opt => opt.MapFrom(src => src.Product != null && src.Product.Variants != null && src.Product.Variants.Any()
-                    ? src.Product.Variants.Min(v => v.OriginalPrice ?? v.Price)
-                    : 0));
+                .ForMember(dest => dest.OriginalPrice, opt => opt.MapFrom(src =>
+                    src.Product != null && src.Product.Variants != null && src.Product.Variants.Any()
+                        ? src.Product.Variants.Min(v => v.OriginalPrice ?? v.Price)
+                        : 0m));
 
             // Order Mapping
             CreateMap<Order, OrderDto>()

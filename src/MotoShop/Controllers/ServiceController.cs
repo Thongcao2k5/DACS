@@ -322,7 +322,7 @@ namespace MotoShop.Controllers
             if (booking == null) return NotFound();
 
             var currentCustomerId = await GetCurrentCustomerIdAsync();
-            if (booking.CustomerId.HasValue && booking.CustomerId != currentCustomerId)
+            if (!booking.CustomerId.HasValue || booking.CustomerId != currentCustomerId)
                 return Forbid();
 
             // Nếu đã thanh toán hoặc đã chọn "Trả sau" thì về trang thành công
@@ -398,7 +398,7 @@ namespace MotoShop.Controllers
                 return Json(new { success = false, message = "Lịch hẹn không tồn tại." });
 
             var currentCustomerId = await GetCurrentCustomerIdAsync();
-            if (booking.CustomerId.HasValue && booking.CustomerId != currentCustomerId)
+            if (!booking.CustomerId.HasValue || booking.CustomerId != currentCustomerId)
                 return Json(new { success = false, message = "Bạn không có quyền thực hiện thao tác này." });
 
             if (booking.DepositStatus == DepositStatusConst.Paid || booking.DepositStatus == DepositStatusConst.PayLater)
@@ -420,7 +420,7 @@ namespace MotoShop.Controllers
                 return Json(new { success = false, message = "Lịch hẹn không tồn tại." });
 
             var currentCustomerId = await GetCurrentCustomerIdAsync();
-            if (booking.CustomerId.HasValue && booking.CustomerId != currentCustomerId)
+            if (!booking.CustomerId.HasValue || booking.CustomerId != currentCustomerId)
                 return Json(new { success = false, message = "Bạn không có quyền thực hiện thao tác này." });
 
             if (transferProof == null || transferProof.Length == 0)

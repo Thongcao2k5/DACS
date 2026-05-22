@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MotoShop.Data.Constants;
 
 namespace MotoShop.Data.Models
 {
@@ -481,7 +482,7 @@ namespace MotoShop.Data.Models
         public string? Comment { get; set; } = string.Empty;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         [StringLength(20)]
-        public string Status { get; set; } = "Pending"; 
+        public string Status { get; set; } = Constants.ReviewStatusConst.Pending;
 
         [ForeignKey("ProductId")]
         public virtual Product? Product { get; set; }

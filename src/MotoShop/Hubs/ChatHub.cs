@@ -4,6 +4,7 @@ using MotoShop.Data.Data;
 using MotoShop.Data.Models;
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace MotoShop.Hubs
@@ -26,18 +27,21 @@ namespace MotoShop.Hubs
         // Admin tham gia để nhận thông báo cập nhật danh sách
         public async Task AdminJoinDashboard()
         {
+            if (Context.User?.IsInRole("Admin") != true) return;
             await Groups.AddToGroupAsync(Context.ConnectionId, "AdminDashboard");
         }
 
         // Admin tham gia vào một cuộc hội thoại cụ thể
         public async Task AdminJoinConversation(int conversationId)
         {
+            if (Context.User?.IsInRole("Admin") != true) return;
             await Groups.AddToGroupAsync(Context.ConnectionId, $"Conversation_{conversationId}");
         }
 
         // Gửi tin nhắn từ phía Admin
         public async Task AdminSendMessage(int conversationId, string message, string adminName)
         {
+            if (Context.User?.IsInRole("Admin") != true) return;
             if (string.IsNullOrWhiteSpace(message)) return;
 
             var conversation = await _context.ChatConversations.FindAsync(conversationId);
@@ -89,6 +93,10 @@ namespace MotoShop.Hubs
             var conversation = await _context.ChatConversations.FindAsync(conversationId);
             if (conversation == null) return;
 
+            // Nếu đã đăng nhập thì phải là chủ của cuộc hội thoại
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userId) && conversation.UserId != userId) return;
+
             var chatMessage = new ChatMessage
             {
                 ConversationId = conversationId,
@@ -128,6 +136,9 @@ namespace MotoShop.Hubs
         // Đánh dấu đã đọc
         public async Task MarkAsRead(int conversationId, string senderType)
         {
+            // Admin chỉ được mark khi có role, customer chỉ được mark của chính mình
+            if (senderType == "Admin" && Context.User?.IsInRole("Admin") != true) return;
+
             var conversation = await _context.ChatConversations.FindAsync(conversationId);
             if (conversation != null)
             {

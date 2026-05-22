@@ -317,13 +317,22 @@ namespace MotoShop.Business.Services
                         MotoShop.Data.Constants.OrderStatusConst.Pending,
                         MotoShop.Data.Constants.OrderStatusConst.Processing,
                         MotoShop.Data.Constants.OrderStatusConst.DangXuLy,
-                        "Confirmed",
+                        MotoShop.Data.Constants.OrderStatusConst.Confirmed,
                         MotoShop.Data.Constants.OrderStatusConst.Shipping,
                         MotoShop.Data.Constants.OrderStatusConst.DangGiao
                     };
                     if (order == null || !cancellable.Contains(order.Status)) return false;
 
                     order.Status = MotoShop.Data.Constants.OrderStatusConst.Cancelled;
+
+                    // Hoàn lại lượt sử dụng coupon nếu đơn dùng coupon có giới hạn
+                    if (order.CouponId.HasValue)
+                    {
+                        await _context.Coupons
+                            .Where(c => c.CouponId == order.CouponId.Value && c.UsedCount > 0)
+                            .ExecuteUpdateAsync(c => c.SetProperty(p => p.UsedCount, p => p.UsedCount - 1));
+                    }
+
                     foreach (var item in order.OrderItems)
                     {
                         if (item.ProductVariant != null)
