@@ -59,20 +59,23 @@ namespace MotoShop.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Upsert(int? CategoryId, string CategoryName, int? ParentId, string Description, string ImageUrl)
         {
-            if (string.IsNullOrEmpty(CategoryName)) 
+            if (string.IsNullOrEmpty(CategoryName))
                 return Json(new { success = false, message = "Tên danh mục không được để trống!" });
 
-            try 
+            var resolvedParentId = ParentId == 0 ? null : ParentId;
+
+            try
             {
                 if (CategoryId == null || CategoryId == 0) // Thêm mới
                 {
-                    var category = new Category 
-                    { 
-                        CategoryName = CategoryName, 
-                        ParentId = ParentId == 0 ? null : ParentId,
+                    var slug = await MakeUniqueSlugAsync(CategoryName, excludeId: 0);
+                    var category = new Category
+                    {
+                        CategoryName = CategoryName,
+                        ParentId = resolvedParentId,
                         Description = Description,
                         ImageUrl = ImageUrl,
-                        Slug = CategoryName.ToLower().Replace(" ", "-").Replace("đ", "d").Replace("/", "-")
+                        Slug = slug
                     };
                     _context.Categories.Add(category);
                 }
@@ -80,12 +83,33 @@ namespace MotoShop.Areas.Admin.Controllers
                 {
                     var category = await _context.Categories.FindAsync(CategoryId);
                     if (category == null) return Json(new { success = false, message = "Không tìm thấy danh mục!" });
-                    
+
+                    // Kiểm tra circular reference: không được đặt cha là chính mình hoặc con cháu của mình
+                    if (resolvedParentId.HasValue)
+                    {
+                        if (resolvedParentId == CategoryId)
+                            return Json(new { success = false, message = "Danh mục không thể là cha của chính nó!" });
+
+                        // Duyệt lên từ proposed parent, nếu gặp CategoryId hiện tại thì có vòng lặp
+                        var checkId = resolvedParentId;
+                        var visited = new System.Collections.Generic.HashSet<int>();
+                        while (checkId.HasValue)
+                        {
+                            if (checkId == CategoryId.Value)
+                                return Json(new { success = false, message = "Không thể chọn danh mục cha này vì tạo vòng lặp trong cây danh mục!" });
+                            if (!visited.Add(checkId.Value)) break; // Chống loop trong data cũ bị hỏng
+                            checkId = await _context.Categories
+                                .Where(c => c.CategoryId == checkId.Value)
+                                .Select(c => c.ParentId)
+                                .FirstOrDefaultAsync();
+                        }
+                    }
+
                     category.CategoryName = CategoryName;
-                    category.ParentId = ParentId == 0 ? null : ParentId;
+                    category.ParentId = resolvedParentId;
                     category.Description = Description;
                     category.ImageUrl = ImageUrl;
-                    category.Slug = CategoryName.ToLower().Replace(" ", "-").Replace("đ", "d").Replace("/", "-");
+                    category.Slug = await MakeUniqueSlugAsync(CategoryName, excludeId: CategoryId.Value);
                     _context.Categories.Update(category);
                 }
 
@@ -97,6 +121,22 @@ namespace MotoShop.Areas.Admin.Controllers
             {
                 return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
             }
+        }
+
+        // Tạo slug duy nhất: nếu đã tồn tại thì tự thêm hậu tố -2, -3, ...
+        private async Task<string> MakeUniqueSlugAsync(string name, int excludeId)
+        {
+            var baseSlug = name.ToLower()
+                .Replace("đ", "d").Replace("Đ", "d")
+                .Replace("/", "-").Replace(" ", "-");
+
+            var slug = baseSlug;
+            var suffix = 2;
+            while (await _context.Categories.AnyAsync(c => c.Slug == slug && c.CategoryId != excludeId))
+            {
+                slug = $"{baseSlug}-{suffix++}";
+            }
+            return slug;
         }
 
         // POST: Admin/Category/Delete/5
