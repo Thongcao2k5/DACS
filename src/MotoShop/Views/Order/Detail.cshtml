@@ -6,6 +6,7 @@
 @using Microsoft.EntityFrameworkCore
 @{
     var order = Model.OrderInfo;
+    var isCompletedOrder = order.Status == "Completed" || order.Status == "DaHoanThanh";
     ViewData["Title"] = "Chi tiết đơn hàng " + order.OrderCode;
     var user = await UserManager.GetUserAsync(User);
     var currentCustomer = user != null ? await UnitOfWork.Repository<MotoShop.Data.Models.Customer>().Find(c => c.UserId == user.Id).FirstOrDefaultAsync() : null;
@@ -114,6 +115,22 @@
                                             <img src="@(string.IsNullOrEmpty(item.ProductImage) ? "/assets/img/elements/18.jpg" : item.ProductImage)" class="rounded-3 border" style="width: 50px; height: 50px; object-fit: cover;" alt="P">
                                             <div>
                                                 <span class="text-dark fw-bold small d-block">@item.ProductName</span>
+                                                @if (!string.IsNullOrWhiteSpace(item.VariantName))
+                                                {
+                                                    <span class="text-muted x-small d-block">Phân loại: @item.VariantName</span>
+                                                }
+                                                @if (isCompletedOrder && item.ProductId.HasValue && item.ProductVariantId.HasValue)
+                                                {
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-outline-danger rounded-pill mt-2 px-3"
+                                                            data-product-id="@item.ProductId"
+                                                            data-variant-id="@item.ProductVariantId"
+                                                            data-product-name="@item.ProductName"
+                                                            data-variant-name="@item.VariantName"
+                                                            onclick="openReviewModalFromButton(this)">
+                                                        <i class='bx bx-star me-1'></i>Đánh giá
+                                                    </button>
+                                                }
                                             </div>
                                         </div>
                                     </td>
@@ -238,6 +255,11 @@
                         <textarea name="comment" class="form-control rounded-3" rows="4" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này..."></textarea>
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Ảnh thực tế (tối đa 5 ảnh)</label>
+                        <input type="file" name="reviewImages" class="form-control rounded-3" accept="image/jpeg,image/png,image/webp" multiple>
+                        <div class="form-text">Hỗ trợ JPG, PNG, WEBP. Mỗi ảnh tối đa 5MB.</div>
+                    </div>
                     <button type="submit" class="btn btn-danger w-100 rounded-pill py-2 fw-bold">GỬI ĐÁNH GIÁ</button>
                 </form>
             </div>
@@ -264,6 +286,15 @@
             document.getElementById('reviewProductName').innerText = pName;
             document.getElementById('reviewVariantName').innerText = 'Phân loại: ' + vName;
             reviewModal.show();
+        }
+
+        function openReviewModalFromButton(button) {
+            openReviewModal(
+                button.dataset.productId,
+                button.dataset.variantId,
+                button.dataset.productName,
+                button.dataset.variantName || 'Mặc định'
+            );
         }
 
         // Star Rating Logic

@@ -50,6 +50,7 @@ namespace MotoShop.Areas.Admin.Controllers
             var query = _context.ProductReviews
                 .Include(r => r.Product)
                 .Include(r => r.Customer)
+                .Include(r => r.Images)
                 .AsNoTracking()
                 .AsQueryable();
 
@@ -88,9 +89,12 @@ namespace MotoShop.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
-            var review = await _context.ProductReviews.FindAsync(id);
+            var review = await _context.ProductReviews
+                .Include(r => r.Images)
+                .FirstOrDefaultAsync(r => r.ReviewId == id);
             if (review == null) return Json(new { success = false });
 
+            _context.ProductReviewImages.RemoveRange(review.Images);
             _context.ProductReviews.Remove(review);
             await _context.SaveChangesAsync();
             return Json(new { success = true, message = "Xóa đánh giá thành công" });
@@ -101,10 +105,14 @@ namespace MotoShop.Areas.Admin.Controllers
         {
             if (model.Ids == null || model.Ids.Length == 0) return Json(new { success = false });
 
-            var reviews = await _context.ProductReviews.Where(r => model.Ids.Contains(r.ReviewId)).ToListAsync();
+            var reviews = await _context.ProductReviews
+                .Include(r => r.Images)
+                .Where(r => model.Ids.Contains(r.ReviewId))
+                .ToListAsync();
             
             if (model.Action == "Delete")
             {
+                _context.ProductReviewImages.RemoveRange(reviews.SelectMany(r => r.Images));
                 _context.ProductReviews.RemoveRange(reviews);
             }
             else

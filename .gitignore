@@ -23,3 +23,21 @@ Logs/
 # Local upload/test artifacts
 src/MotoShop/wwwroot/uploads/blog/
 src/MotoShop/wwwroot/uploads/sliders/
+
+# Local Codex/render/test artifacts
+.doc-work/
+.screenshot-work/
+docx_render_group*/
+test-results/
+artifacts/
+node_modules/
+package.json
+package-lock.json
+BaoCao_DoAnCoSo_MotoShop.docx
+tools/
+
+# Runtime uploads generated while testing
+src/MotoShop/wwwroot/uploads/products/
+src/MotoShop/wwwroot/uploads/reviews/
+src/MotoShop/wwwroot/uploads/services/*.png
+src/MotoShop/wwwroot/uploads/avatars/*.png

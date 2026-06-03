@@ -8,6 +8,9 @@
 @{
     var flashSale = ViewBag.ActiveFlashSale as MotoShop.Data.Models.Promotion;
     var flashProducts = ViewBag.FlashSaleProducts as List<MotoShop.Business.DTOs.ProductDto>;
+    var flashDiscountLabel = flashSale?.DiscountType == MotoShop.Data.Enums.DiscountType.Percent
+        ? $"-{flashSale.DiscountValue:0}%"
+        : $"-{flashSale?.DiscountValue.ToString("N0")}đ";
 }
 @if (flashSale != null)
 {
@@ -20,7 +23,7 @@
         <span class="popup-badge-live"><i class='bx bx-radio-circle-marked'></i> ĐANG DIỄN RA</span>
         <span class="popup-badge-type"><i class='bx bx-flame'></i> FLASH SALE</span>
       </div>
-      <div class="popup-discount">-@((int)flashSale.DiscountValue)%</div>
+      <div class="popup-discount">@flashDiscountLabel</div>
       <div class="popup-title">@flashSale.Name</div>
       <div class="popup-subtitle">Kết thúc lúc @flashSale.EndDate.ToString("HH:mm dd/MM/yyyy")</div>
     </div>
@@ -47,7 +50,7 @@
             <div class="popup-prod-img">
               <img src="@p.PrimaryImageUrl" alt="@p.ProductName"
                    onerror="this.src='/images/placeholder.jpg'" />
-              <span class="popup-prod-pct">-@((int)flashSale.DiscountValue)%</span>
+              <span class="popup-prod-pct">@flashDiscountLabel</span>
             </div>
             <div class="popup-prod-info">
               <div class="popup-prod-name">@p.ProductName</div>
@@ -70,8 +73,6 @@
 </div>
 <script>
 (function() {
-    const key = 'popup_@flashSale.Id';
-    if (sessionStorage.getItem(key)) return;
     setTimeout(() => {
         const el = document.getElementById('eventPopup');
         if (el) el.style.display = 'flex';
@@ -80,7 +81,6 @@
 function closePopup() {
     const el = document.getElementById('eventPopup');
     if (el) el.style.display = 'none';
-    sessionStorage.setItem('popup_@flashSale.Id', '1');
 }
 const endDate = new Date('@flashSale.EndDate.ToString("yyyy-MM-ddTHH:mm:ss")');
 function tick() {

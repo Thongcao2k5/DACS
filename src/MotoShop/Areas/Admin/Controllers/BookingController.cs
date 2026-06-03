@@ -61,13 +61,23 @@ namespace MotoShop.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> UpdateStatus(int bookingId, string status, string? notes)
         {
-            var booking = await _context.ServiceBookings.FindAsync(bookingId);
+            var booking = await _context.ServiceBookings
+                .Include(b => b.Service)
+                .Include(b => b.Combo)
+                .FirstOrDefaultAsync(b => b.BookingId == bookingId);
             if (booking == null) return Json(new { success = false });
 
             var oldStatus = booking.Status;
             booking.Status = status;
             if ((status == BookingStatusConst.Completed || status == BookingStatusConst.DaHoanThanh) && !booking.CompletedAt.HasValue)
                 booking.CompletedAt = DateTime.Now;
+            if (status == BookingStatusConst.Completed || status == BookingStatusConst.DaHoanThanh)
+                booking.RevenueAmount = ResolveBookingRevenue(booking);
+            if (status == BookingStatusConst.Cancelled)
+            {
+                booking.CompletedAt = null;
+                booking.RevenueAmount = 0;
+            }
             if (!string.IsNullOrEmpty(notes)) booking.Notes = notes;
             await _context.SaveChangesAsync();
 
@@ -128,6 +138,17 @@ namespace MotoShop.Areas.Admin.Controllers
                 HttpContext.Connection.RemoteIpAddress?.ToString());
 
             return Json(new { success = true, message = "Duyệt cọc thành công!" });
+        }
+
+        private static decimal ResolveBookingRevenue(ServiceBooking booking)
+        {
+            if (booking.Service != null)
+                return booking.Service.Price;
+
+            if (booking.Combo != null)
+                return booking.Combo.DiscountPrice > 0 ? booking.Combo.DiscountPrice : booking.Combo.TotalPrice;
+
+            return booking.RevenueAmount > 0 ? booking.RevenueAmount : booking.DepositAmount;
         }
 
         [HttpPost]

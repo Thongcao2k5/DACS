@@ -153,15 +153,16 @@
 
                 <div class="checkout-section">
                     <h5 class="section-subtitle"><i class='bx bx-credit-card'></i> THANH TOÁN</h5>
-                    <div class="method-card active" onclick="setPayment('COD', this)">
+                    <div class="method-card payment-method-card active" onclick="setPayment('COD', this)">
                         <input type="radio" asp-for="PaymentMethod" value="COD" id="pay1" checked>
                         <div class="method-info"><label for="pay1" class="name">Tiền mặt (COD)</label></div>
                     </div>
-                    <div class="method-card mt-2" onclick="setPayment('VNPay', this)">
+                    <div class="method-card payment-method-card mt-2" onclick="setPayment('VNPay', this)">
                         <input type="radio" asp-for="PaymentMethod" value="VNPay" id="pay3">
                         <div class="method-info">
                             <label for="pay3" class="name d-flex align-items-center gap-2">
-                                Thanh toán qua VNPay <img src="https://sandbox.vnpayment.vn/paymentv2/Images/brands/logo-vnpay.png" height="20" alt="VNPay">
+                                Thanh toán qua VNPay
+                                <span class="vnpay-badge" aria-label="VNPay">VN<span>Pay</span></span>
                             </label>
                         </div>
                     </div>
@@ -295,6 +296,31 @@
     <style>
         .saved-addr-option.active { border-color: #dc3545; background: #fff5f5; border-width: 2px; }
         .cursor-pointer { cursor: pointer; }
+        .payment-method-card.active,
+        .payment-method-card:has(input:checked) {
+            border-color: #E60023 !important;
+            background: rgba(230, 0, 35, 0.04) !important;
+        }
+        .payment-method-card:hover {
+            border-color: #E60023 !important;
+        }
+        .vnpay-badge {
+            display: inline-flex;
+            align-items: center;
+            height: 22px;
+            padding: 0 8px;
+            border-radius: 5px;
+            background: #005baa;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .2px;
+            line-height: 1;
+        }
+        .vnpay-badge span {
+            color: #ed1c24;
+            margin-left: 1px;
+        }
     </style>
 }
 
@@ -308,11 +334,10 @@
 
         async function loadProvinces() {
             try {
-                const res = await fetch('https://provinces.open-api.vn/api/p/');
+                const res = await fetch('/api/shipping/provinces');
                 const data = await res.json();
                 data.forEach(p => {
-                    const opt = new Option(p.name, p.name);
-                    opt.dataset.code = p.code;
+                    const opt = new Option(p.provinceName, p.provinceId);
                     provinceSelect.add(opt);
                 });
                 @if (defaultAddr != null) {
@@ -326,16 +351,15 @@
         }
 
         provinceSelect.onchange = async () => {
-            const code = provinceSelect.options[provinceSelect.selectedIndex].dataset.code;
+            const id = provinceSelect.value;
             districtSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
             wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
             districtSelect.disabled = wardSelect.disabled = true;
-            if (code) {
-                const res = await fetch(`https://provinces.open-api.vn/api/p/${code}?depth=2`);
+            if (id) {
+                const res = await fetch(`/api/shipping/districts?provinceId=${id}`);
                 const data = await res.json();
-                data.districts.forEach(d => {
-                    const opt = new Option(d.name, d.name);
-                    opt.dataset.code = d.code;
+                data.forEach(d => {
+                    const opt = new Option(d.districtName, d.districtId);
                     districtSelect.add(opt);
                 });
                 districtSelect.disabled = false;
@@ -347,15 +371,19 @@
         };
 
         districtSelect.onchange = async () => {
-            const code = districtSelect.options[districtSelect.selectedIndex].dataset.code;
+            const id = districtSelect.value;
             wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
             wardSelect.disabled = true;
-            if (code) {
-                const res = await fetch(`https://provinces.open-api.vn/api/d/${code}?depth=2`);
+            if (id) {
+                const res = await fetch(`/api/shipping/wards?districtId=${id}`);
                 const data = await res.json();
-                data.wards.forEach(w => wardSelect.add(new Option(w.name, w.name)));
+                data.forEach(w => wardSelect.add(new Option(w.wardName, w.wardCode)));
                 wardSelect.disabled = false;
-                if (window.pendingWard) { wardSelect.value = window.pendingWard; window.pendingWard = null; }
+                if (window.pendingWard) {
+                    const opt = [...wardSelect.options].find(o => o.text === window.pendingWard);
+                    if(opt) { wardSelect.value = opt.value; }
+                    window.pendingWard = null;
+                }
             }
         };
 
@@ -427,6 +455,35 @@
             }
         }
 
+        function applyFallbackShipping(message) {
+            const fallbackFee = orderSubtotal >= freeShipDefault ? 0 : 30000;
+            document.getElementById('inp-district-id').value = '0';
+            document.getElementById('inp-ward-code').value = '';
+            document.getElementById('inp-shipping-fee').value = fallbackFee;
+            document.getElementById('inp-shipping-method').value = '';
+            document.getElementById('shippingFee').dataset.value = fallbackFee;
+            document.getElementById('shipping-options').innerHTML = `
+                <label id="ship-opt-fallback" style="display:flex;align-items:flex-start;gap:12px;
+                    padding:12px 14px;border:1.5px solid #E60023;border-radius:10px;margin-bottom:8px;
+                    cursor:pointer;background:rgba(230,0,35,0.04);transition:all .15s;">
+                    <input type="radio" name="_shipChoice" value="fallback" checked
+                           style="accent-color:#E60023;margin-top:3px"/>
+                    <div style="flex:1">
+                        <div style="display:flex;justify-content:space-between;align-items:center">
+                            <span style="font-weight:600;font-size:14px;color:#1a1a1a">Tiêu chuẩn</span>
+                            <span style="font-weight:700;color:${fallbackFee === 0 ? '#20c997' : '#E60023'};font-size:15px">
+                                ${fallbackFee === 0 ? 'Miễn phí' : fallbackFee.toLocaleString('vi-VN') + 'đ'}
+                            </span>
+                        </div>
+                        <div style="font-size:12px;color:#a1acb8;margin-top:3px">
+                            <i class='bx bx-time' style="font-size:11px"></i> Dự kiến 3 ngày
+                        </div>
+                        ${message ? `<div style="font-size:11px;color:#fd7e14;margin-top:3px"><i class='bx bx-info-circle'></i> ${message}</div>` : ''}
+                    </div>
+                </label>`;
+            updateTotal();
+        }
+
         function setShippingMethod(id, cost, el) {
             // Update UI class
             const section = el.closest('.checkout-section');
@@ -441,6 +498,18 @@
             updateTotal();
         }
 
+        function setPayment(method, el) {
+            const section = el.closest('.checkout-section');
+            section.querySelectorAll('.payment-method-card').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+
+            const radio = el.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+
         // ── GHN Shipping Logic ──────────────────────────────────────────────
         const orderSubtotal = parseFloat(document.getElementById('subtotal').dataset.value || 0);
         const freeShipDefault = 500000;
@@ -451,9 +520,7 @@
 
         async function loadShippingOptions(districtId, wardCode) {
             if (!districtId || !wardCode) {
-                document.getElementById('shipping-options').innerHTML =
-                    '<div class="alert alert-warning small mb-0"><i class=\'bx bx-error-circle me-1\'></i>' +
-                    'Vui lòng cập nhật địa chỉ giao hàng có đầy đủ Quận/Huyện và Phường/Xã để tính phí ship tự động.</div>';
+                applyFallbackShipping('Chưa có mã GHN cho địa chỉ này nên hệ thống tạm tính phí tiêu chuẩn.');
                 return;
             }
 
@@ -469,8 +536,7 @@
             }).then(r => r.json()).catch(() => []);
 
             if (!res.length) {
-                document.getElementById('shipping-options').innerHTML =
-                    '<div class="p-3 rounded-3 bg-light text-muted small"><i class=\'bx bx-info-circle me-1\'></i>Không thể tính phí ship, sẽ tính khi giao hàng.</div>';
+                applyFallbackShipping('Không thể kết nối GHN, hệ thống tạm tính phí tiêu chuẩn.');
                 return;
             }
 
@@ -554,6 +620,10 @@
             const provinceName = provinceSel?.options[provinceSel?.selectedIndex]?.text || '';
             const districtName = districtSel?.options[districtSel?.selectedIndex]?.text || '';
             const wardName     = wardSel?.options[wardSel?.selectedIndex]?.text || '';
+            const fullName = document.getElementById('inputFullName')?.value?.trim() || '';
+            const phone    = document.getElementById('inputPhone')?.value?.trim() || '';
+            const street   = document.getElementById('inputStreet')?.value?.trim() || '';
+            const token    = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
 
             if (!districtName || districtName === 'Chọn Quận/Huyện' ||
                 !wardName     || wardName === 'Chọn Phường/Xã') {
@@ -561,98 +631,81 @@
                 return;
             }
 
+            if (!fullName || !phone || !street) {
+                status.innerHTML = '<span style="color:#E60023">Vui lòng nhập họ tên, số điện thoại và địa chỉ chi tiết</span>';
+                return;
+            }
+
+            async function persistCheckoutAddress(districtId = null, wardCode = null) {
+                const saveRes = await fetch('/Address/AddAddress', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({
+                        fullName, phone,
+                        province: provinceName,
+                        district: districtName,
+                        ward: wardName,
+                        street,
+                        isDefault: true,
+                        districtId,
+                        wardCode
+                    })
+                }).then(r => r.ok ? r.json() : null).catch(() => null);
+
+                if (!saveRes?.success) {
+                    status.innerHTML = '<span style="color:#E60023">' + (saveRes?.message || 'Không thể lưu địa chỉ. Vui lòng kiểm tra lại thông tin.') + '</span>';
+                    return false;
+                }
+
+                document.getElementById('inputAddressId').value = saveRes.id;
+                document.getElementById('summaryName').innerText    = fullName;
+                document.getElementById('summaryPhone').innerText   = phone;
+                document.getElementById('summaryAddress').innerText =
+                    `${street}, ${wardName}, ${districtName}, ${provinceName}`;
+                document.getElementById('addressSummary').classList.remove('d-none');
+                document.getElementById('formInputs').classList.add('d-none');
+                return true;
+            }
+
             btn.disabled = true;
             btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Đang tính...";
             status.innerHTML = '';
 
             try {
-                // Bước 1: Map tên tỉnh → GHN ProvinceId
-                const provinces = await fetch('/api/shipping/provinces').then(r => r.json());
-                const cleanProvince = provinceName.replace(/^Tỉnh\s+/i,'').replace(/^Thành phố\s+/i,'');
-                const ghnProvince = provinces.find(p => {
-                    const cp = p.provinceName.replace(/^Tỉnh\s+/i,'').replace(/^Thành phố\s+/i,'');
-                    return fuzzyMatch(cp, cleanProvince);
-                });
-                if (!ghnProvince) {
-                    status.innerHTML = '<span style="color:#E60023">Không tìm được tỉnh trong GHN. '
-                        + '<a href="/Address" style="color:#E60023;text-decoration:underline">Lưu địa chỉ tại đây</a> để tính phí chính xác.</span>';
-                    return;
-                }
+                const ghnProvinceId = provinceSel.value;
+                const ghnDistrictId = districtSel.value;
+                const ghnWardCode = wardSel.value;
 
-                // Bước 2: Map tên quận → GHN DistrictId
-                const districts = await fetch(`/api/shipping/districts?provinceId=${ghnProvince.provinceId}`).then(r => r.json());
-                const cleanDistrict = districtName.replace(/^Quận\s+/i,'').replace(/^Huyện\s+/i,'').replace(/^Thị xã\s+/i,'').replace(/^Thành phố\s+/i,'');
-                const ghnDistrict = districts.find(d => {
-                    const cd = d.districtName.replace(/^Quận\s+/i,'').replace(/^Huyện\s+/i,'').replace(/^Thị xã\s+/i,'').replace(/^Thành phố\s+/i,'');
-                    return fuzzyMatch(cd, cleanDistrict);
-                });
-                if (!ghnDistrict) {
-                    status.innerHTML = '<span style="color:#E60023">Không map được Quận/Huyện sang GHN. '
-                        + '<a href="/Address" style="color:#E60023;text-decoration:underline">Lưu địa chỉ tại đây</a>.</span>';
-                    return;
-                }
-
-                // Bước 3: Map tên phường → GHN WardCode
-                const wards = await fetch(`/api/shipping/wards?districtId=${ghnDistrict.districtId}`).then(r => r.json());
-                const cleanWard = wardName.replace(/^Phường\s+/i,'').replace(/^Xã\s+/i,'').replace(/^Thị trấn\s+/i,'');
-                const ghnWard = wards.find(w => {
-                    const cw = w.wardName.replace(/^Phường\s+/i,'').replace(/^Xã\s+/i,'').replace(/^Thị trấn\s+/i,'');
-                    return fuzzyMatch(cw, cleanWard);
-                });
-                if (!ghnWard) {
-                    status.innerHTML = '<span style="color:#E60023">Không map được Phường/Xã sang GHN. '
-                        + '<a href="/Address" style="color:#E60023;text-decoration:underline">Lưu địa chỉ tại đây</a>.</span>';
+                if (!ghnProvinceId || !ghnDistrictId || !ghnWardCode) {
+                    if (!await persistCheckoutAddress()) return;
+                    applyFallbackShipping('Chưa chọn đủ thông tin địa chỉ GHN, hệ thống tạm tính phí tiêu chuẩn.');
+                    status.innerHTML = '<span style="color:#fd7e14"><i class="bx bx-info-circle"></i> Chưa chọn đủ thông tin GHN, đã tạm tính phí tiêu chuẩn.</span>';
                     return;
                 }
 
                 // Bước 4: Gán vào hidden inputs
-                document.getElementById('inp-district-id').value = ghnDistrict.districtId;
-                document.getElementById('inp-ward-code').value   = ghnWard.wardCode;
+                document.getElementById('inp-district-id').value = ghnDistrictId;
+                document.getElementById('inp-ward-code').value   = ghnWardCode;
 
                 // Bước 4.5: Lưu địa chỉ mới vào DB và đặt làm mặc định
-                const fullName = document.getElementById('inputFullName')?.value?.trim() || '';
-                const phone    = document.getElementById('inputPhone')?.value?.trim() || '';
-                const street   = document.getElementById('inputStreet')?.value?.trim() || '';
-                const token    = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
-
-                if (fullName && phone && street) {
-                    const saveRes = await fetch('/Address/AddAddress', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'RequestVerificationToken': token
-                        },
-                        body: JSON.stringify({
-                            fullName, phone,
-                            province: provinceName,
-                            district: districtName,
-                            ward: wardName,
-                            street,
-                            isDefault: true,
-                            districtId: ghnDistrict.districtId,
-                            wardCode: ghnWard.wardCode
-                        })
-                    }).then(r => r.json()).catch(() => null);
-
-                    if (saveRes?.success) {
-                        document.getElementById('inputAddressId').value = saveRes.id;
-                        document.getElementById('summaryName').innerText    = fullName;
-                        document.getElementById('summaryPhone').innerText   = phone;
-                        document.getElementById('summaryAddress').innerText =
-                            `${street}, ${wardName}, ${districtName}, ${provinceName}`;
-                        document.getElementById('addressSummary').classList.remove('d-none');
-                        document.getElementById('formInputs').classList.add('d-none');
-                    }
-                }
+                if (!await persistCheckoutAddress(ghnDistrictId, ghnWardCode)) return;
 
                 status.innerHTML = '<span style="color:#20c997"><i class="bx bx-check"></i> Đã xác định vị trí, đang tính phí...</span>';
 
                 // Bước 5: Gọi tính phí (loadShippingOptions đọc orderSubtotal từ module scope)
-                await loadShippingOptions(ghnDistrict.districtId, ghnWard.wardCode);
+                await loadShippingOptions(ghnDistrictId, ghnWardCode);
 
                 status.innerHTML = '<span style="color:#20c997"><i class="bx bx-check-circle"></i> Đã tính phí ship thành công!</span>';
             } catch (err) {
-                status.innerHTML = '<span style="color:#E60023">Lỗi: ' + err.message + '</span>';
+                if (await persistCheckoutAddress()) {
+                    applyFallbackShipping('Không thể kết nối dịch vụ vận chuyển, hệ thống tạm tính phí tiêu chuẩn.');
+                    status.innerHTML = '<span style="color:#fd7e14"><i class="bx bx-info-circle"></i> Đã lưu địa chỉ và tạm tính phí tiêu chuẩn.</span>';
+                } else {
+                    status.innerHTML = '<span style="color:#E60023">Lỗi: ' + err.message + '</span>';
+                }
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = "<i class='bx bx-map-pin'></i> Lưu & Tính phí ship";
@@ -663,9 +716,7 @@
             if (defaultDistrictId > 0 && defaultWardCode) {
                 await loadShippingOptions(defaultDistrictId, defaultWardCode);
             } else {
-                document.getElementById('shipping-options').innerHTML =
-                    '<div class="alert alert-warning small mb-0"><i class=\'bx bx-error-circle me-1\'></i>' +
-                    'Vui lòng cập nhật địa chỉ giao hàng có đầy đủ Quận/Huyện và Phường/Xã để tính phí ship tự động.</div>';
+                applyFallbackShipping('Địa chỉ hiện tại chưa có mã GHN, hệ thống tạm tính phí tiêu chuẩn.');
             }
         });
         // ── End GHN Shipping Logic ──────────────────────────────────────────

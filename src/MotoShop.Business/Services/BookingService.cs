@@ -72,6 +72,7 @@ namespace MotoShop.Business.Services
                 LicensePlate = model.LicensePlate,
                 Notes = model.Note,
                 DepositAmount = depositAmount,
+                RevenueAmount = service.Price,
                 DepositStatus = "Unpaid",
                 ExpireAt = DateTime.Now.AddHours(_config.GetValue<int>("Booking:ExpireAfterHours", 2))
             };

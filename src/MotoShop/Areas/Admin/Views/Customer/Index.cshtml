@@ -115,6 +115,15 @@
                                         title="@(item.IsLocked ? "Mở khóa" : "Khóa tài khoản")">
                                     <i class="bx @(item.IsLocked ? "bx-lock-open-alt" : "bx-lock-alt")"></i>
                                 </button>
+                                <button type="button"
+                                        class="btn btn-sm btn-icon btn-outline-danger"
+                                        data-id="@item.CustomerId"
+                                        data-name="@item.FullName"
+                                        data-email="@item.Email"
+                                        onclick="confirmDeleteAccount(this)"
+                                        title="Xóa tài khoản">
+                                    <i class="bx bx-trash"></i>
+                                </button>
                             </td>
                         </tr>
                     }
@@ -156,10 +165,31 @@
     </div>
 </div>
 
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-body p-4 text-center">
+                <i class="bx bx-trash text-danger" style="font-size: 4rem"></i>
+                <h5 class="fw-bold mt-3">Xóa tài khoản khách hàng?</h5>
+                <p class="text-muted small mb-2" id="deleteAccountMsg"></p>
+                <div class="alert alert-warning small text-start mb-0">
+                    Tài khoản đăng nhập sẽ bị xóa khỏi hệ thống để email cũ có thể đăng ký lại. Lịch sử đơn hàng và đặt lịch vẫn được giữ dưới hồ sơ đã ẩn danh.
+                </div>
+                <div class="d-flex gap-2 justify-content-center mt-4">
+                    <button class="btn btn-outline-secondary border-0 px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button class="btn btn-danger px-4" id="btnConfirmDeleteAccount">Xóa tài khoản</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         const sModal = new bootstrap.Modal(document.getElementById('statusModal'));
+        const deleteAccountModal = new bootstrap.Modal(document.getElementById('deleteAccountModal'));
         let targetId = 0;
+        let deleteTargetId = 0;
 
         function confirmToggleStatus(id, name, willLock) {
             targetId = id;
@@ -183,6 +213,32 @@
                     UI.toast(res.message, 'success');
                     setTimeout(() => location.reload(), 1000);
                 }
+            });
+        });
+
+        function confirmDeleteAccount(button) {
+            deleteTargetId = $(button).data('id');
+            const name = $(button).data('name') || 'khách hàng này';
+            const email = $(button).data('email') || 'không có email';
+            $('#deleteAccountMsg').html(`Bạn chắc chắn muốn xóa tài khoản <b>${name}</b><br><span class="text-muted">${email}</span>?`);
+            deleteAccountModal.show();
+        }
+
+        $('#btnConfirmDeleteAccount').on('click', function() {
+            const $btn = $(this);
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Đang xóa...');
+
+            $.post('/Admin/Customer/DeleteAccount', { id: deleteTargetId }, function(res) {
+                if (res.success) {
+                    UI.toast(res.message, 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    UI.toast(res.message || 'Không thể xóa tài khoản.', 'error');
+                    $btn.prop('disabled', false).text('Xóa tài khoản');
+                }
+            }).fail(function() {
+                UI.toast('Có lỗi xảy ra khi xóa tài khoản.', 'error');
+                $btn.prop('disabled', false).text('Xóa tài khoản');
             });
         });
 

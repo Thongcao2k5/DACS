@@ -190,6 +190,29 @@
     <script>
         function getAntiForgeryToken() { return document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''; }
 
+        function showWishlistToast(message, icon = 'success') {
+            if (window.CartUI && typeof window.CartUI.showToast === 'function') {
+                window.CartUI.showToast(message, icon);
+                return;
+            }
+            if (window.UI && typeof window.UI.showToast === 'function') {
+                window.UI.showToast(message, icon);
+                return;
+            }
+            if (window.Swal) {
+                Swal.fire({
+                    icon: icon,
+                    title: message,
+                    showConfirmButton: false,
+                    timer: 1600,
+                    toast: true,
+                    position: 'top-end'
+                });
+                return;
+            }
+            alert(message);
+        }
+
         async function removeWishlistItem(e, productId, cardElement) {
             if (e) e.preventDefault();
             
@@ -237,21 +260,27 @@
             try {
                 const res = await fetch('/Wishlist/AddToCart', {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
-                        'RequestVerificationToken': getAntiForgeryToken() 
+                        'RequestVerificationToken': getAntiForgeryToken()
                     },
                     body: JSON.stringify({ productId: productId, quantity: 1 })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    if (typeof updateCartBadge === 'function') updateCartBadge();
-                    Swal.fire({ icon: 'success', title: 'Thành công', text: 'Đã thêm vào giỏ hàng', timer: 1500, toast: true, position: 'top-end', showConfirmButton: false });
+                    const badge = document.getElementById('cartBadge');
+                    if (badge && data.cartCount !== undefined) {
+                        badge.textContent = data.cartCount;
+                        badge.style.display = data.cartCount > 0 ? 'inline-flex' : 'none';
+                    } else if (typeof updateCartBadge === 'function') {
+                        updateCartBadge();
+                    }
+                    showWishlistToast(data.message || 'Đã thêm vào giỏ hàng', 'success');
                 } else {
-                    Swal.fire('Thông báo', data.message || 'Lỗi khi thêm vào giỏ', 'info');
+                    showWishlistToast(data.message || 'Lỗi khi thêm vào giỏ', 'info');
                 }
             } catch (err) {
-                Swal.fire('Lỗi', 'Lỗi hệ thống', 'error');
+                showWishlistToast('Lỗi hệ thống', 'error');
             } finally {
                 btn.innerHTML = originalHtml;
                 btn.disabled = false;

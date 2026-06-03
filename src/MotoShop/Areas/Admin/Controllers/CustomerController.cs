@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ClosedXML.Excel;
 using System.IO;
+using System.Security.Claims;
 
 namespace MotoShop.Areas.Admin.Controllers
 {
@@ -115,6 +116,127 @@ namespace MotoShop.Areas.Admin.Controllers
 
             string msg = customer.IsLocked ? "Đã khóa tài khoản" : "Đã mở khóa tài khoản";
             return Json(new { success = true, message = msg, isLocked = customer.IsLocked });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteAccount(int id)
+        {
+            var strategy = _context.Database.CreateExecutionStrategy();
+
+            return await strategy.ExecuteAsync(async () =>
+            {
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+
+                var customer = await _context.Customers
+                    .Include(c => c.Carts).ThenInclude(c => c.CartItems)
+                    .Include(c => c.Addresses)
+                    .FirstOrDefaultAsync(c => c.CustomerId == id);
+
+                if (customer == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy khách hàng." });
+                }
+
+                var oldUserId = customer.UserId;
+                var oldEmail = customer.Email;
+                var oldName = customer.FullName;
+                var currentAdminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (!string.IsNullOrWhiteSpace(oldUserId) && oldUserId == currentAdminId)
+                {
+                    return Json(new { success = false, message = "Không thể xóa chính tài khoản đang đăng nhập." });
+                }
+
+                IdentityUser? identityUser = null;
+                if (!string.IsNullOrWhiteSpace(oldUserId))
+                {
+                    identityUser = await _userManager.FindByIdAsync(oldUserId);
+                }
+
+                if (identityUser != null && await _userManager.IsInRoleAsync(identityUser, "Admin"))
+                {
+                    return Json(new { success = false, message = "Không thể xóa tài khoản có quyền Admin." });
+                }
+
+                if (identityUser != null)
+                {
+                    var deleteResult = await _userManager.DeleteAsync(identityUser);
+                    if (!deleteResult.Succeeded)
+                    {
+                        var errors = string.Join(" ", deleteResult.Errors.Select(e => e.Description));
+                        return Json(new { success = false, message = $"Không thể xóa tài khoản đăng nhập. {errors}" });
+                    }
+                }
+
+                var cartItems = customer.Carts.SelectMany(c => c.CartItems).ToList();
+                if (cartItems.Count > 0)
+                {
+                    _context.CartItems.RemoveRange(cartItems);
+                }
+
+                if (customer.Carts.Count > 0)
+                {
+                    _context.Carts.RemoveRange(customer.Carts);
+                }
+
+                if (customer.Addresses.Count > 0)
+                {
+                    _context.AddressesNew.RemoveRange(customer.Addresses);
+                }
+
+                var wishlists = await _context.WishlistsNew
+                    .Where(w => w.UserId == customer.CustomerId)
+                    .ToListAsync();
+                if (wishlists.Count > 0)
+                {
+                    _context.WishlistsNew.RemoveRange(wishlists);
+                }
+
+                if (!string.IsNullOrWhiteSpace(oldUserId))
+                {
+                    var notifications = await _context.Notifications
+                        .Where(n => n.UserId == oldUserId)
+                        .ToListAsync();
+                    if (notifications.Count > 0)
+                    {
+                        _context.Notifications.RemoveRange(notifications);
+                    }
+
+                    var conversations = await _context.ChatConversations
+                        .Where(c => c.UserId == oldUserId)
+                        .ToListAsync();
+                    foreach (var conversation in conversations)
+                    {
+                        conversation.UserId = null;
+                        conversation.CustomerEmail = null;
+                        conversation.CustomerName = "Tài khoản đã xóa";
+                        conversation.IsClosed = true;
+                    }
+                }
+
+                customer.UserId = null;
+                customer.Email = null;
+                customer.Phone = null;
+                customer.Address = null;
+                customer.AvatarUrl = null;
+                customer.FullName = $"Tài khoản đã xóa #{customer.CustomerId}";
+                customer.IsLocked = true;
+
+                await _context.SaveChangesAsync();
+
+                var adminId = _userManager.GetUserId(User);
+                await _auditLogService.LogActionAsync(adminId, "DeleteAccount", "Customer", id.ToString(),
+                    null, $"Xóa tài khoản khách hàng: {oldName} ({oldEmail})",
+                    HttpContext.Connection.RemoteIpAddress?.ToString());
+
+                await transaction.CommitAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Đã xóa tài khoản. Email cũ có thể dùng để đăng ký lại."
+                });
+            });
         }
 
         public async Task<IActionResult> ExportExcel(string? searchTerm, string? status)

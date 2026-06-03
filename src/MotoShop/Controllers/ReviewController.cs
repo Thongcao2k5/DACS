@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MotoShop.Business.Interfaces;
 using MotoShop.Data.Constants;
 using MotoShop.Data.Data;
 using MotoShop.Data.Models;
@@ -14,16 +15,18 @@ namespace MotoShop.Controllers
     {
         private readonly MotoShopDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly IFileService _fileService;
 
-        public ReviewController(MotoShopDbContext context, UserManager<IdentityUser> userManager)
+        public ReviewController(MotoShopDbContext context, UserManager<IdentityUser> userManager, IFileService fileService)
         {
             _context = context;
             _userManager = userManager;
+            _fileService = fileService;
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SubmitReview(int productId, int? variantId, int rating, string comment)
+        public async Task<IActionResult> SubmitReview(int productId, int? variantId, int rating, string comment, List<IFormFile>? reviewImages)
         {
             var userId = _userManager.GetUserId(User);
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
@@ -31,7 +34,6 @@ namespace MotoShop.Controllers
             if (customer == null) return Json(new { success = false, message = "Không tìm thấy thông tin khách hàng." });
             if (rating < 1 || rating > 5) return Json(new { success = false, message = "Số sao không hợp lệ." });
 
-            // [L2-FIX] Strip HTML tags để ngăn stored XSS
             var sanitizedComment = Regex.Replace(comment ?? "", "<.*?>", " ", RegexOptions.Singleline).Trim();
             sanitizedComment = Regex.Replace(sanitizedComment, @"\s{2,}", " ");
 
@@ -55,7 +57,12 @@ namespace MotoShop.Controllers
             if (existed)
                 return Json(new { success = false, message = "Bạn đã đánh giá sản phẩm này rồi." });
 
-            _context.ProductReviews.Add(new ProductReview
+            var validImages = reviewImages?
+                .Where(f => f != null && f.Length > 0)
+                .Take(5)
+                .ToList() ?? new List<IFormFile>();
+
+            var review = new ProductReview
             {
                 ProductId = productId,
                 ProductVariantId = variantId,
@@ -64,11 +71,38 @@ namespace MotoShop.Controllers
                 Comment = sanitizedComment,
                 CreatedDate = DateTime.Now,
                 Status = ReviewStatusConst.Pending
-            });
+            };
 
+            _context.ProductReviews.Add(review);
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true, message = "Cảm ơn bạn đã đánh giá sản phẩm!" });
+            var uploadedImageUrls = new List<string>();
+            foreach (var image in validImages)
+            {
+                var upload = await _fileService.SaveFileAsync(image, "reviews");
+                if (!upload.IsSuccess)
+                {
+                    foreach (var url in uploadedImageUrls)
+                        _fileService.DeleteFile(url);
+
+                    _context.ProductReviews.Remove(review);
+                    await _context.SaveChangesAsync();
+
+                    return Json(new { success = false, message = upload.ErrorMessage ?? "Không thể tải ảnh đánh giá." });
+                }
+
+                uploadedImageUrls.Add(upload.FilePath ?? string.Empty);
+                _context.ProductReviewImages.Add(new ProductReviewImage
+                {
+                    ReviewId = review.ReviewId,
+                    ImageUrl = upload.FilePath ?? string.Empty
+                });
+            }
+
+            if (validImages.Any())
+                await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Cảm ơn bạn đã đánh giá sản phẩm! Đánh giá đang chờ quản trị viên duyệt." });
         }
     }
 }

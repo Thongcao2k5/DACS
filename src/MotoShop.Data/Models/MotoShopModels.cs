@@ -449,6 +449,8 @@ namespace MotoShop.Data.Models
         public string? Notes { get; set; }
         [Column(TypeName = "decimal(18, 2)")]
         public decimal DepositAmount { get; set; } = 0;
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal RevenueAmount { get; set; } = 0;
         [StringLength(50)]
         public string? DepositStatus { get; set; } 
         [StringLength(500)]

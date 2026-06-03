@@ -8,6 +8,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using ClosedXML.Excel;
 using System.IO;
+using System.Text.RegularExpressions;
+using System.Text;
+using System.Globalization;
 
 namespace MotoShop.Areas.Admin.Controllers
 {
@@ -29,7 +32,10 @@ namespace MotoShop.Areas.Admin.Controllers
             page = Math.Max(1, page);
             pageSize = Math.Clamp(pageSize, 1, 100);
 
-            var query = _context.Services.AsNoTracking().AsQueryable();
+            var query = _context.Services
+                .AsNoTracking()
+                .Include(s => s.ServiceCategory)
+                .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchTerm))
                 query = query.Where(s => s.ServiceName.Contains(searchTerm));
@@ -45,13 +51,14 @@ namespace MotoShop.Areas.Admin.Controllers
 
             var totalItems = await query.CountAsync();
             var services = await query
-                .OrderBy(s => s.ServiceName)
+                .OrderByDescending(s => s.ServiceId)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
             ViewBag.Categories = await _context.ServiceCategories.ToListAsync();
             ViewBag.SearchTerm = searchTerm;
+            ViewBag.Status = status;
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
 
@@ -61,45 +68,66 @@ namespace MotoShop.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Save(Service service, IFormFile? imageFile, bool IsActive = false)
         {
-            service.IsActive = IsActive;
-            if (service.ServiceId == 0)
+            try
             {
-                if (imageFile != null)
-                {
-                    var uploadResult = await _fileService.SaveFileAsync(imageFile, "services");
-                    if (!uploadResult.IsSuccess) return Json(new { success = false, message = uploadResult.ErrorMessage });
-                    service.ImageUrl = uploadResult.FilePath;
-                }
-                
-                if (string.IsNullOrEmpty(service.Slug)) 
-                    service.Slug = service.ServiceName.ToLower().Replace(" ", "-");
+                if (string.IsNullOrWhiteSpace(service.ServiceName))
+                    return Json(new { success = false, message = "Vui lòng nhập tên dịch vụ" });
 
-                _context.Services.Add(service);
+                if (service.CategoryId == null || service.CategoryId <= 0)
+                    return Json(new { success = false, message = "Vui lòng chọn danh mục dịch vụ" });
+
+                if (service.Price < 0)
+                    return Json(new { success = false, message = "Giá dịch vụ không hợp lệ" });
+
+                service.ServiceName = service.ServiceName.Trim();
+                service.Description = service.Description?.Trim();
+                service.Duration ??= 30;
+                service.WarrantyDays ??= 30;
+                service.TotalBookings ??= 0;
+                service.IsActive = IsActive;
+
+                if (service.ServiceId == 0)
+                {
+                    if (imageFile != null)
+                    {
+                        var uploadResult = await _fileService.SaveFileAsync(imageFile, "services");
+                        if (!uploadResult.IsSuccess) return Json(new { success = false, message = uploadResult.ErrorMessage });
+                        service.ImageUrl = uploadResult.FilePath;
+                    }
+
+                    service.Slug = await CreateUniqueSlugAsync(service.ServiceName);
+                    _context.Services.Add(service);
+                }
+                else
+                {
+                    var existing = await _context.Services.FindAsync(service.ServiceId);
+                    if (existing == null) return Json(new { success = false, message = "Không tìm thấy dịch vụ" });
+
+                    existing.ServiceName = service.ServiceName;
+                    existing.Price = service.Price;
+                    existing.Duration = service.Duration;
+                    existing.WarrantyDays = service.WarrantyDays;
+                    existing.CategoryId = service.CategoryId;
+                    existing.Description = service.Description;
+                    existing.IsActive = IsActive;
+                    existing.Slug = await CreateUniqueSlugAsync(service.ServiceName, existing.ServiceId);
+
+                    if (imageFile != null)
+                    {
+                        var uploadResult = await _fileService.SaveFileAsync(imageFile, "services");
+                        if (!uploadResult.IsSuccess) return Json(new { success = false, message = uploadResult.ErrorMessage });
+                        if (!string.IsNullOrEmpty(existing.ImageUrl)) _fileService.DeleteFile(existing.ImageUrl);
+                        existing.ImageUrl = uploadResult.FilePath;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Lưu dịch vụ thành công" });
             }
-            else
+            catch (Exception ex)
             {
-                var existing = await _context.Services.FindAsync(service.ServiceId);
-                if (existing == null) return Json(new { success = false, message = "Không tìm thấy dịch vụ" });
-
-                existing.ServiceName = service.ServiceName;
-                existing.Price = service.Price;
-                existing.Duration = service.Duration;
-                existing.WarrantyDays = service.WarrantyDays;
-                existing.CategoryId = service.CategoryId;
-                existing.Description = service.Description;
-                existing.IsActive = IsActive;
-
-                if (imageFile != null)
-                {
-                    var uploadResult = await _fileService.SaveFileAsync(imageFile, "services");
-                    if (!uploadResult.IsSuccess) return Json(new { success = false, message = uploadResult.ErrorMessage });
-                    if (!string.IsNullOrEmpty(existing.ImageUrl)) _fileService.DeleteFile(existing.ImageUrl);
-                    existing.ImageUrl = uploadResult.FilePath;
-                }
+                return Json(new { success = false, message = $"Không thể lưu dịch vụ: {ex.GetBaseException().Message}" });
             }
-
-            await _context.SaveChangesAsync();
-            return Json(new { success = true, message = "Lưu dịch vụ thành công" });
         }
 
         [HttpPost]
@@ -116,6 +144,41 @@ namespace MotoShop.Areas.Admin.Controllers
             _context.Services.Remove(service);
             await _context.SaveChangesAsync();
             return Json(new { success = true, message = "Xóa thành công" });
+        }
+
+        private async Task<string> CreateUniqueSlugAsync(string name, int? currentServiceId = null)
+        {
+            var baseSlug = GenerateSlug(name);
+            if (string.IsNullOrWhiteSpace(baseSlug))
+                baseSlug = $"dich-vu-{DateTime.Now:yyyyMMddHHmmss}";
+
+            var slug = baseSlug;
+            var index = 2;
+            while (await _context.Services.AnyAsync(s => s.Slug == slug && (!currentServiceId.HasValue || s.ServiceId != currentServiceId.Value)))
+            {
+                slug = $"{baseSlug}-{index++}";
+            }
+
+            return slug;
+        }
+
+        private static string GenerateSlug(string input)
+        {
+            var normalized = input.ToLowerInvariant().Normalize(NormalizationForm.FormD);
+            var builder = new StringBuilder();
+
+            foreach (var ch in normalized)
+            {
+                var category = CharUnicodeInfo.GetUnicodeCategory(ch);
+                if (category != UnicodeCategory.NonSpacingMark)
+                    builder.Append(ch == '\u0111' ? 'd' : ch);
+            }
+
+            var slug = builder.ToString().Normalize(NormalizationForm.FormC);
+            slug = Regex.Replace(slug, @"[^a-z0-9\s-]", "");
+            slug = Regex.Replace(slug, @"\s+", "-").Trim('-');
+            slug = Regex.Replace(slug, @"-+", "-");
+            return slug;
         }
 
         public async Task<IActionResult> ExportExcel()

@@ -15,6 +15,9 @@
         .badge-pending { background-color: #fff2e2; color: #fdac41; }
         .badge-approved { background-color: #e8fadf; color: #71dd37; }
         .badge-hidden { background-color: #f5f5f9; color: #8592a3; }
+        .review-thumb { width: 42px; height: 42px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e7eb; }
+        .review-image-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .review-modal-img { width: 86px; height: 86px; object-fit: cover; border-radius: 10px; border: 1px solid #e5e7eb; }
     </style>
 }
 
@@ -99,7 +102,22 @@
                                     <i class="bx @(i <= item.Rating ? "bxs-star" : "bx-star")"></i>
                                 }
                             </td>
-                            <td><span class="comment-text text-muted small">@item.Comment</span></td>
+                            <td>
+                                <span class="comment-text text-muted small">@item.Comment</span>
+                                @if (item.Images != null && item.Images.Any())
+                                {
+                                    <div class="d-flex align-items-center gap-1 mt-2">
+                                        @foreach (var img in item.Images.Take(3))
+                                        {
+                                            <img src="@img.ImageUrl" class="review-thumb" alt="Ảnh đánh giá">
+                                        }
+                                        @if (item.Images.Count > 3)
+                                        {
+                                            <span class="badge bg-light text-muted border">+@(item.Images.Count - 3)</span>
+                                        }
+                                    </div>
+                                }
+                            </td>
                             <td>@item.CreatedDate.ToString("dd/MM/yyyy")</td>
                             <td>
                                 @{
@@ -120,7 +138,8 @@
                                             CreatedDate = item.CreatedDate,
                                             Status = item.Status,
                                             ProductName = item.Product?.ProductName,
-                                            CustomerName = item.Customer?.FullName
+                                            CustomerName = item.Customer?.FullName,
+                                            Images = (item.Images ?? new List<MotoShop.Data.Models.ProductReviewImage>()).Select(i => i.ImageUrl).ToList()
                                         }))'><i class="bx bx-show"></i></button>
                                 
                                 @if (item.Status == "Pending" || item.Status == "Hidden") {
@@ -189,6 +208,10 @@
                     <div class="small text-muted mb-1 text-uppercase fw-bold">Nội dung</div>
                     <div id="mComm" class="p-3 bg-light rounded-3 border italic"></div>
                 </div>
+                <div class="mb-4" id="mImagesWrap" style="display:none;">
+                    <div class="small text-muted mb-2 text-uppercase fw-bold">Ảnh đánh giá</div>
+                    <div id="mImages" class="review-image-grid"></div>
+                </div>
                 <div id="modalActions" class="d-flex gap-2">
                     <!-- Nút hành động sẽ render qua JS -->
                 </div>
@@ -223,8 +246,8 @@
             const data = $(this).data('review');
             if (!data) return;
 
-            $('#mProd').text(data.Product?.ProductName || data.product?.productName || 'N/A');
-            $('#mCust').text(data.Customer?.FullName || data.customer?.fullName || 'N/A');
+            $('#mProd').text(data.ProductName || data.productName || data.Product?.ProductName || data.product?.productName || 'N/A');
+            $('#mCust').text(data.CustomerName || data.customerName || data.Customer?.FullName || data.customer?.fullName || 'N/A');
             
             const date = data.CreatedDate || data.createdDate;
             $('#mDate').text(new Date(date).toLocaleDateString('vi-VN'));
@@ -237,6 +260,14 @@
 
             const status = data.Status || data.status;
             const reviewId = data.ReviewId || data.reviewId;
+            const images = data.Images || data.images || [];
+            if (images.length > 0) {
+                $('#mImagesWrap').show();
+                $('#mImages').html(images.map(src => `<a href="${src}" target="_blank"><img src="${src}" class="review-modal-img" alt="Ảnh đánh giá"></a>`).join(''));
+            } else {
+                $('#mImagesWrap').hide();
+                $('#mImages').empty();
+            }
 
             let btns = '';
             if (status === 'Pending') btns += `<button class="btn btn-success flex-grow-1 btn-update-review" data-id="${reviewId}" data-status="Approved"><i class="bx bx-check me-1"></i>Duyệt ngay</button>`;

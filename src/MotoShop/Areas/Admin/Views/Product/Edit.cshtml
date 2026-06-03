@@ -2,22 +2,34 @@
 @using MotoShop.Data.Models
 
 @{
-    ViewData["Title"] = "Chá»‰nh sá»­a sáº£n pháº©m: " + Model.ProductName;
+    ViewData["Title"] = "Chỉnh sửa sản phẩm: " + Model.ProductName;
     Layout = "_AdminLayout";
     var usages = ViewBag.ProductUsages as List<ProductUsage> ?? new List<ProductUsage>();
     var selectedUsageIds = Model.ProductProductUsages.Select(x => x.ProductUsageId).ToHashSet();
+    string DisplayUsageName(string name) => (name ?? "").Trim().ToLowerInvariant() switch
+    {
+        "bao ve dong co" => "Bảo vệ động cơ",
+        "giam rung" => "Giảm rung",
+        "phu hop xe so" => "Phù hợp xe số",
+        "phu hop xe tay ga" => "Phù hợp xe tay ga",
+        "tang hieu suat phanh" => "Tăng hiệu suất phanh",
+        "tang toc" => "Tăng tốc",
+        "tiet kiem nhien lieu" => "Tiết kiệm nhiên liệu",
+        "trang tri xe" => "Trang trí xe",
+        _ => name ?? string.Empty
+    };
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-bold mb-0"><span class="text-muted fw-light">Sáº£n pháº©m /</span> Chá»‰nh sá»­a</h4>
-            <small class="text-muted">ID: #@Model.ProductId | NgÃ y táº¡o: @Model.CreatedDate.ToString("dd/MM/yyyy")</small>
+            <h4 class="fw-bold mb-0"><span class="text-muted fw-light">Sản phẩm /</span> Chỉnh sửa</h4>
+            <small class="text-muted">ID: #@Model.ProductId | Ngày tạo: @Model.CreatedDate.ToString("dd/MM/yyyy")</small>
         </div>
         <div class="d-flex gap-2">
-            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Quay láº¡i</a>
+            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Quay lại</a>
             <button type="button" onclick="submitProductForm()" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">
-                LÆ¯U THAY Äá»”I
+                LƯU THAY ĐỔI
             </button>
         </div>
     </div>
@@ -27,45 +39,45 @@
         <input type="hidden" asp-for="ProductId" />
         
         <div class="row">
-            <!-- Cá»™t trÃ¡i: ThÃ´ng tin chÃ­nh -->
+            <!-- Cột trái: Thông tin chính -->
             <div class="col-lg-8">
-                <!-- 1. ThÃ´ng tin chung -->
+                <!-- 1. Thông tin chung -->
                 <div class="card mb-4 border-0 shadow-sm">
                     <div class="card-header bg-white border-0 py-3">
-                        <h5 class="mb-0 fw-bold text-primary">ThÃ´ng tin chung</h5>
+                        <h5 class="mb-0 fw-bold text-primary">Thông tin chung</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label fw-bold small text-muted">TÃªn sáº£n pháº©m *</label>
+                            <label class="form-label fw-bold small text-muted">Tên sản phẩm *</label>
                             <input type="text" asp-for="ProductName" class="form-control custom-input" required>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold small text-muted">Danh má»¥c</label>
+                                <label class="form-label fw-bold small text-muted">Danh mục</label>
                                 <select asp-for="CategoryId" id="CategoryId" class="form-select custom-input" asp-items="@(new SelectList(ViewBag.Categories, "CategoryId", "CategoryName"))">
-                                    <option value="">-- Chá»n danh má»¥c --</option>
+                                    <option value="">-- Chọn danh mục --</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold small text-muted">ThÆ°Æ¡ng hiá»‡u</label>
+                                <label class="form-label fw-bold small text-muted">Thương hiệu</label>
                                 <select asp-for="BrandId" class="form-select custom-input" asp-items="@(new SelectList(ViewBag.Brands, "BrandId", "BrandName"))">
-                                    <option value="">-- Chá»n thÆ°Æ¡ng hiá»‡u --</option>
+                                    <option value="">-- Chọn thương hiệu --</option>
                                 </select>
                             </div>
                         </div>
                         <div class="mb-0">
-                            <label class="form-label fw-bold small text-muted">MÃ´ táº£ sáº£n pháº©m</label>
-                            <textarea asp-for="Description" class="form-control custom-input rich-editor" rows="5" placeholder="MÃ´ táº£ chi tiáº¿t sáº£n pháº©m..."></textarea>
+                            <label class="form-label fw-bold small text-muted">Mô tả sản phẩm</label>
+                            <textarea asp-for="Description" class="form-control custom-input rich-editor" rows="5" placeholder="Mô tả chi tiết sản phẩm..."></textarea>
                         </div>
                     </div>
                 </div>
 
-                <!-- 2. Quáº£n lÃ½ Biáº¿n thá»ƒ -->
+                <!-- 2. Quản lý Biến thể -->
                 <div class="card mb-4 border-0 shadow-sm">
                     <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 fw-bold text-primary">Biáº¿n thá»ƒ & GiÃ¡ bÃ¡n</h5>
+                        <h5 class="mb-0 fw-bold text-primary">Biến thể & Giá bán</h5>
                         <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" onclick="addVariantRow()">
-                            <i class="bx bx-plus me-1"></i> ThÃªm biáº¿n thá»ƒ
+                            <i class="bx bx-plus me-1"></i> Thêm biến thể
                         </button>
                     </div>
                     <div class="card-body p-0">
@@ -73,11 +85,11 @@
                             <table class="table table-hover align-middle mb-0" id="variantTable">
                                 <thead class="table-light">
                                     <tr class="small text-uppercase">
-                                        <th class="ps-4">TÃªn biáº¿n thá»ƒ</th>
-                                        <th>GiÃ¡ bÃ¡n (VNÄ)</th>
+                                        <th class="ps-4">Tên biến thể</th>
+                                        <th>Giá bán (VNĐ)</th>
                                         <th>SKU</th>
-<th>Tồn kho</th>
-                                        <th style="width:130px">Nhóm hàng<span style="font-size:10px;color:#a1acb8;display:block">(gợi ý KL)</span></th>
+                                        <th>Tồn kho</th>
+                                        <th style="width:130px">Nhóm hàng<span style="font-size:10px;color:#a1acb8;display:block">(gợi ý khối lượng)</span></th>
                                         <th>Trọng lượng (g)</th>
                                         <th class="text-center" style="width: 50px"></th>
                                     </tr>
@@ -110,7 +122,7 @@
                                                         onchange="applyWeightGroup(this)">
                                                     <option value="">-- Chọn nhóm --</option>
                                                     <option value="1" data-weight="300"  selected="@(variant.WeightGroupId == 1)">Hàng nhẹ (300g)</option>
-                                                    <option value="2" data-weight="1000" selected="@(variant.WeightGroupId == 2)">Hàng TB (1kg)</option>
+                                                    <option value="2" data-weight="1000" selected="@(variant.WeightGroupId == 2)">Hàng trung bình (1kg)</option>
                                                     <option value="3" data-weight="3000" selected="@(variant.WeightGroupId == 3)">Hàng nặng (3kg)</option>
                                                     <option value="4" data-weight="6000" selected="@(variant.WeightGroupId == 4)">Rất nặng (6kg)</option>
                                                 </select>
@@ -138,41 +150,41 @@
                 </div>
             </div>
 
-            <!-- Cá»™t pháº£i: HÃ¬nh áº£nh & Tráº¡ng thÃ¡i -->
+            <!-- Cột phải: Hình ảnh & Trạng thái -->
             <div class="col-lg-4">
-                <!-- 3. Tráº¡ng thÃ¡i & PhÃ¢n loáº¡i -->
+                <!-- 3. Trạng thái & Phân loại -->
                 <div class="card mb-4 border-0 shadow-sm">
                     <div class="card-header bg-white border-0 py-3">
-                        <h5 class="mb-0 fw-bold text-primary">Cáº¥u hÃ¬nh hiá»ƒn thá»‹</h5>
+                        <h5 class="mb-0 fw-bold text-primary">Cấu hình hiển thị</h5>
                     </div>
                     <div class="card-body">
                         <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" asp-for="IsActive" checked="@Model.IsActive">
-                            <label class="form-check-label fw-bold">Äang hoáº¡t Ä‘á»™ng (Hiá»ƒn thá»‹ trÃªn web)</label>
+                            <label class="form-check-label fw-bold">Đang hoạt động (Hiển thị trên web)</label>
                         </div>
                         <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" asp-for="IsFeatured" checked="@Model.IsFeatured">
                             <div class="mt-3 ps-0">
-                                <div class="small fw-bold text-muted mb-2">Cong dung san pham</div>
+                                <div class="small fw-bold text-muted mb-2">Công dụng sản phẩm</div>
                                 @foreach (var usage in usages)
                                 {
                                     <div class="form-check mb-1">
                                         <input class="form-check-input" type="checkbox" name="ProductUsageIds" value="@usage.Id" id="usage_@usage.Id" checked="@selectedUsageIds.Contains(usage.Id)" />
-                                        <label class="form-check-label" for="usage_@usage.Id">@usage.Name</label>
+                                        <label class="form-check-label" for="usage_@usage.Id">@DisplayUsageName(usage.Name)</label>
                                     </div>
                                 }
                             </div>
-                            <label class="form-check-label fw-bold text-warning"><i class="bx bxs-star me-1"></i> Sáº£n pháº©m ná»•i báº­t</label>
+                            <label class="form-check-label fw-bold text-warning"><i class="bx bxs-star me-1"></i> Sản phẩm nổi bật</label>
                         </div>
                     </div>
                 </div>
 
-                <!-- 4. Quáº£n lÃ½ HÃ¬nh áº£nh -->
+                <!-- 4. Quản lý Hình ảnh -->
                 <div class="card mb-4 border-0 shadow-sm">
                     <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 fw-bold text-primary">HÃ¬nh áº£nh</h5>
+                        <h5 class="mb-0 fw-bold text-primary">Hình ảnh</h5>
                         <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" onclick="document.getElementById('newImages').click()">
-                            <i class="bx bx-upload me-1"></i> ThÃªm áº£nh
+                            <i class="bx bx-upload me-1"></i> Thêm ảnh
                         </button>
                         <input type="file" id="newImages" name="NewImages" multiple class="d-none" accept="image/*" onchange="previewNewImages(this)">
                     </div>
@@ -184,7 +196,7 @@
                                     <img src="@img.ImageUrl" class="img-thumbnail rounded-3" style="width: 100%; aspect-ratio: 1; object-fit: cover;" />
                                     @if (img.IsPrimary)
                                     {
-                                        <span class="badge bg-primary position-absolute top-0 start-0 m-1" style="font-size: 8px;">CHÃNH</span>
+                                        <span class="badge bg-primary position-absolute top-0 start-0 m-1" style="font-size: 8px;">CHÍNH</span>
                                     }
                                     <button type="button" class="btn btn-xs btn-danger position-absolute top-0 end-0 m-1 p-0 rounded-circle" style="width:18px; height:18px;" onclick="removeImage(@img.ImageId, this)">
                                         <i class="bx bx-x" style="font-size: 12px;"></i>
@@ -193,7 +205,7 @@
                             }
                         </div>
                         <div id="newImagesPreview" class="d-flex flex-wrap gap-2 mt-2"></div>
-                        <small class="text-muted d-block mt-3">* KÃ©o tháº£ Ä‘á»ƒ thay Ä‘á»•i thá»© tá»±. áº¢nh Ä‘áº§u tiÃªn lÃ  áº£nh chÃ­nh.</small>
+                        <small class="text-muted d-block mt-3">* Kéo thả để thay đổi thứ tự. Ảnh đầu tiên là ảnh chính.</small>
                     </div>
                 </div>
             </div>
@@ -220,7 +232,7 @@
     <script src="~/assets/js/rich-text-editor.js" asp-append-version="true"></script>
     <script>
         document.getElementById('CategoryId')?.addEventListener('change', async function () {
-            // Danh muc con bi xoa
+            // Danh mục con đã bỏ
         });
     </script>
     <script>
@@ -237,7 +249,7 @@
             tr.className = 'variant-row';
             tr.innerHTML = `
                 <td class="ps-4">
-                    <input type="text" name="Variants[${variantIndex}].VariantName" class="form-control form-control-sm" placeholder="TÃªn biáº¿n thá»ƒ" required />
+                    <input type="text" name="Variants[${variantIndex}].VariantName" class="form-control form-control-sm" placeholder="Tên biến thể" required />
                 </td>
                 <td>
                     <input type="number" name="Variants[${variantIndex}].Price" class="form-control form-control-sm" placeholder="0" required />
@@ -255,7 +267,7 @@
                           onchange="applyWeightGroup(this)">
                     <option value="">-- Chọn nhóm --</option>
                     <option value="1" data-weight="300">Hàng nhẹ (300g)</option>
-                    <option value="2" data-weight="1000">Hàng TB (1kg)</option>
+                    <option value="2" data-weight="1000">Hàng trung bình (1kg)</option>
                     <option value="3" data-weight="3000">Hàng nặng (3kg)</option>
                     <option value="4" data-weight="6000">Rất nặng (6kg)</option>
                   </select>
@@ -330,7 +342,7 @@
             }
         }
 
-        // KÃ©o tháº£ áº£nh
+        // Kéo thả ảnh
         const el = document.getElementById('sortable-images');
         if (el) {
             new Sortable(el, {
@@ -345,7 +357,7 @@
             items.forEach((item, index) => {
                 const id = parseInt(item.getAttribute('data-id'));
                 const order = index + 1;
-                orderData.push({ ImageId: id, Order: order }); // Gá»­i Ä‘Ãºng ImageId vÃ  Order
+                orderData.push({ ImageId: id, Order: order }); // Gửi đúng ImageId và Order
                 
                 // UI update
                 const badge = item.querySelector('.badge');
@@ -354,7 +366,7 @@
                         const b = document.createElement('span');
                         b.className = 'badge bg-primary position-absolute top-0 start-0 m-1';
                         b.style.fontSize = '8px';
-                        b.innerText = 'CHÃNH';
+                        b.innerText = 'CHÍNH';
                         item.appendChild(b);
                     }
                 } else if (badge) {
@@ -371,7 +383,7 @@
                 return;
             }
 
-            // NgÄƒn cháº·n submit nhiá»u láº§n
+            // Ngăn chặn submit nhiều lần
             const btn = document.querySelector('button[onclick="submitProductForm()"]');
             if(btn.disabled) return;
 
@@ -381,11 +393,11 @@
             window.MotoShopRichText?.syncAll();
             const formData = new FormData(form);
             
-            // ThÃªm danh sÃ¡ch ID cáº§n xÃ³a
+            // Thêm danh sách ID cần xóa
             deletedVariantIds.forEach(id => formData.append('DeletedVariantIds', id));
             deletedImageIds.forEach(id => formData.append('DeletedImageIds', id));
 
-            // ThÃªm thá»© tá»± áº£nh má»›i
+            // Thêm thứ tự ảnh mới
             const imageOrders = updateImageOrders();
             formData.append('ImageOrdersJson', JSON.stringify(imageOrders));
 
@@ -398,18 +410,18 @@
                 success: function (result) {
                     UI.hideLoader();
                     if (result.success) {
-                        UI.toast('Cáº­p nháº­t sáº£n pháº©m thÃ nh cÃ´ng!', 'success');
+                        UI.toast('Cập nhật sản phẩm thành công!', 'success');
                         setTimeout(() => {
                             window.location.href = '@Url.Action("Index")';
                         }, 800);
                     } else {
-                        UI.toast(result.message || 'CÃ³ lá»—i xáº£y ra', 'error');
+                        UI.toast(result.message || 'Có lỗi xảy ra', 'error');
                         btn.disabled = false;
                     }
                 },
                 error: function (xhr, status, error) {
                     UI.hideLoader();
-                    let message = 'Lá»—i há»‡ thá»‘ng (500) khi cáº­p nháº­t. Vui lÃ²ng kiá»ƒm tra láº¡i.';
+                    let message = 'Lỗi hệ thống (500) khi cập nhật. Vui lòng kiểm tra lại.';
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         message = xhr.responseJSON.message;
                     }

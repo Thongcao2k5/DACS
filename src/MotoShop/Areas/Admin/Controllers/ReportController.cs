@@ -42,7 +42,9 @@ namespace MotoShop.Areas.Admin.Controllers
                 select new ServiceRevenueRow
                 {
                     CompletedAt = b.CompletedAt!.Value,
-                    Amount = s != null
+                    Amount = b.RevenueAmount > 0
+                        ? b.RevenueAmount
+                        : s != null
                         ? s.Price
                         : c != null
                             ? (c.DiscountPrice > 0 ? c.DiscountPrice : c.TotalPrice)

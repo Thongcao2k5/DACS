@@ -6,6 +6,7 @@
 }
 
 @section Styles {
+    <link rel="stylesheet" href="~/assets/css/rich-text-editor.css" asp-append-version="true" />
     <style>
         .product-img-admin { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; transition: 0.3s; }
         .product-img-admin:hover { transform: scale(1.1); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
@@ -68,7 +69,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-muted">Mô tả</label>
-                        <textarea name="Description" class="form-control custom-input" rows="3" placeholder="Mô tả ngắn gọn..."></textarea>
+                        <textarea name="Description" id="modalProductDescription" class="form-control custom-input rich-editor" rows="4" placeholder="Mô tả ngắn gọn..."></textarea>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-muted">Hình ảnh sản phẩm</label>
@@ -245,6 +246,7 @@
 </div>
 
 @section Scripts {
+    <script src="~/assets/js/rich-text-editor.js" asp-append-version="true"></script>
     <script>
         let variantIndex = 1;
         function addVariantRow() {
@@ -279,6 +281,12 @@
             });
             variantIndex = rows.length;
         }
+
+        document.getElementById('addProductModal')?.addEventListener('shown.bs.modal', function () {
+            if (window.MotoShopRichText) {
+                window.MotoShopRichText.initAll();
+            }
+        });
 
         $(document).ready(function() {
             // 1. Logic chọn nhiều dòng và hiển thị nút Xóa hàng loạt
@@ -348,6 +356,9 @@
             // 5. AJAX Form Submission for Modal
             $('#createProductForm').on('submit', function (e) {
                 e.preventDefault(); 
+                if (window.MotoShopRichText) {
+                    window.MotoShopRichText.syncAll();
+                }
                 
                 const form = $(this);
                 const btn = $('#btnSaveProduct');

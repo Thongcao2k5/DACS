@@ -83,6 +83,10 @@ namespace MotoShop.Business.Services
                 .Include(c => c.CartItems)
                     .ThenInclude(ci => ci.ProductVariant)
                         .ThenInclude(pv => pv != null ? pv.Product : null)
+                            .ThenInclude(p => p != null ? p.Images : null)
+                .Include(c => c.CartItems)
+                    .ThenInclude(ci => ci.ProductVariant)
+                        .ThenInclude(pv => pv != null ? pv.VariantImages : null)
                 .FirstOrDefaultAsync();
 
             if (cart == null) return new List<CartItemDto>();
@@ -94,12 +98,38 @@ namespace MotoShop.Business.Services
                 ProductVariantId = ci.ProductVariantId,
                 ProductName = ci.ProductVariant!.Product!.ProductName,
                 VariantName = ci.ProductVariant.VariantName,
-                ImageUrl = ci.ProductVariant.ImageUrl ?? "",
+                ImageUrl = ResolveCartImageUrl(ci.ProductVariant),
                 Price = ci.Price, // Giá đã lưu trong giỏ hàng (có thể là giá khuyến mãi)
                 OriginalPrice = ci.ProductVariant.Price, // Giá niêm yết hiện tại của hệ thống
                 Quantity = ci.Quantity,
                 StockQuantity = ci.ProductVariant.StockQuantity
             }).ToList();
+        }
+
+        private static string ResolveCartImageUrl(ProductVariant variant)
+        {
+            if (!string.IsNullOrWhiteSpace(variant.ImageUrl))
+            {
+                return variant.ImageUrl;
+            }
+
+            var variantImage = variant.VariantImages?
+                .OrderByDescending(i => i.IsPrimary)
+                .ThenBy(i => i.DisplayOrder)
+                .FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.ImageUrl))
+                ?.ImageUrl;
+
+            if (!string.IsNullOrWhiteSpace(variantImage))
+            {
+                return variantImage;
+            }
+
+            return variant.Product?.Images?
+                .Where(i => string.IsNullOrWhiteSpace(i.MediaType) || string.Equals(i.MediaType, "image", StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(i => i.IsPrimary)
+                .ThenBy(i => i.DisplayOrder)
+                .FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.ImageUrl))
+                ?.ImageUrl ?? "";
         }
 
         public async Task<bool> UpdateQuantityAsync(string userId, int variantId, int quantity)

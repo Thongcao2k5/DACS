@@ -311,7 +311,10 @@ namespace MotoShop.Controllers
             var product = await _productService.GetProductBySlugAsync(slug);
             if (product == null) return NotFound();
 
-            ViewBag.DefaultVariant = product.Variants.OrderByDescending(v => v.StockQuantity > 0).FirstOrDefault() ?? product.Variants.FirstOrDefault();
+            ViewBag.DefaultVariant = product.Variants
+                .OrderByDescending(v => v.StockQuantity > 0)
+                .ThenBy(v => v.Price)
+                .FirstOrDefault() ?? product.Variants.OrderBy(v => v.Price).FirstOrDefault();
             ViewBag.MaxStock = product.Variants.Max(v => (int?)v.StockQuantity) ?? 0;
 
             var attrGroups = product.Variants
@@ -367,9 +370,9 @@ namespace MotoShop.Controllers
 
             if (promoProduct?.Promotion != null) {
                 var promo = promoProduct.Promotion;
-                var defaultVar = product.Variants.OrderByDescending(v => v.StockQuantity > 0).FirstOrDefault() ?? product.Variants.FirstOrDefault();
+                var defaultVar = ViewBag.DefaultVariant as ProductVariantDto;
                 if (defaultVar != null) {
-                    decimal basePrice = defaultVar.OriginalPrice ?? defaultVar.Price;
+                    decimal basePrice = defaultVar.Price;
                     // [M3-FIX] Dùng PromotionService thay vì tính tay — nhất quán với CartService/OrderService
                     decimal discountedPrice = await _promotionService.CalculateDiscountAsync(product.ProductId, basePrice, defaultVar.ProductVariantId);
                     if (discountedPrice < basePrice) {
@@ -382,6 +385,22 @@ namespace MotoShop.Controllers
                     }
                 }
             }
+
+            var variantPromotionPrices = new Dictionary<int, decimal>();
+            var variantPromotionOriginalPrices = new Dictionary<int, decimal>();
+            foreach (var variant in product.Variants)
+            {
+                var basePrice = variant.Price;
+                var discountedPrice = await _promotionService.CalculateDiscountAsync(product.ProductId, basePrice, variant.ProductVariantId);
+                if (discountedPrice < basePrice)
+                {
+                    variantPromotionPrices[variant.ProductVariantId] = discountedPrice;
+                    variantPromotionOriginalPrices[variant.ProductVariantId] = basePrice;
+                }
+            }
+
+            ViewBag.VariantPromotionPrices = variantPromotionPrices;
+            ViewBag.VariantPromotionOriginalPrices = variantPromotionOriginalPrices;
 
             return View(product);
         }

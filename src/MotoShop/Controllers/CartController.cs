@@ -115,6 +115,8 @@ namespace MotoShop.Controllers
             {
                 var variant = await _context.ProductVariants
                     .Include(v => v.Product)
+                        .ThenInclude(p => p != null ? p.Images : null)
+                    .Include(v => v.VariantImages)
                     .FirstOrDefaultAsync(v => v.ProductVariantId == variantId.Value);
 
                 if (variant == null) return RedirectToAction("Index");
@@ -133,7 +135,7 @@ namespace MotoShop.Controllers
                         Price = displayPrice,
                         OriginalPrice = originalPrice,
                         Quantity = quantity,
-                        ImageUrl = variant.ImageUrl ?? ""
+                        ImageUrl = ResolveCartImageUrl(variant)
                     }
                 };
                 ViewBag.IsDirectCheckout = true;
@@ -191,6 +193,32 @@ namespace MotoShop.Controllers
             }
 
             return View(model);
+        }
+
+        private static string ResolveCartImageUrl(ProductVariant variant)
+        {
+            if (!string.IsNullOrWhiteSpace(variant.ImageUrl))
+            {
+                return variant.ImageUrl;
+            }
+
+            var variantImage = variant.VariantImages?
+                .OrderByDescending(i => i.IsPrimary)
+                .ThenBy(i => i.DisplayOrder)
+                .FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.ImageUrl))
+                ?.ImageUrl;
+
+            if (!string.IsNullOrWhiteSpace(variantImage))
+            {
+                return variantImage;
+            }
+
+            return variant.Product?.Images?
+                .Where(i => string.IsNullOrWhiteSpace(i.MediaType) || string.Equals(i.MediaType, "image", StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(i => i.IsPrimary)
+                .ThenBy(i => i.DisplayOrder)
+                .FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.ImageUrl))
+                ?.ImageUrl ?? "";
         }
 
         [HttpPost]

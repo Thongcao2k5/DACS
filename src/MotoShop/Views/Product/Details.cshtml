@@ -9,6 +9,8 @@
     var promotionType = ViewBag.PromotionType as string;
     var isFlashPromotion = promotionType == "FlashSale";
     var isProductDiscountPromotion = promotionType == "ProductDiscount";
+    var variantPromotionPrices = ViewBag.VariantPromotionPrices as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
+    var variantPromotionOriginalPrices = ViewBag.VariantPromotionOriginalPrices as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
 }
 
 @Html.AntiForgeryToken()
@@ -161,6 +163,36 @@
                                 </div>
                             </div>
                             <div class="col-lg-7">
+                                @if ((ViewBag.CanReview as bool?) == true && (ViewBag.HasReviewed as bool?) != true)
+                                {
+                                    <form id="productReviewForm" class="border rounded-4 p-3 mb-3 bg-white">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productId" value="@Model.ProductId">
+                                        <input type="hidden" name="variantId" id="productReviewVariantId" value="@defaultVariant?.ProductVariantId">
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                                            <div class="fw-bold text-dark">Viết đánh giá sản phẩm</div>
+                                            <div class="text-warning fs-5 product-rating-stars">
+                                                @for (int i = 1; i <= 5; i++)
+                                                {
+                                                    <i class="bi bi-star-fill product-rating-star" data-rating="@i" style="cursor:pointer;"></i>
+                                                }
+                                            </div>
+                                            <input type="hidden" name="rating" id="productReviewRating" value="5">
+                                        </div>
+                                        <textarea name="comment" class="form-control rounded-3 mb-3" rows="4" placeholder="Chia sẻ cảm nhận thực tế của bạn về sản phẩm..." required></textarea>
+                                        <input type="file" name="reviewImages" class="form-control rounded-3 mb-2" accept="image/jpeg,image/png,image/webp" multiple>
+                                        <div class="d-flex justify-content-between align-items-center gap-2">
+                                            <span class="small text-muted">Tối đa 5 ảnh JPG, PNG hoặc WEBP.</span>
+                                            <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">Gửi đánh giá</button>
+                                        </div>
+                                    </form>
+                                }
+                                else if ((ViewBag.HasReviewed as bool?) == true)
+                                {
+                                    <div class="alert alert-light border rounded-4 small mb-3">
+                                        Bạn đã gửi đánh giá cho sản phẩm này.
+                                    </div>
+                                }
                                 <div class="d-flex flex-wrap gap-2 mb-3 bg-light p-2 rounded-3 border">
                                     <button class="btn btn-sm btn-white border rounded-pill active px-3 filter-btn" data-filter="all">Tất cả</button>
                                     <button class="btn btn-sm btn-white border rounded-pill px-3 filter-btn" data-filter="5">5 Sao</button>
@@ -512,6 +544,8 @@
             percent: @((ViewBag.PromotionPercent ?? 0).ToString()),
             hasDiscount: @(ViewBag.PromotionPrice != null ? "true" : "false")
         };
+        const variantPromotionPrices = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(variantPromotionPrices));
+        const variantPromotionOriginalPrices = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(variantPromotionOriginalPrices));
 
         let selected = {};
         let currentVar = null;
@@ -565,16 +599,23 @@
             const matched = variants.find(v => v.Attributes.every(a => selected[a.Name] === a.Value));
             if (matched) {
                 currentVar = matched;
-                document.getElementById('displayPrice').innerText = matched.Price.toLocaleString('vi-VN') + '₫';
+                const reviewVariantInput = document.getElementById('productReviewVariantId');
+                if (reviewVariantInput) reviewVariantInput.value = matched.ProductVariantId;
+                const variantKey = String(matched.ProductVariantId);
+                const promotionPrice = variantPromotionPrices[variantKey];
+                const promotionOriginalPrice = variantPromotionOriginalPrices[variantKey];
+                const displayPrice = promotionPrice !== undefined ? Number(promotionPrice) : matched.Price;
+                const displayOldPrice = promotionOriginalPrice !== undefined ? Number(promotionOriginalPrice) : matched.OriginalPrice;
+                document.getElementById('displayPrice').innerText = displayPrice.toLocaleString('vi-VN') + '₫';
 
                 let oldPriceEl = document.getElementById('displayOldPrice');
-                if (matched.OriginalPrice > matched.Price) {
+                if (displayOldPrice && displayOldPrice > displayPrice) {
                     if (!oldPriceEl) {
                         document.querySelector('.price-box .d-flex').insertAdjacentHTML('beforeend',
                             `<del id="displayOldPrice" class="text-muted h6 mb-0 ms-2"></del>`);
                         oldPriceEl = document.getElementById('displayOldPrice');
                     }
-                    oldPriceEl.innerText = matched.OriginalPrice.toLocaleString('vi-VN') + '₫';
+                    oldPriceEl.innerText = displayOldPrice.toLocaleString('vi-VN') + '₫';
                 } else {
                     oldPriceEl?.remove();
                 }
@@ -633,6 +674,42 @@
             if (filter === 'all') $('.review-item').fadeIn();
             else if (filter === 'photo') $('.customer-photos').closest('.review-item').fadeIn();
             else $('.star-' + filter).fadeIn();
+        });
+
+        $(document).on('click', '.product-rating-star', function () {
+            const rating = parseInt($(this).data('rating'));
+            $('#productReviewRating').val(rating);
+            $('.product-rating-star').each(function () {
+                const isActive = parseInt($(this).data('rating')) <= rating;
+                $(this).toggleClass('bi-star-fill', isActive).toggleClass('bi-star', !isActive);
+            });
+        });
+
+        $('#productReviewForm').on('submit', async function (e) {
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = 'Đang gửi...';
+
+            try {
+                const response = await fetch('/Review/SubmitReview', {
+                    method: 'POST',
+                    body: new FormData(this)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    Swal.fire('Thành công', data.message, 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Lỗi', data.message, 'error');
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
+            } catch {
+                Swal.fire('Lỗi', 'Không thể gửi đánh giá lúc này.', 'error');
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
         });
 
         document.addEventListener('DOMContentLoaded', () => {

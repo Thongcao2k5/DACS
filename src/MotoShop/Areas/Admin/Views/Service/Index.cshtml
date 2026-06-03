@@ -13,6 +13,12 @@
         .custom-input { border-radius: 10px !important; border: 1px solid #ddd; padding: 10px 15px; transition: 0.3s; }
         .btn-filter-red { background-color: #ff3e1d !important; border-color: #ff3e1d !important; color: #fff !important; box-shadow: 0 0.125rem 0.25rem 0 rgba(255, 62, 29, 0.4) !important; border-radius: 10px !important; }
         .btn-filter-red:hover { background-color: #e6381a !important; transform: translateY(-1px); }
+        .service-editor { border: 1px solid #ddd; border-radius: 10px; overflow: hidden; background: #fff; }
+        .service-editor-toolbar { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 10px; border-bottom: 1px solid #eee; background: #fafafa; }
+        .service-editor-toolbar button { width: 34px; height: 32px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #6c757d; display: inline-flex; align-items: center; justify-content: center; }
+        .service-editor-toolbar button:hover { border-color: #ff3e1d; color: #ff3e1d; background: #fff5f3; }
+        .service-editor-body { min-height: 210px; max-height: 360px; overflow-y: auto; padding: 14px 16px; outline: none; line-height: 1.6; }
+        .service-editor-body:empty:before { content: attr(data-placeholder); color: #a8b1bb; }
     </style>
 }
 
@@ -174,7 +180,24 @@
                         </div>
                         <div class="col-12 mt-3">
                             <label class="form-label fw-bold small text-muted text-uppercase">Mô tả chi tiết</label>
-                            <textarea name="Description" id="sDesc" class="form-control custom-input" rows="3" placeholder="Nhập mô tả chi tiết..."></textarea>
+                            <textarea name="Description" id="sDesc" class="d-none"></textarea>
+                            <div class="service-editor">
+                                <div class="service-editor-toolbar" role="toolbar" aria-label="Thanh cong cu mo ta dich vu">
+                                    <button type="button" data-cmd="undo" title="Hoàn tác"><i class="bx bx-undo"></i></button>
+                                    <button type="button" data-cmd="redo" title="Làm lại"><i class="bx bx-redo"></i></button>
+                                    <button type="button" data-cmd="bold" title="In đậm"><i class="bx bx-bold"></i></button>
+                                    <button type="button" data-cmd="italic" title="In nghiêng"><i class="bx bx-italic"></i></button>
+                                    <button type="button" data-cmd="underline" title="Gạch chân"><i class="bx bx-underline"></i></button>
+                                    <button type="button" data-cmd="justifyLeft" title="Căn trái"><i class="bx bx-align-left"></i></button>
+                                    <button type="button" data-cmd="justifyCenter" title="Căn giữa"><i class="bx bx-align-middle"></i></button>
+                                    <button type="button" data-cmd="justifyRight" title="Căn phải"><i class="bx bx-align-right"></i></button>
+                                    <button type="button" data-cmd="insertUnorderedList" title="Danh sách chấm"><i class="bx bx-list-ul"></i></button>
+                                    <button type="button" data-cmd="insertOrderedList" title="Danh sách số"><i class="bx bx-list-ol"></i></button>
+                                    <button type="button" data-cmd="createLink" title="Chèn liên kết"><i class="bx bx-link"></i></button>
+                                    <button type="button" data-cmd="removeFormat" title="Xóa định dạng"><i class="bx bx-eraser"></i></button>
+                                </div>
+                                <div id="sDescEditor" class="service-editor-body" contenteditable="true" data-placeholder="Nhập mô tả chi tiết dịch vụ..."></div>
+                            </div>
                         </div>
                         <div class="col-12 mt-3">
                             <div class="form-check form-switch">
@@ -194,40 +217,61 @@
 </div>
 
 @section Scripts {
-    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
     <script>
         const sModal = new bootstrap.Modal(document.getElementById('serviceModal'));
         let pendingEditorContent = '';
-        let sDescEditorReady = false;
+
+        function getEditor() {
+            return document.getElementById('sDescEditor');
+        }
+
+        function setEditorContent(html) {
+            const editor = getEditor();
+            if (editor) editor.innerHTML = html || '';
+            $('#sDesc').val(html || '');
+        }
+
+        function syncEditorToTextarea() {
+            const editor = getEditor();
+            const html = editor ? editor.innerHTML.trim() : '';
+            $('#sDesc').val(html);
+            return html;
+        }
 
         document.getElementById('serviceModal').addEventListener('shown.bs.modal', function () {
-            if (!sDescEditorReady) {
-                tinymce.init({
-                    selector: '#sDesc',
-                    height: 280,
-                    menubar: false,
-                    plugins: 'lists link charmap code',
-                    toolbar: 'undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist | link | code | removeformat',
-                    content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; line-height: 1.6; }',
-                    setup: function (editor) {
-                        editor.on('init', function () {
-                            editor.setContent(pendingEditorContent);
-                            sDescEditorReady = true;
-                        });
-                    }
-                });
-            } else {
-                tinymce.get('sDesc').setContent(pendingEditorContent);
-            }
+            setEditorContent(pendingEditorContent);
+            getEditor()?.focus();
         });
+
+        document.querySelectorAll('.service-editor-toolbar button').forEach(button => {
+            button.addEventListener('click', function () {
+                const cmd = this.dataset.cmd;
+                const editor = getEditor();
+                editor?.focus();
+
+                if (cmd === 'createLink') {
+                    const url = prompt('Nhập đường dẫn liên kết:');
+                    if (url) document.execCommand(cmd, false, url);
+                } else {
+                    document.execCommand(cmd, false, null);
+                }
+
+                syncEditorToTextarea();
+            });
+        });
+
+        getEditor()?.addEventListener('input', syncEditorToTextarea);
+        getEditor()?.addEventListener('blur', syncEditorToTextarea);
 
         function openServiceModal() {
             pendingEditorContent = '';
             $('#serviceForm')[0].reset();
             $('#sId').val(0);
+            $('#imageFile').val('');
             $('#imgPreview').attr('src', '/assets/img/elements/18.jpg');
             $('#modalTitle').text('Thêm dịch vụ mới');
             $('#sActive').prop('checked', true);
+            setEditorContent('');
             sModal.show();
         }
 
@@ -235,52 +279,62 @@
             const data = $(this).data('service');
             if (!data) return;
             pendingEditorContent = data.Description || data.description || '';
-            $('#sId').val(data.ServiceId || data.serviceId);
-            $('#sName').val(data.ServiceName || data.serviceName);
-            $('#sCategory').val(data.CategoryId || data.categoryId);
-            $('#sPrice').val(data.Price || data.price);
-            $('#sDuration').val(data.Duration || data.duration);
-            $('#sWarranty').val(data.WarrantyDays || data.warrantyDays);
-            $('#sActive').prop('checked', data.IsActive || data.isActive);
-            if (data.ImageUrl || data.imageUrl) $('#imgPreview').attr('src', data.ImageUrl || data.imageUrl);
+            $('#serviceForm')[0].reset();
+            $('#sId').val(data.ServiceId || data.serviceId || 0);
+            $('#sName').val(data.ServiceName || data.serviceName || '');
+            $('#sCategory').val(data.CategoryId || data.categoryId || '');
+            $('#sPrice').val(data.Price || data.price || 0);
+            $('#sDuration').val(data.Duration || data.duration || 30);
+            $('#sWarranty').val(data.WarrantyDays || data.warrantyDays || 30);
+            $('#sActive').prop('checked', data.IsActive ?? data.isActive ?? true);
+            $('#imageFile').val('');
+            $('#imgPreview').attr('src', data.ImageUrl || data.imageUrl || '/assets/img/elements/18.jpg');
             $('#modalTitle').text('Chỉnh sửa dịch vụ');
+            setEditorContent(pendingEditorContent);
             sModal.show();
         });
 
         $('#serviceForm').on('submit', function(e) {
             e.preventDefault();
-            const btn = $(this).find('button[type=submit]');
+            syncEditorToTextarea();
+
+            const form = this;
+            const btn = $(form).find('button[type=submit]');
+            const originalText = btn.html();
             btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> ĐANG LƯU...');
 
-            const editor = tinymce.get('sDesc');
-            if (editor) editor.save();
-            const formData = new FormData(this);
             $.ajax({
                 url: '/Admin/Service/Save',
                 type: 'POST',
-                data: formData,
+                data: new FormData(form),
                 processData: false,
                 contentType: false,
                 success: function(res) {
-                    if (res.success) {
-                        Swal.fire('Thành công', res.message, 'success').then(() => location.reload());
+                    if (res && res.success) {
+                        window.location.href = '/Admin/Service?saved=1&_=' + Date.now();
                     } else {
-                        Swal.fire('Lỗi', res.message, 'error');
-                        btn.prop('disabled', false).text('LƯU DỮ LIỆU');
+                        Swal.fire('Lỗi', (res && res.message) || 'Không thể lưu dịch vụ', 'error');
+                        btn.prop('disabled', false).html(originalText);
                     }
                 },
-                error: function() {
-                    Swal.fire('Lỗi', 'Không thể kết nối máy chủ', 'error');
-                    btn.prop('disabled', false).text('LƯU DỮ LIỆU');
+                error: function(xhr) {
+                    const message = xhr.responseJSON?.message || 'Không thể kết nối máy chủ';
+                    Swal.fire('Lỗi', message, 'error');
+                    btn.prop('disabled', false).html(originalText);
                 }
             });
         });
 
         $(document).on('click', '.btn-delete-service', function() {
             const id = $(this).data('id');
-            if(confirm("Bạn có chắc muốn xóa dịch vụ này?")) {
+            if(confirm('Bạn có chắc muốn xóa dịch vụ này?')) {
                 $.post('/Admin/Service/Delete', { id: id }, function(res) {
-                    if (res.success) { UI.toast(res.message, 'success'); setTimeout(() => location.reload(), 1000); }
+                    if (res.success) {
+                        Swal.fire('Thành công', res.message || 'Xóa thành công', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        Swal.fire('Lỗi', res.message || 'Không thể xóa dịch vụ', 'error');
+                    }
                 });
             }
         });
@@ -291,6 +345,13 @@
                 reader.onload = (e) => $('#imgPreview').attr('src', e.target.result);
                 reader.readAsDataURL(input.files[0]);
             }
+        }
+
+        if (new URLSearchParams(window.location.search).get('saved') === '1') {
+            if (window.Swal) {
+                Swal.fire({ icon: 'success', title: 'Thành công', text: 'Dịch vụ đã được lưu', timer: 1200, showConfirmButton: false });
+            }
+            window.history.replaceState({}, document.title, '/Admin/Service');
         }
     </script>
 }

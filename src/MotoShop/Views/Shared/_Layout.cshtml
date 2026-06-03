@@ -145,44 +145,69 @@
 
     <script src="~/js/header.js" asp-append-version="true"></script>
     <script src="~/js/components.js" asp-append-version="true"></script>
-    
     <script>
-        async function addToWishlist(productId) {
+        function showShopToast(message, icon = 'success') {
+            if (window.CartUI && typeof window.CartUI.showToast === 'function') {
+                window.CartUI.showToast(message, icon);
+                return;
+            }
+            if (window.UI && typeof window.UI.showToast === 'function') {
+                window.UI.showToast(message, icon);
+                return;
+            }
+            if (window.Swal) {
+                Swal.fire({
+                    icon: icon,
+                    title: message,
+                    showConfirmButton: false,
+                    timer: 1600,
+                    toast: true,
+                    position: 'top-end'
+                });
+                return;
+            }
+            alert(message);
+        }
+
+        async function addToWishlist(productId, button) {
             try {
                 const token = document.querySelector('meta[name="__RequestVerificationToken"]')?.content
                            || document.querySelector('input[name="__RequestVerificationToken"]')?.value
                            || '';
-                const response = await fetch('/Wishlist/Add', {
+                const response = await fetch('/Wishlist/Toggle', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-XSRF-TOKEN': token
                     },
-                    body: JSON.stringify(productId)
+                    body: JSON.stringify({ productId: productId })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Thành công!',
-                        text: data.message,
-                        showConfirmButton: false,
-                        timer: 1500,
-                        toast: true,
-                        position: 'top-end'
-                    });
-                    
-                    // Cập nhật con số trên header
+                    const isAdded = data.added === true;
+                    const currentButton = button || window.event?.currentTarget;
+                    if (currentButton) {
+                        currentButton.classList.toggle('active', isAdded);
+                        currentButton.classList.toggle('text-danger', isAdded);
+                        const icon = currentButton.querySelector('i');
+                        if (icon) {
+                            icon.className = isAdded ? 'bx bxs-heart' : 'bx bx-heart';
+                        }
+                    }
+
+                    showShopToast(data.message || (isAdded ? 'Đã thêm vào yêu thích' : 'Đã xóa khỏi yêu thích'), isAdded ? 'success' : 'info');
+
                     if (typeof updateWishlistBadge === 'function') {
                         updateWishlistBadge();
                     }
                 } else {
-                    Swal.fire('Thông báo', data.message, 'info');
+                    showShopToast(data.message || 'Không thể cập nhật yêu thích', 'info');
                 }
             } catch (error) {
                 console.error('Lỗi Wishlist:', error);
+                showShopToast('Không thể cập nhật yêu thích', 'error');
             }
         }
     </script>

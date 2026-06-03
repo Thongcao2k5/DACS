@@ -109,9 +109,13 @@ namespace MotoShop.Controllers
                 PaymentStatus = o.PaymentStatus,
                 PaymentMethod = o.PaymentMethod == "BankTransfer" ? "Chuyển khoản" : (o.PaymentMethod == "VNPay" ? "VNPay" : (o.PaymentMethod ?? "Tiền mặt (COD)")),
                 Note = o.Note,
-                Items = (o.OrderItems ?? new List<OrderItem>()).Take(2).Select(oi => new OrderItemViewModel
+                Items = (o.OrderItems ?? new List<OrderItem>()).Select(oi => new OrderItemViewModel
                 {
-                    ProductName = oi.ProductVariant?.VariantName ?? "Sản phẩm đã xóa",
+                    ProductId = oi.ProductVariant?.ProductId,
+                    ProductVariantId = oi.ProductVariantId,
+                    ProductSlug = oi.ProductVariant?.Product?.Slug,
+                    VariantName = oi.ProductVariant?.VariantName ?? string.Empty,
+                    ProductName = oi.ProductVariant?.Product?.ProductName ?? oi.ProductVariant?.VariantName ?? "Sản phẩm đã xóa",
                     ProductImage = oi.ProductVariant?.ImageUrl ?? "/assets/img/elements/18.jpg",
                     Quantity = oi.Quantity,
                     UnitPrice = oi.Price

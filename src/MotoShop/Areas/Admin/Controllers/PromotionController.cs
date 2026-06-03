@@ -81,6 +81,10 @@ namespace MotoShop.Areas.Admin.Controllers
                 {
                     p.ProductId,
                     p.ProductName,
+                    p.CategoryId,
+                    CategoryName = p.Category != null ? p.Category.CategoryName : "Chua phan loai",
+                    p.IsActive,
+                    StockQuantity = p.Variants.Sum(v => v.StockQuantity),
                     Price = p.Variants.OrderBy(v => v.Price).Select(v => v.Price).FirstOrDefault()
                 })
                 .ToListAsync();

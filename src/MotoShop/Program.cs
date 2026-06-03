@@ -357,6 +357,32 @@ using (var scope = app.Services.CreateScope())
             IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ServiceBookings') AND name = 'CompletedAt')
                 ALTER TABLE ServiceBookings ADD CompletedAt DATETIME NULL;
 
+            IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ServiceBookings') AND name = 'CompletedAt')
+                UPDATE ServiceBookings
+                SET CompletedAt = COALESCE(ServiceDate, BookingDate, GETDATE())
+                WHERE Status IN ('Completed', 'DaHoanThanh')
+                  AND CompletedAt IS NULL;
+
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ServiceBookings') AND name = 'RevenueAmount')
+                ALTER TABLE ServiceBookings ADD RevenueAmount DECIMAL(18,2) NOT NULL DEFAULT 0;
+
+            IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ServiceBookings') AND name = 'RevenueAmount')
+            BEGIN
+                EXEC(N'
+                    UPDATE b
+                    SET RevenueAmount = CASE
+                        WHEN s.ServiceId IS NOT NULL THEN s.Price
+                        WHEN c.ComboId IS NOT NULL THEN CASE WHEN c.DiscountPrice > 0 THEN c.DiscountPrice ELSE c.TotalPrice END
+                        ELSE ISNULL(b.DepositAmount, 0)
+                    END
+                    FROM ServiceBookings b
+                    LEFT JOIN Services s ON b.ServiceId = s.ServiceId
+                    LEFT JOIN ServiceCombos c ON b.ComboId = c.ComboId
+                    WHERE b.Status IN (''Completed'', ''DaHoanThanh'')
+                      AND ISNULL(b.RevenueAmount, 0) = 0;
+                ');
+            END
+
             IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'OrderStatusHistory')
                 CREATE TABLE OrderStatusHistory (HistoryId INT IDENTITY PRIMARY KEY, OrderId INT NOT NULL, Status NVARCHAR(100) NOT NULL, ChangedDate DATETIME DEFAULT GETDATE(), Note NVARCHAR(MAX) NULL);
             
@@ -609,52 +635,96 @@ using (var scope = app.Services.CreateScope())
                 CONSTRAINT FK_ProductVariants_WeightGroup FOREIGN KEY REFERENCES WeightGroups(Id);
             """);
         // Category child groups from backup home UI branch.
+        // Resolve parent IDs by slug instead of hardcoded identity values; existing DBs may
+        // have different CategoryId values, and hardcoded IDs can violate the self-FK.
         await context.Database.ExecuteSqlRawAsync("""
-    IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Dầu nhớt động cơ')
+    IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'dau-nhot-boi-tron')
+        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive)
+        VALUES (N'Dau nhot & Boi tron', 'dau-nhot-boi-tron', NULL, 1);
+
+    IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'lop-xe-vanh')
+        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive)
+        VALUES (N'Lop xe & Vanh', 'lop-xe-vanh', NULL, 1);
+
+    IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'he-thong-phanh')
+        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive)
+        VALUES (N'He thong phanh', 'he-thong-phanh', NULL, 1);
+
+    IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'giam-xoc')
+        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive)
+        VALUES (N'Giam xoc', 'giam-xoc', NULL, 1);
+
+    IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'ac-quy-dien')
+        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive)
+        VALUES (N'Ac quy & Dien', 'ac-quy-dien', NULL, 1);
+
+    IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'phu-tung-phu-kien')
+        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive)
+        VALUES (N'Phu tung & Phu kien', 'phu-tung-phu-kien', NULL, 1);
+
+    DECLARE @OilParentId INT = (SELECT TOP 1 CategoryId FROM Categories WHERE Slug = 'dau-nhot-boi-tron');
+    DECLARE @TireParentId INT = (SELECT TOP 1 CategoryId FROM Categories WHERE Slug = 'lop-xe-vanh');
+    DECLARE @BrakeParentId INT = (SELECT TOP 1 CategoryId FROM Categories WHERE Slug = 'he-thong-phanh');
+    DECLARE @ShockParentId INT = (SELECT TOP 1 CategoryId FROM Categories WHERE Slug = 'giam-xoc');
+    DECLARE @ElectricParentId INT = (SELECT TOP 1 CategoryId FROM Categories WHERE Slug = 'ac-quy-dien');
+    DECLARE @PartsParentId INT = (SELECT TOP 1 CategoryId FROM Categories WHERE Slug = 'phu-tung-phu-kien');
+
+    IF @OilParentId IS NOT NULL
     BEGIN
-        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES
-        (N'Dầu nhớt động cơ',   'dau-nhot-dong-co',  16, 1),
-        (N'Dung dịch & Vệ sinh', 'dung-dich-ve-sinh', 16, 1),
-        (N'Dưỡng xe & Bảo vệ',  'duong-xe-bao-ve',   16, 1);
+        IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'dau-nhot-dong-co')
+            INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES (N'Dau nhot dong co', 'dau-nhot-dong-co', @OilParentId, 1);
+        IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'dung-dich-ve-sinh')
+            INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES (N'Dung dich & Ve sinh', 'dung-dich-ve-sinh', @OilParentId, 1);
+        IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'duong-xe-bao-ve')
+            INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES (N'Duong xe & Bao ve', 'duong-xe-bao-ve', @OilParentId, 1);
     END
 
-    IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Lốp thể thao')
+    IF @TireParentId IS NOT NULL
     BEGIN
-        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES
-        (N'Lốp thể thao',  'lop-the-thao',  17, 1),
-        (N'Lốp phổ thông', 'lop-pho-thong', 17, 1);
+        IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'lop-the-thao')
+            INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES (N'Lop the thao', 'lop-the-thao', @TireParentId, 1);
+        IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'lop-pho-thong')
+            INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES (N'Lop pho thong', 'lop-pho-thong', @TireParentId, 1);
     END
 
-    IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Đĩa phanh & Má phanh')
+    IF @BrakeParentId IS NOT NULL
     BEGIN
-        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES
-        (N'Đĩa phanh & Má phanh', 'dia-phanh-ma-phanh', 18, 1),
-        (N'Heo dầu & Cùm thắng',  'heo-dau-cum-thang',  18, 1),
-        (N'Phụ kiện phanh',       'phu-kien-phanh',     18, 1);
+        IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'dia-phanh-ma-phanh')
+            INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES (N'Dia phanh & Ma phanh', 'dia-phanh-ma-phanh', @BrakeParentId, 1);
+        IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'heo-dau-cum-thang')
+            INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES (N'Heo dau & Cum thang', 'heo-dau-cum-thang', @BrakeParentId, 1);
+        IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'phu-kien-phanh')
+            INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES (N'Phu kien phanh', 'phu-kien-phanh', @BrakeParentId, 1);
     END
 
-    IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Phuộc sau')
+    IF @ShockParentId IS NOT NULL
     BEGIN
-        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES
-        (N'Phuộc sau',              'phuoc-sau',           19, 1),
-        (N'Phuộc trước & Bộ nâng', 'phuoc-truoc-bo-nang', 19, 1);
+        IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'phuoc-sau')
+            INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES (N'Phuoc sau', 'phuoc-sau', @ShockParentId, 1);
+        IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'phuoc-truoc-bo-nang')
+            INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES (N'Phuoc truoc & Bo nang', 'phuoc-truoc-bo-nang', @ShockParentId, 1);
     END
 
-    IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Ắc quy & Sạc')
+    IF @ElectricParentId IS NOT NULL
     BEGIN
-        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES
-        (N'Ắc quy & Sạc',   'ac-quy-sac',   20, 1),
-        (N'Đèn & Điện xe',  'den-dien-xe',  20, 1),
-        (N'Bugi & An toàn', 'bugi-an-toan', 20, 1);
+        IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'ac-quy-sac')
+            INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES (N'Ac quy & Sac', 'ac-quy-sac', @ElectricParentId, 1);
+        IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'den-dien-xe')
+            INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES (N'Den & Dien xe', 'den-dien-xe', @ElectricParentId, 1);
+        IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'bugi-an-toan')
+            INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES (N'Bugi & An toan', 'bugi-an-toan', @ElectricParentId, 1);
     END
 
-    IF NOT EXISTS (SELECT 1 FROM Categories WHERE CategoryName = N'Nhông sên dĩa')
+    IF @PartsParentId IS NOT NULL
     BEGIN
-        INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES
-        (N'Nhông sên dĩa',         'nhong-sen-dia',         22, 1),
-        (N'Truyền động xe tay ga', 'truyen-dong-xe-tay-ga', 22, 1),
-        (N'Truyền động & Động cơ', 'truyen-dong-dong-co',   22, 1),
-        (N'Điều khiển & Phụ kiện', 'dieu-khien-phu-kien',   22, 1);
+        IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'nhong-sen-dia')
+            INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES (N'Nhong sen dia', 'nhong-sen-dia', @PartsParentId, 1);
+        IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'truyen-dong-xe-tay-ga')
+            INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES (N'Truyen dong xe tay ga', 'truyen-dong-xe-tay-ga', @PartsParentId, 1);
+        IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'truyen-dong-dong-co')
+            INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES (N'Truyen dong & Dong co', 'truyen-dong-dong-co', @PartsParentId, 1);
+        IF NOT EXISTS (SELECT 1 FROM Categories WHERE Slug = 'dieu-khien-phu-kien')
+            INSERT INTO Categories (CategoryName, Slug, ParentId, IsActive) VALUES (N'Dieu khien & Phu kien', 'dieu-khien-phu-kien', @PartsParentId, 1);
     END
     """);
 
