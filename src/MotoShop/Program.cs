@@ -153,6 +153,7 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
+builder.Services.AddSingleton<MotoShop.Business.Interfaces.IAiChatService, MotoShop.Business.Services.AiChatService>();
 builder.Services.AddHttpClient<IGhnService, GhnService>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(10);
